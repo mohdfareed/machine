@@ -34,17 +34,17 @@ jobs:
       - name: Set up environment
         uses: ./.github/setup
 
-      - name: Get last version
-        id: previous-tag
-        uses: WyriHaximus/github-action-get-previous-tag@master
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Get current version
+        id: previous-version
+        run: |
+          version=$(poetry version | cut -d' ' -f2)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Update version
         id: semver
         uses: WyriHaximus/github-action-next-semvers@master
         with:
-          version: ${{ steps.previous-tag.outputs.tag }}
+          version: ${{ steps.previous-version.outputs.version }}
 
       - name: Resolve new version
         id: resolver
