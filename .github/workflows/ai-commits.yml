@@ -22,7 +22,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env:
-          OCO_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OCO_OPENAI_MAX_TOKENS: 500
           OCO_DESCRIPTION: true
           OCO_EMOJI: false
