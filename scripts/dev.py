@@ -40,7 +40,7 @@ def _validate_python():
     if version_output == PYTHON_VERSION:
         return
 
-    _log_warning(f"Python {PYTHON_VERSION} is not installed.")
+    _log_warning(f"Python {version_output} is not supported.")
     if not shutil.which("pyenv"):
         _log_error(f"Pyenv is required to install Python {PYTHON_VERSION}.")
         sys.exit(1)
@@ -51,9 +51,9 @@ def _validate_python():
     _log_success(f"Python {PYTHON_VERSION} installed via pyenv.")
 
 
-def _validate_poetry():
-    if shutil.which("poetry"):
-        return
+def _resolve_poetry() -> str:
+    if poetry := shutil.which("poetry"):
+        return poetry
 
     _log_warning("Poetry is not installed.")
     if not shutil.which("pipx"):
@@ -63,12 +63,18 @@ def _validate_poetry():
     _log_info("Installing Poetry with pipx...")
     subprocess.run(["pipx", "install", "poetry"], check=True)
     _log_success("Poetry installed successfully.")
+    if poetry := shutil.which("poetry"):
+        return poetry
+
+    _log_error("Poetry is not available in the PATH.")
+    _log_warning("Restart the shell to update the PATH.")
+    sys.exit(1)
 
 
-def _setup_environment():
+def _setup_environment(poetry: str):
     _log_info("Installing development dependencies with Poetry...")
     subprocess.run(
-        ["poetry", "install", "--with", "dev"],
+        [poetry, "install", "--with", "dev"],
         env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
         check=True,
     )
@@ -86,8 +92,8 @@ def main():
 
     _validate_env()
     _validate_python()
-    _validate_poetry()
-    _setup_environment()
+    poetry = _resolve_poetry()
+    _setup_environment(poetry)
 
     _log_success("Development environment set up successfully.")
 

@@ -10,7 +10,7 @@ import sys
 _home = os.environ.get("HOME", os.path.expanduser("~"))
 DEFAULT_MACHINE_PATH = os.path.join(_home, ".machine")
 
-APP_URL = "https://github.com/mohdfareed/typer-machine.git"
+APP_URL = "https://github.com/mohdfareed/machine.git"
 EXECUTABLE = "machine-setup"
 
 if os.name == "nt":

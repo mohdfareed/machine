@@ -17,6 +17,19 @@
     ],
     "cSpell.ignorePaths": [
         ".vscode",
+        ".git",
+        ".venv",
+        ".pre-commit-config.yaml",
+        ".gitignore",
     ],
-    "cSpell.words": [],
+    "cSpell.words": [
+        "mohdfareed",
+        "mypy",
+        "pipx",
+        "pyenv",
+        "pylint",
+        "pytest",
+        "typer",
+        "venv"
+    ],
 }
