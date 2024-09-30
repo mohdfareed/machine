@@ -1,0 +1,74 @@
+# region - Setup
+# =============================================================================
+
+# install zinit
+repo=https://github.com/zdharma-continuum/zinit.git
+[ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
+[ ! -d $ZINIT_HOME/.git ] && git clone $repo $ZINIT_HOME
+source $ZINIT_HOME/zinit.zsh && unset repo
+
+# extensions and plugins
+zinit light zdharma-continuum/zinit-annex-as-monitor # remote file updater
+zinit light zdharma-continuum/zinit-annex-patch-dl # download with dl"URL file"
+source "$(realpath $(dirname $0))/plugins.zsh"
+
+# history
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/zcompcache"
+
+# disable login message
+[ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
+
+# endregion
+# region - Functions and Aliases
+# =============================================================================
+
+alias zsh::reload='exec $SHELL'
+alias zsh::source='source $ZDOTDIR/.zshrc'
+alias zsh::update='zinit update && zinit self-update'
+alias zsh::clean='zinit delete --clean'
+alias brew::update='brew update && brew upgrade'
+alias brew::cleanup='brew autoremove && brew cleanup'
+alias ssh::gen-key='ssh-keygen -t ed25519 -C'
+
+alias cat='bat --paging=never'
+alias vim='nvim'
+alias ls='eza --icons --group-directories-first --sort=Name'
+alias lst='ls -T'
+alias lls='ls -lhmU --git --no-user'
+alias llst='lls -T'
+
+# copy ssh key to machine, default user is current user
+ssh::copy() {
+    usage="usage: $0 host [user]"
+    if (($# < 1 || $# > 2)); then echo $usage && return 1; fi
+    ssh-copy-id ${2-$USER}@$1
+}
+
+# time the startup of shell
+zsh::time() {
+    usage="usage: $0 [iterations]"
+    if (($# > 1)); then echo $usage && return 1; fi
+    for i in $(seq 1 ${1-1}); do time $SHELL -i -c exit; done
+}
+
+# activate python virtual environment
+venv::activate() {
+    usage="usage: $0 [venv_dir]"
+    if (($# > 1)); then echo $usage && return 1; fi
+
+    venv=${1-.venv}
+    if [[ ! -d "$venv" ]]; then
+        echo "No virtual environment directory found"
+        return 1
+    fi
+    source "$venv/bin/activate"
+}
+
+# endregion
