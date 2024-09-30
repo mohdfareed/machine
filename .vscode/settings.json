@@ -1,0 +1,22 @@
+{
+    "python.analysis.typeCheckingMode": "strict",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "bandit.importStrategy": "fromEnvironment",
+    "bandit.path": [
+        "~/.venv/python",
+        "-m",
+        "bandit"
+    ],
+    "bandit.ignorePatterns": [
+        "tests/*.py",
+        "scripts/*.py"
+    ],
+    "cSpell.ignorePaths": [
+        ".vscode",
+    ],
+    "cSpell.words": [],
+}
