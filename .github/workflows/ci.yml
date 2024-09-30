@@ -1,0 +1,133 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Set up environment
+        uses: ./.github/setup
+
+      - name: Linter (pylint)
+        uses: dciborow/action-pylint@main
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: "true"
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          reviewdog_flags: '-tee'
+
+      - name: Type check (mypy)
+        uses: tsuyoshicho/action-mypy@master
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: "true"
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          reviewdog_flags: '-tee'
+
+      - name: Security check (Bandit)
+        uses: brunohaf/action-bandit@main
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: "true"
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          bandit_config: pyproject.toml
+          reviewdog_flags: '-tee'
+
+        # cache pre-commit hooks
+      - uses: actions/cache@main
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: pre-commit
+
+      - name: Install pre-commit hooks
+        run: pre-commit install --install-hooks
+        shell: sh
+
+      - name: Pre-commit hooks
+        id: hooks
+        run: |
+          poetry run pre-commit run --all-files --show-diff-on-failure 2>&1 | tee pre-commit-output.txt
+          echo "status=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Annotation
+        run: |
+          while IFS= read -r line; do
+            if [[ $line == *"FAILED" ]]; then
+              echo "::error::${line}"
+            else
+              echo "::notice::${line}"
+            fi
+          done < pre-commit-output.txt
+          exit ${{ steps.hooks.outputs.status }}
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Set up environment
+        uses: ./.github/setup
+
+      - name: Ensure runnable
+        run: machine-setup --help
+
+      - name: Run tests
+        run: |
+          poetry run pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
+
+      - name: Generate coverage report
+        id: coverage
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
+
+      - name: Annotation
+        run: |
+          echo "::notice::coverage: ${{ steps.coverage.outputs.coverage }}"
+          echo "::notice::tests: ${{ steps.coverage.outputs.tests }}"
+          echo "::notice::skipped: ${{ steps.coverage.outputs.skipped }}"
+          echo "::notice::time: ${{ steps.coverage.outputs.time }}s"
+          if [ ${{ steps.coverage.outputs.warnings }} -gt 0 ]; then
+            echo "::warning::warnings: ${{ steps.coverage.outputs.warnings }}"
+          fi
+          if [ ${{ steps.coverage.outputs.failures }} -gt 0 ]; then
+            echo "::error::failures: ${{ steps.coverage.outputs.failures }}"
+          fi
+          if [ ${{ steps.coverage.outputs.errors }} -gt 0 ]; then
+            echo "::error::errors: ${{ steps.coverage.outputs.errors }}"
+          fi
+
+  spelling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Spell check
+        uses: reviewdog/action-misspell@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          level: warning
+          locale: "US"
+          exclude: |
+              *.lock

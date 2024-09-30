@@ -1,0 +1,81 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+  workflow_call:
+    outputs:
+      run_id:
+        value: ${{ github.run_id }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependencies:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Set up environment
+        uses: ./.github/setup
+
+      - name: Update dependencies
+        run: poetry update
+
+      - name: Update pre-commit hooks
+        run: pre-commit autoupdate
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: 'Update dependencies'
+          branch: 'update-dependencies'
+          sign-commits: true
+          labels: 'CD'
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Set up environment
+        uses: ./.github/setup
+
+      - name: Run tests
+        run: |
+            pytest --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
+
+      - name: Pytest coverage report
+        id: coverage
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          hide-comment: true
+          pytest-coverage-path: pytest-coverage.txt
+
+      - name: Update README coverage badge
+        run: |
+          sed -i -E "s/(<a><img alt=\"Coverage\" src=\"https:\/\/img.shields.io\/badge\/Coverage-)[0-9]+%25-[a-z]+(.svg\" \/>)/\1${{ steps.coverage.outputs.coverage }}25-${{ steps.coverage.outputs.color }}\2/" README.md
+
+      - name: Generate CLI documentation
+        run: |
+          typer app.main utils docs --output docs/cli.md --name machine-setup
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@main
+        with:
+          add-paths: README.md, docs/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chores: update docs'
+          title: 'Update documentation'
+          body: "This PR updates the project's documentation."
+          branch: 'update-docs'
+          labels: 'CD'
