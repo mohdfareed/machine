@@ -21,6 +21,7 @@
         ".venv",
         ".pre-commit-config.yaml",
         ".gitignore",
+        ".github",
     ],
     "cSpell.words": [
         "mohdfareed",

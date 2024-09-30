@@ -1,0 +1,30 @@
+name: Generate AI commits
+
+on:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  chatgpt-commit-message:
+    name: ChatGPT commit message
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions: write-all
+
+    steps:
+      - uses: actions/setup-node@main
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+
+      - name: OpenCommit
+        uses: di-sukharev/opencommit@master
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          OCO_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OCO_OPENAI_MAX_TOKENS: 500
+          OCO_DESCRIPTION: true
+          OCO_EMOJI: false
+          OCO_MODEL: gpt-4o
+          OCO_LANGUAGE: en
