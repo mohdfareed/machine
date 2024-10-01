@@ -1,4 +1,4 @@
-# get the latest release wheel url from github
+# Get the latest release wheel url from github
 
 repo="mohdfareed/machine"
 download_url=$(curl -s https://api.github.com/repos/$repo/releases/latest | \

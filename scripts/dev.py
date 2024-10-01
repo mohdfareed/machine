@@ -55,19 +55,19 @@ def _resolve_poetry() -> str:
     if poetry := shutil.which("poetry"):
         return poetry
 
-    _log_warning("Poetry is not installed.")
+    _log_warning("Poetry is not installed")
     if not shutil.which("pipx"):
-        _log_error("Pipx is required to install Poetry.")
+        _log_error("Pipx is required to install Poetry")
         sys.exit(1)
 
     _log_info("Installing Poetry with pipx...")
     subprocess.run(["pipx", "install", "poetry"], check=True)
-    _log_success("Poetry installed successfully.")
+    _log_success("Poetry installed successfully")
     if poetry := shutil.which("poetry"):
         return poetry
 
-    _log_error("Poetry is not available in the PATH.")
-    _log_warning("Restart the shell to update the PATH.")
+    _log_error("Poetry is not available in the PATH")
+    _log_warning("Restart the shell to update the PATH")
     sys.exit(1)
 
 
@@ -95,19 +95,19 @@ def main():
     poetry = _resolve_poetry()
     _setup_environment(poetry)
 
-    _log_success("Development environment set up successfully.")
+    _log_success("Set up completed successfully")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="""
-        Set up a local development environment.
+        Set up a local development environment
 
         The script must be run within the repository.
         If Python 3.9.6 is not installed, pyenv is used to install it.
         if Poetry is not installed, the script will install it with pipx.
 
-        Requirements: python 3.9.6 or pyenv, poetry or pipx.
+        Requirements: python 3.9.6 or pyenv, poetry or pipx
         """,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        _log_warning("Aborted.")
+        _log_warning("Aborted!")
         sys.exit(1)
     except Exception as e:  # pylint: disable=broad-except
         _log_error(f"Setup failed: {e}")
