@@ -31,15 +31,15 @@ def setup(
     typer.echo(f"Setting up {machine_name}...")
     typer.echo(f"Machine path: {typer.get_app_dir(APP_NAME)}")
 
-    for _ in track(range(50), description="Downloading files"):
+    for _ in track(range(25), description="Downloading files"):
         time.sleep(0.1)
 
-    with Status("Setting up...\n") as status:
-        time.sleep(1)
-        status.update("Symlinking config files...\n")
-        time.sleep(1)
-        status.update("Resolving environment variables...\n")
-        time.sleep(1)
+    with Status("Setting up...") as status:
+        time.sleep(0.5)
+        status.update("Setting up configuration files...")
+        time.sleep(0.5)
+        status.update("Setting up environment variables...")
+        time.sleep(0.5)
 
     typer.echo("Machine setup completed successfully")
     raise typer.Exit()
