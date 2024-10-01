@@ -5,10 +5,13 @@ from pathlib import Path
 from typing import Optional
 
 import pydantic
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Config(pydantic.BaseModel):
+class Config(BaseSettings):
     """Machine Configuration model."""
+
+    model_config = SettingsConfigDict()
 
 
 class ConfigFiles(Config):
@@ -29,7 +32,7 @@ class ConfigFiles(Config):
 class Environment(Config):
     """Machine environment variables."""
 
-    MACHINE: Path = Path.home() / ".machine"
+    MACHINE: Path
     PRIVATE_ENV: Optional[Path] = None
     SSH_KEYS: Optional[Path] = None
 
@@ -48,6 +51,6 @@ class WindowsVariables(Config):
 class UnixVariables(Config):
     """Unix environment variables."""
 
-    XDG_CONFIG_HOME: Path = Path.home() / ".config"
-    XDG_DATA_HOME: Path = Path.home() / ".local" / "share"
-    COMPLETIONS_PATH: Optional[Path] = None
+    XDG_CONFIG_HOME: Path
+    XDG_DATA_HOME: Path
+    COMPLETIONS_PATH: Path

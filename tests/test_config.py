@@ -27,12 +27,11 @@ def test_config_files():
 
 def test_environment():
     """Test environment variables."""
-    environment = Environment(PRIVATE_ENV=Path("private"), SSH_KEYS=Path("ssh"))
-    home_path = Path.home()
+    environment = Environment(MACHINE=Path(), PRIVATE_ENV=Path(), SSH_KEYS=Path())
 
-    assert environment.MACHINE == home_path / ".machine"
-    assert environment.PRIVATE_ENV == Path("private")
-    assert environment.SSH_KEYS == Path("ssh")
+    assert environment.MACHINE == Path()
+    assert environment.PRIVATE_ENV == Path()
+    assert environment.SSH_KEYS == Path()
 
 
 def test_windows_variables():
@@ -50,9 +49,12 @@ def test_unix_variables():
     if _is_windows:
         return
 
-    unix_variables = UnixVariables()
-    home_path = Path.home()
+    unix_variables = UnixVariables(
+        COMPLETIONS_PATH=Path(),
+        XDG_DATA_HOME=Path(),
+        XDG_CONFIG_HOME=Path(),
+    )
 
-    assert unix_variables.XDG_CONFIG_HOME == home_path / ".config"
-    assert unix_variables.XDG_DATA_HOME == home_path / ".local" / "share"
-    assert unix_variables.COMPLETIONS_PATH is None
+    assert unix_variables.XDG_CONFIG_HOME == Path()
+    assert unix_variables.XDG_DATA_HOME == Path()
+    assert unix_variables.COMPLETIONS_PATH == Path()
