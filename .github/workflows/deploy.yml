@@ -110,11 +110,21 @@ jobs:
           git pull
           poetry build
 
+      - name: Generate CLI documentation
+        run: |
+          poetry run typer app.main utils docs --output cli.md --name machine-setup
+
       - name: Create artifact
         uses: actions/upload-artifact@main
         with:
           name: machine-wheel
           path: dist/*.whl
+
+      - name: Create artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: cli-docs
+          path: cli.md
 
   release:
     runs-on: ubuntu-latest
@@ -127,16 +137,21 @@ jobs:
           fetch-depth: 0
 
       - uses: actions/download-artifact@main
-        id: artifact
+        id: package
         with:
           name: machine-wheel
+
+      - uses: actions/download-artifact@main
+        id: docs
+        with:
+          name: cli-docs
 
       - name: Create release
         id: create_release
         uses: softprops/action-gh-release@master
         with:
-          files: ${{ steps.artifact.outputs.download-path }}/*.whl
-          body_path: docs/cli.md
+          files: ${{ steps.package.outputs.download-path }}/*.whl
+          body_path: ${{ steps.docs.outputs.download-path }}/cli.md
           generate_release_notes: true
           tag_name: ${{ needs.versioning.outputs.tag }}
 

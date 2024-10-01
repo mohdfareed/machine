@@ -3,7 +3,8 @@
 .python-version
 
 .coverage
-*dist/
+pytest.xml
+dist/*
 
 *.mypy_cache/
 *.ruff_cache/

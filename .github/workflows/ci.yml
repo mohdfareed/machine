@@ -57,7 +57,7 @@ jobs:
           restore-keys: pre-commit
 
       - name: Install pre-commit hooks
-        run: pre-commit install --install-hooks
+        run: poetry run pre-commit install --install-hooks
         shell: sh
 
       - name: Pre-commit hooks
@@ -87,7 +87,7 @@ jobs:
         uses: ./.github/setup
 
       - name: Ensure runnable
-        run: machine-setup --help
+        run: poetry run machine-setup --help
 
       - name: Run tests
         run: |
