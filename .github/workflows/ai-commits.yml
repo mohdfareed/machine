@@ -32,5 +32,5 @@ jobs:
       - name: Add summary
         run: |
           git pull
-          summary=$(git log --pretty=format:"%s" -n 1)
+          summary=$(git log --pretty=format:"%B" -n 1)
           echo "$summary" >> $GITHUB_STEP_SUMMARY
