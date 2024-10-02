@@ -28,11 +28,13 @@
         "mohdfareed",
         "mypy",
         "pipx",
+        "pwsh",
         "pydantic",
         "pyenv",
         "pylint",
         "pytest",
         "typer",
-        "venv"
+        "venv",
+        "zinit"
     ],
 }

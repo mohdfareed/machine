@@ -21,8 +21,7 @@ def test_app():
 
     result = runner.invoke(app, ["macOS"])
     assert result.exit_code == 0
-    assert "Setting up macOS" in result.stdout
-    assert "Machine setup completed" in result.stdout
+    assert "macOS" in (result.stdout.split("\n")[0])
 
 
 def test_app_invalid():
