@@ -28,3 +28,9 @@ jobs:
           OCO_EMOJI: false
           OCO_MODEL: gpt-4o
           OCO_LANGUAGE: en
+
+      - name: Add summary
+        run: |
+          git pull
+          summary=$(git log --pretty=format:"%s" -n 1)
+          echo "$summary" >> $GITHUB_STEP_SUMMARY
