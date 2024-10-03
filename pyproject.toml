@@ -5,10 +5,14 @@ description = "Machine setup CLI app."
 authors = ["Mohammed Fareed <mohdf.fareed@icloud.com>"]
 readme = "README.md"
 repository = "https://github.com/mohdfareed/machine"
+
 packages = [
     { include = "app", from = "." },
-    { include = "config", from = "." },
-    { include = "scripts", from = "." }
+]
+
+include = [
+    { path = "config" },
+    { path = "scripts" }
 ]
 
 [tool.poetry.scripts]
