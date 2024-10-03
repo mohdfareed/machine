@@ -72,6 +72,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chores: update docs'
           title: 'Update documentation'
-          body: "This PR updates the project's documentation."
           branch: 'update-docs'
           labels: 'CD'

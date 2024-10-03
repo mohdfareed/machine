@@ -2,6 +2,7 @@
 *.venv/
 .python-version
 
+*.log
 .coverage
 pytest.xml
 dist/*
