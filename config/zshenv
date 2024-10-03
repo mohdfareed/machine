@@ -2,19 +2,15 @@
 # =============================================================================
 
 # set the machine path
-script_dir=$(dirname "$(readlink -f "${BASH_SOURCE:-$0}")")
+local script_dir=$(dirname "$(readlink -f "${BASH_SOURCE:-$0}")")
 export MACHINE="$(dirname "$script_dir")"
-unset script_dir
 
 # private environment
-export SSH_KEYS="$MACHINE/config/keys"
 export PRIVATE_ENV="$MACHINE/config/private.sh"
-if [[ -f "$PRIVATE_ENV" ]]; then
-    source "$PRIVATE_ENV"
-fi
+if [[ -f "$PRIVATE_ENV" ]]; then source "$PRIVATE_ENV"; fi
 
 # XDG Base Directory Specification
-# Source: https://wiki.archlinux.org/title/XDG_Base_Directory =================
+# source: https://wiki.archlinux.org/title/XDG_Base_Directory =================
 
 # user directories
 export XDG_CONFIG_HOME="$HOME/.config"
@@ -26,9 +22,41 @@ export XDG_STATE_HOME="$XDG_LOCAL_HOME/state"
 # system directories
 export XDG_DATA_DIRS="/usr/local/share:/usr/share:$XDG_DATA_DIRS"
 export XDG_CONFIG_DIRS="/etc/xdg:$XDG_CONFIG_DIRS"
-export PATH="$PATH:$XDG_LOCAL_HOME/bin" # add local packages to path
+export PATH="$XDG_LOCAL_HOME/bin:$PATH" # add local packages to path
 
-# Shell Configuration
+# region: Development Environment
+# =============================================================================
+
+# dev tools
+export GOPATH="$XDG_DATA_HOME/go"              # go path
+export PATH="$GOPATH/bin:$PATH"                # add go bin to path
+export DOCKER_CONFIG="$XDG_CONFIG_HOME/docker" # docker config
+
+# dotnet environment
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export DOTNET_ROOT="/usr/local/share/dotnet"
+    export PATH="$DOTNET_ROOT:$PATH"
+elif [[ "$OSTYPE" == "linux"* ]]; then
+    export DOTNET_ROOT="/usr/share/dotnet"
+    export PATH="$DOTNET_ROOT:$PATH"
+fi
+export PATH="$HOME/.dotnet/tools:$PATH"
+
+# python environment
+export PYTHON_HISTORY="$XDG_STATE_HOME/python/history"
+export PYTHONPYCACHEPREFIX="$XDG_CACHE_HOME/python"
+export PYTHONUSERBASE="$XDG_DATA_HOME/python"
+export IPYTHONDIR="$XDG_CONFIG_HOME/ipython"
+export PYENV_ROOT="$XDG_DATA_HOME/pyenv"
+export JUPYTER_PLATFORM_DIRS="1" # REVIEW: not needed for >= v6.0.0
+[ -d "$IPYTHONDIR" ] || mkdir -p "$IPYTHONDIR"
+
+# node environment
+export NVM_DIR="$XDG_DATA_HOME/nvm"
+export PATH="$NVM_DIR:$PATH"
+#endregion
+
+# region: Shell Configuration
 # =============================================================================
 
 # shell environment
@@ -56,34 +84,4 @@ export POETRY_VIRTUALENVS_IN_PROJECT=true  # create virtual envs in project
 export LESS="-R --ignore-case" # use less with colors, ignoring case
 export SYSTEMD_LESS=$LESS      # less arguments of systemd pager
 export BAT_PAGER="less $LESS"  # use less as the pager for bat
-
-# Development Environment
-# =============================================================================
-
-# dev tools
-export GOPATH="$XDG_DATA_HOME/go"              # go path
-export PATH="$PATH:$GOPATH/bin"                # add go bin to path
-export DOCKER_CONFIG="$XDG_CONFIG_HOME/docker" # docker config
-
-# dotnet environment
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    export DOTNET_ROOT="/usr/local/share/dotnet"
-    export PATH="$PATH:$DOTNET_ROOT"
-elif [[ "$OSTYPE" == "linux"* ]]; then
-    export DOTNET_ROOT="/usr/share/dotnet"
-    export PATH="$PATH:$DOTNET_ROOT"
-fi
-export PATH="$PATH:$HOME/.dotnet/tools"
-
-# python environment
-export PYTHON_HISTORY="$XDG_STATE_HOME/python/history"
-export PYTHONPYCACHEPREFIX="$XDG_CACHE_HOME/python"
-export PYTHONUSERBASE="$XDG_DATA_HOME/python"
-export IPYTHONDIR="$XDG_CONFIG_HOME/ipython"
-export PYENV_ROOT="$XDG_DATA_HOME/pyenv"
-export JUPYTER_PLATFORM_DIRS="1" # REVIEW: not needed for >= v6.0.0
-[ -d "$IPYTHONDIR" ] || mkdir -p "$IPYTHONDIR"
-
-# node environment
-export NVM_DIR="$XDG_DATA_HOME/nvm"
-export PATH="$PATH:$NVM_DIR"
+# endregion
