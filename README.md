@@ -1,6 +1,6 @@
 # Machine Setup
 
-[![CI](https://github.com/mohdfareed/machine/actions/workflows/ci.yml/badge.svg)](https://github.com/mohdfareed/machine/actions/workflows/ci.yml) [![CD](https://github.com/mohdfareed/machine/actions/workflows/cd.yml/badge.svg)](https://github.com/mohdfareed/machine/actions/workflows/cd.yml) <a><img alt="Coverage" src="https://img.shields.io/badge/Coverage-85%25-green.svg" /></a>
+[![CI](https://github.com/mohdfareed/machine/actions/workflows/ci.yml/badge.svg)](https://github.com/mohdfareed/machine/actions/workflows/ci.yml) [![CD](https://github.com/mohdfareed/machine/actions/workflows/cd.yml/badge.svg)](https://github.com/mohdfareed/machine/actions/workflows/cd.yml) <a><img alt="Coverage" src="https://img.shields.io/badge/Coverage-100%25-brightgreen.svg" /></a>
 
 Machine setup and configuration CLI app.
 
