@@ -1,0 +1,56 @@
+[user]
+    name = Mohammed Fareed
+    email = mohdf.fareed@icloud.com
+    signingkey = ~/.ssh/github.pub
+
+; git settings
+[commit]
+    ; sign commits
+    gpgsign = true
+[gpg]
+    ; use ssh key for signing
+    format = ssh
+[init]
+    ; use main as default branch name
+    defaultBranch = main
+[fetch]
+    ; remove remote-tracking branches for deleted remote branches
+    prune = true
+[pull]
+    ; rebase local commits on top of the updated upstream branch
+    rebase = true
+[rerere]
+    ; enable reuse recorded resolution (remember conflict resolutions)
+    enabled = true
+
+; terminal settings
+[status]
+    ; git status uses --short by default
+    short = true
+[color]
+    ; colorize git output
+    ui = auto
+[help]
+    ; prompt to correct typos in git commands
+    autoCorrect = prompt
+
+; vim editor
+[core]
+    editor = nvim
+    ; convert windows line endings to unix
+    autocrlf = input
+[diff]
+    tool = nvimdiff
+[difftool "nvimdiff"]
+    cmd = nvim -d $LOCAL $REMOTE
+[merge]
+    tool = nvimdiff
+[mergetool "nvimdiff"]
+    cmd = nvim -d $LOCAL $REMOTE $MERGED
+
+; lfs (large file system)
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

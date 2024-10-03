@@ -1,1 +1,1 @@
-"""Tests for the `machine` package."""
+"""Tests for the `app` package."""

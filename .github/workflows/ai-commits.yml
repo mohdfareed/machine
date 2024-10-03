@@ -22,9 +22,15 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env:
-          OCO_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OCO_OPENAI_MAX_TOKENS: 500
           OCO_DESCRIPTION: true
           OCO_EMOJI: false
           OCO_MODEL: gpt-4o
           OCO_LANGUAGE: en
+
+      - name: Add summary
+        run: |
+          git pull
+          summary=$(git log --pretty=format:"%B" -n 1)
+          echo "$summary" >> $GITHUB_STEP_SUMMARY

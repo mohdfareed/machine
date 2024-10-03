@@ -1,0 +1,11 @@
+# macos
+*.DS_Store
+._*
+
+# windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# linux
+*~

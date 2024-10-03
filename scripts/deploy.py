@@ -43,7 +43,7 @@ def _validate_git():
     if shutil.which("git"):
         return
 
-    _log_error("git is required.")
+    _log_error("git is required")
     sys.exit(1)
 
 
@@ -65,7 +65,7 @@ def _install_poetry(path: str):
     _log_info("Installing poetry...")
     poetry_path = os.path.join(path, ".poetry")
 
-    # windows
+    # Windows
     if os.name == "nt":
         subprocess.run(
             [
@@ -80,7 +80,7 @@ def _install_poetry(path: str):
             executable="powershell",
         )
 
-    # unix
+    # Unix
     else:
         subprocess.run(
             [
@@ -95,7 +95,7 @@ def _install_poetry(path: str):
             check=True,
         )
 
-    _log_success("Poetry installed successfully.")
+    _log_success("Poetry installed successfully")
     return os.path.join(poetry_path, "bin", "poetry")
 
 
@@ -127,7 +127,7 @@ def main(path: str):
     _install_machine(path, poetry)
     _link_executable(path)
 
-    _log_success("Machine deployed successfully.")
+    _log_success("Machine deployed successfully")
 
 
 if __name__ == "__main__":
@@ -153,14 +153,14 @@ if __name__ == "__main__":
         default=DEFAULT_MACHINE_PATH,
     )
 
-    # parse arguments
+    # Parse arguments
     args = parser.parse_args()
     machine_path = args.machine_path
 
     try:
         main(machine_path)
     except KeyboardInterrupt:
-        _log_warning("Aborted.")
+        _log_warning("Aborted!")
         sys.exit(0)
     except Exception as e:  # pylint: disable=broad-except
         _log_error(f"{e}")

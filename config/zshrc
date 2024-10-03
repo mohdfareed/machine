@@ -1,0 +1,159 @@
+# Environment Setup
+# =============================================================================
+
+# set up zinit
+local repo="https://github.com/zdharma-continuum/zinit.git"
+[ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
+[ ! -d $ZINIT_HOME/.git ] && git clone $repo $ZINIT_HOME
+source $ZINIT_HOME/zinit.zsh
+
+# homebrew
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)" # activate homebrew
+    FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}" # completions
+
+    # nvm
+    if [ -s "$(brew --prefix nvm)/nvm.sh" ]; then
+        source "$(brew --prefix nvm)/nvm.sh" # load nvm
+        [ -s "$(brew --prefix nvm)/etc/bash_completion.d/nvm" ] && \
+        source "$(brew --prefix nvm)/etc/bash_completion.d/nvm" # completions
+    fi
+fi
+
+# pyenv (python version manager)
+if command -v pyenv 1>/dev/null 2>&1; then
+    eval "$(pyenv init -)"
+fi
+
+# dotnet completions, source:
+# https://learn.microsoft.com/en-us/dotnet/core/tools/enable-tab-autocomplete
+_dotnet_zsh_complete()
+{
+    if [[ ! $(command -v dotnet) ]]; then
+        return
+    fi
+
+    local completions=("$(dotnet complete "$words")")
+    if [ -z "$completions" ]
+    then
+        _arguments '*::arguments: _normal'
+        return
+    fi
+
+    # this is not variable assignment, do not modify!
+    _values = "${(ps:\n:)completions}"
+}
+# endregion
+
+# region - Shell
+# =============================================================================
+# examples: https://zdharma-continuum.github.io/zinit/wiki/GALLERY
+
+# zinit plugins
+zinit light zdharma-continuum/zinit-annex-as-monitor # remote file updater
+zinit light zdharma-continuum/zinit-annex-patch-dl # download with dl"URL file"
+
+# oh-my-posh theme
+if [[ ! $(command -v oh-my-posh) ]]; then
+    curl -s https://ohmyposh.dev/install.sh | bash -s
+fi
+local theme="$POSH_THEMES_PATH/pure.omp.json"
+eval "$(oh-my-posh init zsh --config "$theme")"
+
+# # pure theme
+# PURE_PROMPT_SYMBOL='➜' # prompt symbol
+# PURE_PROMPT_VICMD_SYMBOL='»' # vi mode symbol
+# PURE_CMD_MAX_EXEC_TIME=1 # show time if command takes more than 1 second
+# zstyle :prompt:pure:git:stash show yes # show stash count
+# zstyle :prompt:pure:git:fetch only_upstream yes # only show upstream changes
+# zinit ice pick'async.zsh' src'pure.zsh'
+# zinit light sindresorhus/pure
+
+# syntax highlighting, autosuggestions, completions
+zinit wait lucid light-mode for \
+  atinit"zicompinit; zicdreplay; compdef _dotnet_zsh_complete dotnet;" \
+      zdharma-continuum/fast-syntax-highlighting \
+  atload"_zsh_autosuggest_start" \
+      zsh-users/zsh-autosuggestions \
+  blockf atpull'zinit creinstall -q .' \
+      zsh-users/zsh-completions
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' \
+'r:|[._-]=* r:|=* l:|=*' # case-insensitive completion, ignore dots and hyphens
+
+# fzf (fuzzy finder) tab completion
+zinit ice wait lucid
+zinit light Aloxaf/fzf-tab
+# source: https://github.com/Aloxaf/fzf-tab?tab=readme-ov-file#configure
+zstyle ':completion:*:git-checkout:*' sort false
+zstyle ':completion:*:descriptions' format '[%d]'
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+zstyle ':fzf-tab:*' switch-group '<' '>'
+zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
+
+# fzf (fuzzy finder)
+zinit ice wait lucid as"program" from"gh-r" mv"fzf* -> fzf" pick"fzf" \
+      atload"eval \"\$(fzf --zsh)\"" # key bindings for fzf (ctrl-t, ctrl-r)
+zinit light junegunn/fzf
+
+# history
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/zcompcache"
+
+# disable login message
+[ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
+# endregion
+
+# region - Functions and Aliases
+# =============================================================================
+
+alias zsh::reload='exec $SHELL'
+alias zsh::source='source $ZDOTDIR/.zshrc'
+alias zsh::update='zinit update && zinit self-update'
+alias zsh::clean='zinit delete --clean'
+alias brew::update='brew update && brew upgrade'
+alias brew::cleanup='brew autoremove && brew cleanup'
+alias ssh::gen-key='ssh-keygen -t ed25519 -C'
+
+alias cat='bat --paging=never'
+alias vim='nvim'
+alias ls='eza --icons --group-directories-first --sort=Name'
+alias lst='ls -T'
+alias lls='ls -lhmU --git --no-user'
+alias llst='lls -T'
+
+# copy ssh key to machine, default user is current user
+ssh::copy() {
+    usage="usage: $0 host [user]"
+    if (($# < 1 || $# > 2)); then echo $usage && return 1; fi
+    ssh-copy-id ${2-$USER}@$1
+}
+
+# time the startup of shell
+zsh::time() {
+    usage="usage: $0 [iterations]"
+    if (($# > 1)); then echo $usage && return 1; fi
+    for i in $(seq 1 ${1-1}); do time $SHELL -i -c exit; done
+}
+
+# activate python virtual environment
+venv::activate() {
+    usage="usage: $0 [venv_dir]"
+    if (($# > 1)); then echo $usage && return 1; fi
+
+    venv=${1-.venv}
+    if [[ ! -d "$venv" ]]; then
+        echo "No virtual environment directory found"
+        return 1
+    fi
+    source "$venv/bin/activate"
+}
+
+# endregion

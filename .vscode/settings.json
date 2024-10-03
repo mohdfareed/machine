@@ -24,13 +24,18 @@
         ".github",
     ],
     "cSpell.words": [
+        "LOCALAPPDATA",
         "mohdfareed",
         "mypy",
+        "nvim",
         "pipx",
+        "pwsh",
+        "pydantic",
         "pyenv",
         "pylint",
         "pytest",
         "typer",
-        "venv"
+        "venv",
+        "zinit"
     ],
 }

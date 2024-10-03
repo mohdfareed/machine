@@ -29,7 +29,7 @@ jobs:
         run: poetry update
 
       - name: Update pre-commit hooks
-        run: pre-commit autoupdate
+        run: poetry run pre-commit autoupdate
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@main
@@ -52,7 +52,7 @@ jobs:
 
       - name: Run tests
         run: |
-            pytest --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
+            poetry run pytest --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
 
       - name: Pytest coverage report
         id: coverage
@@ -64,10 +64,6 @@ jobs:
       - name: Update README coverage badge
         run: |
           sed -i -E "s/(<a><img alt=\"Coverage\" src=\"https:\/\/img.shields.io\/badge\/Coverage-)[0-9]+%25-[a-z]+(.svg\" \/>)/\1${{ steps.coverage.outputs.coverage }}25-${{ steps.coverage.outputs.color }}\2/" README.md
-
-      - name: Generate CLI documentation
-        run: |
-          typer app.main utils docs --output docs/cli.md --name machine-setup
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@main
