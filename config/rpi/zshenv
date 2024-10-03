@@ -1,0 +1,10 @@
+# Environment: Raspberry Pi
+# =============================================================================
+
+# global environment variables
+config="$(dirname "$(realpath "$(readlink "$HOME/.zshenv")")")"
+source "$config/../../../config/zshenv" # rpi -> machines -> machine
+unset config
+
+# machine specific environment variables
+export PATH="$PATH:/snap/bin"

@@ -1,0 +1,39 @@
+# CASKS
+# =============================================================================
+
+# general
+cask "chatgpt"
+cask "iterm2"             # terminal
+cask "raycast"            # spotlight replacement
+cask "zed"                # text editor
+cask "utm"                # virtual machines
+
+# utilities
+cask "iina"           # video player
+cask "openinterminal" # open terminal in current directory
+cask "sf-symbols"     # system font symbols
+cask "the-unarchiver" # unzip files
+cask "mos"            # mouse scroll smoothing (65, 1, 2.5)
+cask "swish"          # trackpad gestures
+cask "monitorcontrol" # external monitor utility
+
+# MAC APP STORE
+# =============================================================================
+
+# apple
+mas "Keynote", id: 409183694      # presentation software
+mas "Numbers", id: 409203825      # spreadsheet software
+mas "Pages", id: 409201541        # word processor software
+mas "Xcode", id: 497799835        # xcode
+mas "Playgrounds", id: 1496833156 # swift playgrounds
+
+# productivity
+mas "Craft", id: 1487937127      # note-taking app
+mas "Copilot", id: 1447330651    # finances app
+mas "TechniCalc", id: 1504965415 # scientifc calculator
+
+# utilities
+mas "Noir", id: 1592917505      # safari dark mode
+mas "AdGuard", id: 1440147259   # safari ad-blocker
+mas "Peek", id: 1554235898      # quicklook plugin
+# mas "iPreview", id: 1519213509  # zip quicklook plugin

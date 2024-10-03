@@ -25,7 +25,7 @@ def test_app_unix(monkeypatch: MonkeyPatch):
     result = runner.invoke(app, ["macOS"])
     assert result.exit_code == 0
     assert "macOS" in (result.stdout.split("\n")[0])
-    assert str(config.ConfigFiles().machine) in (result.stdout)
+    assert str(config.MachineConfig().machine) in (result.stdout)
     assert str(config.UnixEnvironment().XDG_CONFIG_HOME) in (result.stdout)
 
 
@@ -36,7 +36,7 @@ def test_app_windows(monkeypatch: MonkeyPatch):
     result = runner.invoke(app, ["Windows"])
     assert result.exit_code == 0
     assert "Windows" in (result.stdout.split("\n")[0])
-    assert str(config.ConfigFiles().machine) in (result.stdout)
+    assert str(config.MachineConfig().machine) in (result.stdout)
     assert str(config.WindowsEnvironment().APPDATA) in (result.stdout)
 
 

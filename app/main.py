@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.progress import track
 
 from app import utils
-from app.config import ConfigFiles, UnixEnvironment, WindowsEnvironment
+from app.config import MachineConfig, UnixEnvironment, WindowsEnvironment
 
 APP_NAME = "machine-setup"
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
@@ -36,7 +36,7 @@ def setup(
         stderr.print("No machine name provided")
         raise typer.Abort()
 
-    config_files = ConfigFiles()
+    config_files = MachineConfig()
     win_env = WindowsEnvironment()
     unix_env = UnixEnvironment()
 

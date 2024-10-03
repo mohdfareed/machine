@@ -1,5 +1,4 @@
 {
-    "python.analysis.typeCheckingMode": "strict",
     "python.testing.pytestArgs": [
         "tests"
     ],
@@ -24,6 +23,8 @@
         ".github",
     ],
     "cSpell.words": [
+        "Codespace",
+        "Codespaces",
         "LOCALAPPDATA",
         "mohdfareed",
         "mypy",

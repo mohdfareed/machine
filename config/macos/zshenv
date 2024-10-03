@@ -1,0 +1,12 @@
+# Environment: macOS
+# =============================================================================
+
+# global environment variables
+config="$(dirname "$(realpath "$(readlink "$HOME/.zshenv")")")"
+source "$config/../../../config/zshenv" # macos -> machines -> machine
+unset config
+
+# machine specific environment variables
+export DEV="$HOME/Developer"
+export ICLOUD="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
+export GODOT="/Applications/Godot_mono.app/Contents/MacOS/Godot"

@@ -1,0 +1,10 @@
+# Configuration: Codespaces
+# =============================================================================
+
+# load core machine configuration
+source $MACHINE/config/zshrc
+
+# Functions and Aliases
+# =============================================================================
+
+alias setup-machine="$MACHINE/setup.sh codespaces"
