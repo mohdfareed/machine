@@ -3,8 +3,8 @@
 from pytest import MonkeyPatch
 from typer.testing import CliRunner
 
-from app import utils
-from app.main import app
+from app import config, utils
+from app.main import app, reports
 
 runner = CliRunner()
 
@@ -18,23 +18,26 @@ def test_package():
         assert ex.code == 2
 
 
-def test_app():
+def test_app_unix(monkeypatch: MonkeyPatch):
     """Test the app."""
 
+    monkeypatch.setattr(utils, "WINDOWS", False)
     result = runner.invoke(app, ["macOS"])
     assert result.exit_code == 0
     assert "macOS" in (result.stdout.split("\n")[0])
-    assert "XDG" in (result.stdout)
+    assert str(config.ConfigFiles().machine) in (result.stdout)
+    assert str(config.UnixEnvironment().XDG_CONFIG_HOME) in (result.stdout)
 
 
 def test_app_windows(monkeypatch: MonkeyPatch):
     """Test the app on Windows."""
 
-    monkeypatch.setattr(utils, "is_windows", True)
+    monkeypatch.setattr(utils, "WINDOWS", True)
     result = runner.invoke(app, ["Windows"])
     assert result.exit_code == 0
     assert "Windows" in (result.stdout.split("\n")[0])
-    assert "APPDATA" in (result.stdout)
+    assert str(config.ConfigFiles().machine) in (result.stdout)
+    assert str(config.WindowsEnvironment().APPDATA) in (result.stdout)
 
 
 def test_app_invalid():
@@ -43,3 +46,14 @@ def test_app_invalid():
     result = runner.invoke(app, [""])
     assert result.exit_code != 0
     assert "No machine name provided" in result.stdout
+
+
+def test_setup_reports():
+    """Test the setup reports."""
+
+    reports.append("Report 1")
+    reports.append("Report 2")
+    result = runner.invoke(app, ["macOS"])
+    assert result.exit_code == 0
+    assert "Report 1" in result.stdout
+    assert "Report 2" in result.stdout
