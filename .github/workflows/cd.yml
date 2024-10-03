@@ -68,7 +68,7 @@ jobs:
       - name: Create pull request
         uses: peter-evans/create-pull-request@main
         with:
-          add-paths: README.md, docs/*
+          add-paths: README.md
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chores: update docs'
           title: 'Update documentation'
