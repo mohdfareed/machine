@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "machine"
-version = "0.1.2"
+version = "0.1.3"
 description = "Machine setup CLI app."
 authors = ["Mohammed Fareed <mohdf.fareed@icloud.com>"]
 readme = "README.md"
