@@ -3,6 +3,9 @@
 .python-version
 
 *.log
+config/**/keys
+config/**/private.sh
+
 .coverage
 pytest.xml
 dist/*
