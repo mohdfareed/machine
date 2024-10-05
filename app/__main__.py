@@ -1,6 +1,5 @@
 """Main entry point for the machine package."""
 
-from . import APP_NAME
-from .main import app
+from .main import APP_NAME, app
 
 app(prog_name=APP_NAME)

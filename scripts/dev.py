@@ -10,23 +10,23 @@ import sys
 PYTHON_VERSION = "3.9.6"
 
 
-def _log_error(msg: str):
+def _log_error(msg: str) -> None:
     print(f"\033[31m{'ERROR'}\033[0m    {msg}")
 
 
-def _log_success(msg: str):
+def _log_success(msg: str) -> None:
     print(f"\033[35m{'SUCCESS'}\033[0m  {msg}")
 
 
-def _log_info(msg: str):
+def _log_info(msg: str) -> None:
     print(f"\033[34m{'INFO'}\033[0m     {msg}")
 
 
-def _log_warning(msg: str):
+def _log_warning(msg: str) -> None:
     print(f"\033[33m{'WARNING'}\033[0m  {msg}")
 
 
-def _validate_env():
+def _validate_env() -> None:
     os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     if os.path.exists("pyproject.toml"):
         return
@@ -35,7 +35,7 @@ def _validate_env():
     sys.exit(1)
 
 
-def _validate_python():
+def _validate_python() -> None:
     version_output = sys.version.split()[0]
     if version_output == PYTHON_VERSION:
         return
@@ -71,7 +71,7 @@ def _resolve_poetry() -> str:
     sys.exit(1)
 
 
-def _setup_environment(poetry: str):
+def _setup_environment(poetry: str) -> None:
     _log_info("Installing development dependencies with Poetry...")
     subprocess.run(
         [poetry, "install", "--with", "dev"],
@@ -86,7 +86,7 @@ def _setup_environment(poetry: str):
     )
 
 
-def main():
+def main() -> None:
     """Main function to set up the local development environment."""
     _log_info("Setting up development environment...")
 
