@@ -3,7 +3,7 @@
 from pytest import MonkeyPatch
 from typer.testing import CliRunner
 
-from app import config, utils
+from app import env, utils
 from app.main import app
 
 runner = CliRunner()
@@ -18,37 +18,37 @@ def test_app() -> None:
     except SystemExit as ex:
         assert ex.code == 2
 
-    result = runner.invoke(app, ["setup", "machine"])
+    result = runner.invoke(app, ["test", "-h"])
     assert result.exit_code == 0
-    assert "machine" in result.stdout.split("\n")[0]
+    assert "Usage:" in result.stdout.split("\n")[1]
 
 
 def test_app_fail() -> None:
     """Test the app executing and failing."""
 
-    result = runner.invoke(app, ["setup", " "])
-    assert result.exit_code == 1
-    assert "ERROR" in result.stdout
+    result = runner.invoke(app, ["setup"])
+    assert result.exit_code == 2
+    assert "Error" in result.stdout
 
 
 def test_app_debug() -> None:
     """Test the app."""
 
-    result = runner.invoke(app, ["-d", "setup", "testing"])
-    assert str(config.MachineConfig().machine) in result.stdout
+    result = runner.invoke(app, ["-d", "test", "setup"])
+    assert "Machine version" in result.stdout.split("\n")[0]
 
 
 def test_app_unix(monkeypatch: MonkeyPatch) -> None:
     """Test the app."""
 
     monkeypatch.setattr(utils, "WINDOWS", False)
-    result = runner.invoke(app, ["-d", "setup", "testing"])
-    assert str(config.UnixEnvironment().XDG_CONFIG_HOME) in result.stdout
+    result = runner.invoke(app, ["-d", "test", "setup"])
+    assert str(env.Unix().XDG_CONFIG_HOME) in result.stdout
 
 
 def test_app_windows(monkeypatch: MonkeyPatch) -> None:
     """Test the app on Windows."""
 
     monkeypatch.setattr(utils, "WINDOWS", True)
-    result = runner.invoke(app, ["-d", "setup", "testing"])
-    assert str(config.WindowsEnvironment().APPDATA) in result.stdout
+    result = runner.invoke(app, ["-d", "test", "setup"])
+    assert str(env.Windows().APPDATA) in result.stdout

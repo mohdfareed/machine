@@ -6,30 +6,30 @@ from time import sleep
 import typer
 from rich.progress import track
 
-from app import utils
-from app.config import MachineConfig, UnixEnvironment, WindowsEnvironment
-from app.plugins import private_files
+from app import config, env, plugins, utils
 
-app: typer.Typer = typer.Typer(name="test")
-private = partial(private_files.setup)
-app.command(name="private")(private.func)
+app = typer.Typer(name="test", help="Testing machine.")
+
+private_cmd = partial(plugins.private_files.setup)
+plugin_app = plugins.create(plugins.private_files, private_cmd)
+app.add_typer(plugin_app)
 
 
-@app.callback(invoke_without_command=True)
+@app.command()
 def setup(cx: typer.Context) -> None:
-    """Setup a machine with the provided name."""
+    """Test setting up a machine."""
     if cx.invoked_subcommand is not None:
         return
 
-    config_files = MachineConfig()
+    config_files = config.Machine()
     utils.LOGGER.debug("Config files: %s", config_files.model_dump_json(indent=2))
 
     if utils.WINDOWS:
-        win_env = WindowsEnvironment()
+        win_env = env.Windows()
         utils.LOGGER.debug("Environment: %s", win_env.model_dump_json(indent=2))
 
     if utils.LINUX or utils.MACOS:
-        unix_env = UnixEnvironment()
+        unix_env = env.Unix()
         utils.LOGGER.debug("Environment: %s", unix_env.model_dump_json(indent=2))
 
     utils.LOGGER.info("Setting up machine...")

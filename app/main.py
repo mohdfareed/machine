@@ -1,6 +1,7 @@
 """Main module for the Typer Machine Setup CLI."""
 
 import logging
+import platform
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Annotated
@@ -9,16 +10,14 @@ import typer
 from rich.console import Console
 from rich.logging import RichHandler
 
-from app import __version__
-from app.machines import testing
-from app.plugins import private_files
-from app.utils import LOGGER
+from app import __version__, machines, plugins, utils
 
+APP_NAME = "machine-setup"
 app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
 )
-app.add_typer(testing.app)
-app.add_typer(private_files.app)
+app.registered_groups += machines.app.registered_groups
+app.add_typer(plugins.app)
 
 
 @app.callback()
@@ -30,15 +29,20 @@ def main(
 ) -> None:
     """Machine setup CLI."""
 
+    # debug logger
+    debug = RichHandler(markup=True, show_path=False, show_time=False)
+    debug.setFormatter(logging.Formatter(r"[black]%(message)s[/]"))
+    debug.setLevel(logging.DEBUG)
+    debug.addFilter(lambda msg: msg.levelno < logging.INFO if debug_mode else False)
+
     # stdout logger
     stdout = RichHandler(markup=True, show_path=False, show_time=False)
-    stdout.setLevel(logging.DEBUG if debug_mode else logging.INFO)
-    stdout.addFilter(lambda record: record.levelno < logging.ERROR)
+    stdout.setLevel(logging.INFO)
+    stdout.addFilter(lambda msg: msg.levelno < logging.ERROR)
 
     # stderr logger
-    stderr = RichHandler(
-        console=Console(stderr=True), markup=True, show_path=False, show_time=False
-    )
+    console = Console(stderr=True)
+    stderr = RichHandler(console=console, markup=True, show_path=False, show_time=False)
     stderr.setLevel(logging.ERROR)
 
     # setup file logger
@@ -55,8 +59,16 @@ def main(
 
     # configure logging
     logging.captureWarnings(True)
-    LOGGER.setLevel(logging.NOTSET)
-    LOGGER.handlers = [stdout, stderr, file]
+    utils.LOGGER.setLevel(logging.NOTSET)
+    utils.LOGGER.handlers = [debug, stdout, stderr, file]
 
-    # report app version
-    LOGGER.debug("Machine app v%s", __version__)
+    # debug information
+    utils.LOGGER.debug("Machine version: %s", __version__)
+    utils.LOGGER.debug("Python version: %s", platform.python_version())
+    utils.LOGGER.debug("Platform: %s", platform.platform())
+    utils.LOGGER.debug("Log file: %s", file_path)
+    utils.LOGGER.debug("Debug mode: %s", debug_mode)
+    utils.LOGGER.debug("Windows: %s", utils.WINDOWS)
+    utils.LOGGER.debug("macOS: %s", utils.MACOS)
+    utils.LOGGER.debug("Linux: %s", utils.LINUX)
+    utils.LOGGER.debug("ARM: %s", utils.ARM)
