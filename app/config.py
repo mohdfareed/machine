@@ -1,95 +1,80 @@
 """Machine configuration models."""
 
-from abc import ABC
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Environment(BaseSettings, ABC):
-    """Environment variables."""
-
-    model_config = SettingsConfigDict()
-
-
-class UnixEnvironment(Environment):
-    """Unix environment variables."""
-
-    XDG_CONFIG_HOME: Path = Path.home() / ".config"
-    XDG_DATA_HOME: Path = Path.home() / ".local/share"
-    COMPLETIONS_PATH: Optional[Path] = None
-
-
-class WindowsEnvironment(Environment):
-    """Windows environment variables."""
-
-    APPDATA: Path = Path.home() / "AppData" / "Roaming"
-    LOCALAPPDATA: Path = Path.home() / "AppData" / "Local"
-
-
-class MachineConfig(BaseModel):
-    """Core machine configuration files."""
+class Machine(BaseModel):
+    """config machine configuration files."""
 
     machine: Path = Path(__file__).parent.parent
     config: Path = machine / "config"
 
-    config_path: Path = config / "core"
-    vim: Path = config_path / "vim"
-    vscode: Path = config_path / "vscode"
 
-    gitconfig: Path = config_path / ".gitconfig"
-    gitignore: Path = config_path / ".gitignore"
+class Default(Machine):
+    """Default machine configuration files."""
 
-    ps_profile: Path = config_path / "ps_profile.ps1"
-    zshenv: Path = config_path / "zshenv"
-    zshrc: Path = config_path / "zshrc"
+    config: Path = Machine().config / "core"
+    vim: Path = config / "vim"
+    vscode: Path = config / "vscode"
 
-    tmux: Path = config_path / "tmux.conf"
-    zed_settings: Path = config_path / "zed_settings.jsonc"
+    gitconfig: Path = config / ".gitconfig"
+    gitignore: Path = config / ".gitignore"
 
-    private_env: Path = config_path / "private.sh"
-    ssh_keys: Path = config_path / "keys"
+    ps_profile: Path = config / "ps_profile.ps1"
+    zshenv: Path = config / "zshenv"
+    zshrc: Path = config / "zshrc"
+
+    tmux: Path = config / "tmux.conf"
+    zed_settings: Path = config / "zed_settings.jsonc"
 
 
-class CodespacesConfig(MachineConfig):
+class Private(Machine):
+    """Private configuration files."""
+
+    config: Path = Machine().config / "private"
+    private_env: Path = config / "private.sh"
+    ssh_keys: Path = config / "keys"
+
+
+class Codespaces(Machine):
     """Github codespaces configuration files."""
 
-    config_path: Path = MachineConfig().config / "codespaces"
-    zshrc: Path = config_path / "zshrc"
+    config: Path = Machine().config / "codespaces"
+    zshrc: Path = config / "zshrc"
 
 
-class GleasonConfig(MachineConfig):
+class Gleason(Machine):
     """Gleason configuration files."""
 
-    config_path: Path = MachineConfig().config / "gleason"
-    gitconfig: Path = config_path / ".gitconfig"
+    config: Path = Machine().config / "gleason"
+    gitconfig: Path = config / ".gitconfig"
 
 
-class MacOSConfig(MachineConfig):
+class MacOS(Machine):
     """macOS configuration files."""
 
-    config_path: Path = MachineConfig().config / "macos"
-    brewfile: Path = config_path / "Brewfile"
-    system_preferences: Path = config_path / "preferences.json"
-    ssh_config: Path = config_path / "ssh.config"
-    zshenv: Path = config_path / "zshenv"
-    zshrc: Path = config_path / "zshrc"
+    config: Path = Machine().config / "macos"
+    brewfile: Path = config / "Brewfile"
+    system_preferences: Path = config / "preferences.json"
+    ssh_config: Path = config / "ssh.config"
+    zshenv: Path = config / "zshenv"
+    zshrc: Path = config / "zshrc"
 
 
-class RPiConfig(MachineConfig):
+class RPi(Machine):
     """Raspberry Pi configuration files."""
 
-    config_path: Path = MachineConfig().config / "rpi"
-    ssh_config: Path = config_path / "ssh.config"
-    zshenv: Path = config_path / "zshenv"
-    zshrc: Path = config_path / "zshrc"
+    config: Path = Machine().config / "rpi"
+    ssh_config: Path = config / "ssh.config"
+    zshenv: Path = config / "zshenv"
+    zshrc: Path = config / "zshrc"
 
 
-class WindowsConfig(MachineConfig):
+class Windows(Machine):
     """Windows configuration files."""
 
-    config_path: Path = MachineConfig().config / "windows"
-    ps_profile: Path = config_path / "ps_profile.ps1"
-    ssh_config: Path = config_path / "ssh.config"
+    config: Path = Machine().config / "windows"
+    ps_profile: Path = config / "ps_profile.ps1"
+    ssh_config: Path = config / "ssh.config"
