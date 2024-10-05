@@ -1,5 +1,6 @@
 """Machine configuration models."""
 
+from abc import ABC
 from pathlib import Path
 from typing import Optional
 
@@ -7,20 +8,22 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class UnixEnvironment(BaseSettings):
-    """Unix environment variables."""
+class Environment(BaseSettings, ABC):
+    """Environment variables."""
 
     model_config = SettingsConfigDict()
+
+
+class UnixEnvironment(Environment):
+    """Unix environment variables."""
 
     XDG_CONFIG_HOME: Path = Path.home() / ".config"
     XDG_DATA_HOME: Path = Path.home() / ".local/share"
     COMPLETIONS_PATH: Optional[Path] = None
 
 
-class WindowsEnvironment(BaseSettings):
+class WindowsEnvironment(Environment):
     """Windows environment variables."""
-
-    model_config = SettingsConfigDict()
 
     APPDATA: Path = Path.home() / "AppData" / "Roaming"
     LOCALAPPDATA: Path = Path.home() / "AppData" / "Local"
@@ -28,8 +31,6 @@ class WindowsEnvironment(BaseSettings):
 
 class MachineConfig(BaseModel):
     """Core machine configuration files."""
-
-    model_config = SettingsConfigDict()
 
     machine: Path = Path(__file__).parent.parent
     config: Path = machine / "config"
@@ -48,7 +49,7 @@ class MachineConfig(BaseModel):
     tmux: Path = config_path / "tmux.conf"
     zed_settings: Path = config_path / "zed_settings.jsonc"
 
-    private_env: Path = config_path / "private.env"
+    private_env: Path = config_path / "private.sh"
     ssh_keys: Path = config_path / "keys"
 
 

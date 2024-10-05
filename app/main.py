@@ -3,21 +3,22 @@
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from time import sleep
 from typing import Annotated
 
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
-from rich.progress import track
 
-from app import __version__, utils
-from app.config import MachineConfig, UnixEnvironment, WindowsEnvironment
+from app import __version__
+from app.machines import testing
+from app.plugins import private_files
+from app.utils import LOGGER
 
-APP_NAME = "machine-setup"
-LOGGER = logging.getLogger(APP_NAME)
-
-app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
+app = typer.Typer(
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+app.add_typer(testing.app)
+app.add_typer(private_files.app)
 
 
 @app.callback()
@@ -54,46 +55,8 @@ def main(
 
     # configure logging
     logging.captureWarnings(True)
-    logger = logging.getLogger()
-    logger.setLevel(logging.NOTSET)
-    logger.handlers = [stdout, stderr, file]
+    LOGGER.setLevel(logging.NOTSET)
+    LOGGER.handlers = [stdout, stderr, file]
 
     # report app version
     LOGGER.debug("Machine app v%s", __version__)
-
-
-@app.command()
-def setup(
-    machine_name: Annotated[
-        str,
-        typer.Argument(
-            envvar="MACHINE_NAME",
-            help="The name of the machine to setup",
-            default_factory=lambda: typer.prompt("Machine name"),
-        ),
-    ]
-) -> None:
-    """Setup a machine with the provided name."""
-
-    if machine_name.strip() == "":
-        LOGGER.error("No machine name provided")
-        raise typer.Abort()
-
-    config_files = MachineConfig()
-    win_env = WindowsEnvironment()
-    unix_env = UnixEnvironment()
-
-    LOGGER.info("Machine: %s", machine_name)
-    LOGGER.debug("Config files: %s", config_files.model_dump_json(indent=2))
-
-    if utils.WINDOWS:
-        LOGGER.debug("Environment: %s", win_env.model_dump_json(indent=2))
-    else:
-        LOGGER.debug("Environment: %s", unix_env.model_dump_json(indent=2))
-
-    LOGGER.info("Setting up machine...")
-    for _ in track(range(15), description="Processing...", transient=True):
-        sleep(0.1)
-
-    LOGGER.info("Machine setup completed successfully")
-    raise typer.Exit()
