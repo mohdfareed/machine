@@ -26,7 +26,7 @@ def test_app() -> None:
 def test_app_fail() -> None:
     """Test the app executing and failing."""
 
-    result = runner.invoke(app, ["setup"])
+    result = runner.invoke(app, ["test", "fail"])
     assert result.exit_code == 2
     assert "Error" in result.stdout
 

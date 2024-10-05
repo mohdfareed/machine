@@ -8,6 +8,8 @@ from typing import Callable, TypeVar
 
 import typer
 
+T = TypeVar("T")
+
 LOGGER = logging.getLogger("")
 """App logger."""
 
@@ -17,12 +19,15 @@ MACOS = sys.platform == "darwin"
 """Whether the current platform is macOS."""
 LINUX = "linux" in sys.platform[:5]
 """Whether the current platform is Linux."""
+UNIX = MACOS or LINUX
+"""Whether the current platform is Unix-based."""
 ARM = platform.machine().startswith(("arm", "aarch64"))
 """Whether the current platform is ARM-based."""
 
-T = TypeVar("T")
-
 IgnoredArgument = typer.Option(parser=lambda _: _, hidden=True, expose_value=False)
+"""An ignored CLI command argument."""
+post_installation: list[Callable[[], None]] = []
+"""Post installation tasks."""
 
 
 def link(source: Path, target: Path) -> None:

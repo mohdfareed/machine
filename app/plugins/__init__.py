@@ -2,8 +2,7 @@
 
 import inspect
 from functools import partial
-from types import ModuleType
-from typing import Any
+from typing import Any, Protocol
 
 import typer
 
@@ -14,23 +13,28 @@ app.add_typer(git.app)
 app.add_typer(private_files.app)
 
 
-def create(plugin: ModuleType, *partials: partial[Any]) -> typer.Typer:
+class PluginProtocol(Protocol):
+    """Plugin protocol required to register it to a machine."""
+
+    app: typer.Typer
+
+    def setup(self, *args: Any, **kwargs: Any) -> None:
+        """Setup the plugin."""
+
+
+def create(plugin: PluginProtocol, *partials: partial[Any]) -> typer.Typer:
     """Create a plugin from a module."""
 
-    # Check if the module has an app
-    module_app = getattr(plugin, "app", None)
-    if not isinstance(module_app, typer.Typer):
-        raise ValueError("Plugin does not have an app")
-
-    # Create a new Typer app for the plugin
-    plugin_app = typer.Typer(callback=module_app.callback)
-    plugin_app.info = module_app.info
-    plugin_app.registered_groups = module_app.registered_groups
+    # Clone the plugin app and info
+    plugin_app = typer.Typer()
+    plugin_app.info = plugin.app.info
+    plugin_app.registered_callback = plugin.app.registered_callback
+    plugin_app.registered_commands = plugin.app.registered_commands
+    plugin_app.registered_groups = plugin.app.registered_groups
 
     # Register partial functions as commands to the plugin app
     for partial_func in partials:
         plugin_app.command()(_apply_partial(partial_func))
-
     return plugin_app
 
 

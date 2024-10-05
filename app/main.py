@@ -1,5 +1,6 @@
 """Main module for the Typer Machine Setup CLI."""
 
+import atexit
 import logging
 import platform
 from logging.handlers import RotatingFileHandler
@@ -28,6 +29,32 @@ def main(
     ] = False,
 ) -> None:
     """Machine setup CLI."""
+
+    log_file = setup_logging(debug_mode)
+    atexit.register(post_installation)
+
+    # debug information
+    utils.LOGGER.debug("Machine version: %s", __version__)
+    utils.LOGGER.debug("Python version: %s", platform.python_version())
+    utils.LOGGER.debug("Platform: %s", platform.platform())
+    utils.LOGGER.debug("Log file: %s", log_file)
+    utils.LOGGER.debug("Debug mode: %s", debug_mode)
+    utils.LOGGER.debug("Windows: %s", utils.WINDOWS)
+    utils.LOGGER.debug("macOS: %s", utils.MACOS)
+    utils.LOGGER.debug("Linux: %s", utils.LINUX)
+    utils.LOGGER.debug("ARM: %s", utils.ARM)
+
+
+def post_installation() -> None:
+    """Run post installation tasks."""
+
+    utils.LOGGER.info("[bold green]Running post installation tasks...[/]")
+    for post_installation_task in utils.post_installation:
+        post_installation_task()
+
+
+def setup_logging(debug_mode: bool) -> Path:
+    """Setup file and console logging. Return the log file path."""
 
     # debug logger
     debug = RichHandler(markup=True, show_path=False, show_time=False)
@@ -61,14 +88,4 @@ def main(
     logging.captureWarnings(True)
     utils.LOGGER.setLevel(logging.NOTSET)
     utils.LOGGER.handlers = [debug, stdout, stderr, file]
-
-    # debug information
-    utils.LOGGER.debug("Machine version: %s", __version__)
-    utils.LOGGER.debug("Python version: %s", platform.python_version())
-    utils.LOGGER.debug("Platform: %s", platform.platform())
-    utils.LOGGER.debug("Log file: %s", file_path)
-    utils.LOGGER.debug("Debug mode: %s", debug_mode)
-    utils.LOGGER.debug("Windows: %s", utils.WINDOWS)
-    utils.LOGGER.debug("macOS: %s", utils.MACOS)
-    utils.LOGGER.debug("Linux: %s", utils.LINUX)
-    utils.LOGGER.debug("ARM: %s", utils.ARM)
+    return file_path

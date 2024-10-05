@@ -26,22 +26,31 @@ def setup(
         utils.IgnoredArgument,
     ] = config.Private(),
 ) -> None:
-    """Setup private files on a machine."""
+    """Setup private files on a machine.
+
+    The files are linked from the private directory to the private machine
+    configuration. The specific configuration can be overridden by a machine's
+    setup application.
+    """
 
     utils.LOGGER.info("Setting up private files...")
     machine_fields = config.Machine().model_fields.keys()
     for field in private_config.model_fields:
-        utils.LOGGER.debug("Skipping: %s", field)
         if field in [*machine_fields, *IGNORED_FIELDS]:
+            utils.LOGGER.debug("Skipping: %s", field)
             continue
         if not isinstance(path := getattr(private_config, field), Path):
+            utils.LOGGER.debug("Skipping: %s", field)
             continue
 
         private_file = private_dir / path.name
         if not private_file.exists():
-            utils.LOGGER.warning("Private file does not exist: %s", private_file)
+            utils.LOGGER.warning(
+                "Field '%s' does not exist at: %s",
+                field,
+                private_file,
+            )
             continue
 
         utils.link(private_file, path)
         utils.LOGGER.debug("Linked: %s -> %s", private_file, path)
-    utils.LOGGER.debug("Private files setup complete")
