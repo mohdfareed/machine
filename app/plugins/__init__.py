@@ -18,9 +18,6 @@ class PluginProtocol(Protocol):
 
     app: typer.Typer
 
-    def setup(self, *args: Any, **kwargs: Any) -> None:
-        """Setup the plugin."""
-
 
 def create(plugin: PluginProtocol, *partials: partial[Any]) -> typer.Typer:
     """Create a plugin from a module."""
@@ -48,6 +45,7 @@ def _apply_partial(partial_func: partial[Any]) -> Any:
     # Create the new defaults for the function
     new_defaults: list[Any] = []
     for name, param in signature.parameters.items():
+
         # Positional -> Keyword -> Default -> None
         new_defaults.append(next(args, kwargs.pop(name, param.default)))
         if new_defaults[-1] == inspect.Parameter.empty:

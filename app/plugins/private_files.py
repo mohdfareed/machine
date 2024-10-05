@@ -18,13 +18,13 @@ def setup(
         Path,
         typer.Argument(
             help="The private files directory.",
-            callback=utils.validate(utils.path_exists, utils.is_dir),
+            callback=utils.validate(utils.is_dir),
         ),
     ],
     private_config: Annotated[
-        config.Private,
+        type[config.Private],
         utils.IgnoredArgument,
-    ] = config.Private(),
+    ] = config.Private,
 ) -> None:
     """Setup private files on a machine.
 
@@ -36,6 +36,7 @@ def setup(
     utils.LOGGER.info("Setting up private files...")
     machine_fields = config.Machine().model_fields.keys()
     for field in private_config.model_fields:
+
         if field in [*machine_fields, *IGNORED_FIELDS]:
             utils.LOGGER.debug("Skipping: %s", field)
             continue

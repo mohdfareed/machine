@@ -10,10 +10,10 @@ import typer
 from rich.console import Console
 from rich.logging import RichHandler
 
-from app import __version__, machines, plugins, utils
+from app import APP_NAME, __version__, machines, plugins, utils
 
-APP_NAME = "machine-setup"
 app = typer.Typer(
+    name=APP_NAME,
     context_settings={"help_option_names": ["-h", "--help"]},
     result_callback=utils.post_installation,
 )

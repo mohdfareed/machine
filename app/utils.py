@@ -52,42 +52,30 @@ def link(source: Path, target: Path) -> None:
 def validate(*validators: Callable[[T], T]) -> Callable[[T], T]:
     """Validate data against a list of validators."""
 
-    def is_valid(data: T) -> T:
-        for validator in validators:
-            data = validator(data)
+    def validator(data: T) -> T:
+        for _validator in validators:
+            data = _validator(data)
         return data
 
-    return is_valid
+    return validator
 
 
-def path_exists(path: Path) -> Path:
-    """Validate that a path is valid."""
-
+def exists(path: Path) -> Path:
+    """Validate that a path exists."""
     if path.exists():
         return path
     raise typer.BadParameter(f"Path does not exist: {path}")
 
 
 def is_dir(path: Path) -> Path:
-    """Validate that a path is valid."""
-
-    if not path.exists():
-        path.mkdir(parents=True, exist_ok=True)
-        return path
-
-    if path.is_dir():
+    """Validate that a path exists and is a directory."""
+    if path.exists() and path.is_dir():
         return path
     raise typer.BadParameter(f"Path is not a directory: {path}")
 
 
 def is_file(path: Path) -> Path:
-    """Validate that a path is valid."""
-
-    if not path.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.touch()
-        return path
-
-    if path.is_file():
+    """Validate that a path exists and is a file."""
+    if path.exists() and path.is_file():
         return path
     raise typer.BadParameter(f"Path is not a file: {path}")
