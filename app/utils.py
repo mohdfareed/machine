@@ -4,7 +4,7 @@ import logging
 import platform
 import sys
 from pathlib import Path
-from typing import Callable, TypeVar
+from typing import Any, Callable, TypeVar
 
 import typer
 
@@ -26,8 +26,19 @@ ARM = platform.machine().startswith(("arm", "aarch64"))
 
 IgnoredArgument = typer.Option(parser=lambda _: _, hidden=True, expose_value=False)
 """An ignored CLI command argument."""
-post_installation: list[Callable[[], None]] = []
+post_install_tasks: list[Callable[[], None]] = []
 """Post installation tasks."""
+
+
+def post_installation(*_: Any, **__: Any) -> None:
+    """Run post installation tasks."""
+
+    LOGGER.info("[bold green]Running post installation tasks...[/]")
+    LOGGER.debug("Results: %s", _)
+    LOGGER.debug("Options: %s", __)
+
+    for post_install_task in post_install_tasks:
+        post_install_task()
 
 
 def link(source: Path, target: Path) -> None:
