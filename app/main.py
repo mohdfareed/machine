@@ -49,6 +49,7 @@ def main(
     # setup file logger
     file_path = Path(__file__).parent.parent / "app.log"
     log_file = RotatingFileHandler(file_path, maxBytes=2**20, backupCount=5)
+    log_file.addFilter(utils.StripMarkupFilter())
     log_file.setLevel(logging.NOTSET)
     log_file.setFormatter(
         logging.Formatter(

@@ -7,11 +7,11 @@ from pathlib import Path
 from typing import Any, Callable, TypeVar
 
 import typer
-
-T = TypeVar("T")
+from rich.text import Text
 
 LOGGER = logging.getLogger("")
 """App logger."""
+T = TypeVar("T")
 
 WINDOWS = "win" in sys.platform[:3]
 """Whether the current platform is Windows."""
@@ -28,6 +28,17 @@ IgnoredArgument = typer.Option(parser=lambda _: _, hidden=True, expose_value=Fal
 """An ignored CLI command argument."""
 post_install_tasks: list[Callable[[], None]] = []
 """Post installation tasks."""
+
+
+class StripMarkupFilter(logging.Filter):
+    """Strip Rich markup from log records."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Filter the log record message."""
+        if hasattr(record, "msg") and isinstance(record.msg, str):
+            # Strip Rich markup from the message
+            record.msg = Text.from_markup(record.msg).plain
+        return True  # Log the message after filtering
 
 
 def post_installation(*_: Any, **__: Any) -> None:
@@ -60,7 +71,7 @@ def validate(*validators: Callable[[T], T]) -> Callable[[T], T]:
     return validator
 
 
-def exists(path: Path) -> Path:
+def is_path(path: Path) -> Path:
     """Validate that a path exists."""
     if path.exists():
         return path
