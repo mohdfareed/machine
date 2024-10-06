@@ -23,23 +23,23 @@ else:
     )
 
 
-def _log_error(msg: str):
+def _log_error(msg: str) -> None:
     print(f"\033[31m{'ERROR'}\033[0m    {msg}")
 
 
-def _log_success(msg: str):
+def _log_success(msg: str) -> None:
     print(f"\033[35m{'SUCCESS'}\033[0m  {msg}")
 
 
-def _log_warning(msg: str):
+def _log_warning(msg: str) -> None:
     print(f"\033[33m{'WARNING'}\033[0m  {msg}")
 
 
-def _log_info(msg: str):
+def _log_info(msg: str) -> None:
     print(f"\033[34m{'INFO'}\033[0m     {msg}")
 
 
-def _validate_git():
+def _validate_git() -> None:
     if shutil.which("git"):
         return
 
@@ -47,7 +47,7 @@ def _validate_git():
     sys.exit(1)
 
 
-def _clone_app(path: str):
+def _clone_app(path: str) -> None:
     if os.path.exists(path):
         return
 
@@ -58,7 +58,7 @@ def _clone_app(path: str):
     )
 
 
-def _install_poetry(path: str):
+def _install_poetry(path: str) -> str:
     if poetry := shutil.which("poetry"):
         return poetry
 
@@ -99,7 +99,7 @@ def _install_poetry(path: str):
     return os.path.join(poetry_path, "bin", "poetry")
 
 
-def _install_machine(path: str, poetry: str):
+def _install_machine(path: str, poetry: str) -> None:
     _log_info("Installing machine...")
     subprocess.run(
         [poetry, "install"],
@@ -109,7 +109,7 @@ def _install_machine(path: str, poetry: str):
     )
 
 
-def _link_executable(path: str):
+def _link_executable(path: str) -> None:
     machine_setup = os.path.join(path, ".venv", "bin", EXECUTABLE)
     if os.path.islink(EXECUTABLE_PATH) or os.path.exists(EXECUTABLE_PATH):
         os.remove(EXECUTABLE_PATH)
@@ -117,7 +117,7 @@ def _link_executable(path: str):
     os.symlink(machine_setup, EXECUTABLE_PATH)
 
 
-def main(path: str):
+def main(path: str) -> None:
     """Deploy a new machine."""
     _log_info(f"Deploying machine to: {path}")
 
