@@ -8,10 +8,11 @@
             "name": "Testing Machine",
             "type": "debugpy",
             "request": "launch",
-            "module": "app.main",
+            "module": "app",
             "args": [
-                "machine",
-                "test"
+                "--debug",
+                "test",
+                "setup"
             ],
         }
     ]

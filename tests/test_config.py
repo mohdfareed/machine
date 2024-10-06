@@ -17,7 +17,7 @@ from app.config import (
 def test_machine_config() -> None:
     """Test MachineConfig configuration files."""
 
-    machine_config = Machine
+    machine_config = Machine()
     machine = Path(__file__).parent.parent
     config = machine / "config"
 
@@ -28,7 +28,7 @@ def test_machine_config() -> None:
 def test_private_config() -> None:
     """Test PrivateConfig configuration files."""
 
-    private_config = Private
+    private_config = Private()
     machine = Path(__file__).parent.parent
     config = machine / "config" / "private"
 
@@ -40,7 +40,7 @@ def test_private_config() -> None:
 def test_config_files() -> None:
     """Test base MachineConfig configuration files."""
 
-    config_files = Default
+    config_files = Default()
     machine = Path(__file__).parent.parent
     config = machine / "config" / "core"
 
@@ -62,7 +62,7 @@ def test_config_files() -> None:
 def test_codespaces_config_files() -> None:
     """Test CodespacesConfig configuration files."""
 
-    codespaces_config = Codespaces
+    codespaces_config = Codespaces()
     machine = Path(__file__).parent.parent
     config = machine / "config" / "codespaces"
 
@@ -73,7 +73,7 @@ def test_codespaces_config_files() -> None:
 def test_gleason_config_files() -> None:
     """Test GleasonConfig configuration files."""
 
-    gleason_config = Gleason
+    gleason_config = Gleason()
     machine = Path(__file__).parent.parent
     config = machine / "config" / "gleason"
 
@@ -84,7 +84,7 @@ def test_gleason_config_files() -> None:
 def test_macos_config_files() -> None:
     """Test macOSConfig configuration files."""
 
-    macos_config = MacOS
+    macos_config = MacOS()
     machine = Path(__file__).parent.parent
     config = machine / "config" / "macos"
 
@@ -99,7 +99,7 @@ def test_macos_config_files() -> None:
 def test_rpi_config_files() -> None:
     """Test RPiConfig configuration files."""
 
-    rpi_config = RPi
+    rpi_config = RPi()
     machine = Path(__file__).parent.parent
     config = machine / "config" / "rpi"
 
@@ -112,7 +112,7 @@ def test_rpi_config_files() -> None:
 def test_windows_config_files() -> None:
     """Test WindowsConfig configuration files."""
 
-    windows_config = Windows
+    windows_config = Windows()
     machine = Path(__file__).parent.parent
     config = machine / "config" / "windows"
 

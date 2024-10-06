@@ -4,6 +4,7 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
+    "debugpy.debugJustMyCode": false,
     "bandit.importStrategy": "fromEnvironment",
     "bandit.path": [
         "~/.venv/python",
@@ -26,6 +27,7 @@
         "aarch",
         "Codespace",
         "Codespaces",
+        "dotenv",
         "levelname",
         "levelno",
         "LOCALAPPDATA",

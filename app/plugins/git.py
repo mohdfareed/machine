@@ -18,18 +18,18 @@ def setup(
             help="Path to the .gitconfig file.",
             callback=utils.validate(utils.is_file),
         ),
-    ] = config.Default.gitconfig,
+    ] = config.Default().gitconfig,
     gitignore: Annotated[
         Path,
         typer.Argument(
             help="Path to the .gitignore file.",
             callback=utils.validate(utils.is_file),
         ),
-    ] = config.Default.gitignore,
+    ] = config.Default().gitignore,
 ) -> None:
     """Configure git."""
 
-    environment = env.Environment.os_env()
+    environment = env.Environment.os_env().load()
     utils.LOGGER.info("Setting up git configuration...")
     utils.LOGGER.debug("global_gitconfig: %s", environment.GITCONFIG)
     utils.LOGGER.debug("global_gitignore: %s", environment.GITIGNORE)
