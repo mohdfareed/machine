@@ -46,6 +46,10 @@ class StripMarkupFilter(logging.Filter):
         return True  # Log the message after filtering
 
 
+class SkipValidation(Exception):
+    """Skip validation exception."""
+
+
 def post_installation(*_: Any, **__: Any) -> None:
     """Run post installation tasks."""
 
@@ -88,10 +92,21 @@ def validate(*validators: Callable[[T], T]) -> Callable[[T], T]:
 
     def validator(data: T) -> T:
         for _validator in validators:
-            data = _validator(data)
+            try:
+                data = _validator(data)
+            except SkipValidation as exc:
+                LOGGER.debug("Skipping validation: %s", exc)
+                break
         return data
 
     return validator
+
+
+def is_optional(value: T) -> T:
+    """Validate that a value is optional."""
+    if value is None:
+        raise SkipValidation("Value is optional")
+    return value
 
 
 def is_path(path: Path) -> Path:

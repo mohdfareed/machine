@@ -48,7 +48,7 @@ def main(
 
     # setup file logger
     file_path = Path(__file__).parent.parent / "app.log"
-    log_file = RotatingFileHandler(file_path, maxBytes=2**20, backupCount=5)
+    log_file = RotatingFileHandler(file_path, maxBytes=2**20, backupCount=3)
     log_file.addFilter(utils.StripMarkupFilter())
     log_file.setLevel(logging.NOTSET)
     log_file.setFormatter(
@@ -68,7 +68,7 @@ def main(
     utils.LOGGER.debug("Machine version: %s", __version__)
     utils.LOGGER.debug("Python version: %s", platform.python_version())
     utils.LOGGER.debug("Platform: %s", platform.platform())
-    utils.LOGGER.debug("Log file: %s", log_file)
+    utils.LOGGER.debug("Log file: %s", file_path)
     utils.LOGGER.debug("Debug mode: %s", debug_mode)
     utils.LOGGER.debug("Windows: %s", utils.WINDOWS)
     utils.LOGGER.debug("macOS: %s", utils.MACOS)

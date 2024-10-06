@@ -10,7 +10,7 @@ Remove-Variable -Name "symlinkPath"
 $config = Split-Path -Parent -Path (Split-Path -Parent -Path $realScriptPath)
 $env:MACHINE = Split-Path -Parent -Path $config
 [System.Environment]::SetEnvironmentVariable("MACHINE", $env:MACHINE, `
-        [System.EnvironmentVariableTarget]::User)
+        [System.EnvironmentVariableTarget]::Process)
 Remove-Variable -Name "realScriptPath"
 Remove-Variable -Name "config"
 
