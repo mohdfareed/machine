@@ -1,6 +1,8 @@
 """Testing machine."""
 
 from functools import partial
+from pathlib import Path
+from typing import Annotated
 
 import typer
 
@@ -18,16 +20,25 @@ app.add_typer(plugin_app)
 
 
 @app.command()
-def setup() -> None:
+def setup(
+    private_dir: Annotated[
+        Path,
+        typer.Argument(
+            help="The private files directory.",
+            callback=utils.validate(utils.is_dir),
+        ),
+    ],
+) -> None:
     """Test setting up a machine."""
 
     config_files = config.Machine()
     utils.LOGGER.debug("Config files: %s", config_files.model_dump_json(indent=2))
+
     environment = env.Environment.os_env()
     utils.LOGGER.debug("Environment: %s", environment.model_dump_json(indent=2))
     utils.LOGGER.info("Setting up machine...")
 
-    private_cmd(typer.prompt("Private directory"))
+    private_cmd(private_dir)
     git_cmd()
 
     utils.LOGGER.info("Machine setup completed successfully")

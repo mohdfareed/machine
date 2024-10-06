@@ -1,13 +1,18 @@
 """App utilities."""
 
+import atexit
 import logging
 import platform
+import shutil
 import sys
+import uuid
 from pathlib import Path
 from typing import Any, Callable, TypeVar
 
 import typer
 from rich.text import Text
+
+from app import APP_NAME
 
 LOGGER = logging.getLogger("")
 """App logger."""
@@ -58,6 +63,24 @@ def link(source: Path, target: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.unlink(missing_ok=True)
     target.symlink_to(source, target_is_directory=source.is_dir())
+
+
+def create_temp_dir(name: str = "") -> Path:
+    """Create a temporary directory."""
+
+    temp_file = Path(typer.get_app_dir(APP_NAME)) / f"{name}.{uuid.uuid4()}"
+    temp_file.mkdir(parents=True, exist_ok=True)
+    atexit.register(lambda: shutil.rmtree(temp_file, ignore_errors=True))
+    return temp_file
+
+
+def create_temp_file(name: str = "") -> Path:
+    """Create a temporary file."""
+
+    temp_file = Path(typer.get_app_dir(APP_NAME)) / f"{name}-{uuid.uuid4()}"
+    temp_file.parent.mkdir(parents=True, exist_ok=True)
+    atexit.register(lambda: temp_file.unlink(missing_ok=True))
+    return temp_file
 
 
 def validate(*validators: Callable[[T], T]) -> Callable[[T], T]:

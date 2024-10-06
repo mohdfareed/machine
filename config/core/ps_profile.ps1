@@ -1,5 +1,19 @@
 #!/usr/bin/env pwsh
 
+# resolve script path
+$symlinkPath = $MyInvocation.MyCommand.Definition
+$realScriptPath = (Get-Item -LiteralPath $symlinkPath).Target
+if (-not $realScriptPath) { $realScriptPath = $symlinkPath }
+Remove-Variable -Name "symlinkPath"
+
+# machine path
+$config = Split-Path -Parent -Path (Split-Path -Parent -Path $realScriptPath)
+$env:MACHINE = Split-Path -Parent -Path $config
+[System.Environment]::SetEnvironmentVariable("MACHINE", $env:MACHINE, `
+        [System.EnvironmentVariableTarget]::User)
+Remove-Variable -Name "realScriptPath"
+Remove-Variable -Name "config"
+
 # set execution policy
 if ($IsWindows) {
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
