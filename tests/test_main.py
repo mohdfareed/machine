@@ -4,7 +4,6 @@ from pytest import MonkeyPatch
 from typer.testing import CliRunner
 
 from app import env, utils
-from app.config import Private
 from app.main import app
 
 runner = CliRunner()
