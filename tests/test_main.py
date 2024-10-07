@@ -41,16 +41,14 @@ def test_app_debug() -> None:
 def test_app_unix(monkeypatch: MonkeyPatch) -> None:
     """Test the app."""
 
-    temp_dir = utils.create_temp_dir("test")
     monkeypatch.setattr(utils, "WINDOWS", False)
-    result = runner.invoke(app, ["-d", "test", "setup", str(temp_dir)])
+    result = runner.invoke(app, ["-d", "test", "setup"])
     assert str(env.Unix().XDG_CONFIG_HOME) in result.stdout
 
 
 def test_app_windows(monkeypatch: MonkeyPatch) -> None:
     """Test the app on Windows."""
 
-    temp_dir = utils.create_temp_dir("test")
     monkeypatch.setattr(utils, "WINDOWS", True)
-    result = runner.invoke(app, ["-d", "test", "setup", str(temp_dir)])
+    result = runner.invoke(app, ["-d", "test", "setup"])
     assert str(env.Windows().APPDATA) in result.stdout

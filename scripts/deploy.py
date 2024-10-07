@@ -102,6 +102,12 @@ def _install_poetry(path: str) -> str:
 def _install_machine(path: str, poetry: str) -> None:
     _log_info("Installing machine...")
     subprocess.run(
+        [poetry, "env", "use", "3.9.6"],
+        env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
+        cwd=path,
+        check=True,
+    )
+    subprocess.run(
         [poetry, "install"],
         env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
         cwd=path,

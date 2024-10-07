@@ -9,41 +9,34 @@ from app import config, utils
 
 IGNORED_FIELDS = {"config"}
 
+PrivateDirArg = Annotated[
+    Path,
+    typer.Argument(
+        help="The private files directory.",
+        callback=utils.validate(utils.is_optional, utils.is_dir),
+    ),
+]
+PrivateConfigArg = Annotated[config.Private, utils.IgnoredArgument]
 app = typer.Typer(name="private", help="Private files setup.")
 
 
 @app.command()
 def setup(
-    private_dir: Annotated[
-        Path,
-        typer.Argument(
-            help="The private files directory.",
-            callback=utils.validate(utils.is_dir),
-        ),
-    ],
-    private_config: Annotated[
-        type[config.Private],
-        utils.IgnoredArgument,
-    ] = config.Private,
+    private_dir: PrivateDirArg,
+    private_config: Annotated[config.Private, utils.IgnoredArgument] = config.Private(),
 ) -> None:
-    """Setup private files on a machine.
-
-    The files are linked from the private directory to the private machine
-    configuration. The specific configuration can be overridden by a machine's
-    setup application.
-    """
-    private_instance = private_config()
+    """Setup private files on a machine."""
 
     utils.LOGGER.info("Setting up private files...")
     machine_fields = config.Machine().model_fields.keys()
-    for field in private_instance.model_fields:
+    for field in private_config.model_fields:
 
         if field in [*machine_fields, *IGNORED_FIELDS]:
             utils.LOGGER.debug("Skipping: %s", field)
-            continue
-        if not isinstance(path := getattr(private_instance, field, None), Path):
+            continue  # skip machine fields and ignored fields
+        if not isinstance(path := getattr(private_config, field, None), Path):
             utils.LOGGER.debug("Skipping: %s", field)
-            continue
+            continue  # skip non-Path fields
 
         private_file = private_dir / path.name
         if not private_file.exists():
