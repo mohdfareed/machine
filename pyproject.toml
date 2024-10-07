@@ -19,7 +19,7 @@ include = [
 machine-setup = "app.main:app"
 
 [tool.poetry.dependencies]
-python = "3.9.6" # default macos version
+python = "^3.9.6" # default macos version
 typer = "^0.12.4"
 pydantic = "^2.9.2"
 pydantic-settings = "^2.5.2"
