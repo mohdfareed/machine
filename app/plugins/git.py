@@ -7,29 +7,28 @@ import typer
 
 from app import config, env, utils
 
+GitConfigArg = Annotated[
+    Path,
+    typer.Argument(
+        help="Path to the .gitconfig file.",
+        callback=utils.validate(utils.is_file),
+    ),
+]
+GitIgnoreArg = Annotated[
+    Path,
+    typer.Argument(
+        help="Path to the .gitignore file.",
+        callback=utils.validate(utils.is_file),
+    ),
+]
 app = typer.Typer(name="git", help="Git configuration setup.")
 
 
 @app.command()
 def setup(
-    gitconfig: Annotated[
-        Path,
-        typer.Argument(
-            help="Path to the .gitconfig file.",
-            callback=utils.validate(utils.is_file),
-        ),
-    ] = config.Default().gitconfig,
-    gitignore: Annotated[
-        Path,
-        typer.Argument(
-            help="Path to the .gitignore file.",
-            callback=utils.validate(utils.is_file),
-        ),
-    ] = config.Default().gitignore,
-    environment: Annotated[
-        env.Environment,
-        utils.IgnoredArgument,
-    ] = env.Environment.os_env().load(),
+    gitconfig: GitConfigArg = config.Default().gitconfig,
+    gitignore: GitIgnoreArg = config.Default().gitignore,
+    environment: env.EnvArg = env.OSEnvironment(),
 ) -> None:
     """Configure git."""
 

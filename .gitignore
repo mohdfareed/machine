@@ -2,7 +2,7 @@
 *.venv/
 .python-version
 
-*.log
+*.log*
 config/**/keys
 config/**/private.sh
 

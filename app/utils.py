@@ -14,9 +14,9 @@ from rich.text import Text
 
 from app import APP_NAME
 
+T = TypeVar("T")
 LOGGER = logging.getLogger("")
 """App logger."""
-T = TypeVar("T")
 
 WINDOWS = "win" in sys.platform[:3]
 """Whether the current platform is Windows."""
@@ -31,6 +31,7 @@ ARM = platform.machine().startswith(("arm", "aarch64"))
 
 IgnoredArgument = typer.Option(parser=lambda _: _, hidden=True, expose_value=False)
 """An ignored CLI command argument."""
+
 post_install_tasks: list[Callable[[], None]] = []
 """Post installation tasks."""
 
@@ -41,9 +42,8 @@ class StripMarkupFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         """Filter the log record message."""
         if hasattr(record, "msg") and isinstance(record.msg, str):
-            # Strip Rich markup from the message
             record.msg = Text.from_markup(record.msg).plain
-        return True  # Log the message after filtering
+        return True
 
 
 class SkipValidation(Exception):
