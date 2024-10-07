@@ -28,7 +28,7 @@ app = typer.Typer(name="git", help="Git configuration setup.")
 def setup(
     gitconfig: GitConfigArg = config.Default().gitconfig,
     gitignore: GitIgnoreArg = config.Default().gitignore,
-    environment: env.EnvArg = env.OSEnvironment(),
+    environment: env.EnvArg = env.OSEnv(),
 ) -> None:
     """Configure git."""
 

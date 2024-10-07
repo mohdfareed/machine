@@ -4,12 +4,14 @@ import shutil
 import subprocess
 from abc import ABC
 from pathlib import Path
-from typing import Annotated, Optional, Self
+from typing import Annotated, Optional, TypeVar
 
 from dotenv import dotenv_values
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app import config, utils
+
+T = TypeVar("T", bound="Environment")
 
 
 class Environment(BaseSettings, ABC):
@@ -22,22 +24,13 @@ class Environment(BaseSettings, ABC):
     GITIGNORE: Path = Path.home() / ".gitignore"
 
     def load(
-        self,
+        self: T,
         env: Optional[Path] = None,
         pwsh: Optional[bool] = None,
-    ) -> Self:
+    ) -> T:
         """Load environment variables from a file."""
-        if env is None:
-            env = (
-                config.Default().ps_profile
-                if utils.WINDOWS
-                else config.Default().zshenv
-            )
-
-        temp_file = utils.create_temp_file(env.name)
-        env_vars = _load_env(temp_file, isinstance(self, Windows), env, pwsh)
+        env_vars = _load_env(isinstance(self, Windows), env, pwsh)
         utils.LOGGER.debug("Loaded environment variables from: %s", env)
-
         for field in self.model_fields:
             if field in env_vars:
                 setattr(self, field, env_vars[field])
@@ -67,15 +60,18 @@ class Windows(Environment):
 
 
 EnvArg = Annotated[Environment, utils.IgnoredArgument]
-OSEnvironment = Windows if utils.WINDOWS else Unix
+OSEnv = Windows if utils.WINDOWS else Unix
 
 
 def _load_env(
-    path: Path,
     is_windows: bool,
-    env: Path,
+    env: Optional[Path],
     pwsh: Optional[bool] = None,
 ) -> dict[str, Optional[str]]:
+
+    if env is None:
+        env = config.Default().ps_profile if utils.WINDOWS else config.Default().zshenv
+    path = utils.create_temp_file(env.name)
 
     if pwsh or (pwsh is None and is_windows):
         executable = shutil.which("pwsh") or shutil.which("powershell")
@@ -96,20 +92,17 @@ def _load_env(
         capture_output=True,
         executable=executable,
     )
-
     if result.returncode != 0:
         raise RuntimeError(f"Failed to execute command: {result.stderr}")
 
-    # filter out file
+    # filter out empty lines and comments
     with open(path, "r+", encoding="utf-8") as file:
         lines = file.readlines()
-        # remove lines not in the form of KEY=VALUE
         lines = [line for line in lines if "=" in line]
-        # remove variables in the form _=VALUE
         lines = [line for line in lines if not line.startswith("_=")]
+
         # update file
         file.seek(0)
         file.writelines(lines)
         file.truncate()
-
     return dotenv_values(path)
