@@ -13,7 +13,7 @@ app.add_typer(git.app)
 app.add_typer(private_files.app)
 
 
-class PluginProtocol(Protocol):
+class PluginProtocol(Protocol):  # pylint: disable=too-few-public-methods
     """Plugin protocol required to register it to a machine."""
 
     app: typer.Typer

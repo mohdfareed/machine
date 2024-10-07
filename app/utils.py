@@ -36,7 +36,7 @@ post_install_tasks: list[Callable[[], None]] = []
 """Post installation tasks."""
 
 
-class StripMarkupFilter(logging.Filter):
+class StripMarkupFilter(logging.Filter):  # pylint: disable=too-few-public-methods
     """Strip Rich markup from log records."""
 
     def filter(self, record: logging.LogRecord) -> bool:
