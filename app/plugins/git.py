@@ -26,16 +26,19 @@ def setup(
             callback=utils.validate(utils.is_file),
         ),
     ] = config.Default().gitignore,
+    environment: Annotated[
+        env.Environment,
+        utils.IgnoredArgument,
+    ] = env.Environment.os_env().load(),
 ) -> None:
     """Configure git."""
 
-    environment = env.Environment.os_env().load()
     utils.LOGGER.info("Setting up git configuration...")
     utils.LOGGER.debug("global_gitconfig: %s", environment.GITCONFIG)
     utils.LOGGER.debug("global_gitignore: %s", environment.GITIGNORE)
     utils.LOGGER.debug("gitconfig: %s", gitconfig)
     utils.LOGGER.debug("gitignore: %s", gitignore)
 
-    # utils.link(gitconfig, global_gitconfig)
-    # utils.link(gitignore, global_gitignore)
+    utils.link(gitconfig, environment.GITCONFIG)
+    utils.link(gitignore, environment.GITIGNORE)
     utils.LOGGER.debug("Git configuration setup complete")

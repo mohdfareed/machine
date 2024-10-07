@@ -32,15 +32,16 @@ def setup(
     configuration. The specific configuration can be overridden by a machine's
     setup application.
     """
+    private_instance = private_config()
 
     utils.LOGGER.info("Setting up private files...")
     machine_fields = config.Machine().model_fields.keys()
-    for field in private_config.model_fields:
+    for field in private_instance.model_fields:
 
         if field in [*machine_fields, *IGNORED_FIELDS]:
             utils.LOGGER.debug("Skipping: %s", field)
             continue
-        if not isinstance(path := getattr(private_config, field), Path):
+        if not isinstance(path := getattr(private_instance, field, None), Path):
             utils.LOGGER.debug("Skipping: %s", field)
             continue
 

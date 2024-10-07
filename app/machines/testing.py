@@ -19,6 +19,21 @@ plugin_app = plugins.create(plugins.git, git_cmd)
 app.add_typer(plugin_app)
 
 
+class TestingEnvironment(env.Environment):
+    """Testing machine configuration files."""
+
+    MACHINE: Path = utils.create_temp_dir("machine")
+    GITCONFIG: Path = utils.create_temp_file(".gitconfig")
+    GITIGNORE: Path = utils.create_temp_file(".gitignore")
+
+
+class TestingPrivateConfig(config.Private):
+    """Testing private configuration files."""
+
+    valid_field: Path = utils.create_temp_file("private_env_field")
+    invalid_field: int = 0
+
+
 @app.command()
 def setup(
     private_dir: Annotated[
@@ -38,8 +53,9 @@ def setup(
     utils.LOGGER.debug("Environment: %s", environment.model_dump_json(indent=2))
 
     if private_dir:
-        private_cmd(private_dir)
-    git_cmd()
+        (private_dir / TestingPrivateConfig().valid_field.name).touch()
+        private_cmd(private_dir, TestingPrivateConfig)
+    git_cmd(environment=TestingEnvironment())
 
     utils.LOGGER.info("Machine setup completed successfully")
     raise typer.Exit()

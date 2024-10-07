@@ -4,6 +4,7 @@ from pytest import MonkeyPatch
 from typer.testing import CliRunner
 
 from app import env, utils
+from app.config import Private
 from app.main import app
 
 runner = CliRunner()
@@ -41,14 +42,16 @@ def test_app_debug() -> None:
 def test_app_unix(monkeypatch: MonkeyPatch) -> None:
     """Test the app."""
 
+    temp_dir = utils.create_temp_dir("test")
     monkeypatch.setattr(utils, "WINDOWS", False)
-    result = runner.invoke(app, ["-d", "test", "setup", "."])
+    result = runner.invoke(app, ["-d", "test", "setup", str(temp_dir)])
     assert str(env.Unix().XDG_CONFIG_HOME) in result.stdout
 
 
 def test_app_windows(monkeypatch: MonkeyPatch) -> None:
     """Test the app on Windows."""
 
+    temp_dir = utils.create_temp_dir("test")
     monkeypatch.setattr(utils, "WINDOWS", True)
-    result = runner.invoke(app, ["-d", "test", "setup", "."])
+    result = runner.invoke(app, ["-d", "test", "setup", str(temp_dir)])
     assert str(env.Windows().APPDATA) in result.stdout
