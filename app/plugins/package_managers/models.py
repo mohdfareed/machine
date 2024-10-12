@@ -2,11 +2,11 @@
 
 __all__ = ["PackageManager", "PackageManagerException"]
 
+import shutil
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Union
+from typing import Generator
 
 from app import utils
-from app.utils import LOGGER
 
 
 class PackageManager(ABC):
@@ -14,62 +14,63 @@ class PackageManager(ABC):
 
     shell = utils.Shell()
 
-    @property
-    def name(self) -> str:
+    @classmethod
+    def name(cls) -> str:
         """The package manager name."""
-        return self.__class__.__name__
+        return cls.__name__
 
-    def __init__(self) -> None:
-        if not self.is_supported():
-            raise PackageManagerException(
-                f"Package manager {self.name} is not supported."
-            )
+    @classmethod
+    def command(cls) -> str:
+        """The package manager's shell command."""
+        return cls.name().lower()
 
-        LOGGER.info("Setting up %s...", self.name)
-        self.setup()
-        LOGGER.debug("%s was setup successfully.", self.name)
+    @classmethod
+    def is_available(cls) -> bool:
+        """Check if the package manager is available."""
+        return shutil.which(cls.command()) is not None
 
+    @classmethod
     @abstractmethod
-    def setup(self) -> None:
-        """Setup the package manager."""
+    @utils.setup_wrapper
+    def setup(cls) -> None:
+        """Install or update the package manager."""
 
+    @classmethod
     @abstractmethod
-    def install(self, package: Union[str, list[str]]) -> None:
+    @utils.update_wrapper
+    def update(cls) -> None:
+        """Update the package manager and its packages."""
+
+    @classmethod
+    @utils.install_wrapper
+    def install(cls, package: str) -> None:
         """Install a package."""
+        cls.shell.execute(f"{cls.command()} install {package}")
 
-    @abstractmethod
-    def cleanup(self) -> None:
+    @classmethod
+    @utils.uninstall_wrapper
+    def uninstall(cls, package: str) -> None:
+        """Install a package."""
+        cls.shell.execute(f"{cls.command()} uninstall {package}")
+
+    @classmethod
+    @utils.cleanup_wrapper
+    def cleanup(cls) -> None:
         """Cleanup package manager."""
+        return None
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def is_supported() -> bool:
+    @utils.is_supported_wrapper
+    def is_supported(cls) -> bool:
         """Check if the package manager is supported."""
 
     @staticmethod
-    def installer(func: Callable[..., None]) -> Callable[..., None]:
-        """Decorator to wrap installation process."""
-
-        def wrapper(
-            self: PackageManager,
-            package: Union[str, list[str]],
-            *args: Any,
-            **kwargs: Any,
-        ) -> None:
-            if isinstance(package, str):
-                package = package.split()
-
-            for pkg in package:
-                LOGGER.info("Installing %s from %s...", pkg, self.name)
-                func(self, pkg, *args, **kwargs)
-                LOGGER.debug("%s was installed successfully.", pkg)
-
-        return wrapper
-
-    def __del__(self) -> None:
-        LOGGER.debug("Cleaning up %s...", self.name)
-        self.cleanup()
-        LOGGER.debug("%s cleanup complete.", self.name)
+    def available(
+        *managers: type["PackageManager"],
+    ) -> Generator[type["PackageManager"], None, None]:
+        """Return a list of available package managers."""
+        yield from (manager for manager in managers if manager.is_available())
 
 
 class PackageManagerException(Exception):

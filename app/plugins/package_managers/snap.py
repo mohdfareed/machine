@@ -4,6 +4,8 @@ __all__ = ["SnapStore"]
 
 from typing import Union
 
+from app import utils
+
 from .apt import APT
 from .models import PackageManager
 
@@ -11,24 +13,25 @@ from .models import PackageManager
 class SnapStore(PackageManager):
     """Snap Store package manager."""
 
-    def __init__(self, apt: APT) -> None:
-        self.apt = apt
-        """The Snap Store package manager."""
-        super().__init__()
+    @classmethod
+    def command(cls) -> str:
+        """The package manager's shell command."""
+        return "snap"
 
-    def setup(self) -> None:
-        self.apt.install("snapd")
-        self.install("snapd")
+    @classmethod
+    @utils.setup_wrapper
+    def setup(cls) -> None:
+        APT.install("snapd")
+        cls.install("snapd")
 
-    @PackageManager.installer
-    def install(self, package: Union[str, list[str]], classic: bool = False) -> None:
+    @classmethod
+    @utils.install_wrapper
+    def install(cls, package: Union[str, list[str]], classic: bool = False) -> None:
         SnapStore.shell.execute(
-            f"sudo snap install {package} {'--classic' if classic else ''}"
+            f"snap install {package} {'--classic' if classic else ''}"
         )
 
-    def cleanup(self) -> None:
-        pass
-
-    @staticmethod
-    def is_supported() -> bool:
+    @classmethod
+    @utils.is_supported_wrapper
+    def is_supported(cls) -> bool:
         return True

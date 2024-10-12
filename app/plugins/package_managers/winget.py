@@ -2,8 +2,7 @@
 
 __all__ = ["WinGet"]
 
-import shutil
-from typing import Union
+from app import utils
 
 from .models import PackageManager
 
@@ -11,13 +10,17 @@ from .models import PackageManager
 class WinGet(PackageManager):
     """WinGet package manager."""
 
-    def setup(self) -> None:
+    @classmethod
+    @utils.update_wrapper
+    def update(cls) -> None:
         WinGet.shell.execute("winget upgrade --all --include-unknown")
 
-    @PackageManager.installer
-    def install(self, package: Union[str, list[str]]) -> None:
+    @classmethod
+    @utils.install_wrapper
+    def install(cls, package: str) -> None:
         WinGet.shell.execute(f"winget install -e --id {package}", throws=False)
 
-    @staticmethod
-    def is_supported() -> bool:
-        return shutil.which("winget") is not None
+    @classmethod
+    @utils.is_supported_wrapper
+    def is_supported(cls) -> bool:
+        return cls.is_available()

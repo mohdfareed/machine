@@ -2,9 +2,7 @@
 
 __all__ = ["APT"]
 
-import shutil
-from typing import Union
-
+from app import utils
 from app.utils import LOGGER
 
 from .models import PackageManager
@@ -13,19 +11,28 @@ from .models import PackageManager
 class APT(PackageManager):
     """Advanced Package Tool (APT) package manager."""
 
-    def setup(self) -> None:
+    @classmethod
+    @utils.setup_wrapper
+    def setup(cls) -> None:
+        pass
+
+    @classmethod
+    @utils.update_wrapper
+    def update(cls) -> None:
         APT.shell.execute("sudo apt update && sudo apt upgrade -y")
 
-    @PackageManager.installer
-    def install(self, package: Union[str, list[str]]) -> None:
-        APT.shell.execute(f"sudo apt install -y {package}")
+    @classmethod
+    @utils.cleanup_wrapper
+    def cleanup(cls) -> None:
+        APT.shell.execute("sudo apt autoremove -y")
 
-    @staticmethod
-    def is_supported() -> bool:
-        return shutil.which("apt") is not None
+    @classmethod
+    @utils.is_supported_wrapper
+    def is_supported(cls) -> bool:
+        return cls.is_available()
 
-    @staticmethod
-    def add_keyring(keyring: str, repo: str, name: str) -> None:
+    @classmethod
+    def add_keyring(cls, keyring: str, repo: str, name: str) -> None:
         """Add a keyring to the apt package manager."""
         LOGGER.info("Adding keyring %s to apt...", keyring)
         keyring_path = f"/etc/apt/keyrings/{keyring}"
@@ -43,6 +50,3 @@ class APT(PackageManager):
             """
         )
         LOGGER.debug("Keyring %s was added successfully.", keyring)
-
-    def cleanup(self) -> None:
-        APT.shell.execute("sudo apt autoremove -y")
