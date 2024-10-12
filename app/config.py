@@ -2,11 +2,11 @@
 
 from pathlib import Path
 
-from pydantic import BaseModel
+from app.models import BaseConfig
 
 
-class Machine(BaseModel):
-    """config machine configuration files."""
+class Machine(BaseConfig):
+    """Machine configuration files."""
 
     machine: Path = Path(__file__).parent.parent
     config: Path = machine / "config"
@@ -34,25 +34,27 @@ class Private(Machine):
     """Private configuration files."""
 
     config: Path = Machine().config / "private"
+    excluded_fields: list[str] = ["config"]
+
     private_env: Path = config / "private.sh"
     ssh_keys: Path = config / "keys"
 
 
-class Codespaces(Machine):
+class Codespaces(Default):
     """Github codespaces configuration files."""
 
     config: Path = Machine().config / "codespaces"
     zshrc: Path = config / "zshrc"
 
 
-class Gleason(Machine):
+class Gleason(Default):
     """Gleason configuration files."""
 
     config: Path = Machine().config / "gleason"
     gitconfig: Path = config / ".gitconfig"
 
 
-class MacOS(Machine):
+class MacOS(Default):
     """macOS configuration files."""
 
     config: Path = Machine().config / "macos"
@@ -63,7 +65,7 @@ class MacOS(Machine):
     zshrc: Path = config / "zshrc"
 
 
-class RPi(Machine):
+class RPi(Default):
     """Raspberry Pi configuration files."""
 
     config: Path = Machine().config / "rpi"
@@ -72,7 +74,7 @@ class RPi(Machine):
     zshrc: Path = config / "zshrc"
 
 
-class Windows(Machine):
+class Windows(Default):
     """Windows configuration files."""
 
     config: Path = Machine().config / "windows"
