@@ -10,8 +10,8 @@ from app import env, utils
 
 def test_env_fail() -> None:
     """Test the environment variables failing."""
-    with pytest.raises(RuntimeError):
-        env.OSEnv().load(Path("."))
+    with pytest.raises(utils.ShellError):
+        env.Default().load(Path("."))
 
 
 def test_unix_env(monkeypatch: MonkeyPatch) -> None:

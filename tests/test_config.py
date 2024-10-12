@@ -2,16 +2,7 @@
 
 from pathlib import Path
 
-from app.config import (
-    Codespaces,
-    Default,
-    Gleason,
-    Machine,
-    MacOS,
-    Private,
-    RPi,
-    Windows,
-)
+from app.config import Codespaces, Default, Gleason, Machine, MacOS, RPi, Windows
 
 
 def test_machine_config() -> None:
@@ -20,14 +11,6 @@ def test_machine_config() -> None:
     machine_config = Machine()
     machine = Path(__file__).parent.parent
     assert machine_config.machine == machine
-
-
-def test_private_config() -> None:
-    """Test PrivateConfig configuration files."""
-
-    private_config = Private()
-    config = Path(__file__).parent.parent / "config" / "private"
-    assert private_config.config == config
 
 
 def test_config_files() -> None:
