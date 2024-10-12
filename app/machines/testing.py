@@ -60,4 +60,3 @@ def setup(
     )
 
     utils.LOGGER.info("Machine setup completed successfully")
-    raise typer.Exit()

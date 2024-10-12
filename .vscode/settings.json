@@ -43,6 +43,7 @@
         "pytest",
         "typer",
         "venv",
+        "winget",
         "zinit"
     ],
 }
