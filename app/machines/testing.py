@@ -1,10 +1,11 @@
 """Testing machine."""
 
+from functools import partial
 from pathlib import Path
 
 import typer
 
-from app import config, env, utils
+from app import config, env, plugins, utils
 from app.plugins import git, private_files
 
 
@@ -24,18 +25,19 @@ class TestingConfig(config.Private):
 
 
 machine_app = typer.Typer(name="test", help="Testing machine.")
-machine_app.command()(
-    lambda: git.setup(
-        gitconfig=utils.create_temp_file("gitconfig"),
-        gitignore=utils.create_temp_file("gitignore"),
-        environment=TestingEnvironment(),
-    )
+
+private_cmd = partial(private_files.setup, private_config=TestingConfig())
+plugin_app = plugins.create(private_files, private_cmd)
+machine_app.add_typer(plugin_app)
+
+git_cmd = partial(
+    git.setup,
+    gitconfig=utils.create_temp_file("gitconfig"),
+    gitignore=utils.create_temp_file("gitignore"),
+    environment=TestingEnvironment(),
 )
-machine_app.command()(
-    lambda: private_files.setup(
-        private_dir=utils.create_temp_dir("private"), private_config=TestingConfig()
-    )
-)
+plugin_app = plugins.create(git, git_cmd)
+machine_app.add_typer(plugin_app)
 
 
 @machine_app.command()

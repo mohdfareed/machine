@@ -1,7 +1,7 @@
 """Environment variables models."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional
 
 from app import config, utils
 from app.models import BaseEnvironment, T
@@ -13,6 +13,7 @@ class Environment(BaseEnvironment):
     MACHINE: Path = Path(__file__).parent.parent
     GITCONFIG: Path = Path.home() / ".gitconfig"
     GITIGNORE: Path = Path.home() / ".gitignore"
+    SSH_DIR: Path = Path.home() / ".ssh"
 
     def load(self: T, env: Optional[Path] = None) -> T:
         env = env or (
@@ -44,3 +45,4 @@ class Windows(Environment):
 
 
 Default = Windows if utils.WINDOWS else Unix
+EnvArg = Annotated[Environment, utils.InternalArg]

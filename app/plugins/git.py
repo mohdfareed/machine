@@ -1,8 +1,5 @@
 """Git plugin."""
 
-from pathlib import Path
-from typing import Annotated
-
 import typer
 
 from app import config, env, utils
@@ -12,9 +9,9 @@ app = typer.Typer(name="git", help="Configure git.")
 
 @app.command()
 def setup(
-    gitconfig: Path = config.Default().gitconfig,
-    gitignore: Path = config.Default().gitignore,
-    environment: Annotated[env.Environment, utils.InternalArg] = env.Default(),
+    gitconfig: utils.ReqFileArg = config.Default().gitconfig,
+    gitignore: utils.ReqFileArg = config.Default().gitignore,
+    environment: env.EnvArg = env.Default(),
 ) -> None:
     """Configure git."""
 
