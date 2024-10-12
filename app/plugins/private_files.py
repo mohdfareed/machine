@@ -15,8 +15,10 @@ PrivateDirArg = Annotated[
         callback=utils.validate(utils.is_optional, utils.is_dir),
     ),
 ]
+app = typer.Typer(name="git", help="Configure git.")
 
 
+@app.command()
 def setup(
     private_dir: PrivateDirArg,
     private_config: Annotated[config.Private, utils.InternalArg] = config.Private(),
