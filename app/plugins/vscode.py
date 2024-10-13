@@ -30,8 +30,7 @@ def setup(
     )
 
     for file in configuration.vscode.iterdir():
-        (env.Default().VSCODE / file.name).unlink(missing_ok=True)
-        file.link_to(env.Default().VSCODE / file.name)
+        utils.link(file, env.Default().VSCODE / file.name)
     LOGGER.debug("VSCode was setup successfully.")
 
 

@@ -108,8 +108,7 @@ def setup_zed() -> None:
     else:
         utils.Shell().execute("curl -f https://zed.dev/install.sh | sh")
 
-    env.Unix().ZED_SETTINGS.unlink(missing_ok=True)
-    config.Default().zed_settings.link_to(env.Unix().ZED_SETTINGS)
+    utils.link(config.Default().zed_settings, env.Unix().ZED_SETTINGS)
     LOGGER.debug("Zed was setup successfully.")
 
 
@@ -134,9 +133,7 @@ def install_powershell(
         Winget().install("Microsoft.PowerShell")
     elif SnapStore().is_supported():
         SnapStore().install("powershell")
-
-    env.Default().PS_PROFILE.unlink(missing_ok=True)
-    configuration.ps_profile.link_to(env.Windows().PS_PROFILE)
+    utils.link(configuration.ps_profile, env.Windows().PS_PROFILE)
 
 
 def install_nvim(
@@ -157,6 +154,5 @@ def install_nvim(
         SnapStore().install("ripgrep", classic=True)
         APT().install("fd-find")
 
-    env.Default().VIM.unlink(missing_ok=True)
-    configuration.vim.link_to(env.Default().VIM)
+    utils.link(configuration.vim, env.Default().VIM)
     LOGGER.debug("Shell setup complete.")

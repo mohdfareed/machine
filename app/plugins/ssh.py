@@ -29,8 +29,7 @@ def setup(
 
     LOGGER.info("Setting up SSH...")
     if ssh_config:  # symlink ssh config file
-        (env.Default().SSH_DIR / "config").unlink(missing_ok=True)
-        ssh_config.link_to(env.Default().SSH_DIR / "config")
+        utils.link(ssh_config, env.Default().SSH_DIR / "config")
 
     # read ssh keys from directory
     for key in _load_keys(ssh_keys):
@@ -61,11 +60,11 @@ def _setup_key(key: "_SSHKeyPair", environment: env.Environment) -> None:
     LOGGER.info("Setting up SSH key: %s", key.name)
 
     # symlink private key and set permissions
-    key.private.link_to(environment.SSH_DIR / key.private.name)
+    utils.link(key.private, environment.SSH_DIR / key.private.name)
     key.private.chmod(0o600)
 
     if key.public.exists():  # symlink public key and set permissions
-        key.public.link_to(environment.SSH_DIR / key.public.name)
+        utils.link(key.public, environment.SSH_DIR / key.public.name)
         key.public.chmod(0o644)
 
     # get key fingerprint

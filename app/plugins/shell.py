@@ -29,12 +29,9 @@ def setup(
     )
 
     # symlink config files
-    env.Unix().ZSHENV.unlink(missing_ok=True)
-    configuration.zshenv.link_to(env.Unix().ZSHENV)
-    env.Unix().ZSHRC.unlink(missing_ok=True)
-    configuration.zshrc.link_to(env.Unix().ZSHRC)
-    env.Unix().TMUX_CONFIG.unlink(missing_ok=True)
-    configuration.tmux_config.link_to(env.Unix().TMUX_CONFIG)
+    utils.link(configuration.zshenv, env.Unix().ZSHENV)
+    utils.link(configuration.zshrc, env.Unix().ZSHRC)
+    utils.link(configuration.tmux_config, env.Unix().TMUX_CONFIG)
 
     # update zinit and its plugins
     LOGGER.info("Updating zinit and its plugins...")
