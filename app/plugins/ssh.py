@@ -7,9 +7,8 @@ from pathlib import Path
 import typer
 
 from app import config, env, utils
+from app.package_managers import APT
 from app.utils import LOGGER
-
-from .package_managers import APT
 
 plugin_app = typer.Typer(name="ssh", help="Configure SSH keys.")
 shell = utils.Shell()

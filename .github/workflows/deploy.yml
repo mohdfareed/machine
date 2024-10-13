@@ -5,7 +5,7 @@ on:
     inputs:
       release:
         description: 'Create a new release'
-        default: false
+        default: true
         type: boolean
       increment:
         description: 'Version increment type'

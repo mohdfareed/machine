@@ -8,6 +8,8 @@ __all__ = [
     "ARM",
     "PLATFORM",
     "InternalArg",
+    "post_install_tasks",
+    "post_installation",
     "load_env",
     "create_plugin",
     # "cli_selector",
@@ -18,7 +20,7 @@ import platform
 import sys
 from functools import partial
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import typer
 from dotenv import dotenv_values
@@ -47,6 +49,15 @@ PLATFORM = platform.platform().replace("-", "[black]|[/]")
 
 InternalArg = typer.Option(parser=lambda _: _, hidden=True, expose_value=False)
 """An internal argument that is not exposed in the CLI."""
+
+post_install_tasks: list[Callable[[], None]] = []
+"""Post installation tasks."""
+
+
+def post_installation(*_: Any, **__: Any) -> None:
+    """Run post installation tasks."""
+    for task in post_install_tasks:
+        task()
 
 
 def load_env(env: Path) -> dict[str, Optional[str]]:

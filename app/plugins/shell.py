@@ -4,7 +4,7 @@ import typer
 
 from app import config, env, utils
 from app.models import PluginException
-from app.plugins.package_managers import APT, Brew, PackageManager
+from app.package_managers import APT, Brew, PackageManager
 from app.utils import LOGGER
 
 plugin_app_win = typer.Typer(name="shell", help="Configure shell.")

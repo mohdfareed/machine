@@ -6,7 +6,7 @@ import typer
 
 from app import config, env, utils
 from app.models import PluginException
-from app.plugins.package_managers import (
+from app.package_managers import (
     APT,
     Brew,
     PackageManager,

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import typer
 
-from app import config, env, main, utils
+from app import config, env, utils
 from app.plugins import private_files
 
 
@@ -31,7 +31,7 @@ machine_app.add_typer(plugin_app)
 def setup() -> None:
     """Test setting up a machine."""
     utils.LOGGER.info("Setting up machine...")
-    main.post_install_tasks += [
+    utils.post_install_tasks += [
         lambda: utils.LOGGER.info("Machine setup completed successfully")
     ]
 

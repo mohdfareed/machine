@@ -1,37 +1,23 @@
 """Main module for the Typer Machine Setup CLI."""
 
 import platform
-from typing import Annotated, Any, Callable
+from typing import Annotated
 
 import typer
 
-from app import APP_NAME, __version__, machines, utils
-from app.plugins.package_managers import PackageManager
+from app import APP_NAME, __version__, machines, package_managers, plugins, utils
 from app.utils.logging import log_file_path
-
-post_install_tasks: list[Callable[[], None]] = []
-"""Post installation tasks."""
-
-
-def _run_post_install_tasks(*_: Any, **__: Any) -> None:
-    for task in post_install_tasks:
-        task()
-
 
 app = typer.Typer(
     name=APP_NAME,
     context_settings={"help_option_names": ["-h", "--help"]},
-    result_callback=_run_post_install_tasks,
+    result_callback=utils.post_installation,
 )
 
-# register machine apps
-app.add_typer(machines.machines_app)
-
-# register package manager apps
-pkg_app = typer.Typer(name="pkg", help="Package managers.")
-for pkg_manager in PackageManager.available_managers():
-    pkg_app.add_typer(pkg_manager.app())
-app.add_typer(pkg_app)
+# register machines, plugins, and package managers
+app.add_typer(machines.app)
+app.add_typer(plugins.app)
+app.add_typer(package_managers.app)
 
 
 @app.callback()
