@@ -1,11 +1,8 @@
 """SSH setup module."""
 
-__all__ = ["setup", "setup_server", "generate_key_pair"]
-
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated
 
 import typer
 
@@ -27,7 +24,7 @@ PRIVATE_EXT: str = ".key"
 def setup(
     ssh_config: utils.OptionalFileArg = None,
     ssh_keys: utils.ReqDirArg = config.Private().ssh_keys,
-    environment: Annotated[env.Environment, utils.InternalArg] = env.Default(),
+    environment: env.EnvArg = env.Default(),
 ) -> None:
     """Setup ssh keys and configuration on a new machine. The ssh keys and
     config file are copied from the specified directory."""

@@ -49,10 +49,7 @@ def main(
     # debug information
     utils.LOGGER.debug("Machine version: %s", __version__)
     utils.LOGGER.debug("Python version: %s", platform.python_version())
-    utils.LOGGER.debug("Platform: %s", platform.platform())
-    utils.LOGGER.debug("Log file: %s", log_file_path)
     utils.LOGGER.debug("Debug mode: %s", debug_mode)
-    utils.LOGGER.debug("Windows: %s", utils.WINDOWS)
-    utils.LOGGER.debug("macOS: %s", utils.MACOS)
-    utils.LOGGER.debug("Linux: %s", utils.LINUX)
+    utils.LOGGER.debug("Log file: %s", log_file_path)
+    utils.LOGGER.debug("Platform: [blue]%s[/]", utils.PLATFORM)
     utils.LOGGER.debug("ARM: %s", utils.ARM)

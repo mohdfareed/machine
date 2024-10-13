@@ -8,7 +8,7 @@ from app import utils
 from app.models import PackageManagerException
 from app.utils import LOGGER
 
-from .package_manager import PackageManager
+from .package_manager import PackageManager, T
 
 
 class Brew(PackageManager):
@@ -36,11 +36,12 @@ class Brew(PackageManager):
     def _uninstall(self, package: str) -> None:
         self.shell.execute(f"brew uninstall {package}")
 
-    def install_brewfile(self, filepath: str) -> None:
+    def install_brewfile(self: T, filepath: str) -> T:
         """Install Homebrew packages from a Brewfile."""
         LOGGER.info("Installing Homebrew packages from Brewfile...")
         self.shell.execute(f"brew bundle install --file={filepath}")
         LOGGER.debug("Homebrew packages were installed successfully.")
+        return self
 
     def app(self) -> typer.Typer:
         machine_app = super().app()

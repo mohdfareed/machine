@@ -4,9 +4,11 @@ __all__ = ["APT"]
 
 import typer
 
+from app import utils
+from app.models import PackageManagerException
 from app.utils import LOGGER
 
-from .package_manager import PackageManager
+from .package_manager import PackageManager, T
 
 
 class APT(PackageManager):
@@ -24,7 +26,7 @@ class APT(PackageManager):
     def _cleanup(self) -> None:
         self.shell.execute("sudo apt autoremove -y")
 
-    def add_keyring(self, keyring: str, repo: str, name: str) -> None:
+    def add_keyring(self: T, keyring: str, repo: str, name: str) -> T:
         """Add a keyring to the apt package manager."""
         LOGGER.info("Adding keyring %s to apt...", keyring)
         keyring_path = f"/etc/apt/keyrings/{keyring}"
@@ -42,6 +44,20 @@ class APT(PackageManager):
             """
         )
         LOGGER.debug("Keyring %s was added successfully.", keyring)
+        return self
+
+    def from_url(self: T, url: str) -> T:
+        """Install a package from a URL."""
+        if not url.split("/")[-1].endswith(".deb"):
+            raise PackageManagerException("URL must point to a .deb file")
+        temp_file = utils.create_temp_file()
+
+        self.install("wget")
+        self.shell.execute(f"wget {url} -O {temp_file}")
+        self.shell.execute(f"sudo dpkg -i {temp_file}")
+        self.shell.execute("sudo apt install -f")
+        temp_file.unlink()
+        return self
 
     def app(self) -> typer.Typer:
         machine_app = super().app()

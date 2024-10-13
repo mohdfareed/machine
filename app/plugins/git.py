@@ -10,15 +10,14 @@ plugin_app = typer.Typer(name="git", help="Configure git.")
 
 @plugin_app.command()
 def setup(
-    gitconfig: utils.ReqFileArg = config.Default().gitconfig,
-    gitignore: utils.ReqFileArg = config.Default().gitignore,
+    configuration: config.DefaultConfigArg = config.Default(),
     environment: env.EnvArg = env.Default(),
 ) -> None:
     """Configure git."""
 
     utils.LOGGER.info("Setting up git configuration...")
-    utils.link(gitconfig, environment.GITCONFIG)
-    utils.link(gitignore, environment.GITIGNORE)
+    utils.link(configuration.gitconfig, environment.GITCONFIG)
+    utils.link(configuration.gitignore, environment.GITIGNORE)
     utils.LOGGER.debug("Git configuration setup complete")
 
 

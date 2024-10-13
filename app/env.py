@@ -34,9 +34,15 @@ class Unix(Environment):
     XDG_CONFIG_HOME: Path = Path.home() / ".config"
     XDG_DATA_HOME: Path = Path.home() / ".local/share"
     COMPLETIONS_PATH: Optional[Path] = None
+    ZDOTDIR: Path = XDG_CONFIG_HOME / "zsh"
 
     GITCONFIG: Path = XDG_CONFIG_HOME / "git" / "config"
     GITIGNORE: Path = XDG_CONFIG_HOME / "git" / "ignore"
+    VIM: Path = XDG_CONFIG_HOME / "nvim"
+    TMUX_CONFIG: Path = XDG_CONFIG_HOME / "tmux" / "tmux.conf"
+    PS_PROFILE: Path = XDG_CONFIG_HOME / "powershell" / "profile.ps1"
+    ZSHRC: Path = ZDOTDIR / ".zshrc"
+    ZSHENV: Path = Path.home() / ".zshenv"
 
 
 class Windows(Environment):
@@ -48,7 +54,11 @@ class Windows(Environment):
 
     GITCONFIG: Path = USERPROFILE / ".gitconfig"
     GITIGNORE: Path = USERPROFILE / ".gitignore"
+    VIM: Path = LOCALAPPDATA / "nvim"
+    PS_PROFILE: Path = USERPROFILE / "Documents" / "WindowsPowerShell" / "profile.ps1"
 
 
 Default = Windows if utils.WINDOWS else Unix
 EnvArg = Annotated[Environment, utils.InternalArg]
+WinEnvArg = Annotated[Windows, utils.InternalArg]
+UnixEnvArg = Annotated[Unix, utils.InternalArg]

@@ -2,6 +2,8 @@
 
 __all__ = ["Winget"]
 
+from app import utils
+
 from .package_manager import PackageManager
 
 
@@ -9,7 +11,7 @@ class Winget(PackageManager):
     """WinGet package manager."""
 
     def is_supported(self) -> bool:
-        return self.is_available()
+        return utils.WINDOWS
 
     def _setup(self) -> None:
         return None

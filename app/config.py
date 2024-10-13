@@ -1,7 +1,9 @@
 """Machine configuration models."""
 
 from pathlib import Path
+from typing import Annotated
 
+from app import utils
 from app.models import BaseConfig
 
 
@@ -26,7 +28,7 @@ class Default(Machine):
     zshenv: Path = config / "zshenv"
     zshrc: Path = config / "zshrc"
 
-    tmux: Path = config / "tmux.conf"
+    tmux_config: Path = config / "tmux.conf"
     zed_settings: Path = config / "zed_settings.jsonc"
 
 
@@ -80,3 +82,9 @@ class Windows(Default):
     config: Path = Machine().config / "windows"
     ps_profile: Path = config / "ps_profile.ps1"
     ssh_config: Path = config / "ssh.config"
+
+
+ConfigArg = Annotated[Machine, utils.InternalArg]
+DefaultConfigArg = Annotated[Default, utils.InternalArg]
+WindowsConfigArg = Annotated[Windows, utils.InternalArg]
+PrivateArg = Annotated[Private, utils.InternalArg]

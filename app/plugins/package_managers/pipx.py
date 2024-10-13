@@ -12,7 +12,7 @@ class PIPx(PackageManager):
     """PIPx package manager."""
 
     def is_supported(self) -> bool:
-        return self.is_available()
+        return True
 
     def _setup(self) -> None:
         self.from_spec(

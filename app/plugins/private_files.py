@@ -15,13 +15,12 @@ PrivateDirArg = Annotated[
         callback=utils.validate(utils.is_dir),
     ),
 ]
-plugin_app = typer.Typer(name="git", help="Configure git.")
+plugin_app = typer.Typer(name="private", help="Set up private config files.")
 
 
 @plugin_app.command()
 def setup(
-    private_dir: PrivateDirArg,
-    private_config: Annotated[config.Private, utils.InternalArg] = config.Private(),
+    private_dir: PrivateDirArg, private_config: config.PrivateArg = config.Private()
 ) -> None:
     """Setup private files on a machine."""
     utils.LOGGER.info("Setting up private files...")

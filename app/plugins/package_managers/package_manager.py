@@ -4,7 +4,7 @@ __all__ = ["PackageManager"]
 
 import shutil
 from abc import ABC, abstractmethod
-from typing import Callable, List
+from typing import Any, Callable, List, TypeVar, Union
 
 import rich
 import rich.progress
@@ -13,6 +13,8 @@ import typer
 
 from app import utils
 from app.models import PackageManagerException
+
+T = TypeVar("T", bound="PackageManager")
 
 
 class PackageManager(ABC):
@@ -69,12 +71,12 @@ class PackageManager(ABC):
         """Check if the package manager is available."""
         return shutil.which(self.command) is not None
 
-    def setup(self) -> None:
+    def setup(self: T) -> T:
         """Install or update the package manager."""
         self.validate()
         if self.is_available():
             utils.LOGGER.debug("%s is already available.", self.name)
-            return
+            return self
 
         utils.LOGGER.info("Setting up %s...", self.name)
         with rich.status.Status("[bold green]Setting up..."):
@@ -82,8 +84,9 @@ class PackageManager(ABC):
 
         self.update()
         utils.LOGGER.debug("%s was set up successfully.", self.name)
+        return self
 
-    def update(self) -> None:
+    def update(self: T) -> T:
         """Update the package manager and its packages."""
         self.validate()
         self.setup()
@@ -92,8 +95,9 @@ class PackageManager(ABC):
         with rich.status.Status("[bold green]Updating..."):
             self._update()
         utils.LOGGER.debug("%s was updated successfully.", self.name)
+        return self
 
-    def install(self, packages: str) -> None:
+    def install(self: T, packages: str, *args: Any, **kwargs: Any) -> T:
         """Install packages."""
         self.validate()
         self.setup()
@@ -103,10 +107,11 @@ class PackageManager(ABC):
             range(len(pkgs)), description="Installing...", transient=True
         ):
             utils.LOGGER.info("Installing %s using %s...", pkgs[i], self.name)
-            self._install(pkgs[i])
+            self._install(pkgs[i], *args, **kwargs)
             utils.LOGGER.debug("%s was installed successfully.", pkgs[i])
+        return self
 
-    def uninstall(self, packages: str) -> None:
+    def uninstall(self: T, packages: str, *args: Any, **kwargs: Any) -> T:
         """Uninstall packages."""
         self.validate()
         self.setup()
@@ -116,10 +121,11 @@ class PackageManager(ABC):
             range(len(pkgs)), description="Uninstalling...", transient=True
         ):
             utils.LOGGER.info("Uninstalling %s using %s...", pkgs[i], self.name)
-            self._uninstall(pkgs[i])
+            self._uninstall(pkgs[i], *args, **kwargs)
             utils.LOGGER.debug("%s was uninstalled successfully.", pkgs[i])
+        return self
 
-    def cleanup(self) -> None:
+    def cleanup(self: T) -> T:
         """Cleanup the package manager."""
         self.validate()
         self.setup()
@@ -128,6 +134,7 @@ class PackageManager(ABC):
         with rich.status.Status("[bold green]Cleaning up..."):
             self._cleanup()
         utils.LOGGER.debug("%s was cleaned up successfully.", self.name)
+        return self
 
     def print_status(self) -> None:
         """Print the status of the package manager."""
@@ -163,4 +170,6 @@ class PackageManager(ABC):
         return None
 
 
-PackageSpec = list[tuple[type[PackageManager], Callable[[], None]]]
+PackageSpec = list[
+    tuple[type[PackageManager], Callable[[], Union[PackageManager, None]]]
+]

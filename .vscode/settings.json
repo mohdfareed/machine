@@ -41,6 +41,7 @@
         "pyenv",
         "pylint",
         "pytest",
+        "Tailscale",
         "typer",
         "venv",
         "winget",
