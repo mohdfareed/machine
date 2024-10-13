@@ -37,7 +37,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore: update dependencies'
           title: 'Update dependencies'
-          branch: 'update-dependencies'
+          branch: 'deps'
           sign-commits: true
           labels: 'CD'
 
@@ -72,5 +72,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chores: update docs'
           title: 'Update documentation'
-          branch: 'update-docs'
+          branch: 'docs'
           labels: 'CD'
