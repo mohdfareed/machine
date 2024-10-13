@@ -25,9 +25,7 @@ app = typer.Typer(
 )
 
 # register machine apps
-machines_app = typer.Typer(name="machine", help="Machines setup.")
-machines_app.add_typer(machines.testing.machine_app)
-app.add_typer(machines_app)
+app.add_typer(machines.machines_app)
 
 # register package manager apps
 pkg_app = typer.Typer(name="pkg", help="Package managers.")
