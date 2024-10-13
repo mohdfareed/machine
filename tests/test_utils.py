@@ -15,13 +15,11 @@ from app.utils import (
     create_temp_file,
     is_dir,
     is_file,
-    is_optional,
     is_path,
     link,
     validate,
 )
 from app.utils.logging import StripMarkupFilter
-from app.utils.validators import SkipValidation
 
 
 @pytest.fixture(name="temp_dir")
@@ -99,12 +97,6 @@ def test_create_temp_file() -> None:
         file.unlink()
 
 
-def test_validate_optional() -> None:
-    """Test the validate function with an optional value."""
-    validator = validate(is_optional)
-    assert validator(None) is None
-
-
 def test_validate_path(temp_file: Path) -> None:
     """Test the validate function with a valid path."""
     validator = validate(is_path)
@@ -121,14 +113,6 @@ def test_validate_file(temp_file: Path) -> None:
     """Test the validate function with a valid file."""
     validator = validate(is_file)
     assert validator(temp_file) == temp_file
-
-
-def test_is_optional() -> None:
-    """Test the is_optional function."""
-    assert is_optional("None") is not None
-
-    with pytest.raises(SkipValidation):
-        is_optional(None)
 
 
 def test_is_path_valid(temp_file: Path) -> None:

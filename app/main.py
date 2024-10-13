@@ -30,8 +30,10 @@ machines_app.add_typer(machines.testing.machine_app)
 app.add_typer(machines_app)
 
 # register package manager apps
+pkg_app = typer.Typer(name="pkg", help="Package managers.")
 for pkg_manager in PackageManager.available_managers():
-    app.add_typer(pkg_manager.app())
+    pkg_app.add_typer(pkg_manager.app())
+app.add_typer(pkg_app)
 
 
 @app.callback()

@@ -4,7 +4,7 @@ __all__ = ["PackageManager"]
 
 import shutil
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, TypeVar, Union
+from typing import Callable, List, TypeVar, Union
 
 import rich
 import rich.progress
@@ -97,7 +97,7 @@ class PackageManager(ABC):
         utils.LOGGER.debug("%s was updated successfully.", self.name)
         return self
 
-    def install(self: T, packages: str, **kwargs: Any) -> T:
+    def install(self: T, packages: str, **kwargs: bool) -> T:
         """Install packages."""
         self.validate()
         self.setup()
@@ -111,7 +111,7 @@ class PackageManager(ABC):
             utils.LOGGER.debug("%s was installed successfully.", pkgs[i])
         return self
 
-    def uninstall(self: T, packages: str, *args: Any, **kwargs: Any) -> T:
+    def uninstall(self: T, packages: str, **kwargs: bool) -> T:
         """Uninstall packages."""
         self.validate()
         self.setup()
@@ -121,7 +121,7 @@ class PackageManager(ABC):
             range(len(pkgs)), description="Uninstalling...", transient=True
         ):
             utils.LOGGER.info("Uninstalling %s using %s...", pkgs[i], self.name)
-            self._uninstall(pkgs[i], *args, **kwargs)
+            self._uninstall(pkgs[i], **kwargs)
             utils.LOGGER.debug("%s was uninstalled successfully.", pkgs[i])
         return self
 
