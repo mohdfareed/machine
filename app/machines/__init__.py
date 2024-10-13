@@ -2,7 +2,7 @@
 
 import typer as _typer
 
-from . import testing
+from . import testbench
 
 app = _typer.Typer(name="machine", help="Machines setup.")
-app.add_typer(testing.machine_app)
+app.add_typer(testbench.machine_app)

@@ -16,7 +16,7 @@ class TestingConfig(config.Private):
     invalid_field: int = 0
 
 
-machine_app = typer.Typer(name="test", help="Testing machine.")
+machine_app = typer.Typer(name="test", help="Testbench.")
 
 private_cmd = partial(
     private_files.setup,
