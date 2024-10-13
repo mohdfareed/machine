@@ -6,7 +6,6 @@ __all__ = [
     "LINUX",
     "UNIX",
     "ARM",
-    "PLATFORM",
     "InternalArg",
     "post_install_tasks",
     "post_installation",
@@ -45,7 +44,6 @@ UNIX = MACOS or LINUX
 """Whether the current platform is Unix-based."""
 ARM = platform.machine().startswith(("arm", "aarch64"))
 """Whether the current platform is ARM-based."""
-PLATFORM = platform.platform().replace("-", "[black]|[/]")
 
 InternalArg = typer.Option(parser=lambda _: _, hidden=True, expose_value=False)
 """An internal argument that is not exposed in the CLI."""

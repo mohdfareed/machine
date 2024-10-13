@@ -12,7 +12,6 @@ app = typer.Typer(
     name=APP_NAME,
     context_settings={"help_option_names": ["-h", "--help"]},
     result_callback=utils.post_installation,
-    add_completion=False,
 )
 
 # register machines, plugins, and package managers
@@ -29,6 +28,9 @@ def main(
     ] = False,
 ) -> None:
     """Machine setup CLI."""
+    platform_info = (
+        f"Platform: [blue]{platform.platform().replace('-', '[black]|[/]')}[/]"
+    )
 
     # initialize logging
     utils.init_logging(debug_mode)
@@ -38,18 +40,21 @@ def main(
     utils.LOGGER.debug("Python version: %s", platform.python_version())
     utils.LOGGER.debug("Debug mode: %s", debug_mode)
     utils.LOGGER.debug("Log file: %s", log_file_path)
-    utils.LOGGER.debug("Platform: [blue]%s[/]", utils.PLATFORM)
-    utils.LOGGER.debug("ARM: %s", utils.ARM)
+    utils.LOGGER.debug(platform_info)
 
 
+@app.command()
 def completions() -> None:
     """Install shell completions."""
+    if not utils.UNIX:
+        utils.LOGGER.error("Unsupported platform for shell completions.")
+        raise typer.Abort
+
+    utils.LOGGER.debug("Generating completions...")
     temp_file = utils.create_temp_file()
-    temp_file.parent.mkdir(parents=True, exist_ok=True)
-
     utils.Shell().execute(f"poetry run {APP_NAME} --show-completion > '{temp_file}'")
-    temp_file.rename(env.Unix().COMPLETIONS_PATH / APP_NAME)
 
-
-if utils.UNIX:
-    app.command()(completions)
+    comp_path = env.Unix().COMPLETIONS_PATH / APP_NAME
+    utils.LOGGER.debug("Installing completions at: %s", comp_path)
+    temp_file.rename(comp_path)
+    utils.LOGGER.info("Shell completions installed successfully.")
