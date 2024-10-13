@@ -5,7 +5,7 @@ import shutil
 import typer
 
 from app import config, env, utils
-from app.package_managers import Brew, PackageManager, SnapStore, Winget
+from app.pkg_managers import Brew, PackageManager, SnapStore, Winget
 from app.utils import LOGGER
 
 plugin_app = typer.Typer(name="ssh", help="Configure SSH keys.")

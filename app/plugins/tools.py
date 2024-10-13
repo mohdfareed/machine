@@ -6,15 +6,7 @@ import typer
 
 from app import config, env, utils
 from app.models import PluginException
-from app.package_managers import (
-    APT,
-    Brew,
-    PackageManager,
-    PIPx,
-    Scoop,
-    SnapStore,
-    Winget,
-)
+from app.pkg_managers import APT, Brew, PackageManager, PIPx, Scoop, SnapStore, Winget
 from app.utils import LOGGER
 
 plugin_app = typer.Typer(name="shell", help="Configure shell.")

@@ -7,7 +7,7 @@ from pathlib import Path
 import typer
 
 from app import config, env, utils
-from app.package_managers import APT
+from app.pkg_managers import APT
 from app.utils import LOGGER
 
 plugin_app = typer.Typer(name="ssh", help="Configure SSH keys.")

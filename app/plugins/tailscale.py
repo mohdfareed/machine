@@ -8,7 +8,7 @@ import typer
 
 from app import utils
 from app.models import PluginException
-from app.package_managers import Brew
+from app.pkg_managers import Brew
 from app.utils import LOGGER
 
 plugin_app = typer.Typer(name="tailscale", help="Configure Tailscale.")

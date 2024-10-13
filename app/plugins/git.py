@@ -3,7 +3,7 @@
 import typer
 
 from app import config, env, utils
-from app.package_managers import APT, Brew, PackageManager, Winget
+from app.pkg_managers import APT, Brew, PackageManager, Winget
 
 plugin_app = typer.Typer(name="git", help="Configure git.")
 

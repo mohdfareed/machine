@@ -5,7 +5,7 @@ from typing import Annotated
 
 import typer
 
-from app import APP_NAME, __version__, machines, package_managers, plugins, utils
+from app import APP_NAME, __version__, machines, pkg_managers, plugins, utils
 from app.utils.logging import log_file_path
 
 app = typer.Typer(
@@ -17,7 +17,7 @@ app = typer.Typer(
 # register machines, plugins, and package managers
 app.add_typer(machines.app)
 app.add_typer(plugins.app)
-app.add_typer(package_managers.app)
+app.add_typer(pkg_managers.app)
 
 
 @app.callback()
