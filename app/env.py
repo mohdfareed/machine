@@ -34,7 +34,7 @@ class Unix(Environment):
 
     XDG_CONFIG_HOME: Path = Path.home() / ".config"
     XDG_DATA_HOME: Path = Path.home() / ".local/share"
-    COMPLETIONS_PATH: Optional[Path] = None
+    COMPLETIONS_PATH: Path = XDG_DATA_HOME / "zinit" / "completions"
     ZDOTDIR: Path = XDG_CONFIG_HOME / "zsh"
 
     GITCONFIG: Path = XDG_CONFIG_HOME / "git" / "config"

@@ -4,7 +4,7 @@ on:
   push:
     branches-ignore: [main]
 
-jobs:
+jobs: # FIXME: don't run on merge commits
   chatgpt-commit-message:
     name: ChatGPT commit message
     timeout-minutes: 10
