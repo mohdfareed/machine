@@ -2,37 +2,29 @@
 
 __all__ = ["APT"]
 
-from app import utils
+import typer
+
 from app.utils import LOGGER
 
-from .models import PackageManager
+from .package_manager import PackageManager
 
 
 class APT(PackageManager):
     """Advanced Package Tool (APT) package manager."""
 
-    @classmethod
-    @utils.setup_wrapper
-    def setup(cls) -> None:
+    def is_supported(self) -> bool:
+        return self.is_available()
+
+    def _setup(self) -> None:
         pass
 
-    @classmethod
-    @utils.update_wrapper
-    def update(cls) -> None:
-        APT.shell.execute("sudo apt update && sudo apt upgrade -y")
+    def _update(self) -> None:
+        self.shell.execute("sudo apt update && sudo apt upgrade -y")
 
-    @classmethod
-    @utils.cleanup_wrapper
-    def cleanup(cls) -> None:
-        APT.shell.execute("sudo apt autoremove -y")
+    def _cleanup(self) -> None:
+        self.shell.execute("sudo apt autoremove -y")
 
-    @classmethod
-    @utils.is_supported_wrapper
-    def is_supported(cls) -> bool:
-        return cls.is_available()
-
-    @classmethod
-    def add_keyring(cls, keyring: str, repo: str, name: str) -> None:
+    def add_keyring(self, keyring: str, repo: str, name: str) -> None:
         """Add a keyring to the apt package manager."""
         LOGGER.info("Adding keyring %s to apt...", keyring)
         keyring_path = f"/etc/apt/keyrings/{keyring}"
@@ -50,3 +42,8 @@ class APT(PackageManager):
             """
         )
         LOGGER.debug("Keyring %s was added successfully.", keyring)
+
+    def app(self) -> typer.Typer:
+        machine_app = super().app()
+        machine_app.command()(self.add_keyring)
+        return machine_app

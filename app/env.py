@@ -19,7 +19,13 @@ class Environment(BaseEnvironment):
         env = env or (
             config.Default().ps_profile if utils.WINDOWS else config.Default().zshenv
         )
-        return super().load(env)
+        env_vars = utils.load_env(env)
+
+        utils.LOGGER.debug("Loading environment from: %s", env)
+        for field in self.model_fields:
+            if field in env_vars:
+                setattr(self, field, env_vars[field])
+        return self
 
 
 class Unix(Environment):

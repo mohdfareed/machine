@@ -2,42 +2,40 @@
 
 __all__ = ["Scoop"]
 
+import typer
+
 from app import utils
 from app.utils import LOGGER
 
-from .models import PackageManager
+from .package_manager import PackageManager
 
 
 class Scoop(PackageManager):
     """Scoop package manager."""
 
-    @classmethod
-    @utils.setup_wrapper
-    def setup(cls) -> None:
-        Scoop.shell.execute(
-            "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"
-        )
-        Scoop.shell.execute('iex "& {$(irm get.scoop.sh)} -RunAsAdmin"')
-
-    @classmethod
-    @utils.update_wrapper
-    def update(cls) -> None:
-        Scoop.shell.execute("scoop update")
-        Scoop.shell.execute("scoop update *")
-
-    @classmethod
-    @utils.cleanup_wrapper
-    def cleanup(cls) -> None:
-        Scoop.shell.execute("scoop cleanup *")
-
-    @classmethod
-    @utils.is_supported_wrapper
-    def is_supported(cls) -> bool:
+    def is_supported(self) -> bool:
         return utils.WINDOWS
 
-    @staticmethod
-    def add_bucket(bucket: str) -> None:
+    def _setup(self) -> None:
+        self.shell.execute(
+            "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"
+        )
+        self.shell.execute('iex "& {$(irm get.scoop.sh)} -RunAsAdmin"')
+
+    def _update(self) -> None:
+        self.shell.execute("scoop update")
+        self.shell.execute("scoop update *")
+
+    def _cleanup(self) -> None:
+        self.shell.execute("scoop cleanup *")
+
+    def add_bucket(self, bucket: str) -> None:
         """Add a bucket to the scoop package manager."""
         LOGGER.info("Adding bucket %s to scoop...", bucket)
-        Scoop.shell.execute(f"scoop bucket add {bucket}", throws=False)
+        self.shell.execute(f"scoop bucket add {bucket}", throws=False)
         LOGGER.debug("Bucket %s was added successfully.", bucket)
+
+    def app(self) -> typer.Typer:
+        manager_app = super().app()
+        manager_app.command()(self.add_bucket)
+        return manager_app

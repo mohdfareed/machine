@@ -2,12 +2,11 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TypeVar
+from typing import Protocol, TypedDict, TypeVar
 
+import typer
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from app import utils
 
 T = TypeVar("T", bound="BaseEnvironment")
 
@@ -25,9 +24,26 @@ class BaseEnvironment(BaseSettings, ABC):
     def load(self: T, env: Path) -> T:
         """Load environment variables from a file."""
 
-        utils.LOGGER.debug("Loaded environment variables from: %s", env)
-        env_vars = utils.load_env(env)
-        for field in self.model_fields:
-            if field in env_vars:
-                setattr(self, field, env_vars[field])
-        return self
+
+class PluginProtocol(Protocol):  # pylint: disable=too-few-public-methods
+    """Plugin protocol required to register it to a machine."""
+
+    plugin_app: typer.Typer
+
+
+class MachineProtocol(Protocol):  # pylint: disable=too-few-public-methods
+    """Machine protocol required to register it to the app."""
+
+    machine_app: typer.Typer
+
+
+class PluginException(Exception):
+    """Plugin exception."""
+
+
+class PackageManagerException(Exception):
+    """Base exception for package manager errors."""
+
+
+class PackageSpec(TypedDict):
+    """Package installation specification."""

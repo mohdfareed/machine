@@ -5,7 +5,7 @@ from pathlib import Path
 
 import typer
 
-from app import config, env, plugins, utils
+from app import config, env, utils
 from app.plugins import git, private_files
 
 
@@ -27,7 +27,7 @@ class TestingConfig(config.Private):
 machine_app = typer.Typer(name="test", help="Testing machine.")
 
 private_cmd = partial(private_files.setup, private_config=TestingConfig())
-plugin_app = plugins.create(private_files, private_cmd)
+plugin_app = utils.create_plugin(private_files, private_cmd)
 machine_app.add_typer(plugin_app)
 
 git_cmd = partial(
@@ -36,7 +36,7 @@ git_cmd = partial(
     gitignore=utils.create_temp_file("gitignore"),
     environment=TestingEnvironment(),
 )
-plugin_app = plugins.create(git, git_cmd)
+plugin_app = utils.create_plugin(git, git_cmd)
 machine_app.add_typer(plugin_app)
 
 

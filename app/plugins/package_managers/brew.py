@@ -2,50 +2,47 @@
 
 __all__ = ["Brew"]
 
-
-from typing import Union
+import typer
 
 from app import utils
+from app.models import PackageManagerException
 from app.utils import LOGGER
 
-from .models import PackageManager, PackageManagerException
+from .package_manager import PackageManager
 
 
 class Brew(PackageManager):
     """Homebrew package manager."""
 
-    @classmethod
-    @utils.setup_wrapper
-    def setup(cls) -> None:
-        try:  # install homebrew otherwise
-            Brew.shell.execute('/bin/bash -c "$(curl -fsSL https://git.io/JIY6g)"')
+    def is_supported(self) -> bool:
+        return utils.MACOS or not utils.ARM
+
+    def _setup(self) -> None:
+        try:
+            # Install Homebrew
+            self.shell.execute('/bin/bash -c "$(curl -fsSL https://git.io/JIY6g)"')
         except utils.ShellError as ex:
             raise PackageManagerException("Failed to install Homebrew.") from ex
 
-    @classmethod
-    @utils.update_wrapper
-    def update(cls) -> None:
-        Brew.shell.execute("brew update && brew upgrade")
+    def _update(self) -> None:
+        self.shell.execute("brew update && brew upgrade")
 
-    @classmethod
-    @utils.install_wrapper
-    def install(cls, package: Union[str, list[str]], cask: bool = False) -> None:
-        Brew.shell.execute(f"brew install {'--cask' if cask else ''} {package}")
+    def _cleanup(self) -> None:
+        self.shell.execute("brew cleanup --prune=all", throws=False)
 
-    @classmethod
-    @utils.cleanup_wrapper
-    def cleanup(cls) -> None:
-        Brew.shell.execute("brew cleanup --prune=all", throws=False)
+    def _install(self, package: str, cask: bool = False) -> None:
+        self.shell.execute(f"brew install {'--cask' if cask else ''} {package}")
 
-    @classmethod
-    @utils.is_supported_wrapper
-    def is_supported(cls) -> bool:
-        return utils.MACOS or not utils.ARM
+    def _uninstall(self, package: str) -> None:
+        self.shell.execute(f"brew uninstall {package}")
 
-    @classmethod
-    def install_brewfile(cls, file: str) -> None:
+    def install_brewfile(self, filepath: str) -> None:
         """Install Homebrew packages from a Brewfile."""
-
         LOGGER.info("Installing Homebrew packages from Brewfile...")
-        Brew.shell.execute(f"brew bundle install --file={file}")
+        self.shell.execute(f"brew bundle install --file={filepath}")
         LOGGER.debug("Homebrew packages were installed successfully.")
+
+    def app(self) -> typer.Typer:
+        machine_app = super().app()
+        machine_app.command()(self.install_brewfile)
+        return machine_app

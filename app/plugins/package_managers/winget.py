@@ -1,26 +1,21 @@
 """WinGet package manager module."""
 
-__all__ = ["WinGet"]
+__all__ = ["Winget"]
 
-from app import utils
-
-from .models import PackageManager
+from .package_manager import PackageManager
 
 
-class WinGet(PackageManager):
+class Winget(PackageManager):
     """WinGet package manager."""
 
-    @classmethod
-    @utils.update_wrapper
-    def update(cls) -> None:
-        WinGet.shell.execute("winget upgrade --all --include-unknown")
+    def is_supported(self) -> bool:
+        return self.is_available()
 
-    @classmethod
-    @utils.install_wrapper
-    def install(cls, package: str) -> None:
-        WinGet.shell.execute(f"winget install -e --id {package}", throws=False)
+    def _setup(self) -> None:
+        return None
 
-    @classmethod
-    @utils.is_supported_wrapper
-    def is_supported(cls) -> bool:
-        return cls.is_available()
+    def _update(self) -> None:
+        self.shell.execute("winget upgrade --all --include-unknown")
+
+    def _install(self, package: str) -> None:
+        self.shell.execute(f"winget install -e --id {package}", throws=False)

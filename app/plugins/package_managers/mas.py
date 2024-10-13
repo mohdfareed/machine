@@ -2,27 +2,20 @@
 
 __all__ = ["MAS"]
 
-
 from app import utils
 
 from .brew import Brew
-from .models import PackageManager
+from .package_manager import PackageManager
 
 
 class MAS(PackageManager):
     """Mac App Store."""
 
-    @classmethod
-    @utils.setup_wrapper
-    def setup(cls) -> None:
-        Brew.install("mas")
-
-    @classmethod
-    @utils.update_wrapper
-    def update(cls) -> None:
-        MAS.shell.execute("mas upgrade")
-
-    @classmethod
-    @utils.is_supported_wrapper
-    def is_supported(cls) -> bool:
+    def is_supported(self) -> bool:
         return utils.MACOS
+
+    def _setup(self) -> None:
+        Brew().install("mas")
+
+    def _update(self) -> None:
+        self.shell.execute("mas upgrade")

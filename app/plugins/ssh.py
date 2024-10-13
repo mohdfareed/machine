@@ -5,16 +5,16 @@ __all__ = ["setup", "setup_server", "generate_key_pair"]
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 
 from app import config, env, utils
 from app.utils import LOGGER
 
-from .package_managers import APT, PackageManager
+from .package_managers import APT
 
-app = typer.Typer(name="ssh", help="Configure SSH keys.")
+plugin_app = typer.Typer(name="ssh", help="Configure SSH keys.")
 shell = utils.Shell()
 
 PUBLIC_EXT: str = ".pub"
@@ -23,7 +23,7 @@ PRIVATE_EXT: str = ".key"
 """The extension of the private key filenames."""
 
 
-@app.command()
+@plugin_app.command()
 def setup(
     ssh_config: utils.OptionalFileArg = None,
     ssh_keys: utils.ReqDirArg = config.Private().ssh_keys,
@@ -97,13 +97,10 @@ def _setup_key(key: "_SSHKeyPair", environment: env.Environment) -> None:
         LOGGER.info("Key already exists in SSH agent")
 
 
-@app.command()
-def setup_server(
-    apt: Annotated[Optional[PackageManager], utils.InternalArg] = None
-) -> None:
+@plugin_app.command()
+def setup_server() -> None:
     """setup an ssh server on a new machine."""
     LOGGER.info("Setting up SSH server...")
-    apt = apt or APT()
 
     if utils.WINDOWS:
         shell.execute("Add-WindowsCapability -Online -Name OpenSSH.Server")
@@ -122,14 +119,14 @@ def setup_server(
         return
 
     if utils.LINUX:
-        apt.install("openssh-server")
+        APT().install("openssh-server")
         shell.execute("sudo systemctl start ssh")
         shell.execute("sudo systemctl enable ssh")
         LOGGER.debug("SSH server setup complete.")
         return
 
 
-@app.command()
+@plugin_app.command()
 def generate_key_pair(
     name: str,
     keys_dir: utils.DirArg = config.Private().ssh_keys,
