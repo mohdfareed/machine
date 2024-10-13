@@ -45,6 +45,7 @@
         "typer",
         "venv",
         "winget",
+        "ZDOTDIR",
         "zinit"
     ],
 }

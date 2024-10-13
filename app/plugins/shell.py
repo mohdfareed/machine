@@ -1,4 +1,4 @@
-"""Setup module containing a `setup` function for setting up the shell on a new machine."""
+"""Shell setup module."""
 
 import typer
 

@@ -97,7 +97,7 @@ class PackageManager(ABC):
         utils.LOGGER.debug("%s was updated successfully.", self.name)
         return self
 
-    def install(self: T, packages: str, *args: Any, **kwargs: Any) -> T:
+    def install(self: T, packages: str, **kwargs: Any) -> T:
         """Install packages."""
         self.validate()
         self.setup()
@@ -107,7 +107,7 @@ class PackageManager(ABC):
             range(len(pkgs)), description="Installing...", transient=True
         ):
             utils.LOGGER.info("Installing %s using %s...", pkgs[i], self.name)
-            self._install(pkgs[i], *args, **kwargs)
+            self._install(pkgs[i], **kwargs)
             utils.LOGGER.debug("%s was installed successfully.", pkgs[i])
         return self
 

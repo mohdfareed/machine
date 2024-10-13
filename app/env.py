@@ -14,6 +14,7 @@ class Environment(BaseEnvironment):
     GITCONFIG: Path = Path.home() / ".gitconfig"
     GITIGNORE: Path = Path.home() / ".gitignore"
     SSH_DIR: Path = Path.home() / ".ssh"
+    VSCODE: Path = Path.home() / ".config" / "Code" / "User"
 
     def load(self: T, env: Optional[Path] = None) -> T:
         env = env or (
@@ -43,6 +44,11 @@ class Unix(Environment):
     PS_PROFILE: Path = XDG_CONFIG_HOME / "powershell" / "profile.ps1"
     ZSHRC: Path = ZDOTDIR / ".zshrc"
     ZSHENV: Path = Path.home() / ".zshenv"
+    VSCODE: Path = (
+        Environment().VSCODE
+        if not utils.MACOS
+        else (Path.home() / "Library" / "Application Support" / "Code" / "User")
+    )
 
 
 class Windows(Environment):
@@ -56,6 +62,7 @@ class Windows(Environment):
     GITIGNORE: Path = USERPROFILE / ".gitignore"
     VIM: Path = LOCALAPPDATA / "nvim"
     PS_PROFILE: Path = USERPROFILE / "Documents" / "WindowsPowerShell" / "profile.ps1"
+    VSCODE: Path = APPDATA / "Code" / "User"
 
 
 Default = Windows if utils.WINDOWS else Unix

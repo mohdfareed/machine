@@ -1,6 +1,4 @@
-"""Setup module containing a `setup` function for setting up Tailscale on a new machine."""
-
-__all__ = ["setup"]
+"""Tailscale setup module."""
 
 import os
 import shutil
