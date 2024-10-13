@@ -24,19 +24,18 @@ PRIVATE_EXT: str = ".key"
 def setup(
     ssh_config: utils.OptionalFileArg = None,
     ssh_keys: utils.ReqDirArg = config.Private().ssh_keys,
-    environment: env.EnvArg = env.Default(),
 ) -> None:
     """Setup ssh keys and configuration on a new machine. The ssh keys and
     config file are copied from the specified directory."""
 
     LOGGER.info("Setting up SSH...")
     if ssh_config:  # symlink ssh config file
-        (environment.SSH_DIR / "config").unlink(missing_ok=True)
-        ssh_config.link_to(environment.SSH_DIR / "config")
+        (env.Default().SSH_DIR / "config").unlink(missing_ok=True)
+        ssh_config.link_to(env.Default().SSH_DIR / "config")
 
     # read ssh keys from directory
     for key in _load_keys(ssh_keys):
-        _setup_key(key, environment)  # setup ssh keys
+        _setup_key(key, env.Default())  # setup ssh keys
     LOGGER.info("SSH setup complete")
 
 

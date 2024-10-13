@@ -49,6 +49,7 @@ class Unix(Environment):
         if not utils.MACOS
         else (Path.home() / "Library" / "Application Support" / "Code" / "User")
     )
+    ZED_SETTINGS: Path = XDG_CONFIG_HOME / "zed" / "settings.json"
 
 
 class Windows(Environment):

@@ -19,7 +19,6 @@ vscode: str
 @plugin_app.command()
 def setup(
     configuration: config.DefaultConfigArg = config.Default(),
-    environment: env.EnvArg = env.Default(),
 ) -> None:
     """Setup VSCode on a new machine."""
     LOGGER.info("Setting up VSCode...")
@@ -32,8 +31,8 @@ def setup(
     )
 
     for file in configuration.vscode.iterdir():
-        (environment.VSCODE / file.name).unlink(missing_ok=True)
-        file.link_to(environment.VSCODE / file.name)
+        (env.Default().VSCODE / file.name).unlink(missing_ok=True)
+        file.link_to(env.Default().VSCODE / file.name)
     LOGGER.debug("VSCode was setup successfully.")
 
 
