@@ -37,3 +37,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 strict = true
+
+[tool.coverage.run]
+omit = [
+    "app/machines/*",
+    "app/plugins/*"
+]

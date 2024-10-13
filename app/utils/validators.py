@@ -23,19 +23,12 @@ import typer
 T = TypeVar("T")
 
 
-class SkipValidation(Exception):
-    """Skip validation exception."""
-
-
 def validate(*validators: Callable[[T], T]) -> Callable[[T], T]:
     """Validate data against a list of validators."""
 
     def validator(data: T) -> T:
         for _validator in validators:
-            try:
-                data = _validator(data)
-            except SkipValidation:
-                break
+            data = _validator(data)
         return data
 
     return validator

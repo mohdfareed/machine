@@ -127,7 +127,7 @@ class ShellError(Exception):
 def _exec_process(process: subprocess.Popen[str], info: bool = False) -> ShellResults:
     output = ""  # if the process has no output
     if process.stdout is None:
-        return ShellResults(process.wait(), output)
+        raise ShellError("Process output file not found.")
 
     while True:  # read output from the process in real time
         line = process.stdout.readline().strip()

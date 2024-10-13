@@ -5,7 +5,7 @@ from pathlib import Path
 
 import typer
 
-from app import config, env, utils
+from app import config, env, main, utils
 from app.plugins import private_files
 
 
@@ -18,24 +18,28 @@ class TestingConfig(config.Private):
 
 machine_app = typer.Typer(name="test", help="Testing machine.")
 
-private_cmd = partial(private_files.setup, private_config=TestingConfig())
+private_cmd = partial(
+    private_files.setup,
+    private_config=TestingConfig(),
+    private_dir=utils.create_temp_dir("private"),
+)
 plugin_app = utils.create_plugin(private_files, private_cmd)
 machine_app.add_typer(plugin_app)
 
 
 @machine_app.command()
-def setup(
-    private_dir: private_files.PrivateDirArg = utils.create_temp_dir("private"),
-) -> None:
+def setup() -> None:
     """Test setting up a machine."""
     utils.LOGGER.info("Setting up machine...")
+    main.post_install_tasks += [
+        lambda: utils.LOGGER.info("Machine setup completed successfully")
+    ]
 
     config_files = TestingConfig()
-    environment = env.Default()
-    (private_dir / config_files.valid_field.name).touch()
-
+    environment = (env.Windows if utils.WINDOWS else env.Unix)()
     utils.LOGGER.debug("Config files: %s", config_files.model_dump_json(indent=2))
     utils.LOGGER.debug("Environment: %s", environment.model_dump_json(indent=2))
 
-    private_files.setup(private_dir=private_dir, private_config=config_files)
-    utils.LOGGER.info("Machine setup completed successfully")
+    temp_dir = utils.create_temp_dir("private")
+    (temp_dir / config_files.valid_field.name).touch()
+    private_files.setup(private_dir=temp_dir, private_config=config_files)

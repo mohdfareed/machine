@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+import typer
 from pytest import MonkeyPatch
 
 from app import env, utils
@@ -10,7 +11,7 @@ from app import env, utils
 
 def test_env_fail() -> None:
     """Test the environment variables failing."""
-    with pytest.raises(utils.ShellError):
+    with pytest.raises(typer.Abort):
         env.Default().load(Path("."))
 
 
