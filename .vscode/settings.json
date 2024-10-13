@@ -25,6 +25,7 @@
     ],
     "cSpell.words": [
         "aarch",
+        "btop",
         "Codespace",
         "Codespaces",
         "dotenv",
@@ -41,8 +42,11 @@
         "pyenv",
         "pylint",
         "pytest",
+        "Tailscale",
         "typer",
         "venv",
+        "winget",
+        "ZDOTDIR",
         "zinit"
     ],
 }

@@ -74,6 +74,11 @@ def _resolve_poetry() -> str:
 def _setup_environment(poetry: str) -> None:
     _log_info("Installing development dependencies with Poetry...")
     subprocess.run(
+        [poetry, "env", "use", shutil.which("python3.9") or "python3.9"],
+        env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
+        check=True,
+    )
+    subprocess.run(
         [poetry, "install", "--with", "dev"],
         env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
         check=True,

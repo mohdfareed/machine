@@ -7,43 +7,37 @@ import typer
 
 from app import config, utils
 
-IGNORED_FIELDS = {"config"}
-
 PrivateDirArg = Annotated[
     Path,
-    typer.Argument(
+    typer.Option(
+        prompt=True,
         help="The private files directory.",
-        callback=utils.validate(utils.is_optional, utils.is_dir),
+        callback=utils.validate(utils.is_dir),
     ),
 ]
-PrivateConfigArg = Annotated[config.Private, utils.IgnoredArgument]
-app = typer.Typer(name="private", help="Private files setup.")
+plugin_app = typer.Typer(name="private", help="Set up private config files.")
 
 
-@app.command()
+@plugin_app.command()
 def setup(
-    private_dir: PrivateDirArg,
-    private_config: Annotated[config.Private, utils.IgnoredArgument] = config.Private(),
+    private_dir: PrivateDirArg, private_config: config.PrivateArg = config.Private()
 ) -> None:
     """Setup private files on a machine."""
-
     utils.LOGGER.info("Setting up private files...")
+    utils.LOGGER.debug("Private directory: %s", private_dir)
+
     machine_fields = config.Machine().model_fields.keys()
-    for field in private_config.model_fields:
+    ignored_fields = [*machine_fields, *private_config.excluded_fields]
 
-        if field in [*machine_fields, *IGNORED_FIELDS]:
-            utils.LOGGER.debug("Skipping: %s", field)
-            continue  # skip machine fields and ignored fields
-        if not isinstance(path := getattr(private_config, field, None), Path):
-            utils.LOGGER.debug("Skipping: %s", field)
-            continue  # skip non-Path fields
+    for field, info in private_config.model_fields.items():
+        if (info.annotation is not Path) or (field in ignored_fields):
+            continue  # skip ignored and non-Path fields
 
+        path: Path = getattr(private_config, field)
         private_file = private_dir / path.name
         if not private_file.exists():
             utils.LOGGER.warning(
-                "Field '%s' does not exist at: %s",
-                field,
-                private_file,
+                "Private field '%s' does not exist at: %s", field, private_file
             )
             continue
 

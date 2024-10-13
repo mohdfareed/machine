@@ -1,8 +1,8 @@
 """Machines setup package."""
 
-import typer
+import typer as _typer
 
 from app.machines import testing
 
-app = typer.Typer(name="machine", help="Machines setup.")
-app.add_typer(testing.app)
+machines_app = _typer.Typer(name="machine", help="Machines setup.")
+machines_app.add_typer(testing.machine_app)

@@ -4,25 +4,22 @@ import logging
 import shutil
 from pathlib import Path
 from typing import Any, Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 import typer
 
 from app.utils import (
-    SkipValidation,
-    StripMarkupFilter,
+    Shell,
     create_temp_dir,
     create_temp_file,
     is_dir,
     is_file,
-    is_optional,
     is_path,
     link,
-    post_install_tasks,
-    post_installation,
     validate,
 )
+from app.utils.logging import StripMarkupFilter
 
 
 @pytest.fixture(name="temp_dir")
@@ -30,6 +27,7 @@ def temp_dir_fixture() -> Generator[Path, Any, None]:
     """Create a temporary directory fixture for file-related tests."""
     path = Path("temp_test_dir")
     path.mkdir(exist_ok=True)
+
     yield path
     shutil.rmtree(path)
 
@@ -39,6 +37,7 @@ def temp_file_fixture(temp_dir: Path) -> Generator[Any, Any, None]:
     """Create a temporary file fixture for file-related tests."""
     file_path = temp_dir / "temp_test_file.txt"
     file_path.touch(exist_ok=True)
+
     yield file_path
     file_path.unlink()
 
@@ -55,24 +54,9 @@ def test_strip_markup_filter() -> None:
         exc_info=None,
     )
     filter_instance = StripMarkupFilter()
+
     assert filter_instance.filter(log_record) is True
     assert log_record.msg == "Bold message"
-
-
-def test_post_installation() -> None:
-    """Test the post_installation function."""
-    task1 = MagicMock()
-    task2 = MagicMock()
-    post_install_tasks.append(task1)
-    post_install_tasks.append(task2)
-
-    post_installation()
-
-    task1.assert_called_once()
-    task2.assert_called_once()
-
-    # Clean up
-    post_install_tasks.clear()
 
 
 def test_link(temp_dir: Path) -> None:
@@ -90,20 +74,19 @@ def test_link(temp_dir: Path) -> None:
 
 def test_create_temp_dir() -> None:
     """Test the create_temp_dir function."""
-    with patch("app.utils.atexit.register") as mock_register:
+    with patch("atexit.register") as mock_register:
         file = create_temp_dir("test")
 
         assert file.exists()
         assert file.is_dir()
 
         mock_register.assert_called_once()
-
         shutil.rmtree(file)
 
 
 def test_create_temp_file() -> None:
     """Test the create_temp_file function."""
-    with patch("app.utils.atexit.register") as mock_register:
+    with patch("atexit.register") as mock_register:
         file = create_temp_file("test")
         file.touch()
 
@@ -111,14 +94,7 @@ def test_create_temp_file() -> None:
         assert file.is_file()
 
         mock_register.assert_called_once()
-
         file.unlink()
-
-
-def test_validate_optional() -> None:
-    """Test the validate function with an optional value."""
-    validator = validate(is_optional)
-    assert validator(None) is None
 
 
 def test_validate_path(temp_file: Path) -> None:
@@ -137,14 +113,6 @@ def test_validate_file(temp_file: Path) -> None:
     """Test the validate function with a valid file."""
     validator = validate(is_file)
     assert validator(temp_file) == temp_file
-
-
-def test_is_optional() -> None:
-    """Test the is_optional function."""
-    assert is_optional("None") is not None
-
-    with pytest.raises(SkipValidation):
-        is_optional(None)
 
 
 def test_is_path_valid(temp_file: Path) -> None:
@@ -178,3 +146,14 @@ def test_is_file_invalid() -> None:
     """Test the is_file function with an invalid file."""
     with pytest.raises(typer.BadParameter):
         is_file(Path("invalid_file.txt"))
+
+
+def test_shell() -> None:
+    """Test the shell function."""
+
+    shell = Shell()
+    shell.execute("echo 'sudo test'")
+    shell.execute("echo 'error test'")
+    shell.execute("echo 'warning test'")
+    shell.execute("echo 'info test'", info=True)
+    shell.execute("echo")
