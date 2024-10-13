@@ -5,7 +5,6 @@ __all__ = ["APT"]
 import typer
 
 from app import utils
-from app.models import PackageManagerException
 from app.utils import LOGGER
 
 from .package_manager import PackageManager, T
@@ -49,7 +48,8 @@ class APT(PackageManager):
     def from_url(self: T, url: str) -> T:
         """Install a package from a URL."""
         if not url.split("/")[-1].endswith(".deb"):
-            raise PackageManagerException("URL must point to a .deb file")
+            LOGGER.error("URL must point to a .deb file.")
+            raise typer.Abort
         temp_file = utils.create_temp_file()
 
         self.install("wget")
@@ -62,4 +62,5 @@ class APT(PackageManager):
     def app(self) -> typer.Typer:
         machine_app = super().app()
         machine_app.command()(self.add_keyring)
+        machine_app.command()(self.from_url)
         return machine_app

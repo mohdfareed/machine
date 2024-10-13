@@ -37,6 +37,7 @@ def setup(
     LOGGER.debug("VSCode was setup successfully.")
 
 
+@plugin_app.command()
 def setup_tunnels(name: str) -> None:
     """Setup VSCode SSH tunnels as a service."""
     if not shutil.which("code"):

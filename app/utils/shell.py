@@ -9,6 +9,7 @@ import subprocess
 from enum import Enum
 from typing import Any, NamedTuple, Optional, TypeVar
 
+import typer
 from rich.text import Text
 
 LOGGER = logging.getLogger(__name__)
@@ -76,7 +77,9 @@ class Shell:  # pylint: disable=too-few-public-methods
             results = _exec_process(process, info)
 
         if throws and results.returncode != 0:
-            raise ShellError(command, results)
+            LOGGER.error("Command failed with return code %d", results.returncode)
+            LOGGER.error("Command output: %s", results.output)
+            raise typer.Abort
         return results
 
 
