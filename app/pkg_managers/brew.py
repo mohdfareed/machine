@@ -8,7 +8,7 @@ from app import utils
 from app.models import PackageManagerException
 from app.utils import LOGGER
 
-from .package_manager import PackageManager, T
+from .pkg_manager import PackageManager, T
 
 
 class Brew(PackageManager):

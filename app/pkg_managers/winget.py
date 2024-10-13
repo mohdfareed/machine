@@ -4,7 +4,7 @@ __all__ = ["Winget"]
 
 from app import utils
 
-from .package_manager import PackageManager
+from .pkg_manager import PackageManager
 
 
 class Winget(PackageManager):

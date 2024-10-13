@@ -5,7 +5,7 @@ __all__ = ["MAS"]
 from app import utils
 
 from .brew import Brew
-from .package_manager import PackageManager
+from .pkg_manager import PackageManager
 
 
 class MAS(PackageManager):

@@ -7,7 +7,7 @@ import typer
 from app import utils
 from app.utils import LOGGER
 
-from .package_manager import PackageManager, T
+from .pkg_manager import PackageManager, T
 
 
 class Scoop(PackageManager):
