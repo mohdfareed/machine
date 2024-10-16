@@ -40,5 +40,9 @@ def setup() -> None:
 
     else:
         raise PluginException("Unsupported operating system")
-    utils.Shell().execute("sudo tailscale update", info=True)
+
+    # update tailscale
+    result = utils.Shell().execute("sudo tailscale update", info=True, throws=False)
+    if not result.returncode == 0:
+        LOGGER.warning("Failed to update tailscale.")
     LOGGER.debug("Tailscale was setup successfully.")

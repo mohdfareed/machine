@@ -61,7 +61,7 @@ class MacOS(Default):
 
     config: Path = Machine().config / "macos"
     brewfile: Path = config / "Brewfile"
-    system_preferences: Path = config / "preferences.json"
+    system_preferences: Path = config / "preferences.sh"
     ssh_config: Path = config / "ssh.config"
     zshenv: Path = config / "zshenv"
     zshrc: Path = config / "zshrc"

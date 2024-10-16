@@ -9,8 +9,7 @@ from app import config, utils
 
 PrivateDirArg = Annotated[
     Path,
-    typer.Option(
-        prompt=True,
+    typer.Argument(
         help="The private files directory.",
         callback=utils.validate(utils.is_dir),
     ),
@@ -40,6 +39,4 @@ def setup(
                 "Private field '%s' does not exist at: %s", field, private_file
             )
             continue
-
         utils.link(private_file, path)
-        utils.LOGGER.debug("Linked: %s -> %s", private_file, path)

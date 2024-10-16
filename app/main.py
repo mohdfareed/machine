@@ -41,6 +41,7 @@ def main(
     utils.LOGGER.debug("Debug mode: %s", debug_mode)
     utils.LOGGER.debug("Log file: %s", log_file_path)
     utils.LOGGER.debug(platform_info)
+    utils.LOGGER.debug("Environment: %s", env.Default())
 
 
 @app.command()

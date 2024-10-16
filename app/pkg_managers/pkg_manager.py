@@ -73,9 +73,11 @@ class PackageManager(ABC):
 
     def setup(self: T) -> T:
         """Install or update the package manager."""
+
         self.validate()
         if self.is_available():
             utils.LOGGER.debug("%s is already available.", self.name)
+            self.update()
             return self
 
         utils.LOGGER.info("Setting up %s...", self.name)
@@ -89,7 +91,8 @@ class PackageManager(ABC):
     def update(self: T) -> T:
         """Update the package manager and its packages."""
         self.validate()
-        self.setup()
+        if not self.is_available():
+            self.setup()
 
         utils.LOGGER.info("Updating %s...", self.name)
         with rich.status.Status("[bold green]Updating..."):

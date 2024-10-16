@@ -20,7 +20,7 @@ def link(source: Path, target: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.unlink(missing_ok=True)
     target.symlink_to(source, target_is_directory=source.is_dir())
-    LOGGER.debug("Linked: %s => %s", source, target)
+    LOGGER.debug("Linked: %s => %s", target, source)
 
 
 def create_temp_dir(name: str = "") -> Path:

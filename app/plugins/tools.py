@@ -9,10 +9,11 @@ from app.models import PluginException
 from app.pkg_managers import APT, Brew, PackageManager, PIPx, Scoop, SnapStore, Winget
 from app.utils import LOGGER
 
-plugin_app = typer.Typer(name="shell", help="Configure shell.")
+plugin_app = typer.Typer(name="tools", help="Install and configure tools.")
 shell = utils.Shell()
 
 
+@plugin_app.command()
 def setup_fonts() -> None:
     """Setup fonts on a new machine."""
     LOGGER.info("Setting up tailscale...")
@@ -36,6 +37,7 @@ def setup_fonts() -> None:
     LOGGER.debug("Fonts were setup successfully.")
 
 
+@plugin_app.command()
 def setup_docker() -> None:
     """Setup docker on a new Debian machine."""
     LOGGER.info("Setting up Docker...")
@@ -54,6 +56,7 @@ def setup_docker() -> None:
     LOGGER.debug("Docker was setup successfully.")
 
 
+@plugin_app.command()
 def setup_python() -> None:
     """Setup python on a new Debian machine."""
     LOGGER.info("Setting up Python...")
@@ -79,13 +82,14 @@ def setup_python() -> None:
     LOGGER.debug("Python was setup successfully.")
 
 
+@plugin_app.command()
 def setup_node() -> None:
     """Setup node on a new Debian machine."""
     LOGGER.info("Setting up Node...")
 
     if Brew().is_supported():
         Brew().install("nvm")
-    if Winget().is_supported():
+    elif Winget().is_supported():
         Winget().install("Schniz.fnm")
 
     elif utils.LINUX and not shutil.which("nvm"):
@@ -97,6 +101,7 @@ def setup_node() -> None:
     LOGGER.debug("Node was setup successfully.")
 
 
+@plugin_app.command()
 def setup_zed() -> None:
     """Setup the Zed text editor on a new machine."""
     LOGGER.info("Setting up Zed...")
@@ -112,6 +117,7 @@ def setup_zed() -> None:
     LOGGER.debug("Zed was setup successfully.")
 
 
+@plugin_app.command()
 def install_btop() -> None:
     """Install btop on a machine."""
     if Brew().is_supported():
@@ -122,6 +128,7 @@ def install_btop() -> None:
         Scoop().install("btop-lhm")
 
 
+@plugin_app.command()
 def install_powershell(
     configuration: config.DefaultConfigArg = config.Default(),
 ) -> None:
@@ -136,6 +143,7 @@ def install_powershell(
     utils.link(configuration.ps_profile, env.Windows().PS_PROFILE)
 
 
+@plugin_app.command()
 def install_nvim(
     configuration: config.DefaultConfigArg = config.Default(),
 ) -> None:

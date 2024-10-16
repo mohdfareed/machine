@@ -2,6 +2,8 @@
 
 __all__ = ["Brew"]
 
+from pathlib import Path
+
 import typer
 
 from app import utils
@@ -36,7 +38,7 @@ class Brew(PackageManager):
     def _uninstall(self, package: str) -> None:
         self.shell.execute(f"brew uninstall {package}")
 
-    def install_brewfile(self: T, filepath: str) -> T:
+    def install_brewfile(self: T, filepath: Path) -> T:
         """Install Homebrew packages from a Brewfile."""
         LOGGER.info("Installing Homebrew packages from Brewfile...")
         self.shell.execute(f"brew bundle install --file={filepath}")

@@ -2,8 +2,10 @@
 # =============================================================================
 
 # set the machine path
-local script_dir=$(dirname "$(readlink -f "${BASH_SOURCE:-$0}")")
-export MACHINE="$(dirname "$script_dir")"
+if [[ -z "$MACHINE" ]]; then
+    local script_dir=$(dirname "$(readlink -f "${BASH_SOURCE:-$0}")")
+    export MACHINE="$(dirname "$script_dir")"
+fi
 
 # private environment
 export PRIVATE_ENV="$MACHINE/config/private.sh"

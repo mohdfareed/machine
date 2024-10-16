@@ -1,5 +1,6 @@
 """Shell setup module."""
 
+import rich.status
 import typer
 
 from app import config, env, utils
@@ -36,12 +37,13 @@ def setup(
     # update zinit and its plugins
     LOGGER.info("Updating zinit and its plugins...")
     source_env = f"source {configuration.zshenv} && source {configuration.zshrc}"
-    shell.execute(f"{source_env} && zinit self-update && zinit update")
+    with rich.status.Status("[bold green]Updating..."):
+        shell.execute(f"{source_env} && zinit self-update && zinit update")
 
     # clean up
-    shell.execute("sudo rm -rf ~/.zcompdump*", throws=False)
-    shell.execute("sudo rm -rf ~/.zshrc", throws=False)
-    shell.execute("sudo rm -rf ~/.zsh_sessions", throws=False)
-    shell.execute("sudo rm -rf ~/.zsh_history", throws=False)
-    shell.execute("sudo rm -rf ~/.lesshst", throws=False)
+    LOGGER.debug("Cleaning up...")
+    shell.execute(
+        "sudo rm -rf ~/.zcompdump* ~/.zshrc ~/.zsh_sessions ~/.zsh_history ~/.lesshst",
+        throws=False,
+    )
     LOGGER.debug("Shell setup complete.")

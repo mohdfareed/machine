@@ -9,7 +9,6 @@ import subprocess
 from enum import Enum
 from typing import Any, NamedTuple, Optional, TypeVar
 
-import typer
 from rich.text import Text
 
 LOGGER = logging.getLogger(__name__)
@@ -18,7 +17,6 @@ T = TypeVar("T")
 
 # special log matching tokens
 ERROR_TOKEN = "error"
-WARNING_TOKEN = "warning"
 SUDO_TOKEN = "sudo"
 
 ShellResults = NamedTuple("ShellResults", [("returncode", int), ("output", str)])
@@ -78,9 +76,8 @@ class Shell:  # pylint: disable=too-few-public-methods
             results = _exec_process(process, info)
 
         if throws and results.returncode != 0:
-            LOGGER.error("Command failed with return code %d", results.returncode)
-            LOGGER.error("Command output: %s", results.output)
-            raise typer.Abort
+            LOGGER.error("Command failed: [%d] %s", results.returncode, results.output)
+            raise ShellError(results)
         return results
 
 
@@ -146,8 +143,6 @@ def _exec_process(process: subprocess.Popen[str], info: bool = False) -> ShellRe
 def _log_line(line: str, info: bool) -> None:
     if ERROR_TOKEN in line.lower():
         LOGGER.error("[italic]%s[/]", line)
-    elif WARNING_TOKEN in line.lower():
-        LOGGER.warning("[italic]%s[/]", line)
     elif info:
         LOGGER.info("[italic]%s[/]", line)
     else:

@@ -2,7 +2,7 @@
 # =============================================================================
 
 # load core machine configuration
-source $MACHINE/config/zshrc
+source $MACHINE/config/core/zshrc
 
 # Functions and Aliases
 # =============================================================================
