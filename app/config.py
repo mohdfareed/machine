@@ -36,16 +36,6 @@ class Default(Machine):
     zed_settings: Path = config / "zed_settings.jsonc"
 
 
-class Private(Machine):
-    """Private configuration files."""
-
-    machine_id: str = "private"
-    config: Path = Machine().config / machine_id
-
-    private_env: Path = config / "private.sh"
-    ssh_keys: Path = config / "keys"
-
-
 class Codespaces(Default):
     """Github codespaces configuration files."""
 

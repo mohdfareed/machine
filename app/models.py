@@ -13,6 +13,9 @@ from app import utils
 T = TypeVar("T", bound="Environment")
 
 
+# MARK: Types
+
+
 class ConfigFiles(BaseModel, ABC):
     """Configuration files."""
 
@@ -26,6 +29,25 @@ class Environment(BaseSettings, ABC):
     def load(cls: type[T], env_file: Path) -> T:
         """Load the environment variables from file."""
         return utils.load_env(cls(), env_file)
+
+
+PackageSpec = tuple[type["PackageManagerProtocol"], Callable[[], None]]
+
+
+# MARK: Protocols
+
+
+class PackageManagerProtocol(Protocol):  # pylint: disable=too-few-public-methods
+    """Package manager protocol."""
+
+    def app(self) -> typer.Typer:
+        """The package manager's Typer app."""
+        raise NotImplementedError
+
+    @classmethod
+    def is_supported(cls) -> bool:
+        """Check if the package manager is supported."""
+        raise NotImplementedError
 
 
 class PluginProtocol(Protocol):  # pylint: disable=too-few-public-methods
@@ -46,20 +68,7 @@ class MachineProtocol(Protocol):  # pylint: disable=too-few-public-methods
         """Setup the machine."""
 
 
-class PackageManagerProtocol(Protocol):  # pylint: disable=too-few-public-methods
-    """Package manager protocol."""
-
-    def app(self) -> typer.Typer:
-        """The package manager's Typer app."""
-        raise NotImplementedError
-
-    @classmethod
-    def is_supported(cls) -> bool:
-        """Check if the package manager is supported."""
-        raise NotImplementedError
-
-
-PackageSpec = tuple[type[PackageManagerProtocol], Callable[[], None]]
+# MARK: Exceptions
 
 
 class PluginException(Exception):

@@ -1,49 +1,60 @@
 """Git plugin."""
 
-import typer
+__all__ = ["Git", "GitConfig", "GitEnv"]
 
-from app import config, env, utils
-from app.pkg_managers import APT, Brew, PackageManager, Winget
+from pathlib import Path
 
-plugin_app = typer.Typer(name="git", help="Configure git.")
+from app import utils
+
+from .pkg_managers import APT, Brew, Winget
+from .plugin import Configuration, Environment, Plugin, SetupFunc
 
 
-@plugin_app.command()
-def setup(
-    configuration: config.DefaultConfigArg = config.Default(),
-) -> None:
+class GitConfig(Configuration):
+    """Git configuration files."""
+
+    gitconfig: Path
+    gitignore: Path
+
+
+class GitEnv(Environment):
+    """Git environment variables."""
+
+    GITCONFIG: Path
+    GITIGNORE: Path
+
+
+class Git(Plugin[GitConfig, GitEnv]):
     """Configure git."""
 
-    utils.LOGGER.info("Setting up git configuration...")
-    utils.link(configuration.gitconfig, env.Default().GITCONFIG)
-    utils.link(configuration.gitignore, env.Default().GITIGNORE)
-    utils.LOGGER.debug("Git configuration setup complete")
+    unix_packages = "git git-lfs gh"
+    win_packages = "Git.Git GitHub.GitLFS GitHub.CLI Microsoft.GitCredentialManagerCore"
 
+    @property
+    def plugin_setup(self) -> SetupFunc:
+        return self._setup
 
-@plugin_app.command()
-def install() -> None:
-    """Install git."""
+    def _setup(self) -> None:
+        utils.LOGGER.info("Setting up git...")
+        utils.link(self.config.gitconfig, self.env.GITCONFIG)
+        utils.link(self.config.gitignore, self.env.GITIGNORE)
 
-    def _linux_setup() -> None:
+        utils.install_from_specs(
+            [
+                (Brew, lambda: Brew().install(self.unix_packages)),
+                (APT, lambda: self._linux_setup(self.unix_packages)),
+                (Winget, lambda: Winget().install(self.win_packages)),
+            ]
+        )
+        utils.LOGGER.debug("Git setup complete")
+
+    @staticmethod
+    def _linux_setup(unix_packages: str) -> None:
         apt = APT()
-        apt.install("git git-lfs")
         apt.add_keyring(
             "https://cli.github.com/packages/githubcli-archive-keyring.gpg",
             "https://cli.github.com/packages stable main",
             "github-cli",
         )
         apt.update()
-        apt.install("gh")
-
-    PackageManager.from_spec(
-        [
-            (Brew, lambda: Brew().install("git git-lfs gh")),
-            (APT, _linux_setup),
-            (
-                Winget,
-                lambda: Winget().install(
-                    "Git.Git GitHub.GitLFS GitHub.CLI Microsoft.GitCredentialManagerCore"
-                ),
-            ),
-        ]
-    )
+        apt.install(unix_packages)

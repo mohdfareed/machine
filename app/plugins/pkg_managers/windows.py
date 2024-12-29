@@ -48,11 +48,12 @@ class Scoop(PkgManager):
     def cleanup(self) -> None:
         self.shell.execute("scoop cleanup *")
 
-    def add_bucket(self, bucket: str) -> None:
+    def add_bucket(self, bucket: str) -> "Scoop":
         """Add a bucket to the scoop package manager."""
         LOGGER.info("Adding bucket %s to scoop...", bucket)
         self.shell.execute(f"scoop bucket add {bucket}", throws=False)
         LOGGER.debug("Bucket %s was added successfully.", bucket)
+        return self
 
     def app(self) -> typer.Typer:
         manager_app = super().app()

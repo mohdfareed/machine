@@ -1,38 +1,31 @@
 """macOS machine."""
 
-from functools import partial
 from pathlib import Path
 
 import typer
 
-from app import config, pkg_managers, utils
+from app import config, env, models, pkg_managers, utils
 from app.plugins import git, private_files, shell, ssh, tailscale, tools, vscode
 
-PAM_SUDO = Path("/") / "etc" / "pam.d" / "sudo_local"
-PAM_SUDO_MODULE = "pam_tid.so"
-PAM_SUDO_CONTENT = f"""
-auth       sufficient     {PAM_SUDO_MODULE}
+PAM_SUDO_PATH = Path("/") / "etc" / "pam.d" / "sudo_local"
+PAM_SUDO_CONTENT = """
+auth       sufficient     pam_tid.so
 """.strip()
 VSCODE_TUNNELS_NAME = "macbook"
 
-configuration = config.MacOS()
-plugins = [
-    utils.create_plugin(git, partial(git.setup, configuration)),
-    utils.create_plugin(private_files),
-    utils.create_plugin(shell, partial(shell.setup, configuration)),
-    utils.create_plugin(ssh, partial(ssh.setup, configuration.ssh_config)),
-    utils.create_plugin(
-        vscode,
-        partial(vscode.setup, configuration),
-        partial(vscode.setup_tunnels, VSCODE_TUNNELS_NAME),
-    ),
-    utils.create_plugin(tailscale),
-    utils.create_plugin(tools),
-]
+plugins: tuple[models.PluginProtocol] = (
+    git,
+    private_files,
+    shell,
+    ssh,
+    tailscale,
+    tools,
+    vscode,
+)
 
 machine_app = typer.Typer(name="macos", help="macOS machine configuration.")
-for plugin in plugins:
-    machine_app.add_typer(plugin)
+for plugin in (git, private_files, shell, ssh, tailscale, tools, vscode):
+    machine_app.add_typer(plugin.app)
 
 
 @machine_app.command()
@@ -90,17 +83,17 @@ def system_preferences() -> None:
 def enable_touch_id() -> None:
     """Enable Touch ID for sudo on macOS."""
     utils.LOGGER.info("Enabling Touch ID for sudo...")
-    if not PAM_SUDO.exists():
-        PAM_SUDO.parent.mkdir(parents=True, exist_ok=True)
-        utils.Shell().execute(f"sudo touch {PAM_SUDO}")
+    if not PAM_SUDO_PATH.exists():
+        PAM_SUDO_PATH.parent.mkdir(parents=True, exist_ok=True)
+        utils.Shell().execute(f"sudo touch {PAM_SUDO_PATH}")
 
-    pam_sudo_contents = PAM_SUDO.read_text()
+    pam_sudo_contents = PAM_SUDO_PATH.read_text()
     if PAM_SUDO_MODULE in pam_sudo_contents:
         utils.LOGGER.info("Touch ID for sudo already enabled.")
         return
 
     utils.Shell().execute(
-        f"echo '{PAM_SUDO_CONTENT}' | sudo tee {PAM_SUDO} > /dev/null"
+        f"echo '{PAM_SUDO_CONTENT}' | sudo tee {PAM_SUDO_PATH} > /dev/null"
     )
     utils.LOGGER.info("Touch ID for sudo enabled.")
 

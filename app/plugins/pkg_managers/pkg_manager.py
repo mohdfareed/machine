@@ -4,36 +4,34 @@ __all__ = ["PkgManager"]
 
 import shutil
 from abc import ABC
-from typing import TypeVar, Union
+from typing import Union
 
 import rich
-import rich.progress
-import rich.status
 import typer
 
 from app import utils
 from app.models import PackageManagerException
+from app.plugins import plugin
 
-T = TypeVar("T", bound="PkgManager")
+PkgManagerPlugin = plugin.Plugin[plugin.Configuration, plugin.Environment]
 
 
-class PkgManager(ABC):
+class PkgManager(PkgManagerPlugin, ABC):
     """Abstract base class for package managers."""
 
     is_setup = False
-    shell = utils.Shell()
-
-    @property
-    def name(self) -> str:
-        """The package manager name."""
-        return self.__class__.__name__
 
     @property
     def command(self) -> str:
         """The package manager's shell command."""
         return self.name.lower()
 
-    def __init__(self) -> None:
+    @property
+    def plugin_setup(self) -> plugin.SetupFunc:
+        """Package manager-specific setup steps."""
+        return self.setup
+
+    def __init__(self) -> None:  # pylint: disable=super-init-not-called
         """Initialize the package manager."""
         if self.is_setup:
             return
@@ -42,36 +40,27 @@ class PkgManager(ABC):
             raise PackageManagerException(f"{self.name} is not supported.")
 
         if self.is_available():
-            utils.LOGGER.debug("%s is available.", self.name)
             utils.with_status(f"Updating {self.name}...")(self.update)()
+            self.is_setup = True
             return
 
         utils.LOGGER.info("Setting up %s...", self.name)
-        utils.with_status("Setting up...")(self.setup)()
+        utils.with_status("Setting up...")(self.plugin_setup)()
         utils.LOGGER.debug("%s was set up successfully.", self.name)
         self.is_setup = True
 
     def app(self) -> typer.Typer:
         """Create a Typer app for the package manager."""
-        manager_app = typer.Typer(
-            name=self.name.lower(), help=f"{self.name} package manager."
-        )
 
-        manager_app.command()(self.setup)
+        manager_app = super().app()
         manager_app.command()(self.update)
         manager_app.command()(self.install)
         manager_app.command()(self.cleanup)
-        manager_app.command(name="status")(self.print_status)
         return manager_app
 
     def is_available(self) -> bool:
         """Check if the package manager is available on the system."""
         return shutil.which(self.command) is not None
-
-    @classmethod
-    def is_supported(cls) -> bool:
-        """Check if the package manager is supported."""
-        return True
 
     def setup(self) -> None:
         """Package manager-specific setup steps."""
@@ -93,12 +82,7 @@ class PkgManager(ABC):
         """Package manager-specific cleanup command. Optional."""
 
     def print_status(self) -> None:
-        """Print the status of the package manager."""
-        is_available = (
-            "[bold green]available[/]"
-            if self.is_available()
-            else "[bold red]not available[/]"
-        )
+        """Print the status of the plugin."""
 
         is_supported = (
             "[bold green]supported[/]"
@@ -106,7 +90,13 @@ class PkgManager(ABC):
             else "[bold red]not supported[/]"
         )
 
-        rich.print(f"{self.name} is {is_available} and {is_supported}.")
+        is_available = (
+            "[bold green]available[/]"
+            if self.is_available()
+            else "[bold red]not available[/]"
+        )
+
+        rich.print(f"{self.name} is {is_supported} and {is_available}.")
 
     def __del__(self) -> None:
         """Cleanup the package manager."""

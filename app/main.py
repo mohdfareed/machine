@@ -5,16 +5,8 @@ from typing import Annotated
 
 import typer
 
-from app import (
-    APP_NAME,
-    __version__,
-    config,
-    env,
-    machines,
-    pkg_managers,
-    plugins,
-    utils,
-)
+from app import APP_NAME, __version__, env, machines, utils
+from app.plugins import pkg_managers
 from app.utils.logging import log_file_path
 
 app = typer.Typer(
@@ -23,10 +15,9 @@ app = typer.Typer(
     result_callback=utils.post_installation,
 )
 
-# register machines, plugins, and package managers
+# register machines, and package managers
 app.add_typer(machines.app)
-app.add_typer(plugins.app)
-app.add_typer(pkg_managers.app)
+app.add_typer(pkg_managers.app())
 
 
 @app.callback()
@@ -48,7 +39,10 @@ def main(
     utils.LOGGER.debug("Platform: %s", platform_info)
     utils.LOGGER.debug("Debug mode: %s", debug_mode)
     utils.LOGGER.debug("Log file: %s", log_file_path)
-    utils.LOGGER.debug("Configuration: %s", config.Machine())
+
+    # TODO: report machine environment and configuration
+    # utils.LOGGER.debug("Environment: %s", env.MachineEnv)
+    # utils.LOGGER.debug("Configuration: %s", config.MachineConfig)
 
 
 @app.command()
