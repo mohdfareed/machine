@@ -1,23 +1,27 @@
-"""Machine configuration models."""
+"""Machine configuration files models."""
 
 from pathlib import Path
-from typing import Annotated
 
-from app import utils
-from app.models import BaseConfig
+import typer
+
+from app import APP_NAME
+from app.models import ConfigFiles
 
 
-class Machine(BaseConfig):
+class Machine(ConfigFiles):
     """Machine configuration files."""
 
     machine: Path = Path(__file__).parent.parent
     config: Path = machine / "config"
+    data: Path = Path(typer.get_app_dir(APP_NAME))
 
 
 class Default(Machine):
     """Default machine configuration files."""
 
-    config: Path = Machine().config / "core"
+    machine_id: str = "core"
+    config: Path = Machine().config / machine_id
+
     vim: Path = config / "vim"
     vscode: Path = config / "vscode"
 
@@ -35,8 +39,8 @@ class Default(Machine):
 class Private(Machine):
     """Private configuration files."""
 
-    config: Path = Machine().config / "private"
-    excluded_fields: list[str] = ["config"]
+    machine_id: str = "private"
+    config: Path = Machine().config / machine_id
 
     private_env: Path = config / "private.sh"
     ssh_keys: Path = config / "keys"
@@ -45,32 +49,41 @@ class Private(Machine):
 class Codespaces(Default):
     """Github codespaces configuration files."""
 
-    config: Path = Machine().config / "codespaces"
+    machine_id: str = "codespaces"
+    config: Path = Machine().config / machine_id
+
     zshrc: Path = config / "zshrc"
 
 
 class Gleason(Default):
     """Gleason configuration files."""
 
-    config: Path = Machine().config / "gleason"
+    machine_id: str = "gleason"
+    config: Path = Machine().config / machine_id
+
     gitconfig: Path = config / ".gitconfig"
 
 
 class MacOS(Default):
     """macOS configuration files."""
 
-    config: Path = Machine().config / "macos"
+    machine_id: str = "macos"
+    config: Path = Machine().config / machine_id
+
     brewfile: Path = config / "Brewfile"
     system_preferences: Path = config / "preferences.sh"
     ssh_config: Path = config / "ssh.config"
     zshenv: Path = config / "zshenv"
     zshrc: Path = config / "zshrc"
+    ghostty: Path = config / "ghostty.config"
 
 
 class RPi(Default):
     """Raspberry Pi configuration files."""
 
-    config: Path = Machine().config / "rpi"
+    machine_id: str = "rpi"
+    config: Path = Machine().config / machine_id
+
     ssh_config: Path = config / "ssh.config"
     zshenv: Path = config / "zshenv"
     zshrc: Path = config / "zshrc"
@@ -79,12 +92,8 @@ class RPi(Default):
 class Windows(Default):
     """Windows configuration files."""
 
-    config: Path = Machine().config / "windows"
+    machine_id: str = "windows"
+    config: Path = Machine().config / machine_id
+
     ps_profile: Path = config / "ps_profile.ps1"
     ssh_config: Path = config / "ssh.config"
-
-
-ConfigArg = Annotated[Machine, utils.InternalArg]
-DefaultConfigArg = Annotated[Default, utils.InternalArg]
-WindowsConfigArg = Annotated[Windows, utils.InternalArg]
-PrivateArg = Annotated[Private, utils.InternalArg]

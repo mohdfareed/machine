@@ -2,15 +2,15 @@
 
 import typer as _typer
 
-from .apt import *
-from .brew import *
-from .mas import *
-from .pipx import *
+from .linux import *
+from .macos import *
+from .misc import *
 from .pkg_manager import *
-from .scoop import *
-from .snap import *
-from .winget import *
+from .windows import *
 
 app = _typer.Typer(name="pkg", help="Package managers.")
-for pkg_manager in PackageManager.available_managers():
-    app.add_typer(pkg_manager.app())
+
+for pkg_manager in PkgManager.__subclasses__():
+    if not pkg_manager.is_supported():
+        continue
+    app.add_typer(pkg_manager().app())

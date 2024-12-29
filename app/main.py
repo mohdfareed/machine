@@ -5,7 +5,16 @@ from typing import Annotated
 
 import typer
 
-from app import APP_NAME, __version__, env, machines, pkg_managers, plugins, utils
+from app import (
+    APP_NAME,
+    __version__,
+    config,
+    env,
+    machines,
+    pkg_managers,
+    plugins,
+    utils,
+)
 from app.utils.logging import log_file_path
 
 app = typer.Typer(
@@ -28,25 +37,24 @@ def main(
     ] = False,
 ) -> None:
     """Machine setup CLI."""
-    platform_info = (
-        f"Platform: [blue]{platform.platform().replace('-', '[black]|[/]')}[/]"
-    )
 
     # initialize logging
     utils.init_logging(debug_mode)
+    platform_info = f"[blue]{platform.platform().replace('-', '[black]|[/]')}[/]"
 
     # debug information
     utils.LOGGER.debug("Machine version: %s", __version__)
     utils.LOGGER.debug("Python version: %s", platform.python_version())
+    utils.LOGGER.debug("Platform: %s", platform_info)
     utils.LOGGER.debug("Debug mode: %s", debug_mode)
     utils.LOGGER.debug("Log file: %s", log_file_path)
-    utils.LOGGER.debug(platform_info)
-    utils.LOGGER.debug("Environment: %s", env.Default())
+    utils.LOGGER.debug("Configuration: %s", config.Machine())
 
 
 @app.command()
 def completions() -> None:
     """Install shell completions."""
+
     if not utils.UNIX:
         utils.LOGGER.error("Unsupported platform for shell completions.")
         raise typer.Abort

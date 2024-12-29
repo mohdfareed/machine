@@ -2,16 +2,14 @@
 
 __all__ = [
     "validate",
-    "is_path",
+    "path_exists",
     "is_dir",
     "is_file",
     "FileArg",
     "OptionalFileArg",
-    "ReqFileArg",
     "DirArg",
     "OptionalDirArg",
-    "ReqDirArg",
-    "ReqPathArg",
+    "PathArg",
     "OptionalPathArg",
 ]
 
@@ -34,22 +32,22 @@ def validate(*validators: Callable[[T], T]) -> Callable[[T], T]:
     return validator
 
 
-def is_path(path: Path) -> Path:
+def path_exists(path: Optional[Path]) -> Optional[Path]:
     """Validate that a path exists."""
     if not path or path.exists():
         return path  # allow None through
     raise typer.BadParameter(f"Path does not exist: {path}")
 
 
-def is_dir(path: Path) -> Path:
-    """Validate that a path exists and is a directory."""
+def is_dir(path: Optional[Path]) -> Optional[Path]:
+    """Validate that a path is a directory."""
     if not path or path.is_dir():
         return path  # allow None through
     raise typer.BadParameter(f"Path is not a directory: {path}")
 
 
-def is_file(path: Path) -> Path:
-    """Validate that a path exists and is a file."""
+def is_file(path: Optional[Path]) -> Optional[Path]:
+    """Validate that a path is a file."""
     if not path or path.is_file():
         return path  # allow None through
     raise typer.BadParameter(f"Path is not a file: {path}")
@@ -57,11 +55,11 @@ def is_file(path: Path) -> Path:
 
 FileArg = Annotated[Path, typer.Argument(callback=validate(is_file))]
 OptionalFileArg = Annotated[Optional[Path], typer.Argument(callback=validate(is_file))]
-ReqFileArg = Annotated[Path, typer.Argument(callback=validate(is_path, is_file))]
 
 DirArg = Annotated[Path, typer.Argument(callback=validate(is_dir))]
 OptionalDirArg = Annotated[Optional[Path], typer.Argument(callback=validate(is_dir))]
-ReqDirArg = Annotated[Path, typer.Argument(callback=validate(is_path, is_dir))]
 
-ReqPathArg = Annotated[Path, typer.Argument(callback=validate(is_path))]
-OptionalPathArg = Annotated[Optional[Path], typer.Argument(callback=validate(is_path))]
+PathArg = Annotated[Path, typer.Argument(callback=validate(path_exists))]
+OptionalPathArg = Annotated[
+    Optional[Path], typer.Argument(callback=validate(path_exists))
+]

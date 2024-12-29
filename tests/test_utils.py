@@ -15,8 +15,8 @@ from app.utils import (
     create_temp_file,
     is_dir,
     is_file,
-    is_path,
     link,
+    path_exists,
     validate,
 )
 from app.utils.logging import StripMarkupFilter
@@ -99,7 +99,7 @@ def test_create_temp_file() -> None:
 
 def test_validate_path(temp_file: Path) -> None:
     """Test the validate function with a valid path."""
-    validator = validate(is_path)
+    validator = validate(path_exists)
     assert validator(temp_file) == temp_file
 
 
@@ -117,13 +117,13 @@ def test_validate_file(temp_file: Path) -> None:
 
 def test_is_path_valid(temp_file: Path) -> None:
     """Test the is_path function with a valid path."""
-    assert is_path(temp_file) == temp_file
+    assert path_exists(temp_file) == temp_file
 
 
 def test_is_path_invalid() -> None:
     """Test the is_path function with an invalid path."""
     with pytest.raises(typer.BadParameter):
-        is_path(Path("invalid_path"))
+        path_exists(Path("invalid_path"))
 
 
 def test_is_dir_valid(temp_dir: Path) -> None:

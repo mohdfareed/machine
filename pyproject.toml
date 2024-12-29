@@ -23,6 +23,7 @@ python = "^3.9.6" # default macos version
 typer = "^0.15.1"
 pydantic = "^2.10.4"
 pydantic-settings = "^2.7.0"
+platformdirs = "^4.3.6"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.0.1"

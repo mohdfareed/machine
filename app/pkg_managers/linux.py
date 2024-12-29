@@ -1,31 +1,32 @@
 """Apt package manager module."""
 
-__all__ = ["APT"]
+__all__ = ["APT", "SnapStore"]
+
+import shutil
+from typing import Union
 
 import typer
 
 from app import utils
 from app.utils import LOGGER
 
-from .pkg_manager import PackageManager, T
+from .pkg_manager import PkgManager
 
 
-class APT(PackageManager):
+class APT(PkgManager):
     """Advanced Package Tool (APT) package manager."""
 
-    def is_supported(self) -> bool:
-        return self.is_available()
+    @classmethod
+    def is_supported(cls) -> bool:
+        return shutil.which("apt") is not None
 
-    def _setup(self) -> None:
-        pass
-
-    def _update(self) -> None:
+    def update(self) -> None:
         self.shell.execute("sudo apt update && sudo apt upgrade -y")
 
-    def _cleanup(self) -> None:
+    def cleanup(self) -> None:
         self.shell.execute("sudo apt autoremove -y")
 
-    def add_keyring(self: T, keyring: str, repo: str, name: str) -> T:
+    def add_keyring(self, keyring: str, repo: str, name: str) -> None:
         """Add a keyring to the apt package manager."""
         LOGGER.info("Adding keyring %s to apt...", keyring)
         keyring_path = f"/etc/apt/keyrings/{keyring}"
@@ -43,9 +44,8 @@ class APT(PackageManager):
             """
         )
         LOGGER.debug("Keyring %s was added successfully.", keyring)
-        return self
 
-    def from_url(self: T, url: str) -> T:
+    def from_url(self, url: str) -> None:
         """Install a package from a URL."""
         if not url.split("/")[-1].endswith(".deb"):
             LOGGER.error("URL must point to a .deb file.")
@@ -57,10 +57,27 @@ class APT(PackageManager):
         self.shell.execute(f"sudo dpkg -i {temp_file}")
         self.shell.execute("sudo apt install -f")
         temp_file.unlink()
-        return self
 
     def app(self) -> typer.Typer:
         machine_app = super().app()
         machine_app.command()(self.add_keyring)
         machine_app.command()(self.from_url)
         return machine_app
+
+
+class SnapStore(PkgManager):
+    """Snap Store package manager."""
+
+    @classmethod
+    def is_supported(cls) -> bool:
+        return APT.is_supported()
+
+    def setup(self) -> None:
+        APT().install("snapd")
+        self.install("snapd")
+
+    def update(self) -> None:
+        self.shell.execute("snap refresh")
+
+    def install(self, package: Union[list[str], str], classic: bool = False) -> None:
+        self.shell.execute(f"snap install {package} {'--classic' if classic else ''}")
