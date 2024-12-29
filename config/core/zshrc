@@ -60,15 +60,6 @@ fi
 local theme="$POSH_THEMES_PATH/pure.omp.json"
 eval "$(oh-my-posh init zsh --config "$theme")"
 
-# # pure theme
-# PURE_PROMPT_SYMBOL='➜' # prompt symbol
-# PURE_PROMPT_VICMD_SYMBOL='»' # vi mode symbol
-# PURE_CMD_MAX_EXEC_TIME=1 # show time if command takes more than 1 second
-# zstyle :prompt:pure:git:stash show yes # show stash count
-# zstyle :prompt:pure:git:fetch only_upstream yes # only show upstream changes
-# zinit ice pick'async.zsh' src'pure.zsh'
-# zinit light sindresorhus/pure
-
 # syntax highlighting, autosuggestions, completions
 zinit wait lucid light-mode for \
   atinit"zicompinit; zicdreplay; compdef _dotnet_zsh_complete dotnet;" \
@@ -83,7 +74,6 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' \
 # fzf (fuzzy finder) tab completion
 zinit ice wait lucid
 zinit light Aloxaf/fzf-tab
-# source: https://github.com/Aloxaf/fzf-tab?tab=readme-ov-file#configure
 zstyle ':completion:*:git-checkout:*' sort false
 zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
@@ -91,6 +81,7 @@ zstyle ':completion:*' menu no
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 zstyle ':fzf-tab:*' switch-group '<' '>'
 zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
+# source: https://github.com/Aloxaf/fzf-tab?tab=readme-ov-file#configure
 
 # fzf (fuzzy finder)
 zinit ice wait lucid as"program" from"gh-r" mv"fzf* -> fzf" pick"fzf" \

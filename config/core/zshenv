@@ -1,12 +1,6 @@
 # Environment (shared across machines)
 # =============================================================================
 
-# set the machine path
-if [[ -z "$MACHINE" ]]; then
-    local script_dir=$(dirname "$(readlink -f "${BASH_SOURCE:-$0}")")
-    export MACHINE="$(dirname "$script_dir")"
-fi
-
 # private environment
 export PRIVATE_ENV="$MACHINE/config/private.sh"
 if [[ -f "$PRIVATE_ENV" ]]; then source "$PRIVATE_ENV"; fi

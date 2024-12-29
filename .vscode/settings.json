@@ -22,6 +22,7 @@
         ".pre-commit-config.yaml",
         ".gitignore",
         ".github",
+        "vim",
     ],
     "cSpell.words": [
         "aarch",
@@ -29,6 +30,7 @@
         "Codespace",
         "Codespaces",
         "dotenv",
+        "ghostty",
         "levelname",
         "levelno",
         "LOCALAPPDATA",
@@ -38,6 +40,7 @@
         "mypy",
         "nvim",
         "pipx",
+        "platformdirs",
         "pwsh",
         "pydantic",
         "pyenv",
