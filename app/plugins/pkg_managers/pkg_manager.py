@@ -9,11 +9,11 @@ from typing import Union
 import rich
 import typer
 
-from app import utils
+from app import models, utils
 from app.models import PackageManagerException
 from app.plugins import plugin
 
-PkgManagerPlugin = plugin.Plugin[plugin.Configuration, plugin.Environment]
+PkgManagerPlugin = plugin.Plugin[models.ConfigFiles, models.Environment]
 
 
 class PkgManager(PkgManagerPlugin, ABC):

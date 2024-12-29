@@ -2,20 +2,20 @@
 
 from pathlib import Path
 
-from app import utils
+from app import models, utils
 from app.models import PluginException
 from app.plugins.pkg_managers import Brew
-from app.plugins.plugin import Configuration, Environment, Plugin, SetupFunc
+from app.plugins.plugin import Plugin, SetupFunc
 from app.utils import LOGGER
 
 
-class ZedConfig(Configuration):
+class ZedConfig(models.ConfigFiles):
     """Zed configuration files."""
 
     zed_settings: Path
 
 
-class ZedEnv(Environment):
+class ZedEnv(models.Environment):
     """Zed environment variables."""
 
     ZED_SETTINGS: Path

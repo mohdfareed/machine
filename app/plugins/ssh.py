@@ -8,11 +8,11 @@ from pathlib import Path
 
 import typer
 
-from app import utils
+from app import models, utils
 from app.utils import LOGGER
 
 from .pkg_managers import APT
-from .plugin import Configuration, Environment, Plugin, SetupFunc
+from .plugin import Plugin, SetupFunc
 from .private_files import PrivateConfigData
 
 PUBLIC_EXT: str = ".pub"
@@ -21,14 +21,14 @@ PRIVATE_EXT: str = ".key"
 """The extension of the private key filenames."""
 
 
-class SSHConfig(Configuration):
+class SSHConfig(models.ConfigFiles):
     """SSH configuration files."""
 
-    ssh_keys: Path
+    ssh_keys: Path = PrivateConfigData().ssh_keys
     ssh_config: Path
 
 
-class SSHEnv(Environment):
+class SSHEnv(models.Environment):
     """SSH environment variables."""
 
     SSH_DIR: Path

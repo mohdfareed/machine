@@ -6,9 +6,9 @@ from pathlib import Path
 
 import rich.status
 
-from app import config, utils
+from app import config, models, utils
 from app.plugins.pkg_managers import APT, Brew
-from app.plugins.plugin import Configuration, Environment, Plugin, SetupFunc
+from app.plugins.plugin import Plugin, SetupFunc
 from app.utils import LOGGER
 
 ZSHENV_TEMPLATE = f"""
@@ -24,7 +24,7 @@ $env:MACHINE_ID={{machine_id}}
 """
 
 
-class ShellConfig(Configuration):
+class ShellConfig(models.ConfigFiles):
     """Shell configuration."""
 
     zshenv: Path
@@ -33,7 +33,7 @@ class ShellConfig(Configuration):
     ps_profile: Path
 
 
-class ShellEnv(Environment):
+class ShellEnv(models.Environment):
     """Shell environment."""
 
     ZSHENV: Path

@@ -2,19 +2,19 @@
 
 from pathlib import Path
 
-from app import utils
+from app import models, utils
 from app.plugins.pkg_managers import APT, Brew, SnapStore, Winget
-from app.plugins.plugin import Configuration, Environment, Plugin, SetupFunc
+from app.plugins.plugin import Plugin, SetupFunc
 from app.utils import LOGGER
 
 
-class NeoVimConfig(Configuration):
+class NeoVimConfig(models.ConfigFiles):
     """NeoVim configuration files."""
 
     vim: Path
 
 
-class NeoVimEnv(Environment):
+class NeoVimEnv(models.Environment):
     """NeoVim environment variables."""
 
     VIM: Path

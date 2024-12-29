@@ -74,6 +74,9 @@ class Btop(Plugin[None, None]):
     def plugin_setup(self) -> SetupFunc:
         return self._setup
 
+    def __init__(self) -> None:
+        super().__init__(None, None)
+
     def _setup(self) -> None:
         if Brew().is_supported():
             Brew().install("btop")
@@ -89,6 +92,9 @@ class Node(Plugin[None, None]):
     @property
     def plugin_setup(self) -> SetupFunc:
         return self._setup
+
+    def __init__(self) -> None:
+        super().__init__(None, None)
 
     def _setup(self) -> None:
         LOGGER.info("Setting up Node...")

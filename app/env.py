@@ -4,16 +4,25 @@ from pathlib import Path
 
 import platformdirs
 
+from app import plugins
 from app.models import Environment
 
 
-class Machine(Environment):
+class Machine(plugins.SSHEnv, Environment):
     """Default machine environment variables."""
 
     SSH_DIR: Path = Path.home() / ".ssh"
 
 
-class Unix(Machine):
+class Unix(
+    plugins.PythonEnv,
+    plugins.GitEnv,
+    plugins.ShellEnv,
+    plugins.VSCodeEnv,
+    plugins.PowerShellEnv,
+    plugins.NeoVimEnv,
+    Machine,
+):
     """Unix environment variables."""
 
     XDG_CONFIG_HOME: Path = platformdirs.user_config_path()
@@ -33,7 +42,7 @@ class Unix(Machine):
     ZED_SETTINGS: Path = XDG_CONFIG_HOME / "zed" / "settings.json"
 
 
-class Windows(Machine):
+class Windows(plugins.GitEnv, Machine):
     """Windows environment variables."""
 
     USERPROFILE: Path = Path.home()

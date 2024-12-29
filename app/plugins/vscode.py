@@ -5,20 +5,20 @@ from pathlib import Path
 
 import typer
 
-from app import utils
+from app import models, utils
 from app.plugins.pkg_managers import Brew, SnapStore, Winget
-from app.plugins.plugin import Configuration, Environment, Plugin, SetupFunc
+from app.plugins.plugin import Plugin, SetupFunc
 from app.utils import LOGGER
 
 
-class VSCodeConfig(Configuration):
+class VSCodeConfig(models.ConfigFiles):
     """VSCode configuration files."""
 
     vscode: Path
     """The path to the VSCode user settings directory."""
 
 
-class VSCodeEnv(Environment):
+class VSCodeEnv(models.Environment):
     """VSCode environment variables."""
 
     VSCODE: Path

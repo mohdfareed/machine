@@ -77,3 +77,7 @@ class PluginException(Exception):
 
 class PackageManagerException(Exception):
     """Base exception for package manager errors."""
+
+
+class MachineException(Exception):
+    """Base exception for machine errors."""

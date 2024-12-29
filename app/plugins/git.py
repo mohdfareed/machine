@@ -4,20 +4,20 @@ __all__ = ["Git", "GitConfig", "GitEnv"]
 
 from pathlib import Path
 
-from app import utils
+from app import models, utils
 
 from .pkg_managers import APT, Brew, Winget
-from .plugin import Configuration, Environment, Plugin, SetupFunc
+from .plugin import Plugin, SetupFunc
 
 
-class GitConfig(Configuration):
+class GitConfig(models.ConfigFiles):
     """Git configuration files."""
 
     gitconfig: Path
     gitignore: Path
 
 
-class GitEnv(Environment):
+class GitEnv(models.Environment):
     """Git environment variables."""
 
     GITCONFIG: Path

@@ -2,18 +2,18 @@
 
 from pathlib import Path
 
-from app import utils
+from app import models, utils
 from app.plugins.pkg_managers import Brew, SnapStore, Winget
-from app.plugins.plugin import Configuration, Environment, Plugin, SetupFunc
+from app.plugins.plugin import Plugin, SetupFunc
 
 
-class PowerShellConfig(Configuration):
+class PowerShellConfig(models.ConfigFiles):
     """PowerShell configuration files."""
 
     ps_profile: Path
 
 
-class PowerShellEnv(Environment):
+class PowerShellEnv(models.Environment):
     """PowerShell environment variables."""
 
     PS_PROFILE: Path

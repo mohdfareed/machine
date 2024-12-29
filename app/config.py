@@ -4,7 +4,7 @@ from pathlib import Path
 
 import typer
 
-from app import APP_NAME
+from app import APP_NAME, plugins
 from app.models import ConfigFiles
 
 
@@ -16,7 +16,16 @@ class Machine(ConfigFiles):
     data: Path = Path(typer.get_app_dir(APP_NAME))
 
 
-class Default(Machine):
+class Default(
+    Machine,
+    plugins.GitConfig,
+    plugins.NeoVimConfig,
+    plugins.PowerShellConfig,
+    plugins.ShellConfig,
+    plugins.SSHConfig,
+    plugins.VSCodeConfig,
+    plugins.ZedConfig,
+):
     """Default machine configuration files."""
 
     machine_id: str = "core"

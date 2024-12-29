@@ -1,29 +1,18 @@
 """Plugins interface for managing the functionality of a machine."""
 
-__all__ = ["Plugin", "Configuration", "Environment"]
+__all__ = ["Plugin", "SetupFunc"]
 
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Protocol, TypeVar, runtime_checkable
+from typing import Callable, Generic, Optional, TypeVar
 
 import rich
 import typer
 
-from app import utils
+from app import models, utils
 from app.models import PluginException
 
-
-@runtime_checkable
-class Configuration(Protocol):
-    """Plugin configuration."""
-
-
-@runtime_checkable
-class Environment(Protocol):
-    """Plugin environment."""
-
-
-C = TypeVar("C", bound=Configuration)
-E = TypeVar("E", bound=Environment)
+C = TypeVar("C", bound=Optional[models.ConfigFiles])
+E = TypeVar("E", bound=Optional[models.Environment])
 
 SetupFunc = Callable[..., None]
 

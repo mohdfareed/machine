@@ -40,10 +40,6 @@ def main(
     utils.LOGGER.debug("Debug mode: %s", debug_mode)
     utils.LOGGER.debug("Log file: %s", log_file_path)
 
-    # TODO: report machine environment and configuration
-    # utils.LOGGER.debug("Environment: %s", env.MachineEnv)
-    # utils.LOGGER.debug("Configuration: %s", config.MachineConfig)
-
 
 @app.command()
 def completions() -> None:

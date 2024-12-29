@@ -1,17 +1,18 @@
 """Python setup module."""
 
 import shutil
+from pathlib import Path
 
-from app import env, utils
+from app import models, utils
 from app.plugins.pkg_managers import APT, Brew, PIPx, Scoop
-from app.plugins.plugin import Environment, Plugin, SetupFunc
+from app.plugins.plugin import Plugin, SetupFunc
 from app.utils import LOGGER
 
 
-class PythonEnv(Environment):
+class PythonEnv(models.Environment):
     """Python environment variables."""
 
-    COMPLETIONS_PATH: str
+    COMPLETIONS_PATH: Path
 
 
 class Python(Plugin[None, PythonEnv]):
@@ -21,8 +22,8 @@ class Python(Plugin[None, PythonEnv]):
     def plugin_setup(self) -> SetupFunc:
         return self._setup
 
-    def __init__(self) -> None:
-        super().__init__(None, PythonEnv())
+    def __init__(self, env: PythonEnv) -> None:
+        super().__init__(None, env)
 
     def _setup(self) -> None:
         LOGGER.info("Setting up Python...")
@@ -41,6 +42,6 @@ class Python(Plugin[None, PythonEnv]):
         PIPx().install("poetry")
         if utils.UNIX and shutil.which("poetry"):
             utils.Shell().execute(
-                f"poetry completions zsh > {env.Unix().COMPLETIONS_PATH}/_poetry"
+                f"poetry completions zsh > {self.env.COMPLETIONS_PATH}/_poetry"
             )
         LOGGER.debug("Python was setup successfully.")

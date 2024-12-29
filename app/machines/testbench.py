@@ -1,45 +1,47 @@
 """Testing machine."""
 
-from functools import partial
+__all__ = ["Test"]
+
 from pathlib import Path
+from typing import Any
 
-import typer
+from app import env, models, utils
+from app.machines.machine import Machine
+from app.plugins import Plugin, Private, PrivateConfigData, SetupFunc
 
-from app import config, env, utils
-from app.plugins import private_files
+Environment = env.Unix if utils.UNIX else env.Windows
 
 
-class TestingConfig(config.Private):
+class TestConfig(PrivateConfigData):
     """Testing machine configuration files."""
 
     valid_field: Path = utils.create_temp_file("valid_field")
     invalid_field: int = 0
 
 
-machine_app = typer.Typer(name="test", help="Testbench.")
+class Test(Machine[TestConfig, models.Environment]):
+    """Testbench machine."""
 
-private_cmd = partial(
-    private_files.setup,
-    private_config=TestingConfig(),
-    private_dir=utils.create_temp_dir("private"),
-)
-plugin_app = utils.create_plugin(private_files, private_cmd)
-machine_app.add_typer(plugin_app)
+    @property
+    def plugins(self) -> list[Plugin[Any, Any]]:
+        plugins: list[Plugin[Any, Any]] = [
+            Private(TestConfig()),
+        ]
+        return plugins
 
+    @property
+    def machine_setup(self) -> SetupFunc:
+        return self._setup
 
-@machine_app.command()
-def setup() -> None:
-    """Test setting up a machine."""
-    utils.LOGGER.info("Setting up machine...")
-    utils.post_install_tasks += [
-        lambda: utils.LOGGER.info("Machine setup completed successfully")
-    ]
+    def __init__(self) -> None:
+        super().__init__(TestConfig(), Environment())
 
-    config_files = TestingConfig()
-    environment = (env.Windows if utils.WINDOWS else env.Unix)()
-    utils.LOGGER.debug("Config files: %s", config_files.model_dump_json(indent=2))
-    utils.LOGGER.debug("Environment: %s", environment.model_dump_json(indent=2))
+    @classmethod
+    def is_supported(cls) -> bool:
+        """Check if the plugin is supported."""
+        return True
 
-    temp_dir = utils.create_temp_dir("private")
-    (temp_dir / config_files.valid_field.name).touch()
-    private_files.setup(private_dir=temp_dir, private_config=config_files)
+    def _setup(self) -> None:
+        temp_dir = utils.create_temp_dir("private")
+        (temp_dir / self.config.valid_field.name).touch()
+        Private(TestConfig()).plugin_setup(private_dir=temp_dir)
