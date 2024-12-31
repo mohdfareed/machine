@@ -47,10 +47,10 @@
   // #region ===================================================================
   "editor.suggest.preview": true,
   "editor.inlineSuggest.enabled": true,
-  "cSpell.showAutocompleteSuggestions": true,
-  "cSpell.enableFiletypes": [
-    "*"
-  ],
+  "cSpell.showAutocompleteSuggestions": false,
+  "cSpell.enabledFileTypes": {
+    "*": true
+  },
   "cSpell.userWords": [
     "endregion",
     "Fareed"
@@ -74,7 +74,7 @@
   "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.smoothScrolling": true,
-  // TODO - check if terminal ligature is supported
+  "terminal.integrated.fontLigatures": true,
   // # endregion
   // MARK: git
   // #region ===================================================================
@@ -84,7 +84,9 @@
   "git.confirmSync": false,
   "git.rebaseWhenSync": true,
   "git.enableSmartCommit": true,
+  "git.replaceTagsWhenPull": true,
   "diffEditor.renderSideBySide": false,
+  "diffEditor.ignoreTrimWhitespace": true,
   "gitlens.statusBar.enabled": false,
   "gitlens.hovers.currentLine.over": "line",
   "gitlens.graph.minimap.enabled": true,
@@ -103,6 +105,7 @@
   // #region ===================================================================
   "commentAnchors.scrollPosition": "center",
   "commentAnchors.workspace.lazyLoad": false,
+  "commentAnchors.tags.provideAutoCompletion": false,
   "commentAnchors.tags.displayLineNumber": false,
   "commentAnchors.tags.sortMethod": "type",
   "commentAnchors.tags.anchors": {
@@ -195,23 +198,8 @@
     "editor.defaultFormatter": "golang.go"
   },
   // # endregion
-  // MARK: lua
-  // #region ===================================================================
-  "[lua]": {
-    "editor.defaultFormatter": "sumneko.lua",
-    "editor.tabSize": 2
-  },
-  // # endregion
-  // MARK: latex
-  // #region ===================================================================
-  "[latex]": {
-    "editor.defaultFormatter": "James-Yu.latex-workshop"
-  },
   "git.openRepositoryInParentFolders": "never",
-  "diffEditor.ignoreTrimWhitespace": true,
-  "git.replaceTagsWhenPull": true,
-  "editor.minimap.enabled": false,
-  "git.ignoreRebaseWarning": true
-  // # endregion
+  "git.ignoreRebaseWarning": true,
+  "security.workspace.trust.untrustedFiles": "open"
   // REVIEW - new customizations above =========================================
 }

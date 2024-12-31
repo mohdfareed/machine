@@ -2,19 +2,19 @@
 # =============================================================================
 
 # general
-cask "chatgpt"
-cask "iterm2"             # terminal
+cask "chatgpt"            # chatbot
+cask "ghostty"            # terminal
 cask "raycast"            # spotlight replacement
 cask "zed"                # text editor
 cask "utm"                # virtual machines
 
 # utilities
+cask "setapp"         # apps subscription service
 cask "iina"           # video player
 cask "openinterminal" # open terminal in current directory
 cask "sf-symbols"     # system font symbols
 cask "the-unarchiver" # unzip files
 cask "mos"            # mouse scroll smoothing (65, 1, 2.5)
-cask "swish"          # trackpad gestures
 cask "monitorcontrol" # external monitor utility
 
 # MAC APP STORE

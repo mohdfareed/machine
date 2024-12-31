@@ -1,50 +1,84 @@
 """Shell setup module."""
 
-import typer
+__all__ = ["Shell", "ShellConfig", "ShellEnv"]
 
-from app import config, env, utils
-from app.models import PluginException
-from app.pkg_managers import APT, Brew, PackageManager
+from pathlib import Path
+
+import rich.status
+
+from app import models, utils
+from app.plugins.pkg_managers import APT, Brew
+from app.plugins.plugin import Plugin, SetupFunc
 from app.utils import LOGGER
 
-plugin_app_win = typer.Typer(name="shell", help="Configure shell.")
-plugin_app = typer.Typer(name="shell", help="Configure shell.")
-shell = utils.Shell()
+ZSHENV_TEMPLATE = """
+export MACHINE="{{machine}}"
+export MACHINE_ID={{machine_id}}
+source {{machine_zshenv}}
+"""
 
 
-@plugin_app.command()
-def setup(
-    configuration: config.DefaultConfigArg = config.Default(),
-) -> None:
-    """Setup the shell env.Unix() on a machine."""
-    if utils.WINDOWS:
-        raise PluginException("This command is not supported on Windows.")
+class ShellConfig(models.ConfigFiles):
+    """Shell configuration."""
 
-    LOGGER.info("Setting up shell...")
-    PackageManager.from_spec(
-        [
-            (Brew, lambda: Brew().install("zsh tmux eza bat")),
-            (APT, lambda: APT().install("zsh tmux bat eza")),
-        ]
-    )
+    machine_id: str
+    machine: Path
 
-    # symlink config files
-    env.Unix().ZSHENV.unlink(missing_ok=True)
-    configuration.zshenv.link_to(env.Unix().ZSHENV)
-    env.Unix().ZSHRC.unlink(missing_ok=True)
-    configuration.zshrc.link_to(env.Unix().ZSHRC)
-    env.Unix().TMUX_CONFIG.unlink(missing_ok=True)
-    configuration.tmux_config.link_to(env.Unix().TMUX_CONFIG)
+    zshenv: Path
+    zshrc: Path
+    tmux_config: Path
 
-    # update zinit and its plugins
-    LOGGER.info("Updating zinit and its plugins...")
-    source_env = f"source {configuration.zshenv} && source {configuration.zshrc}"
-    shell.execute(f"{source_env} && zinit self-update && zinit update")
 
-    # clean up
-    shell.execute("sudo rm -rf ~/.zcompdump*", throws=False)
-    shell.execute("sudo rm -rf ~/.zshrc", throws=False)
-    shell.execute("sudo rm -rf ~/.zsh_sessions", throws=False)
-    shell.execute("sudo rm -rf ~/.zsh_history", throws=False)
-    shell.execute("sudo rm -rf ~/.lesshst", throws=False)
-    LOGGER.debug("Shell setup complete.")
+class ShellEnv(models.Environment):
+    """Shell environment."""
+
+    ZSHENV: Path
+    ZSHRC: Path
+    TMUX_CONFIG: Path
+
+
+class Shell(Plugin[ShellConfig, ShellEnv]):
+    """Configure ZSH shell."""
+
+    @property
+    def plugin_setup(self) -> SetupFunc:
+        return self._setup
+
+    @classmethod
+    def is_supported(cls) -> bool:
+        return not utils.WINDOWS
+
+    def _setup(self) -> None:
+        LOGGER.info("Setting up shell...")
+        utils.install_from_specs(
+            [
+                (Brew, lambda: Brew().install("zsh tmux eza bat")),
+                (APT, lambda: APT().install("zsh tmux bat eza")),
+            ]
+        )
+
+        # create machine identifier
+        zshenv_content = ZSHENV_TEMPLATE.format(
+            machine=self.config.machine,
+            machine_id=self.config.machine_id,
+            machine_zshenv=self.config.zshenv,
+        )
+        self.env.ZSHENV.write_text(zshenv_content)
+
+        # symlink config files
+        utils.link(self.config.zshrc, self.env.ZSHRC)
+        utils.link(self.config.tmux_config, self.env.TMUX_CONFIG)
+
+        # update zinit and its plugins
+        LOGGER.info("Updating zinit and its plugins...")
+        source_env = f"source {self.config.zshenv} && source {self.config.zshrc}"
+        with rich.status.Status("[bold green]Updating..."):
+            self.shell.execute(f"{source_env} && zinit self-update && zinit update")
+
+        # clean up
+        LOGGER.debug("Cleaning up...")
+        self.shell.execute(
+            "sudo rm -rf ~/.zcompdump* ~/.zshrc ~/.zsh_sessions ~/.zsh_history ~/.lesshst",
+            throws=False,
+        )
+        LOGGER.debug("Shell setup complete.")

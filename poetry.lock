@@ -196,13 +196,13 @@ typing = ["typing-extensions (>=4.12.2)"]
 
 [[package]]
 name = "identify"
-version = "2.6.3"
+version = "2.6.4"
 description = "File identification library for Python"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "identify-2.6.3-py2.py3-none-any.whl", hash = "sha256:9edba65473324c2ea9684b1f944fe3191db3345e50b6d04571d10ed164f8d7bd"},
-    {file = "identify-2.6.3.tar.gz", hash = "sha256:62f5dae9b5fef52c84cc188514e9ea4f3f636b1d8799ab5ebc475471f9e47a02"},
+    {file = "identify-2.6.4-py2.py3-none-any.whl", hash = "sha256:993b0f01b97e0568c179bb9196391ff391bfb88a99099dbf5ce392b68f42d0af"},
+    {file = "identify-2.6.4.tar.gz", hash = "sha256:285a7d27e397652e8cafe537a6cc97dd470a970f48fb2e9d979aa38eae5513ac"},
 ]
 
 [package.extras]
@@ -554,13 +554,13 @@ typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
 name = "pydantic-settings"
-version = "2.7.0"
+version = "2.7.1"
 description = "Settings management using Pydantic"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pydantic_settings-2.7.0-py3-none-any.whl", hash = "sha256:e00c05d5fa6cbbb227c84bd7487c5c1065084119b750df7c8c1a554aed236eb5"},
-    {file = "pydantic_settings-2.7.0.tar.gz", hash = "sha256:ac4bfd4a36831a48dbf8b2d9325425b549a0a6f18cea118436d728eb4f1c4d66"},
+    {file = "pydantic_settings-2.7.1-py3-none-any.whl", hash = "sha256:590be9e6e24d06db33a4262829edef682500ef008565a969c73d39d5f8bfb3fd"},
+    {file = "pydantic_settings-2.7.1.tar.gz", hash = "sha256:10c9caad35e64bfb3c2fbf70a078c0e25cc92499782e5200747f942a065dec93"},
 ]
 
 [package.dependencies]
@@ -865,4 +865,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9.6"
-content-hash = "d47dc71e82fea6bb22248228c06c8befae3b145a09d8da44b62c41ca1a743727"
+content-hash = "8ebffa3e30a9dfb977b8328528f13eb5ecabf6dfc8616b79dd40dfac0986709e"

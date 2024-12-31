@@ -9,7 +9,6 @@ import subprocess
 from enum import Enum
 from typing import Any, NamedTuple, Optional, TypeVar
 
-import typer
 from rich.text import Text
 
 LOGGER = logging.getLogger(__name__)
@@ -18,7 +17,6 @@ T = TypeVar("T")
 
 # special log matching tokens
 ERROR_TOKEN = "error"
-WARNING_TOKEN = "warning"
 SUDO_TOKEN = "sudo"
 
 ShellResults = NamedTuple("ShellResults", [("returncode", int), ("output", str)])
@@ -70,16 +68,16 @@ class Shell:  # pylint: disable=too-few-public-methods
             ShellError: If the command has a non-zero return code and `throws` is True.
         """
 
+        LOGGER.debug("[bold]Executing command:[/] [blue]%s[/]", command)
         if SUDO_TOKEN in command.lower() and not IS_WINDOWS:
-            LOGGER.debug("[bold]Running sudo command:[/] %s", command)
+            LOGGER.warning("[bold yellow]Running sudo command[/]")
 
         with _create_process(command, self.env, self.executable) as process:
             results = _exec_process(process, info)
 
         if throws and results.returncode != 0:
-            LOGGER.error("Command failed with return code %d", results.returncode)
-            LOGGER.error("Command output: %s", results.output)
-            raise typer.Abort
+            LOGGER.error("Command failed: [%d] %s", results.returncode, results.output)
+            raise ShellError(results)
         return results
 
 
@@ -144,13 +142,11 @@ def _exec_process(process: subprocess.Popen[str], info: bool = False) -> ShellRe
 
 def _log_line(line: str, info: bool) -> None:
     if ERROR_TOKEN in line.lower():
-        LOGGER.error(line)
-    elif WARNING_TOKEN in line.lower():
-        LOGGER.warning(line)
+        LOGGER.error("[italic]%s[/]", line)
     elif info:
-        LOGGER.info(line)
+        LOGGER.info("[italic]%s[/]", line)
     else:
-        LOGGER.debug(line)
+        LOGGER.debug("[italic]%s[/]", line)
 
 
 if IS_WINDOWS:

@@ -1,48 +1,66 @@
 """VSCode setup module."""
 
 import shutil
+from pathlib import Path
 
 import typer
 
-from app import config, env, utils
-from app.pkg_managers import Brew, PackageManager, SnapStore, Winget
+from app import models, utils
+from app.plugins.pkg_managers import Brew, SnapStore, Winget
+from app.plugins.plugin import Plugin, SetupFunc
 from app.utils import LOGGER
 
-plugin_app = typer.Typer(name="ssh", help="Configure SSH keys.")
-shell = utils.Shell()
 
-vscode: str
-"""The path to the VSCode user settings directory."""
+class VSCodeConfig(models.ConfigFiles):
+    """VSCode configuration files."""
 
-
-@plugin_app.command()
-def setup(
-    configuration: config.DefaultConfigArg = config.Default(),
-) -> None:
-    """Setup VSCode on a new machine."""
-    LOGGER.info("Setting up VSCode...")
-    PackageManager.from_spec(
-        [
-            (Brew, lambda: Brew().install("visual-studio-code", cask=True)),
-            (Winget, lambda: Winget().install("Microsoft.VisualStudioCode")),
-            (SnapStore, lambda: SnapStore().install("code", classic=True)),
-        ]
-    )
-
-    for file in configuration.vscode.iterdir():
-        (env.Default().VSCODE / file.name).unlink(missing_ok=True)
-        file.link_to(env.Default().VSCODE / file.name)
-    LOGGER.debug("VSCode was setup successfully.")
+    vscode: Path
+    """The path to the VSCode user settings directory."""
 
 
-@plugin_app.command()
-def setup_tunnels(name: str) -> None:
-    """Setup VSCode SSH tunnels as a service."""
-    if not shutil.which("code"):
-        LOGGER.error("VSCode is not installed.")
-        raise typer.Abort
+class VSCodeEnv(models.Environment):
+    """VSCode environment variables."""
 
-    LOGGER.info("Setting up VSCode SSH tunnels...")
-    cmd = f"code tunnel service install " f"--accept-server-license-terms --name {name}"
-    shell.execute(cmd, info=True)
-    LOGGER.debug("VSCode SSH tunnels were setup successfully.")
+    VSCODE: Path
+    """The path to the VSCode user settings directory."""
+
+
+class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):
+    """Configure VSCode."""
+
+    @property
+    def plugin_setup(self) -> SetupFunc:
+        return self._setup
+
+    def app(self) -> typer.Typer:
+        plugin_app = super().app()
+        plugin_app.command()(self.setup_tunnels)
+        return plugin_app
+
+    def _setup(self) -> None:
+        LOGGER.info("Setting up VSCode...")
+        utils.install_from_specs(
+            [
+                (Brew, lambda: Brew().install("visual-studio-code", cask=True)),
+                (Winget, lambda: Winget().install("Microsoft.VisualStudioCode")),
+                (SnapStore, lambda: SnapStore().install("code", classic=True)),
+            ]
+        )
+
+        for file in self.config.vscode.iterdir():
+            utils.link(file, self.env.VSCODE / file.name)
+        LOGGER.debug("VSCode was setup successfully.")
+
+    def setup_tunnels(self, name: str) -> None:
+        """Setup VSCode SSH tunnels as a service."""
+        if not shutil.which("code"):
+            LOGGER.error("VSCode is not installed.")
+            raise typer.Abort
+
+        LOGGER.info("Setting up VSCode SSH tunnels...")
+        cmd = (
+            f"code tunnel service install "
+            f"--accept-server-license-terms --name {name}"
+        )
+        self.shell.execute(cmd, info=True)
+        LOGGER.debug("VSCode SSH tunnels were setup successfully.")

@@ -1,40 +1,74 @@
 """App models."""
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from pathlib import Path
-from typing import Protocol, TypedDict, TypeVar
+from typing import Callable, Protocol, TypeVar
 
 import typer
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-T = TypeVar("T", bound="BaseEnvironment")
+from app import utils
+
+T = TypeVar("T", bound="Environment")
 
 
-class BaseConfig(BaseModel, ABC):
+# MARK: Types
+
+
+class ConfigFiles(BaseModel, ABC):
     """Configuration files."""
 
 
-class BaseEnvironment(BaseSettings, ABC):
+class Environment(BaseSettings, ABC):
     """Environment variables."""
 
     model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
 
-    @abstractmethod
-    def load(self: T, env: Path) -> T:
-        """Load environment variables from a file."""
+    @classmethod
+    def load(cls: type[T], env_file: Path) -> T:
+        """Load the environment variables from file."""
+        return utils.load_env(cls(), env_file)
 
 
-class PluginProtocol(Protocol):  # pylint: disable=too-few-public-methods
-    """Plugin protocol required to register it to a machine."""
+PackageSpec = tuple[type["PackageManagerProtocol"], Callable[[], None]]
+
+
+# MARK: Protocols
+
+
+class PackageManagerProtocol(Protocol):
+    """Package manager protocol."""
+
+    def app(self) -> typer.Typer:
+        """The package manager's Typer app."""
+        raise NotImplementedError
+
+    @classmethod
+    def is_supported(cls) -> bool:
+        """Check if the package manager is supported."""
+        raise NotImplementedError
+
+
+class PluginProtocol(Protocol):
+    """Plugin protocol required for registration to a machine."""
 
     plugin_app: typer.Typer
 
+    def setup(self) -> None:
+        """Setup the plugin."""
 
-class MachineProtocol(Protocol):  # pylint: disable=too-few-public-methods
-    """Machine protocol required to register it to the app."""
+
+class MachineProtocol(Protocol):
+    """Machine protocol."""
 
     machine_app: typer.Typer
+
+    def setup(self) -> None:
+        """Setup the machine."""
+
+
+# MARK: Exceptions
 
 
 class PluginException(Exception):
@@ -45,5 +79,5 @@ class PackageManagerException(Exception):
     """Base exception for package manager errors."""
 
 
-class PackageSpec(TypedDict):
-    """Package installation specification."""
+class MachineException(Exception):
+    """Base exception for machine errors."""

@@ -1,5 +1,6 @@
 """Utilities package."""
 
+from .config import *
 from .filesystem import *
 from .logging import *
 from .misc import *

@@ -23,20 +23,17 @@ else:
     )
 
 
-def _log_error(msg: str) -> None:
-    print(f"\033[31m{'ERROR'}\033[0m    {msg}")
+def main(path: str) -> None:
+    """Deploy a new machine."""
+    _log_info(f"Deploying machine to: {path}")
 
+    _validate_git()
+    _clone_app(path)
+    poetry = _install_poetry(path)
+    _install_machine(path, poetry)
+    _link_executable(path)
 
-def _log_success(msg: str) -> None:
-    print(f"\033[35m{'SUCCESS'}\033[0m  {msg}")
-
-
-def _log_warning(msg: str) -> None:
-    print(f"\033[33m{'WARNING'}\033[0m  {msg}")
-
-
-def _log_info(msg: str) -> None:
-    print(f"\033[34m{'INFO'}\033[0m     {msg}")
+    _log_success("Machine deployed successfully")
 
 
 def _validate_git() -> None:
@@ -123,17 +120,20 @@ def _link_executable(path: str) -> None:
     os.symlink(machine_setup, EXECUTABLE_PATH)
 
 
-def main(path: str) -> None:
-    """Deploy a new machine."""
-    _log_info(f"Deploying machine to: {path}")
+def _log_error(msg: str) -> None:
+    print(f"\033[31m{'ERROR'}\033[0m    {msg}")
 
-    _validate_git()
-    _clone_app(path)
-    poetry = _install_poetry(path)
-    _install_machine(path, poetry)
-    _link_executable(path)
 
-    _log_success("Machine deployed successfully")
+def _log_success(msg: str) -> None:
+    print(f"\033[35m{'SUCCESS'}\033[0m  {msg}")
+
+
+def _log_warning(msg: str) -> None:
+    print(f"\033[33m{'WARNING'}\033[0m  {msg}")
+
+
+def _log_info(msg: str) -> None:
+    print(f"\033[34m{'INFO'}\033[0m     {msg}")
 
 
 if __name__ == "__main__":

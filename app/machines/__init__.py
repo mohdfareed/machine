@@ -2,7 +2,13 @@
 
 import typer as _typer
 
-from . import testing
+from .machine import *
+from .macos import *
+from .testbench import *
 
 app = _typer.Typer(name="machine", help="Machines setup.")
-app.add_typer(testing.machine_app)
+
+if Test.is_supported():
+    app.add_typer(Test().app())
+if MacOS.is_supported():
+    app.add_typer(MacOS().app())

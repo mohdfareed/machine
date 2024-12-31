@@ -6,33 +6,36 @@ __all__ = [
     "LINUX",
     "UNIX",
     "ARM",
-    "PLATFORM",
     "InternalArg",
     "post_install_tasks",
     "post_installation",
-    "load_env",
+    "with_status",
+    "install_with_progress",
+    "install_from_specs",
     "create_plugin",
-    # "cli_selector",
+    "cli_selector",
 ]
 
 import inspect
 import platform
 import sys
-from functools import partial
-from pathlib import Path
-from typing import Any, Callable, Optional
+from functools import partial, wraps
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
+import rich
+import rich.progress
+import rich.status
 import typer
-from dotenv import dotenv_values
+from rich.console import Console
+from rich.table import Table
 
-from app.models import PluginProtocol
-
-from .filesystem import create_temp_file
 from .logging import LOGGER
-from .shell import Executable, Shell
 
-# from rich.console import Console
-# from rich.table import Table
+# typechecking imports
+if TYPE_CHECKING:
+    from app import models
+
+T = TypeVar("T")
 
 
 WINDOWS = "win" in sys.platform[:3]
@@ -45,7 +48,6 @@ UNIX = MACOS or LINUX
 """Whether the current platform is Unix-based."""
 ARM = platform.machine().startswith(("arm", "aarch64"))
 """Whether the current platform is ARM-based."""
-PLATFORM = platform.platform().replace("-", "[black]|[/]")
 
 InternalArg = typer.Option(parser=lambda _: _, hidden=True, expose_value=False)
 """An internal argument that is not exposed in the CLI."""
@@ -60,38 +62,59 @@ def post_installation(*_: Any, **__: Any) -> None:
         task()
 
 
-def load_env(env: Path) -> dict[str, Optional[str]]:
-    """Load environment variables from a file."""
-    LOGGER.debug("Loaded environment variables from: %s", env)
-    path = create_temp_file(env.name)
-    shell = Shell()
+def with_status(message: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """Decorator to show a status message while running a function."""
 
-    if UNIX and env.suffix in (".ps1", ".psm1"):
-        shell.executable = Executable.PWSH
-        cmd = (
-            f'. "{env}" ; Get-ChildItem Env:* | ForEach-Object '
-            f'{{ "$($_.Name)=$($_.Value)" }} | Out-File -FilePath "{path}"'
-        )
-        shell.executable = Executable.PWSH
-    else:
-        cmd = f"source '{env}' && env > '{path}'"
-    shell.execute(cmd)
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            with Console().status(message):
+                return func(*args, **kwargs)
 
-    # filter out unparsable environment variables
-    def _filter(lines: list[str]) -> list[str]:
-        lines = [line for line in lines if "=" in line]
-        lines = [line for line in lines if not line.startswith("_=")]
-        return lines
+        return wrapper
 
-    # update the file in place
-    with open(path, "r+", encoding="utf-8") as file:
-        file.seek(0)
-        file.writelines(_filter(file.readlines()))
-        file.truncate()
-    return dotenv_values(path)
+    return decorator
 
 
-def create_plugin(plugin: PluginProtocol, *partials: partial[Any]) -> typer.Typer:
+def install_with_progress(
+    message: str,
+) -> Callable[[Callable[[Any, str], None]], Callable[[Any, str], None]]:
+    """Decorator to show a progress bar while running a function."""
+
+    def decorator(func: Callable[[Any, str], None]) -> Callable[[Any, str], None]:
+        @wraps(func)
+        def wrapper(self: Any, iterable: str, *args: Any, **kwargs: Any) -> None:
+            items = iterable.split()
+
+            for i in rich.progress.track(
+                range(len(items)), description=f"{message}...", transient=True
+            ):
+                LOGGER.info("Installing %s using %s...", items[i], self.name)
+                func(self, items[i], *args, **kwargs)
+                LOGGER.debug("%s was installed successfully.", items[i])
+
+        return wrapper
+
+    return decorator
+
+
+def install_from_specs(specs: list["models.PackageSpec"]) -> None:
+    """Install packages from a specification."""
+    for spec in specs:
+        manager = spec[0]
+        installer = spec[1]
+
+        if manager.is_supported():
+            installer()
+            return
+
+    LOGGER.error("No supported package manager found.")
+    raise typer.Abort
+
+
+def create_plugin(
+    plugin: "models.PluginProtocol", *partials: partial[Any]
+) -> typer.Typer:
     """Create a plugin from a list of partials. The first partial is the plugin module."""
     app_clone = typer.Typer()
     plugin_app = plugin.plugin_app
@@ -129,25 +152,25 @@ def _apply_partial(partial_func: partial[Any]) -> Any:
     return partial_func.func
 
 
-# def cli_selector(options: list[str], title: str) -> str:
-#     """Select an option from a list of options."""
-#     console = Console()
-#     table = Table(title=title)
+def cli_selector(options: list[str], title: str) -> str:
+    """Select an option from a list of options."""
+    console = Console()
+    table = Table(title=title)
 
-#     table.add_column(justify="right", style="green", no_wrap=True)
-#     table.add_column(style="magenta")
-#     for i, name in enumerate(options):
-#         table.add_row(str(i + 1), name)
-#     console.print(table)
+    table.add_column(justify="right", style="green", no_wrap=True)
+    table.add_column(style="magenta")
+    for i, name in enumerate(options):
+        table.add_row(str(i + 1), name)
+    console.print(table)
 
-#     while True:
-#         choice = console.input("Choose an environment: ")
-#         try:
+    while True:
+        choice = console.input("Choose an option: ")
+        try:
 
-#             index = int(choice) - 1
-#             if 0 <= index < len(options):
-#                 return options[index]
+            index = int(choice) - 1
+            if 0 <= index < len(options):
+                return options[index]
 
-#             raise ValueError
-#         except ValueError:
-#             console.print("[red]Invalid number.[/]")
+            raise ValueError
+        except ValueError:
+            console.print("[red]Invalid number.[/]")
