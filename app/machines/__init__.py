@@ -8,5 +8,7 @@ from .testbench import *
 
 app = _typer.Typer(name="machine", help="Machines setup.")
 
-app.add_typer(Test().app())
-app.add_typer(MacOS().app())
+if Test.is_supported():
+    app.add_typer(Test().app())
+if MacOS.is_supported():
+    app.add_typer(MacOS().app())
