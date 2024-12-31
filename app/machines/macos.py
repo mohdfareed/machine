@@ -29,7 +29,7 @@ class MacOS(Machine[config.MacOS, env.MacOS]):
         machine_plugins: list[Plugin[Any, Any]] = [
             plugins.Fonts(),
             plugins.Git(self.config, self.env),
-            plugins.Private(),
+            plugins.Private(self.config),
             plugins.Shell(self.config, self.env),
             plugins.SSH(self.config, self.env),
             plugins.Btop(),
@@ -52,7 +52,6 @@ class MacOS(Machine[config.MacOS, env.MacOS]):
 
     def app(self) -> typer.Typer:
         machine_app = super().app()
-        machine_app.command()(self.setup_brew)
         machine_app.command()(self.system_preferences)
         machine_app.command()(self.enable_touch_id)
         machine_app.command()(self.accept_xcode_license)
@@ -73,6 +72,8 @@ class MacOS(Machine[config.MacOS, env.MacOS]):
                 plugin.setup_tunnels(VSCODE_TUNNELS_NAME)
             if isinstance(plugin, plugins.SSH):
                 plugin.setup_server()
+            if isinstance(plugin, plugins.Shell):
+                plugin.plugin_setup(machine_id=self.config.machine_id)
                 continue
             plugin.plugin_setup()
 

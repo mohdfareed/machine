@@ -6,31 +6,27 @@ from pathlib import Path
 
 import rich.status
 
-from app import config, models, utils
+from app import models, utils
 from app.plugins.pkg_managers import APT, Brew
 from app.plugins.plugin import Plugin, SetupFunc
 from app.utils import LOGGER
 
-ZSHENV_TEMPLATE = f"""
-export MACHINE="{config.Machine().machine}"
+ZSHENV_TEMPLATE = """
+export MACHINE="{{machine}}"
 export MACHINE_ID={{machine_id}}
 source {{machine_zshenv}}
-"""
-
-PS_PROFILE_TEMPLATE = f"""
-$env:MACHINE="{config.Machine().machine}"
-$env:MACHINE_ID={{machine_id}}
-. {{machine_zshenv}}
 """
 
 
 class ShellConfig(models.ConfigFiles):
     """Shell configuration."""
 
+    machine_id: str
+    machine: Path
+
     zshenv: Path
     zshrc: Path
     tmux_config: Path
-    ps_profile: Path
 
 
 class ShellEnv(models.Environment):
@@ -39,7 +35,6 @@ class ShellEnv(models.Environment):
     ZSHENV: Path
     ZSHRC: Path
     TMUX_CONFIG: Path
-    PS_PROFILE: Path
 
 
 class Shell(Plugin[ShellConfig, ShellEnv]):
@@ -62,11 +57,17 @@ class Shell(Plugin[ShellConfig, ShellEnv]):
             ]
         )
 
+        # create machine identifier
+        zshenv_content = ZSHENV_TEMPLATE.format(
+            machine=self.config.machine,
+            machine_id=self.config.machine_id,
+            machine_zshenv=self.config.zshenv,
+        )
+        self.env.ZSHENV.write_text(zshenv_content)
+
         # symlink config files
-        utils.link(self.config.zshenv, self.env.ZSHENV)
         utils.link(self.config.zshrc, self.env.ZSHRC)
         utils.link(self.config.tmux_config, self.env.TMUX_CONFIG)
-        utils.link(self.config.ps_profile, self.env.PS_PROFILE)
 
         # update zinit and its plugins
         LOGGER.info("Updating zinit and its plugins...")

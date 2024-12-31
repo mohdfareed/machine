@@ -16,6 +16,17 @@ class Machine(ConfigFiles):
     data: Path = Path(typer.get_app_dir(APP_NAME))
 
 
+class Private(ConfigFiles):
+    """Private configuration files."""
+
+    SSH_KEYS_DIRNAME: str = "keys"
+    PRIVATE_ENV_FILENAME: str = "private.sh"
+
+    config: Path = Machine().config / "private"
+    private_env: Path = config / PRIVATE_ENV_FILENAME
+    ssh_keys: Path = config / SSH_KEYS_DIRNAME
+
+
 class Default(
     Machine,
     plugins.GitConfig,
@@ -63,7 +74,7 @@ class Gleason(Default):
     gitconfig: Path = config / ".gitconfig"
 
 
-class MacOS(Default):
+class MacOS(Private, Default):
     """macOS configuration files."""
 
     machine_id: str = "macos"
@@ -77,7 +88,7 @@ class MacOS(Default):
     ghostty: Path = config / "ghostty.config"
 
 
-class RPi(Default):
+class RPi(Private, Default):
     """Raspberry Pi configuration files."""
 
     machine_id: str = "rpi"
@@ -88,7 +99,7 @@ class RPi(Default):
     zshrc: Path = config / "zshrc"
 
 
-class Windows(Default):
+class Windows(Private, Default):
     """Windows configuration files."""
 
     machine_id: str = "windows"

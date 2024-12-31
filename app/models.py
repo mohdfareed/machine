@@ -37,7 +37,7 @@ PackageSpec = tuple[type["PackageManagerProtocol"], Callable[[], None]]
 # MARK: Protocols
 
 
-class PackageManagerProtocol(Protocol):  # pylint: disable=too-few-public-methods
+class PackageManagerProtocol(Protocol):
     """Package manager protocol."""
 
     def app(self) -> typer.Typer:
@@ -50,7 +50,7 @@ class PackageManagerProtocol(Protocol):  # pylint: disable=too-few-public-method
         raise NotImplementedError
 
 
-class PluginProtocol(Protocol):  # pylint: disable=too-few-public-methods
+class PluginProtocol(Protocol):
     """Plugin protocol required for registration to a machine."""
 
     plugin_app: typer.Typer
@@ -59,7 +59,7 @@ class PluginProtocol(Protocol):  # pylint: disable=too-few-public-methods
         """Setup the plugin."""
 
 
-class MachineProtocol(Protocol):  # pylint: disable=too-few-public-methods
+class MachineProtocol(Protocol):
     """Machine protocol."""
 
     machine_app: typer.Typer

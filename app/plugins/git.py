@@ -56,5 +56,4 @@ class Git(Plugin[GitConfig, GitEnv]):
             "https://cli.github.com/packages stable main",
             "github-cli",
         )
-        apt.update()
         apt.install(unix_packages)

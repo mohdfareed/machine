@@ -2,9 +2,9 @@ name: Generate AI commits
 
 on:
   push:
-    branches-ignore: [main]
+    branches-ignore: [main, dependabot*]
   pull_request:
-    branches-ignore: [main]
+    branches-ignore: [main, dependabot*]
 
 jobs: # FIXME: don't run on merge commits
   chatgpt-commit-message:

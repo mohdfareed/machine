@@ -10,20 +10,16 @@ import sys
 PYTHON_VERSION = "3.9.6"
 
 
-def _log_error(msg: str) -> None:
-    print(f"\033[31m{'ERROR'}\033[0m    {msg}")
+def main() -> None:
+    """Main function to set up the local development environment."""
+    _log_info("Setting up development environment...")
 
+    _validate_env()
+    _validate_python()
+    poetry = _resolve_poetry()
+    _setup_environment(poetry)
 
-def _log_success(msg: str) -> None:
-    print(f"\033[35m{'SUCCESS'}\033[0m  {msg}")
-
-
-def _log_info(msg: str) -> None:
-    print(f"\033[34m{'INFO'}\033[0m     {msg}")
-
-
-def _log_warning(msg: str) -> None:
-    print(f"\033[33m{'WARNING'}\033[0m  {msg}")
+    _log_success("Set up completed successfully")
 
 
 def _validate_env() -> None:
@@ -91,16 +87,20 @@ def _setup_environment(poetry: str) -> None:
     )
 
 
-def main() -> None:
-    """Main function to set up the local development environment."""
-    _log_info("Setting up development environment...")
+def _log_error(msg: str) -> None:
+    print(f"\033[31m{'ERROR'}\033[0m    {msg}")
 
-    _validate_env()
-    _validate_python()
-    poetry = _resolve_poetry()
-    _setup_environment(poetry)
 
-    _log_success("Set up completed successfully")
+def _log_success(msg: str) -> None:
+    print(f"\033[35m{'SUCCESS'}\033[0m  {msg}")
+
+
+def _log_info(msg: str) -> None:
+    print(f"\033[34m{'INFO'}\033[0m     {msg}")
+
+
+def _log_warning(msg: str) -> None:
+    print(f"\033[33m{'WARNING'}\033[0m  {msg}")
 
 
 if __name__ == "__main__":

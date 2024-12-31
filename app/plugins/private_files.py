@@ -1,17 +1,18 @@
 """Private files plugin."""
 
-__all__ = ["Private", "PrivateConfigData"]
+__all__ = ["Private"]
 
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
-from app import config, models, utils
+from app import utils
 from app.plugins.plugin import Plugin, SetupFunc
 
-SSH_KEYS_DIRNAME = "keys"
-PRIVATE_ENV_FILENAME = "private.sh"
+# typechecking imports
+if TYPE_CHECKING:
+    from app import config
 
 PrivateDirArg = Annotated[
     Path,
@@ -22,22 +23,14 @@ PrivateDirArg = Annotated[
 ]
 
 
-class PrivateConfigData(models.ConfigFiles):
-    """Private configuration files."""
-
-    config: Path = config.Machine().config / "private"
-    private_env: Path = config / PRIVATE_ENV_FILENAME
-    ssh_keys: Path = config / SSH_KEYS_DIRNAME
-
-
-class Private(Plugin[PrivateConfigData, None]):
+class Private(Plugin["config.Private", None]):
     """Setup private config files."""
 
     @property
     def plugin_setup(self) -> SetupFunc:
         return self._setup
 
-    def __init__(self, private_config: PrivateConfigData = PrivateConfigData()) -> None:
+    def __init__(self, private_config: "config.Private") -> None:
         """Initialize the plugin."""
         super().__init__(private_config, None)
 
@@ -46,7 +39,7 @@ class Private(Plugin[PrivateConfigData, None]):
 
         # copy ssh keys
         if self.config.ssh_keys.exists():
-            local_ssh_keys = private_dir / SSH_KEYS_DIRNAME
+            local_ssh_keys = private_dir / self.config.SSH_KEYS_DIRNAME
             utils.link(local_ssh_keys, self.config.ssh_keys)
         else:
             utils.LOGGER.warning(
@@ -55,7 +48,7 @@ class Private(Plugin[PrivateConfigData, None]):
 
         # copy private
         if self.config.private_env.exists():
-            local_private_env = private_dir / PRIVATE_ENV_FILENAME
+            local_private_env = private_dir / self.config.PRIVATE_ENV_FILENAME
             utils.link(local_private_env, self.config.private_env)
         else:
             utils.LOGGER.warning(

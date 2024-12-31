@@ -13,7 +13,6 @@ from app.utils import LOGGER
 
 from .pkg_managers import APT
 from .plugin import Plugin, SetupFunc
-from .private_files import PrivateConfigData
 
 PUBLIC_EXT: str = ".pub"
 """The extension of the public key filenames."""
@@ -24,7 +23,7 @@ PRIVATE_EXT: str = ".key"
 class SSHConfig(models.ConfigFiles):
     """SSH configuration files."""
 
-    ssh_keys: Path = PrivateConfigData().ssh_keys
+    ssh_keys: Path
     ssh_config: Path
 
 
@@ -89,7 +88,7 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
     def generate_key_pair(
         self,
         name: str,
-        keys_dir: utils.DirArg = PrivateConfigData().ssh_keys,
+        keys_dir: utils.DirArg,
         email: str = "mohdf.fareed@icloud.com",
         passphrase: str = "",
     ) -> None:

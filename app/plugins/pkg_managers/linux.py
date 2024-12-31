@@ -3,7 +3,6 @@
 __all__ = ["APT", "SnapStore"]
 
 import shutil
-from typing import Union
 
 import typer
 
@@ -79,5 +78,5 @@ class SnapStore(PkgManager):
     def update(self) -> None:
         self.shell.execute("snap refresh")
 
-    def install(self, package: Union[list[str], str], classic: bool = False) -> None:
+    def install(self, package: str, classic: bool = False) -> None:
         self.shell.execute(f"snap install {package} {'--classic' if classic else ''}")

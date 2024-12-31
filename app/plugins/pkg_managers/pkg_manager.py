@@ -4,7 +4,6 @@ __all__ = ["PkgManager"]
 
 import shutil
 from abc import ABC
-from typing import Union
 
 import rich
 import typer
@@ -39,14 +38,8 @@ class PkgManager(PkgManagerPlugin, ABC):
         if not self.is_supported():
             raise PackageManagerException(f"{self.name} is not supported.")
 
-        if self.is_available():
-            utils.with_status(f"Updating {self.name}...")(self.update)()
-            self.is_setup = True
-            return
-
-        utils.LOGGER.info("Setting up %s...", self.name)
-        utils.with_status("Setting up...")(self.plugin_setup)()
-        utils.LOGGER.debug("%s was set up successfully.", self.name)
+        # cleanup
+        utils.post_install_tasks.append(self._cleanup)
         self.is_setup = True
 
     def app(self) -> typer.Typer:
@@ -69,12 +62,12 @@ class PkgManager(PkgManagerPlugin, ABC):
         """Package manager-specific update steps."""
 
     @utils.install_with_progress("Installing...")
-    def install(self, package: Union[list[str], str]) -> None:
+    def install(self, package: str) -> None:
         """Package manager-specific install command."""
         self.shell.execute(f"{self.command} install {package}")
 
     @utils.install_with_progress("Uninstalling...")
-    def uninstall(self, package: Union[list[str], str]) -> None:
+    def uninstall(self, package: str) -> None:
         """Package manager-specific Uninstall command."""
         self.shell.execute(f"{self.command} uninstall {package}")
 
@@ -98,8 +91,12 @@ class PkgManager(PkgManagerPlugin, ABC):
 
         rich.print(f"{self.name} is {is_supported} and {is_available}.")
 
-    def __del__(self) -> None:
-        """Cleanup the package manager."""
+    def _cleanup(self) -> None:
         utils.LOGGER.info("Cleaning up %s...", self.name)
         utils.with_status("Cleaning up...")(self.cleanup)()
         utils.LOGGER.debug("%s was cleaned up successfully.", self.name)
+
+    def _setup(self) -> None:
+        utils.LOGGER.info("Setting up %s...", self.name)
+        utils.with_status("Setting up...")(self.plugin_setup)()
+        utils.LOGGER.debug("%s was set up successfully.", self.name)

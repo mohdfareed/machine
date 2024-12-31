@@ -5,14 +5,14 @@ __all__ = ["Test"]
 from pathlib import Path
 from typing import Any
 
-from app import env, models, utils
+from app import config, env, models, utils
 from app.machines.machine import Machine
-from app.plugins import Plugin, Private, PrivateConfigData, SetupFunc
+from app.plugins import Plugin, Private, SetupFunc
 
 Environment = env.Unix if utils.UNIX else env.Windows
 
 
-class TestConfig(PrivateConfigData):
+class TestConfig(config.Private):
     """Testing machine configuration files."""
 
     valid_field: Path = utils.create_temp_file("valid_field")
