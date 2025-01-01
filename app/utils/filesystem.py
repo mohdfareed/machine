@@ -18,8 +18,13 @@ def link(source: Path, target: Path) -> None:
     """Link files and directories from source to target."""
 
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.unlink(missing_ok=True)
-    target.symlink_to(source, target_is_directory=source.is_dir())
+
+    if source.is_dir():
+        for file in source.iterdir():
+            link(file, target / file.name)
+    else:
+        target.unlink(missing_ok=True)
+        target.symlink_to(source, target_is_directory=target.is_dir())
     LOGGER.debug("Linked: %s => %s", target, source)
 
 

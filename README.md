@@ -23,7 +23,7 @@ git clone https://github.com/mohdfareed/machine.git
 cd machine
 
 # setup environment
-./setup.sh --dev
+./scripts/dev.py
 ```
 
 ### Releases

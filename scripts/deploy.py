@@ -62,38 +62,43 @@ def _install_poetry(path: str) -> str:
     _log_info("Installing poetry...")
     poetry_path = os.path.join(path, ".poetry")
 
-    # Windows
-    if os.name == "nt":
-        subprocess.run(
-            [
-                "(Invoke-WebRequest -Uri https://install.python-poetry.org "
-                "-UseBasicParsing).Content",
-                "|",
-                "py",
-                "-",
-            ],
-            env={"POETRY_HOME": poetry_path},
-            check=True,
-            executable="powershell",
-        )
-
-    # Unix
+    if os.name != "nt":
+        _install_poetry_unix(poetry_path)
     else:
-        subprocess.run(
-            [
-                "curl",
-                "-sSL",
-                "https://install.python-poetry.org",
-                "|",
-                "python3",
-                "-",
-            ],
-            env={"POETRY_HOME": poetry_path},
-            check=True,
-        )
+        _install_poetry_windows(poetry_path)
 
     _log_success("Poetry installed successfully")
     return os.path.join(poetry_path, "bin", "poetry")
+
+
+def _install_poetry_unix(path: str) -> None:
+    subprocess.run(
+        [
+            "curl",
+            "-sSL",
+            "https://install.python-poetry.org",
+            "|",
+            "python3",
+            "-",
+        ],
+        env={"POETRY_HOME": path},
+        check=True,
+    )
+
+
+def _install_poetry_windows(path: str) -> None:
+    subprocess.run(
+        [
+            "(Invoke-WebRequest -Uri https://install.python-poetry.org "
+            "-UseBasicParsing).Content",
+            "|",
+            "py",
+            "-",
+        ],
+        env={"POETRY_HOME": path},
+        check=True,
+        executable="powershell",
+    )
 
 
 def _install_machine(path: str, poetry: str) -> None:

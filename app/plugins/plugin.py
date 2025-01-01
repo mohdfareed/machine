@@ -49,7 +49,7 @@ class Plugin(ABC, Generic[C, E]):
         """Create a Typer app for the plugin."""
 
         manager_app = typer.Typer(name=self.name.lower(), help=self.help)
-        manager_app.command()(self.plugin_setup)
+        manager_app.command(name="setup")(self.plugin_setup)
         manager_app.command(name="status")(self.print_status)
         return manager_app
 

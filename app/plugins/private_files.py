@@ -38,20 +38,22 @@ class Private(Plugin["config.Private", None]):
         utils.LOGGER.debug("Private directory: %s", private_dir)
 
         # copy ssh keys
-        if self.config.ssh_keys.exists():
-            local_ssh_keys = private_dir / self.config.SSH_KEYS_DIRNAME
+        local_ssh_keys = private_dir / self.config.ssh_keys.name
+        if local_ssh_keys.exists():
             utils.link(local_ssh_keys, self.config.ssh_keys)
+            utils.LOGGER.info("Loaded private data: %s", local_ssh_keys)
         else:
             utils.LOGGER.warning(
-                "Private SSH keys directory does not exist at: %s", self.config.ssh_keys
+                "Private SSH keys directory does not exist at: %s", local_ssh_keys
             )
 
         # copy private
-        if self.config.private_env.exists():
-            local_private_env = private_dir / self.config.PRIVATE_ENV_FILENAME
+        local_private_env = private_dir / self.config.private_env.name
+        if local_private_env.exists():
             utils.link(local_private_env, self.config.private_env)
+            utils.LOGGER.info("Loaded private data%s", local_private_env)
         else:
             utils.LOGGER.warning(
-                "Private environment keys directory does not exist at: %s",
+                "Private environment file does not exist at: %s",
                 self.config.private_env,
             )

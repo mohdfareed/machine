@@ -19,12 +19,9 @@ class Machine(ConfigFiles):
 class Private(ConfigFiles):
     """Private configuration files."""
 
-    SSH_KEYS_DIRNAME: str = "keys"
-    PRIVATE_ENV_FILENAME: str = "private.sh"
-
     config: Path = Machine().config / "private"
-    private_env: Path = config / PRIVATE_ENV_FILENAME
-    ssh_keys: Path = config / SSH_KEYS_DIRNAME
+    private_env: Path = config / "private.sh"
+    ssh_keys: Path = config / "keys"
 
 
 class Default(
