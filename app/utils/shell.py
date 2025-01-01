@@ -1,6 +1,6 @@
 """Shell commands execution."""
 
-__all__ = ["Shell", "ShellResults", "ShellError", "Executable"]
+__all__ = ["Shell", "ShellResults", "ShellError", "Executable", "OS_EXECUTABLE"]
 
 import logging
 import os

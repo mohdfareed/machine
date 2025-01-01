@@ -2,7 +2,7 @@
 
 from abc import ABC
 from pathlib import Path
-from typing import Callable, Protocol, TypeVar
+from typing import Callable, Optional, Protocol, TypeVar
 
 import typer
 from pydantic import BaseModel
@@ -26,9 +26,11 @@ class Environment(BaseSettings, ABC):
     model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
 
     @classmethod
-    def load(cls: type[T], env_file: Path) -> T:
+    def load(
+        cls: type[T], env_file: Path, executable: Optional[utils.Executable] = None
+    ) -> T:
         """Load the environment variables from file."""
-        return utils.load_env(cls(), env_file)
+        return utils.load_env(cls(), env_file, executable)
 
 
 PackageSpec = tuple[type["PackageManagerProtocol"], Callable[[], None]]

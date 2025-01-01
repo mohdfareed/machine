@@ -35,7 +35,7 @@ def create_temp_dir(name: str = "") -> Path:
 def create_temp_file(name: str = "") -> Path:
     """Create a temporary file."""
 
-    temp_file = Path(typer.get_app_dir(APP_NAME)) / f"{name}-{uuid.uuid4()}"
+    temp_file = Path(typer.get_app_dir(APP_NAME)) / f"{uuid.uuid4()}-{name or 'temp'}"
     temp_file.parent.mkdir(parents=True, exist_ok=True)
     atexit.register(lambda: temp_file.unlink(missing_ok=True))
     return temp_file
