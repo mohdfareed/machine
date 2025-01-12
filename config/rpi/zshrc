@@ -1,8 +1,8 @@
 # Configuration: Raspberry Pi
 # =============================================================================
 
-# load core machine configuration
-source $MACHINE/config/core/zshrc
+source "$MACHINE/config/core/zshrc" # global environment variables
+source "$MACHINE/private/private.sh" # private environment variables
 
 # Functions and Aliases
 # =============================================================================

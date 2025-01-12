@@ -19,7 +19,7 @@ class Machine(ConfigFiles):
 class Private(ConfigFiles):
     """Private configuration files."""
 
-    config: Path = Machine().config / "private"
+    config: Path = Machine().config.parent / "private"
     private_env: Path = config / "private.sh"
     ssh_keys: Path = config / "keys"
 

@@ -9,7 +9,7 @@ from typing import Any, Generic, List
 
 import typer
 
-from app import utils
+from app import main, utils
 from app.models import ConfigFiles, Environment, MachineException
 from app.plugins import app as plugins_app
 from app.plugins.plugin import C, E, Plugin, SetupFunc
@@ -28,6 +28,8 @@ class Machine(Plugin[C, E], Generic[C, E]):
             utils.post_install_tasks += [
                 lambda: utils.LOGGER.info("Machine setup completed successfully")
             ]
+
+            utils.post_install_tasks += [main.completions]
             self.machine_setup(*args, **kwargs)
 
         return setup_wrapper

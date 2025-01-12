@@ -3,12 +3,11 @@
 .python-version
 
 *.log*
-config/**/keys
-config/**/private.sh
+private/
 
 .coverage
 pytest.xml
-dist/*
+dist/
 
 *.mypy_cache/
 *.ruff_cache/
