@@ -30,7 +30,7 @@ class Tailscale(Plugin[None, None]):
 
     def _setup(self) -> None:
         LOGGER.info("Setting up tailscale...")
-        if Brew().is_supported():
+        if Brew.is_supported():
             Brew().install("tailscale", cask=True)
 
         elif utils.LINUX:

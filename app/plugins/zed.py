@@ -33,7 +33,7 @@ class Zed(Plugin[ZedConfig, ZedEnv]):
         if utils.WINDOWS:
             raise PluginException("Zed is not supported on Windows.")
 
-        if Brew().is_supported():
+        if Brew.is_supported():
             Brew().install("zed")
         else:
             utils.Shell().execute("curl -f https://zed.dev/install.sh | sh")

@@ -19,6 +19,7 @@ class PkgManager(PkgManagerPlugin, ABC):
     """Abstract base class for package managers."""
 
     is_setup = False
+    is_cleanup_scheduled = False
 
     @property
     def command(self) -> str:
@@ -39,7 +40,9 @@ class PkgManager(PkgManagerPlugin, ABC):
             raise PackageManagerException(f"{self.name} is not supported.")
 
         # cleanup
-        utils.post_install_tasks.append(self._cleanup)
+        if not self.is_cleanup_scheduled:
+            utils.post_install_tasks.append(self._cleanup)
+            self.is_cleanup_scheduled = True
         self.is_setup = True
 
     def app(self) -> typer.Typer:

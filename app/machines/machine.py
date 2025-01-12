@@ -4,6 +4,7 @@ __all__ = ["Machine"]
 
 
 from abc import abstractmethod
+from functools import wraps
 from typing import Any, Generic, List
 
 import typer
@@ -21,12 +22,13 @@ class Machine(Plugin[C, E], Generic[C, E]):
     def plugin_setup(self) -> SetupFunc:
         """Plugin-specific setup steps."""
 
-        def setup_wrapper() -> None:
+        @wraps(self.machine_setup)
+        def setup_wrapper(*args: Any, **kwargs: Any) -> None:
             utils.LOGGER.info("Setting up machine...")
             utils.post_install_tasks += [
                 lambda: utils.LOGGER.info("Machine setup completed successfully")
             ]
-            self.machine_setup()
+            self.machine_setup(*args, **kwargs)
 
         return setup_wrapper
 

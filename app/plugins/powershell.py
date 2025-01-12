@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from app import models, utils
+from app import models
 from app.plugins.pkg_managers import Brew, SnapStore, Winget
 from app.plugins.plugin import Plugin, SetupFunc
 
@@ -36,19 +36,20 @@ class PowerShell(Plugin[PowerShellConfig, PowerShellEnv]):
         return self._setup
 
     def _setup(self) -> None:
-        if Brew().is_supported():
+        if Brew.is_supported():
             Brew().install("powershell", cask=True)
-        elif Winget().is_supported():
+        elif Winget.is_supported():
             Winget().install("Microsoft.PowerShell")
-        elif SnapStore().is_supported():
+        elif SnapStore.is_supported():
             SnapStore().install("powershell")
 
         # create machine identifier
         ps_profile_content = PS_PROFILE_TEMPLATE.format(
             machine=self.config.machine,
             machine_id=self.config.machine_id,
-            machine_zshenv=self.config.ps_profile,
+            machine_ps_profile=self.config.ps_profile,
         )
-        self.env.PS_PROFILE.write_text(ps_profile_content)
 
-        utils.link(self.config.ps_profile, self.env.PS_PROFILE)
+        # create the PowerShell profile
+        self.env.PS_PROFILE.parent.mkdir(parents=True, exist_ok=True)
+        self.env.PS_PROFILE.write_text(ps_profile_content)

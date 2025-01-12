@@ -78,11 +78,11 @@ class Btop(Plugin[None, None]):
         super().__init__(None, None)
 
     def _setup(self) -> None:
-        if Brew().is_supported():
+        if Brew.is_supported():
             Brew().install("btop")
-        elif SnapStore().is_supported():
+        elif SnapStore.is_supported():
             SnapStore().install("btop")
-        elif Scoop().is_supported():
+        elif Scoop.is_supported():
             Scoop().install("btop-lhm")
 
 
@@ -99,9 +99,9 @@ class Node(Plugin[None, None]):
     def _setup(self) -> None:
         LOGGER.info("Setting up Node...")
 
-        if Brew().is_supported():
+        if Brew.is_supported():
             Brew().install("nvm")
-        elif Winget().is_supported():
+        elif Winget.is_supported():
             Winget().install("Schniz.fnm")
 
         elif utils.LINUX and not shutil.which("nvm"):

@@ -72,9 +72,6 @@ class MacOS(Machine[config.MacOS, env.MacOS]):
                 plugin.setup_tunnels(VSCODE_TUNNELS_NAME)
             if isinstance(plugin, plugins.SSH):
                 plugin.setup_server()
-            if isinstance(plugin, plugins.Shell):
-                plugin.plugin_setup(machine_id=self.config.machine_id)
-                continue
             plugin.plugin_setup()
 
         self.setup_brew()

@@ -28,15 +28,15 @@ class NeoVim(Plugin[NeoVimConfig, NeoVimEnv]):
         return self._setup
 
     def _setup(self) -> None:
-        if Brew().is_supported():
+        if Brew.is_supported():
             Brew().install("nvim lazygit ripgrep fd")
 
-        elif Winget().is_supported():
+        elif Winget.is_supported():
             Winget().install(
                 "Neovim.Neovim JesseDuffield.lazygit BurntSushi.ripgrep sharkdp.fd"
             )
 
-        elif SnapStore().is_supported():
+        elif SnapStore.is_supported():
             SnapStore().install("nvim lazygit-gm ")
             SnapStore().install("ripgrep", classic=True)
             APT().install("fd-find")

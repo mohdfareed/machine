@@ -28,15 +28,13 @@ class Python(Plugin[None, PythonEnv]):
     def _setup(self) -> None:
         LOGGER.info("Setting up Python...")
 
-        if Brew().is_supported():
+        if Brew.is_supported():
             Brew().install("python pipx pyenv")
-
-        if APT().is_supported():
+        elif APT.is_supported():
             APT().install("python3 python3-pip python3-venv pipx")
             if not shutil.which("pyenv"):
                 utils.Shell().execute("curl https://pyenv.run | bash")
-
-        if Scoop().is_supported():
+        elif Scoop.is_supported():
             Scoop().install("pipx pyenv")
 
         PIPx().install("poetry")
