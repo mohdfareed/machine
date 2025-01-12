@@ -1,23 +1,24 @@
 """Git plugin."""
 
-__all__ = ["Git", "GitConfig", "GitEnv"]
+__all__ = ["Git"]
 
 from pathlib import Path
+from typing import Protocol
 
 from app import models, utils
 
-from .pkg_managers import APT, Brew, Winget
-from .plugin import Plugin, SetupFunc
+from .pkg_managers import APT, Brew, Winget, install_from_specs
+from .plugin import Plugin
 
 
-class GitConfig(models.ConfigFiles):
+class GitConfig(models.ConfigProtocol, Protocol):
     """Git configuration files."""
 
     gitconfig: Path
     gitignore: Path
 
 
-class GitEnv(models.Environment):
+class GitEnv(models.EnvironmentProtocol, Protocol):
     """Git environment variables."""
 
     GITCONFIG: Path
@@ -30,16 +31,13 @@ class Git(Plugin[GitConfig, GitEnv]):
     unix_packages = "git git-lfs gh"
     win_packages = "Git.Git GitHub.GitLFS GitHub.CLI Microsoft.GitCredentialManagerCore"
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
-    def _setup(self) -> None:
+    def setup(self) -> None:
+        """Set up git."""
         utils.LOGGER.info("Setting up git...")
         utils.link(self.config.gitconfig, self.env.GITCONFIG)
         utils.link(self.config.gitignore, self.env.GITIGNORE)
 
-        utils.install_from_specs(
+        install_from_specs(
             [
                 (Brew, lambda: Brew().install(self.unix_packages)),
                 (APT, lambda: self._linux_setup(self.unix_packages)),

@@ -1,28 +1,30 @@
 """Environment variables models."""
 
+from abc import ABC
 from pathlib import Path
 
 import platformdirs
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app import plugins
-from app.models import Environment
+from app import utils
 
 
-class Machine(plugins.SSHEnv, Environment):
+class Machine(BaseSettings, ABC):
     """Default machine environment variables."""
 
+    model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
     SSH_DIR: Path = Path.home() / ".ssh"
 
+    def load(self, env_file: Path) -> None:
+        """Load the environment variables from file."""
+        utils.LOGGER.debug("Loading environment from: %s", env_file)
 
-class Unix(
-    plugins.PythonEnv,
-    plugins.GitEnv,
-    plugins.ShellEnv,
-    plugins.VSCodeEnv,
-    plugins.PowerShellEnv,
-    plugins.NeoVimEnv,
-    Machine,
-):
+        env_vars = utils.load_env_vars(env_file)
+        for field in self.model_fields:
+            setattr(self, field, env_vars.get(field, getattr(self, field)))
+
+
+class Unix(Machine):
     """Unix environment variables."""
 
     XDG_CONFIG_HOME: Path = platformdirs.user_config_path()
@@ -42,7 +44,13 @@ class Unix(
     ZED_SETTINGS: Path = XDG_CONFIG_HOME / "zed" / "settings.json"
 
 
-class Windows(plugins.GitEnv, Machine):
+class MacOS(Unix):
+    """MacOS environment variables."""
+
+    ICLOUD: Path = Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs"
+
+
+class Windows(Machine):
     """Windows environment variables."""
 
     USERPROFILE: Path = Path.home()
@@ -54,9 +62,3 @@ class Windows(plugins.GitEnv, Machine):
     VIM: Path = LOCALAPPDATA / "nvim"
     PS_PROFILE: Path = USERPROFILE / "Documents" / "WindowsPowerShell" / "profile.ps1"
     VSCODE: Path = APPDATA / "Code" / "User"
-
-
-class MacOS(Unix):
-    """MacOS environment variables."""
-
-    ICLOUD: Path = Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs"

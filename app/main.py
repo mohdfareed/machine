@@ -16,13 +16,19 @@ app = typer.Typer(
     result_callback=utils.post_installation,
 )
 
-# register machines, and package managers
-app.add_typer(machines.app)
-app.add_typer(pkg_managers.app())
+# register machines and package managers
+# machine_app: type[machines.Machine[Any, Any]]
+for machine_app in machines.apps:
+    app.add_typer(machine_app)
+# for machine in machines.Machine[Any, Any].__():
+#     if not isabstract(machine) and machine.is_supported():
+#         app.add_typer(machine.machine_app(machine()))
+app.add_typer(pkg_managers.pkg_managers_app())
 
 
 @app.callback()
 def main(
+    ctx: typer.Context,
     debug_mode: Annotated[
         bool,
         typer.Option("--debug", "-d", help="Log debug messages to the console."),
@@ -31,7 +37,7 @@ def main(
     """Machine setup CLI."""
 
     # initialize logging
-    utils.init_logging(debug_mode)
+    utils.setup_logging(debug_mode)
     platform_info = f"[blue]{platform.platform().replace('-', '[black]|[/]')}[/]"
 
     # debug information
@@ -40,6 +46,10 @@ def main(
     utils.LOGGER.debug("Platform: %s", platform_info)
     utils.LOGGER.debug("Debug mode: %s", debug_mode)
     utils.LOGGER.debug("Log file: %s", log_file_path)
+
+    # setup post installation tasks
+    if ctx.invoked_subcommand != completions.__name__:
+        utils.post_install_tasks = [completions]
 
 
 @app.command()

@@ -3,38 +3,35 @@
 __all__ = ["Private"]
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated, Optional
 
 import typer
 
-from app import utils
-from app.plugins.plugin import Plugin, SetupFunc
-
-# typechecking imports
-if TYPE_CHECKING:
-    from app import config
+from app import config, utils
+from app.plugins.plugin import Plugin
 
 PrivateDirArg = Annotated[
-    Path,
-    typer.Argument(
-        help="The private files directory.",
-        callback=utils.validate(utils.is_dir),
-    ),
+    Optional[Path],
+    typer.Argument(help="The private files directory."),
 ]
 
 
 class Private(Plugin["config.Private", None]):
     """Setup private config files."""
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
     def __init__(self, private_config: "config.Private") -> None:
         """Initialize the plugin."""
         super().__init__(private_config, None)
 
-    def _setup(self, private_dir: PrivateDirArg) -> None:
+    @classmethod
+    def is_supported(cls) -> bool:
+        return True
+
+    def setup(self, private_dir: PrivateDirArg = None) -> None:
+        """Set up private files."""
+        if not private_dir:
+            utils.LOGGER.warning("Private directory not provided.")
+            return
         utils.LOGGER.debug("Private directory: %s", private_dir)
 
         # copy ssh keys

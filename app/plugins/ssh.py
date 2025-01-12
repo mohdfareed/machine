@@ -1,18 +1,17 @@
 """SSH setup module."""
 
-__all__ = ["SSH", "SSHConfig", "SSHEnv"]
+__all__ = ["SSH"]
 
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-
-import typer
+from typing import Protocol
 
 from app import models, utils
 from app.utils import LOGGER
 
 from .pkg_managers import APT
-from .plugin import Plugin, SetupFunc
+from .plugin import Plugin
 
 PUBLIC_EXT: str = ".pub"
 """The extension of the public key filenames."""
@@ -20,14 +19,14 @@ PRIVATE_EXT: str = ".key"
 """The extension of the private key filenames."""
 
 
-class SSHConfig(models.ConfigFiles):
+class SSHConfig(models.ConfigProtocol, Protocol):
     """SSH configuration files."""
 
     ssh_keys: Path
     ssh_config: Path
 
 
-class SSHEnv(models.Environment):
+class SSHEnv(models.EnvironmentProtocol, Protocol):
     """SSH environment variables."""
 
     SSH_DIR: Path
@@ -36,17 +35,10 @@ class SSHEnv(models.Environment):
 class SSH(Plugin[SSHConfig, SSHEnv]):
     """Configure SSH keys."""
 
-    def app(self) -> typer.Typer:
-        plugin_app = super().app()
-        plugin_app.command()(self.setup_server)
-        plugin_app.command()(self.generate_key_pair)
-        return plugin_app
+    shell = utils.Shell()
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
-    def _setup(self) -> None:
+    def setup(self) -> None:
+        """Set up SSH keys."""
         LOGGER.info("Setting up SSH...")
         if self.config.ssh_config:  # symlink ssh config file
             utils.link(self.config.ssh_config, self.env.SSH_DIR / "config")
@@ -88,7 +80,7 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
     def generate_key_pair(
         self,
         name: str,
-        keys_dir: utils.DirArg,
+        keys_dir: Path,
         email: str = "mohdf.fareed@icloud.com",
         passphrase: str = "",
     ) -> None:

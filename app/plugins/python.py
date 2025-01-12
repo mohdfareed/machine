@@ -1,15 +1,18 @@
 """Python setup module."""
 
+__all__ = ["Python"]
+
 import shutil
 from pathlib import Path
+from typing import Protocol
 
 from app import models, utils
 from app.plugins.pkg_managers import APT, Brew, PIPx, Scoop
-from app.plugins.plugin import Plugin, SetupFunc
+from app.plugins.plugin import Plugin
 from app.utils import LOGGER
 
 
-class PythonEnv(models.Environment):
+class PythonEnv(models.EnvironmentProtocol, Protocol):
     """Python environment variables."""
 
     COMPLETIONS_PATH: Path
@@ -18,14 +21,10 @@ class PythonEnv(models.Environment):
 class Python(Plugin[None, PythonEnv]):
     """Setup Python on a new machine."""
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
     def __init__(self, env: PythonEnv) -> None:
         super().__init__(None, env)
 
-    def _setup(self) -> None:
+    def setup(self) -> None:
         LOGGER.info("Setting up Python...")
 
         if Brew.is_supported():

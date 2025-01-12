@@ -1,24 +1,25 @@
 """Shell setup module."""
 
-__all__ = ["Shell", "ShellConfig", "ShellEnv"]
+__all__ = ["Shell", "PowerShell"]
 
 from pathlib import Path
+from typing import Protocol
 
 import rich.status
 
 from app import models, utils
-from app.plugins.pkg_managers import APT, Brew
-from app.plugins.plugin import Plugin, SetupFunc
+from app.plugins.pkg_managers import APT, Brew, SnapStore, Winget, install_from_specs
+from app.plugins.plugin import Plugin
 from app.utils import LOGGER
 
 ZSHENV_TEMPLATE = """
 export MACHINE="{machine}"
-export MACHINE_ID={machine_id}
-source {machine_zshenv}
+export MACHINE_ID="{machine_id}"
+source "{machine_zshenv}"
 """
 
 
-class ShellConfig(models.ConfigFiles):
+class ShellConfig(models.ConfigProtocol, Protocol):
     """Shell configuration."""
 
     machine_id: str
@@ -29,7 +30,7 @@ class ShellConfig(models.ConfigFiles):
     tmux_config: Path
 
 
-class ShellEnv(models.Environment):
+class ShellEnv(models.EnvironmentProtocol, Protocol):
     """Shell environment."""
 
     ZSHENV: Path
@@ -40,17 +41,15 @@ class ShellEnv(models.Environment):
 class Shell(Plugin[ShellConfig, ShellEnv]):
     """Configure ZSH shell."""
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
+    shell = utils.Shell()
 
     @classmethod
     def is_supported(cls) -> bool:
         return not utils.WINDOWS
 
-    def _setup(self) -> None:
+    def setup(self) -> None:
         LOGGER.info("Setting up shell...")
-        utils.install_from_specs(
+        install_from_specs(
             [
                 (Brew, lambda: Brew().install("zsh tmux eza bat")),
                 (APT, lambda: APT().install("zsh tmux bat eza")),
@@ -82,3 +81,52 @@ class Shell(Plugin[ShellConfig, ShellEnv]):
             throws=False,
         )
         LOGGER.debug("Shell setup complete.")
+
+
+# MARK: PowerShell
+
+PS_PROFILE_TEMPLATE = """
+$env:MACHINE="{machine}"
+$env:MACHINE_ID="{machine_id}"
+. "{machine_ps_profile}"
+"""
+
+
+class PowerShellConfig(models.ConfigProtocol, Protocol):
+    """PowerShell configuration files."""
+
+    machine_id: str
+    machine: Path
+
+    ps_profile: Path
+
+
+class PowerShellEnv(models.EnvironmentProtocol, Protocol):
+    """PowerShell environment variables."""
+
+    PS_PROFILE: Path
+
+
+class PowerShell(Plugin[PowerShellConfig, PowerShellEnv]):
+    """Install PowerShell on a machine."""
+
+    def setup(self) -> None:
+        """Set up PowerShell."""
+
+        if Brew.is_supported():
+            Brew().install_cask("powershell")
+        elif Winget.is_supported():
+            Winget().install("Microsoft.PowerShell")
+        elif SnapStore.is_supported():
+            SnapStore().install("powershell")
+
+        # create machine identifier
+        ps_profile_content = PS_PROFILE_TEMPLATE.format(
+            machine=self.config.machine,
+            machine_id=self.config.machine_id,
+            machine_ps_profile=self.config.ps_profile,
+        )
+
+        # create the PowerShell profile
+        self.env.PS_PROFILE.parent.mkdir(parents=True, exist_ok=True)
+        self.env.PS_PROFILE.write_text(ps_profile_content)

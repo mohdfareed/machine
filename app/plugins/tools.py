@@ -4,24 +4,27 @@ import shutil
 
 from app import utils
 from app.models import PluginException
-from app.plugins.pkg_managers import APT, Brew, Scoop, SnapStore, Winget
-from app.plugins.plugin import Plugin, SetupFunc
+from app.plugins.pkg_managers import (
+    APT,
+    Brew,
+    Scoop,
+    SnapStore,
+    Winget,
+    install_from_specs,
+)
+from app.plugins.plugin import Plugin
 from app.utils import LOGGER
 
 
 class Fonts(Plugin[None, None]):
     """Setup fonts on a new machine."""
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
     def __init__(self) -> None:
         super().__init__(None, None)
 
-    def _setup(self) -> None:
+    def setup(self) -> None:
         LOGGER.info("Setting up fonts...")
-        utils.install_from_specs(
+        install_from_specs(
             [
                 (
                     Brew,
@@ -44,14 +47,10 @@ class Fonts(Plugin[None, None]):
 class Docker(Plugin[None, None]):
     """Setup Docker on a new machine."""
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
     def __init__(self) -> None:
         super().__init__(None, None)
 
-    def _setup(self) -> None:
+    def setup(self) -> None:
         LOGGER.info("Setting up Docker...")
         if utils.MACOS and utils.ARM:
             LOGGER.warning("Docker is not supported on Apple Silicon.")
@@ -70,14 +69,10 @@ class Docker(Plugin[None, None]):
 class Btop(Plugin[None, None]):
     """Install Btop on a machine."""
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
     def __init__(self) -> None:
         super().__init__(None, None)
 
-    def _setup(self) -> None:
+    def setup(self) -> None:
         if Brew.is_supported():
             Brew().install("btop")
         elif SnapStore.is_supported():
@@ -89,14 +84,10 @@ class Btop(Plugin[None, None]):
 class Node(Plugin[None, None]):
     """Setup Node on a new machine."""
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
     def __init__(self) -> None:
         super().__init__(None, None)
 
-    def _setup(self) -> None:
+    def setup(self) -> None:
         LOGGER.info("Setting up Node...")
 
         if Brew.is_supported():

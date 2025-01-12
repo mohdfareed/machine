@@ -1,20 +1,23 @@
 """NeoVim setup module."""
 
+__all__ = ["NeoVim"]
+
 from pathlib import Path
+from typing import Protocol
 
 from app import models, utils
 from app.plugins.pkg_managers import APT, Brew, SnapStore, Winget
-from app.plugins.plugin import Plugin, SetupFunc
+from app.plugins.plugin import Plugin
 from app.utils import LOGGER
 
 
-class NeoVimConfig(models.ConfigFiles):
+class NeoVimConfig(models.ConfigProtocol, Protocol):
     """NeoVim configuration files."""
 
     vim: Path
 
 
-class NeoVimEnv(models.Environment):
+class NeoVimEnv(models.EnvironmentProtocol, Protocol):
     """NeoVim environment variables."""
 
     VIM: Path
@@ -23,11 +26,9 @@ class NeoVimEnv(models.Environment):
 class NeoVim(Plugin[NeoVimConfig, NeoVimEnv]):
     """Install NeoVim on a machine."""
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
+    def setup(self) -> None:
+        """Set up NeoVim."""
 
-    def _setup(self) -> None:
         if Brew.is_supported():
             Brew().install("nvim lazygit ripgrep fd")
 
@@ -38,7 +39,7 @@ class NeoVim(Plugin[NeoVimConfig, NeoVimEnv]):
 
         elif SnapStore.is_supported():
             SnapStore().install("nvim lazygit-gm ")
-            SnapStore().install("ripgrep", classic=True)
+            SnapStore().install_classic("ripgrep")
             APT().install("fd-find")
 
         utils.link(self.config.vim, self.env.VIM)

@@ -1,21 +1,24 @@
 """Zed setup module."""
 
+__all__ = ["Zed"]
+
 from pathlib import Path
+from typing import Protocol
 
 from app import models, utils
 from app.models import PluginException
 from app.plugins.pkg_managers import Brew
-from app.plugins.plugin import Plugin, SetupFunc
+from app.plugins.plugin import Plugin
 from app.utils import LOGGER
 
 
-class ZedConfig(models.ConfigFiles):
+class ZedConfig(models.ConfigProtocol, Protocol):
     """Zed configuration files."""
 
     zed_settings: Path
 
 
-class ZedEnv(models.Environment):
+class ZedEnv(models.EnvironmentProtocol, Protocol):
     """Zed environment variables."""
 
     ZED_SETTINGS: Path
@@ -23,10 +26,6 @@ class ZedEnv(models.Environment):
 
 class Zed(Plugin[ZedConfig, ZedEnv]):
     """Setup the Zed text editor on a new machine."""
-
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
 
     def _setup(self) -> None:
         LOGGER.info("Setting up Zed...")

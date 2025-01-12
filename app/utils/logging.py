@@ -1,6 +1,6 @@
 """Logging setup module."""
 
-__all__ = ["LOGGER", "init_logging"]
+__all__ = ["LOGGER", "setup_logging"]
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -29,7 +29,7 @@ class StripMarkupFilter(logging.Filter):  # pylint: disable=too-few-public-metho
         return True
 
 
-def init_logging(debug_mode: bool) -> None:
+def setup_logging(debug_mode: bool) -> None:
     """Set up and initialize app logging."""
 
     # debug logger

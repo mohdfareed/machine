@@ -65,14 +65,15 @@ def test_unix_loaded_env(monkeypatch: MonkeyPatch) -> None:
     )
 
     monkeypatch.setattr(utils, "WINDOWS", False)
-    unix_env = env.Unix().load(temp_file)
+    unix_env = env.Unix()
+    unix_env.load(temp_file)
     assert Path(unix_env.GITCONFIG) == Path("test")
 
 
 def test_windows_loaded_env(monkeypatch: MonkeyPatch) -> None:
     """Test Windows environment variables."""
 
-    temp_file = utils.create_temp_file()
+    temp_file = utils.create_temp_file(".ps1")
     temp_file.write_text(
         """
         $env:GITCONFIG="./test"
@@ -80,5 +81,6 @@ def test_windows_loaded_env(monkeypatch: MonkeyPatch) -> None:
     )
 
     monkeypatch.setattr(utils, "WINDOWS", True)
-    windows_env = env.Windows().load(temp_file, utils.Executable.PWSH)
+    windows_env = env.Windows()
+    windows_env.load(temp_file)
     assert Path(windows_env.GITCONFIG) == Path("test")

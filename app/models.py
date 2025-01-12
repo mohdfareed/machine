@@ -1,71 +1,79 @@
 """App models."""
 
-from abc import ABC
-from pathlib import Path
-from typing import Callable, Optional, Protocol, TypeVar
-
-import typer
-from pydantic import BaseModel
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from app import utils
-
-T = TypeVar("T", bound="Environment")
-
-
-# MARK: Types
-
-
-class ConfigFiles(BaseModel, ABC):
-    """Configuration files."""
-
-
-class Environment(BaseSettings, ABC):
-    """Environment variables."""
-
-    model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
-
-    @classmethod
-    def load(
-        cls: type[T], env_file: Path, executable: Optional[utils.Executable] = None
-    ) -> T:
-        """Load the environment variables from file."""
-        return utils.load_env(cls(), env_file, executable)
-
-
-PackageSpec = tuple[type["PackageManagerProtocol"], Callable[[], None]]
-
+from abc import abstractmethod
+from typing import Protocol
 
 # MARK: Protocols
 
 
-class PackageManagerProtocol(Protocol):
-    """Package manager protocol."""
+class ConfigProtocol(Protocol):  # pylint: disable=too-few-public-methods
+    """Configuration protocol. Defines what configuration files are needed."""
 
-    def app(self) -> typer.Typer:
-        """The package manager's Typer app."""
-        raise NotImplementedError
 
-    @classmethod
-    def is_supported(cls) -> bool:
-        """Check if the package manager is supported."""
-        raise NotImplementedError
+class EnvironmentProtocol(Protocol):  # pylint: disable=too-few-public-methods
+    """Environment protocol. Defines what environment variables are needed."""
 
 
 class PluginProtocol(Protocol):
-    """Plugin protocol required for registration to a machine."""
+    """Plugin protocol. Defines the plugin's app interface.
+    Member functions not starting with an underscore are automatically
+    added as commands.
+    """
 
-    plugin_app: typer.Typer
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """The plugin name."""
 
+    @property
+    @abstractmethod
+    def help(self) -> str:
+        """The plugin help message."""
+
+    @classmethod
+    @abstractmethod
+    def is_supported(cls) -> bool:
+        """Check if the plugin is supported."""
+
+    @abstractmethod
+    def status(self) -> None:
+        """Print the status of the plugin."""
+
+
+class PackageManagerProtocol(PluginProtocol, Protocol):
+    """Package manager protocol. Defines the package manager's interface."""
+
+    @property
+    @abstractmethod
+    def command(self) -> str:
+        """The package manager's shell command."""
+
+    @classmethod
+    @abstractmethod
+    def is_installed(cls, instance: "PackageManagerProtocol") -> bool:
+        """Check if the package manager is installed."""
+
+    @abstractmethod
+    def install(self, package: str) -> None:
+        """Install a package."""
+
+    @abstractmethod
     def setup(self) -> None:
-        """Setup the plugin."""
+        """Setup the package manager."""
+
+    @abstractmethod
+    def update(self) -> None:
+        """Update the package manager and its packages."""
+
+    @abstractmethod
+    def cleanup(self) -> None:
+        """Cleanup the package manager."""
 
 
-class MachineProtocol(Protocol):
-    """Machine protocol."""
+class MachineProtocol(PluginProtocol, Protocol):
+    """Machine protocol. Defines the machine's interface."""
 
-    machine_app: typer.Typer
-
+    @abstractmethod
     def setup(self) -> None:
         """Setup the machine."""
 

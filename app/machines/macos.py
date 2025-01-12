@@ -9,7 +9,7 @@ import typer
 
 from app import config, env, plugins, utils
 from app.plugins import pkg_managers
-from app.plugins.plugin import Plugin, SetupFunc
+from app.plugins.plugin import Plugin
 from app.plugins.private_files import PrivateDirArg
 
 from .machine import Machine
@@ -23,6 +23,8 @@ VSCODE_TUNNELS_NAME = "macbook"
 
 class MacOS(Machine[config.MacOS, env.MacOS]):
     """macOS machine configuration."""
+
+    shell = utils.Shell()
 
     @property
     def plugins(self) -> list[Plugin[Any, Any]]:
@@ -43,36 +45,24 @@ class MacOS(Machine[config.MacOS, env.MacOS]):
         ]
         return machine_plugins
 
-    @property
-    def machine_setup(self) -> SetupFunc:
-        return self._setup
-
     def __init__(self) -> None:
         super().__init__(config.MacOS(), env.MacOS())
-
-    def app(self) -> typer.Typer:
-        machine_app = super().app()
-        machine_app.command()(self.system_preferences)
-        machine_app.command()(self.enable_touch_id)
-        machine_app.command()(self.accept_xcode_license)
-        return machine_app
 
     @classmethod
     def is_supported(cls) -> bool:
         """Check if the plugin is supported."""
         return utils.MACOS
 
-    def _setup(self, private_dir: PrivateDirArg) -> None:
-
+    def setup(self, private_dir: PrivateDirArg = None) -> None:
         for plugin in self.plugins:
             if isinstance(plugin, plugins.Private):
-                plugin.plugin_setup(private_dir=private_dir)
+                plugin.setup(private_dir=private_dir)
                 continue
             if isinstance(plugin, plugins.VSCode):
                 plugin.setup_tunnels(VSCODE_TUNNELS_NAME)
             if isinstance(plugin, plugins.SSH):
                 plugin.setup_server()
-            plugin.plugin_setup()
+            plugin.setup()
 
         self.setup_brew()
         self.system_preferences()
@@ -83,8 +73,7 @@ class MacOS(Machine[config.MacOS, env.MacOS]):
         brew = pkg_managers.Brew()
         brew.install_brewfile(self.config.brewfile)
         brew.install("go")
-        brew.install("dotnet-sdk", cask=True)
-        brew.install("godot-mono", cask=True)
+        brew.install_cask("dotnet-sdk godot-mono")
 
     def system_preferences(self) -> None:
         """Open macOS System Preferences."""

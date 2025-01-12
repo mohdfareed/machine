@@ -1,14 +1,15 @@
 """Machine configuration files models."""
 
+from abc import ABC
 from pathlib import Path
 
 import typer
+from pydantic import BaseModel
 
-from app import APP_NAME, plugins
-from app.models import ConfigFiles
+from app import APP_NAME
 
 
-class Machine(ConfigFiles):
+class Machine(BaseModel, ABC):
     """Machine configuration files."""
 
     machine: Path = Path(__file__).parent.parent
@@ -16,7 +17,7 @@ class Machine(ConfigFiles):
     data: Path = Path(typer.get_app_dir(APP_NAME))
 
 
-class Private(ConfigFiles):
+class Private(Machine):
     """Private configuration files."""
 
     config: Path = Machine().config.parent / "private"
@@ -24,16 +25,7 @@ class Private(ConfigFiles):
     ssh_keys: Path = config / "keys"
 
 
-class Default(
-    Machine,
-    plugins.GitConfig,
-    plugins.NeoVimConfig,
-    plugins.PowerShellConfig,
-    plugins.ShellConfig,
-    plugins.SSHConfig,
-    plugins.VSCodeConfig,
-    plugins.ZedConfig,
-):
+class Default(Machine):
     """Default machine configuration files."""
 
     machine_id: str = "core"
@@ -83,6 +75,9 @@ class MacOS(Private, Default):
     zshenv: Path = config / "zshenv"
     zshrc: Path = config / "zshrc"
     ghostty: Path = config / "ghostty.config"
+
+    gitconfig: Path = config / ".gitconfig"
+    gitignore: Path = config / ".gitignore"
 
 
 class RPi(Private, Default):

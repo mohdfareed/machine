@@ -1,37 +1,31 @@
 """Tailscale setup module."""
 
+__all__ = ["Tailscale"]
+
 import os
 import shutil
 import urllib.request
 
-from typer.main import Typer
-
 from app import utils
 from app.models import PluginException
 from app.plugins.pkg_managers import Brew
-from app.plugins.plugin import Plugin, SetupFunc
-from app.utils import LOGGER
+from app.plugins.plugin import Plugin
+from app.utils import LOGGER, shell
 
 
 class Tailscale(Plugin[None, None]):
     """Configure Tailscale."""
 
+    shell = shell.Shell()
+
     def __init__(self) -> None:
         super().__init__(None, None)
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
-    def app(self) -> Typer:
-        plugin_app = super().app()
-        plugin_app.command()(self.update)
-        return plugin_app
-
-    def _setup(self) -> None:
+    def setup(self) -> None:
+        """Set up tailscale."""
         LOGGER.info("Setting up tailscale...")
         if Brew.is_supported():
-            Brew().install("tailscale", cask=True)
+            Brew().install_cask("tailscale")
 
         elif utils.LINUX:
             if not shutil.which("tailscale"):

@@ -11,7 +11,6 @@ cask "utm"                # virtual machines
 # utilities
 cask "setapp"         # apps subscription service
 cask "iina"           # video player
-cask "openinterminal" # open terminal in current directory
 cask "sf-symbols"     # system font symbols
 cask "the-unarchiver" # unzip files
 cask "mos"            # mouse scroll smoothing (65, 1, 2.5)
@@ -25,7 +24,6 @@ mas "Keynote", id: 409183694      # presentation software
 mas "Numbers", id: 409203825      # spreadsheet software
 mas "Pages", id: 409201541        # word processor software
 mas "Xcode", id: 497799835        # xcode
-mas "Playgrounds", id: 1496833156 # swift playgrounds
 
 # productivity
 mas "Craft", id: 1487937127      # note-taking app

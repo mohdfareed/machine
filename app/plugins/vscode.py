@@ -1,24 +1,27 @@
 """VSCode setup module."""
 
+__all__ = ["VSCode"]
+
 import shutil
 from pathlib import Path
+from typing import Protocol
 
 import typer
 
 from app import models, utils
-from app.plugins.pkg_managers import Brew, SnapStore, Winget
-from app.plugins.plugin import Plugin, SetupFunc
+from app.plugins.pkg_managers import Brew, SnapStore, Winget, install_from_specs
+from app.plugins.plugin import Plugin
 from app.utils import LOGGER
 
 
-class VSCodeConfig(models.ConfigFiles):
+class VSCodeConfig(models.ConfigProtocol, Protocol):
     """VSCode configuration files."""
 
     vscode: Path
     """The path to the VSCode user settings directory."""
 
 
-class VSCodeEnv(models.Environment):
+class VSCodeEnv(models.EnvironmentProtocol, Protocol):
     """VSCode environment variables."""
 
     VSCODE: Path
@@ -28,22 +31,16 @@ class VSCodeEnv(models.Environment):
 class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):
     """Configure VSCode."""
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
+    shell = utils.Shell()
 
-    def app(self) -> typer.Typer:
-        plugin_app = super().app()
-        plugin_app.command()(self.setup_tunnels)
-        return plugin_app
-
-    def _setup(self) -> None:
+    def setup(self) -> None:
+        """Set up VSCode."""
         LOGGER.info("Setting up VSCode...")
-        utils.install_from_specs(
+        install_from_specs(
             [
-                (Brew, lambda: Brew().install("visual-studio-code", cask=True)),
+                (Brew, lambda: Brew().install_cask("visual-studio-code")),
                 (Winget, lambda: Winget().install("Microsoft.VisualStudioCode")),
-                (SnapStore, lambda: SnapStore().install("code", classic=True)),
+                (SnapStore, lambda: SnapStore().install_classic("code")),
             ]
         )
 
