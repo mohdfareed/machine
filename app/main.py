@@ -1,5 +1,6 @@
 """Main module for the Typer Machine Setup CLI."""
 
+import os
 import platform
 from typing import Annotated
 
@@ -49,8 +50,16 @@ def completions() -> None:
         utils.LOGGER.error("Unsupported platform for shell completions.")
         raise typer.Abort
 
-    utils.LOGGER.debug("Generating completions...")
+    if not os.environ.get("MACHINE"):
+        utils.LOGGER.error("MACHINE environment variable is not set.")
+        raise typer.Abort
+
+    if not env.Unix().COMPLETIONS_PATH.exists():
+        env.Unix().COMPLETIONS_PATH.mkdir(parents=True, exist_ok=True)
+
+    utils.LOGGER.info("Generating completions...")
     temp_file = utils.create_temp_file()
+    os.chdir(os.environ["MACHINE"])
     utils.Shell().execute(f"poetry run {APP_NAME} --show-completion > '{temp_file}'")
 
     comp_path = env.Unix().COMPLETIONS_PATH / APP_NAME

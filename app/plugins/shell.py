@@ -12,9 +12,9 @@ from app.plugins.plugin import Plugin, SetupFunc
 from app.utils import LOGGER
 
 ZSHENV_TEMPLATE = """
-export MACHINE="{{machine}}"
-export MACHINE_ID={{machine_id}}
-source {{machine_zshenv}}
+export MACHINE="{machine}"
+export MACHINE_ID={machine_id}
+source {machine_zshenv}
 """
 
 

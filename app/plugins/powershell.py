@@ -7,9 +7,9 @@ from app.plugins.pkg_managers import Brew, SnapStore, Winget
 from app.plugins.plugin import Plugin, SetupFunc
 
 PS_PROFILE_TEMPLATE = """
-$env:MACHINE="{{machine}}"
-$env:MACHINE_ID={{machine_id}}
-. {{machine_ps_profile}}
+$env:MACHINE="{machine}"
+$env:MACHINE_ID={machine_id}
+. {machine_ps_profile}
 """
 
 
