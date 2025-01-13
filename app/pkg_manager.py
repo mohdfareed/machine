@@ -2,7 +2,6 @@
 
 __all__ = ["PkgManagerPlugin", "install_from_specs", "pkg_managers_app"]
 
-import inspect
 import shutil
 from abc import ABC, abstractmethod
 from inspect import isabstract
@@ -40,16 +39,7 @@ class PkgManagerPlugin(
     def manager_app(cls) -> typer.Typer:
         """Create a Typer app for the package manager."""
         instance = cls()
-        plugin_app = typer.Typer(name=instance.name.lower(), help=instance.help)
-
-        for name, method in inspect.getmembers(instance, predicate=inspect.ismethod):
-            # skip class methods
-            if method == getattr(cls, name):
-                continue
-            # skip private methods
-            if not name.startswith("_"):
-                plugin_app.command(name)(method)
-        return plugin_app
+        return cls.app(instance)
 
     def setup(self) -> None:
         if type(self).is_setup:

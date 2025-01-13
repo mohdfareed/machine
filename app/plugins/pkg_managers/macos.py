@@ -29,9 +29,9 @@ class Brew(PkgManagerPlugin):
         self.setup()
 
         def wrapper(packages: list[str]) -> None:
-            LOGGER.info("Installing cask package %s...", package)
+            LOGGER.info("Installing cask package %s...", packages)
             self._install_pkg(" ".join(packages), cask=True)
-            LOGGER.debug("Cask package %s was installed successfully.", package)
+            LOGGER.debug("Cask package %s was installed successfully.", packages)
 
         utils.with_progress("Installing...")(wrapper)(package.split())
 

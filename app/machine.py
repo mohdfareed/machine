@@ -31,6 +31,7 @@ class Machine(Plugin[C, E], MachineProtocol):
 
         @wraps(self.setup)
         def setup_wrapper(*args: Any, **kwargs: Any) -> None:
+            """Set up the machine."""
             utils.LOGGER.info("Setting up machine...")
             main.completions()
             utils.post_install_tasks += [
@@ -64,15 +65,17 @@ class Machine(Plugin[C, E], MachineProtocol):
                     "Environment: %s", instance.env.model_dump_json(indent=2)
                 )
 
+        plugins_app = typer.Typer(name="plugins", help="Manage machine plugins.")
+        for plugin in instance.plugins:
+            plugins_app.add_typer(plugin.app(plugin))
+
         machine_app = super().app(instance)
         machine_app.callback()(app_callback)
-        machine_app.command()(instance.setup)
-
-        for plugin in instance.plugins:
-            machine_app.add_typer(plugin.app(plugin))
+        machine_app.command(help="Set up the machine.")(instance.machine_setup)
+        machine_app.add_typer(plugins_app)
         return machine_app
 
     def setup(self) -> None:
-        """Set up the machine."""
+        """Machine setup."""
         for plugin in self.plugins:
             plugin.setup()

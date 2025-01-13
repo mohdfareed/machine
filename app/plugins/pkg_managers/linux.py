@@ -77,9 +77,9 @@ class SnapStore(PkgManagerPlugin):
         self.setup()
 
         def wrapper(packages: list[str]) -> None:
-            LOGGER.info("Installing snap package %s...", package)
+            LOGGER.info("Installing snap package %s...", packages)
             self._install_pkg(" ".join(packages), classic=True)
-            LOGGER.debug("Snap package %s was installed successfully.", package)
+            LOGGER.debug("Snap package %s was installed successfully.", packages)
 
         utils.with_progress("Installing...")(wrapper)(package.split())
 

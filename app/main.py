@@ -17,8 +17,9 @@ app = typer.Typer(
 )
 
 # register machines and package managers
-for machine_app in machines.apps:
-    app.add_typer(machine_app)
+for machine in (machines.MacOS, machines.Test):
+    if machine.is_supported():
+        app.add_typer(machine.machine_app(machine()))
 app.add_typer(pkg_managers_app())
 
 
