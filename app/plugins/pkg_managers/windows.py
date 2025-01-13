@@ -4,9 +4,8 @@ __all__ = ["Winget", "Scoop"]
 
 
 from app import utils
+from app.pkg_manager import PkgManagerPlugin
 from app.utils import LOGGER
-
-from .pkg_manager import PkgManagerPlugin
 
 
 class Winget(PkgManagerPlugin):

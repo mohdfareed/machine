@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import Protocol
 
 from app import models, utils
+from app.plugin import Plugin
 from app.utils import LOGGER
 
 from .pkg_managers import APT
-from .plugin import Plugin
 
 PUBLIC_EXT: str = ".pub"
 """The extension of the public key filenames."""

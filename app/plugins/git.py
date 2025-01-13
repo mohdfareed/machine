@@ -5,10 +5,12 @@ __all__ = ["Git"]
 from pathlib import Path
 from typing import Protocol
 
-from app import models, utils
+import typer
 
-from .pkg_managers import APT, Brew, Winget, install_from_specs
-from .plugin import Plugin
+from app import models, utils
+from app.plugin import Plugin
+
+from .pkg_managers import APT, Brew, Winget
 
 
 class GitConfig(models.ConfigProtocol, Protocol):
@@ -37,13 +39,15 @@ class Git(Plugin[GitConfig, GitEnv]):
         utils.link(self.config.gitconfig, self.env.GITCONFIG)
         utils.link(self.config.gitignore, self.env.GITIGNORE)
 
-        install_from_specs(
-            [
-                (Brew, lambda: Brew().install(self.unix_packages)),
-                (APT, lambda: self._linux_setup(self.unix_packages)),
-                (Winget, lambda: Winget().install(self.win_packages)),
-            ]
-        )
+        if Brew.is_supported():
+            Brew().install(self.unix_packages)
+        elif APT.is_supported():
+            self._linux_setup(self.unix_packages)
+        elif Winget.is_supported():
+            Winget().install(self.win_packages)
+        else:
+            utils.LOGGER.error("No supported package manager found.")
+            raise typer.Abort
         utils.LOGGER.debug("Git setup complete")
 
     @staticmethod

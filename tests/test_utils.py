@@ -3,12 +3,13 @@
 import logging
 import shutil
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, Generator, Literal
 from unittest.mock import patch
 
 import pytest
 
-from app.utils import Shell, create_temp_dir, create_temp_file, link
+from app import utils
+from app.utils import Shell, create_temp_dir, create_temp_file, link, load_env_vars
 from app.utils.logging import StripMarkupFilter
 
 
@@ -74,6 +75,15 @@ def test_create_temp_dir() -> None:
         shutil.rmtree(file)
 
 
+def test_create_temp_dir_cleanup() -> None:
+    """Test the create_temp_dir function cleanup."""
+    temp_dir = create_temp_dir()
+    assert temp_dir.exists()
+    assert temp_dir.is_dir()
+    shutil.rmtree(temp_dir)
+    assert not temp_dir.exists()
+
+
 def test_create_temp_file() -> None:
     """Test the create_temp_file function."""
     with patch("atexit.register") as mock_register:
@@ -87,6 +97,16 @@ def test_create_temp_file() -> None:
         file.unlink()
 
 
+def test_create_temp_file_cleanup() -> None:
+    """Test the create_temp_file function cleanup."""
+    temp_file = create_temp_file()
+    temp_file.touch()
+    assert temp_file.exists()
+    assert temp_file.is_file()
+    temp_file.unlink()
+    assert not temp_file.exists()
+
+
 def test_shell() -> None:
     """Test the shell function."""
 
@@ -96,3 +116,53 @@ def test_shell() -> None:
     shell.execute("echo 'warning test'")
     shell.execute("echo 'info test'", info=True)
     shell.execute("echo")
+
+
+def test_shell_execute_with_info() -> None:
+    """Test the shell execute function with info logging."""
+    shell = Shell()
+    result = shell.execute("echo 'info test'", info=True)
+    assert result.returncode == 0
+    assert "info test" in result.output
+
+
+def test_shell_execute_with_error() -> None:
+    """Test the shell execute function with error logging."""
+    shell = Shell()
+    result = shell.execute("echo 'error test'", throws=False)
+    assert result.returncode == 0
+    assert "error test" in result.output
+
+
+def test_env(temp_file: Path) -> None:
+    """Test loading env vars from a file."""
+
+    temp_file.write_text(
+        """
+        export TEST_ENV_VAR="test"
+        """.strip()
+    )
+
+    env_vars = load_env_vars(temp_file)
+    assert env_vars["TEST_ENV_VAR"] == "test"
+
+
+def test_with_status_decorator() -> None:
+    """Test the with_status decorator."""
+
+    @utils.with_status("Testing status")
+    def sample_function() -> Literal["Success"]:
+        return "Success"
+
+    result = sample_function()
+    assert result == "Success"
+
+
+def test_with_progress_decorator() -> None:
+    """Test the with_progress decorator."""
+
+    @utils.with_progress("Testing progress")
+    def sample_function(items: list[Any]) -> Any:
+        return items
+
+    sample_function([1, 2, 3])

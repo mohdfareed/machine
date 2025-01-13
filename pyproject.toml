@@ -47,5 +47,4 @@ strict = true
 omit = [
     "app/machines/*",
     "app/plugins/*",
-    "app/pkg_managers/*"
 ]

@@ -2,17 +2,12 @@
 
 import shutil
 
+import typer
+
 from app import utils
 from app.models import PluginException
-from app.plugins.pkg_managers import (
-    APT,
-    Brew,
-    Scoop,
-    SnapStore,
-    Winget,
-    install_from_specs,
-)
-from app.plugins.plugin import Plugin
+from app.plugin import Plugin
+from app.plugins.pkg_managers import APT, Brew, Scoop, SnapStore, Winget
 from app.utils import LOGGER
 
 
@@ -24,23 +19,16 @@ class Fonts(Plugin[None, None]):
 
     def setup(self) -> None:
         LOGGER.info("Setting up fonts...")
-        install_from_specs(
-            [
-                (
-                    Brew,
-                    lambda: Brew().install(
-                        "font-computer-modern font-jetbrains-mono-nerd-font"
-                    ),
-                ),
-                (APT, lambda: APT().install("fonts-jetbrains-mono fonts-lmodern")),
-                (
-                    Scoop,
-                    lambda: Scoop()
-                    .add_bucket("nerd-fonts")
-                    .install("nerd-fonts/JetBrains-Mono"),
-                ),
-            ]
-        )
+        if Brew.is_supported():
+            Brew().install("font-computer-modern font-jetbrains-mono-nerd-font")
+        elif APT.is_supported():
+            APT().install("fonts-jetbrains-mono fonts-lmodern")
+        elif Scoop.is_supported():
+            Scoop().add_bucket("nerd-fonts").install("nerd-fonts/JetBrains-Mono")
+        else:
+            utils.LOGGER.error("No supported package manager found.")
+            raise typer.Abort
+
         LOGGER.debug("Fonts were setup successfully.")
 
 

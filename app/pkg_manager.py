@@ -12,9 +12,8 @@ import rich
 import typer
 from typing_extensions import override
 
-from app import config, env, utils
+from app import config, env, plugin, utils
 from app.models import PackageManagerException, PackageManagerProtocol
-from app.plugins import plugin
 
 T = TypeVar("T", bound="PkgManagerPlugin")
 PackageSpec = tuple[type[PackageManagerProtocol], Callable[[], None]]

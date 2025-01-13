@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Protocol
 
 from app import models, utils
+from app.plugin import Plugin
 from app.plugins.pkg_managers import APT, Brew, SnapStore, Winget
-from app.plugins.plugin import Plugin
 from app.utils import LOGGER
 
 

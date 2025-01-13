@@ -7,9 +7,8 @@ import shutil
 import typer
 
 from app import utils
+from app.pkg_manager import PkgManagerPlugin
 from app.utils import LOGGER
-
-from .pkg_manager import PkgManagerPlugin
 
 
 class APT(PkgManagerPlugin):

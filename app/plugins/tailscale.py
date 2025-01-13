@@ -8,8 +8,8 @@ import urllib.request
 
 from app import utils
 from app.models import PluginException
+from app.plugin import Plugin
 from app.plugins.pkg_managers import Brew
-from app.plugins.plugin import Plugin
 from app.utils import LOGGER, shell
 
 

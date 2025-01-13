@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from app import config, env, utils
-from app.machines.machine import Machine
-from app.plugins import Plugin, Private
+from app.machine import Machine
+from app.plugin import Plugin
+from app.plugins import Private
 
 Environment = env.Unix if utils.UNIX else env.Windows
 
@@ -19,7 +20,7 @@ class TestConfig(config.Private):
     invalid_field: int = 0
 
 
-class Test(Machine[TestConfig, None]):
+class Test(Machine[TestConfig, env.Machine]):
     """Testbench machine."""
 
     @property
@@ -30,7 +31,7 @@ class Test(Machine[TestConfig, None]):
         return plugins
 
     def __init__(self) -> None:
-        super().__init__(TestConfig(), None)
+        super().__init__(TestConfig(), Environment())
 
     @classmethod
     def is_supported(cls) -> bool:

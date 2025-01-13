@@ -10,7 +10,7 @@ from app import env, utils
 
 def test_env_fail() -> None:
     """Test the environment variables failing."""
-    with pytest.raises(utils.shell.ShellError):
+    with pytest.raises(IsADirectoryError):
         env.Machine().load(Path("."))
 
 

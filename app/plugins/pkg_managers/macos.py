@@ -6,9 +6,8 @@ from pathlib import Path
 
 from app import utils
 from app.models import PackageManagerException
+from app.pkg_manager import PkgManagerPlugin
 from app.utils import LOGGER
-
-from .pkg_manager import PkgManagerPlugin
 
 
 class Brew(PkgManagerPlugin):

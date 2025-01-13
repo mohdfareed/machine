@@ -3,8 +3,8 @@
 from pathlib import Path
 
 from app import models
+from app.plugin import Plugin
 from app.plugins.pkg_managers import Brew, SnapStore, Winget
-from app.plugins.plugin import Plugin
 
 PS_PROFILE_TEMPLATE = """
 $env:MACHINE="{machine}"

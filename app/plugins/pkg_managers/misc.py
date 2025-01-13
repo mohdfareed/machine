@@ -2,9 +2,10 @@
 
 __all__ = ["PIPx"]
 
+from app.pkg_manager import PkgManagerPlugin
+
 from .linux import APT
 from .macos import Brew
-from .pkg_manager import PkgManagerPlugin
 from .windows import Scoop
 
 

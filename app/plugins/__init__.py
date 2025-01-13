@@ -2,7 +2,6 @@
 
 from .git import *
 from .nvim import *
-from .plugin import *
 from .private_files import *
 from .python import *
 from .shell import *

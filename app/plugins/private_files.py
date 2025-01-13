@@ -8,7 +8,7 @@ from typing import Annotated, Optional
 import typer
 
 from app import config, utils
-from app.plugins.plugin import Plugin
+from app.plugin import Plugin
 
 PrivateDirArg = Annotated[
     Optional[Path],

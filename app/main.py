@@ -7,7 +7,7 @@ from typing import Annotated
 import typer
 
 from app import APP_NAME, __version__, env, machines, utils
-from app.plugins import pkg_managers
+from app.pkg_manager import pkg_managers_app
 from app.utils.logging import log_file_path
 
 app = typer.Typer(
@@ -17,13 +17,9 @@ app = typer.Typer(
 )
 
 # register machines and package managers
-# machine_app: type[machines.Machine[Any, Any]]
 for machine_app in machines.apps:
     app.add_typer(machine_app)
-# for machine in machines.Machine[Any, Any].__():
-#     if not isabstract(machine) and machine.is_supported():
-#         app.add_typer(machine.machine_app(machine()))
-app.add_typer(pkg_managers.pkg_managers_app())
+app.add_typer(pkg_managers_app())
 
 
 @app.callback()

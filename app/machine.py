@@ -1,6 +1,6 @@
 """Machine interface for configuring and setting up machines."""
 
-__all__ = ["Machine", "apps"]
+__all__ = ["Machine"]
 
 
 from abc import abstractmethod
@@ -16,12 +16,10 @@ from app.models import (
     MachineException,
     MachineProtocol,
 )
-from app.plugins.plugin import Plugin
+from app.plugin import Plugin
 
 C = TypeVar("C", bound=ConfigProtocol)
 E = TypeVar("E", bound=EnvironmentProtocol)
-
-apps: list["typer.Typer"] = []
 
 
 class Machine(Plugin[C, E], MachineProtocol):
@@ -51,8 +49,6 @@ class Machine(Plugin[C, E], MachineProtocol):
         if not self.is_supported():
             raise MachineException(f"{self.name} is not supported.")
         super().__init__(configuration, environment)
-        if self.is_supported():
-            apps.append(self.machine_app(self))
 
     @classmethod
     def machine_app(cls, instance: "Machine[Any, Any]") -> typer.Typer:

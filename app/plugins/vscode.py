@@ -9,8 +9,8 @@ from typing import Protocol
 import typer
 
 from app import models, utils
-from app.plugins.pkg_managers import Brew, SnapStore, Winget, install_from_specs
-from app.plugins.plugin import Plugin
+from app.plugin import Plugin
+from app.plugins.pkg_managers import Brew, SnapStore, Winget
 from app.utils import LOGGER
 
 
@@ -36,13 +36,15 @@ class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):
     def setup(self) -> None:
         """Set up VSCode."""
         LOGGER.info("Setting up VSCode...")
-        install_from_specs(
-            [
-                (Brew, lambda: Brew().install_cask("visual-studio-code")),
-                (Winget, lambda: Winget().install("Microsoft.VisualStudioCode")),
-                (SnapStore, lambda: SnapStore().install_classic("code")),
-            ]
-        )
+        if Brew.is_supported():
+            Brew().install_cask("visual-studio-code")
+        elif Winget.is_supported():
+            Winget().install("Microsoft.VisualStudioCode")
+        elif SnapStore.is_supported():
+            SnapStore().install_classic("code")
+        else:
+            utils.LOGGER.error("No supported package manager found.")
+            raise typer.Abort
 
         for file in self.config.vscode.iterdir():
             utils.link(file, self.env.VSCODE / file.name)

@@ -6,10 +6,11 @@ from pathlib import Path
 from typing import Protocol
 
 import rich.status
+import typer
 
 from app import models, utils
-from app.plugins.pkg_managers import APT, Brew, SnapStore, Winget, install_from_specs
-from app.plugins.plugin import Plugin
+from app.plugin import Plugin
+from app.plugins.pkg_managers import APT, Brew, SnapStore, Winget
 from app.utils import LOGGER
 
 ZSHENV_TEMPLATE = """
@@ -49,12 +50,13 @@ class Shell(Plugin[ShellConfig, ShellEnv]):
 
     def setup(self) -> None:
         LOGGER.info("Setting up shell...")
-        install_from_specs(
-            [
-                (Brew, lambda: Brew().install("zsh tmux eza bat")),
-                (APT, lambda: APT().install("zsh tmux bat eza")),
-            ]
-        )
+        if Brew.is_supported():
+            Brew().install("zsh tmux bat eza")
+        elif APT.is_supported():
+            APT().install("zsh tmux bat eza")
+        else:
+            utils.LOGGER.error("No supported package manager found.")
+            raise typer.Abort
 
         # create machine identifier
         zshenv_content = ZSHENV_TEMPLATE.format(

@@ -8,11 +8,10 @@ from typing import Any
 import typer
 
 from app import config, env, plugins, utils
+from app.machine import Machine
+from app.plugin import Plugin
 from app.plugins import pkg_managers
-from app.plugins.plugin import Plugin
 from app.plugins.private_files import PrivateDirArg
-
-from .machine import Machine
 
 PAM_SUDO_PATH = Path("/") / "etc" / "pam.d" / "sudo_local"
 PAM_SUDO_CONTENT = """
