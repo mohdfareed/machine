@@ -51,7 +51,7 @@ class Machine(Plugin[C, E], MachineProtocol):
         if not self.is_supported():
             raise MachineException(f"{self.name} is not supported.")
         super().__init__(configuration, environment)
-        if type(self).is_supported():
+        if self.is_supported():
             apps.append(self.machine_app(self))
 
     @classmethod
