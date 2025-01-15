@@ -2,9 +2,11 @@
 
 from abc import ABC
 from pathlib import Path
+from typing import Optional
 
 import platformdirs
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing_extensions import Self
 
 from app import utils
 
@@ -15,13 +17,14 @@ class Machine(BaseSettings, ABC):
     model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
     SSH_DIR: Path = Path.home() / ".ssh"
 
-    def load(self, env_file: Path) -> None:
+    def load(self, env_file: Path) -> Self:
         """Load the environment variables from file."""
         utils.LOGGER.debug("Loading environment from: %s", env_file)
 
         env_vars = utils.load_env_vars(env_file)
         for field in self.model_fields:
             setattr(self, field, env_vars.get(field, getattr(self, field)))
+        return self
 
 
 class Unix(Machine):
@@ -48,6 +51,7 @@ class MacOS(Unix):
     """MacOS environment variables."""
 
     ICLOUD: Path = Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs"
+    GHOSTTY: Path = Unix.XDG_CONFIG_HOME / "ghostty" / "config.json"
 
 
 class Windows(Machine):
@@ -62,3 +66,5 @@ class Windows(Machine):
     VIM: Path = LOCALAPPDATA / "nvim"
     PS_PROFILE: Path = USERPROFILE / "Documents" / "WindowsPowerShell" / "profile.ps1"
     VSCODE: Path = APPDATA / "Code" / "User"
+
+    COMPLETIONS_PATH: Optional[Path] = None

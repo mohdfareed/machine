@@ -1,6 +1,6 @@
 """Shell setup module."""
 
-__all__ = ["Shell", "PowerShell"]
+__all__ = ["ZSH", "PowerShell"]
 
 from pathlib import Path
 from typing import Protocol
@@ -13,6 +13,8 @@ from app.plugin import Plugin
 from app.plugins.pkg_managers import APT, Brew, SnapStore, Winget
 from app.utils import LOGGER
 
+# MARK: ZSH
+
 ZSHENV_TEMPLATE = """
 export MACHINE="{machine}"
 export MACHINE_ID="{machine_id}"
@@ -20,7 +22,7 @@ source "{machine_zshenv}"
 """
 
 
-class ShellConfig(models.ConfigProtocol, Protocol):
+class ZSHConfig(models.ConfigProtocol, Protocol):
     """Shell configuration."""
 
     machine_id: str
@@ -31,7 +33,7 @@ class ShellConfig(models.ConfigProtocol, Protocol):
     tmux_config: Path
 
 
-class ShellEnv(models.EnvironmentProtocol, Protocol):
+class ZSHEnv(models.EnvironmentProtocol, Protocol):
     """Shell environment."""
 
     ZSHENV: Path
@@ -39,7 +41,7 @@ class ShellEnv(models.EnvironmentProtocol, Protocol):
     TMUX_CONFIG: Path
 
 
-class Shell(Plugin[ShellConfig, ShellEnv]):
+class ZSH(Plugin[ZSHConfig, ZSHEnv]):
     """Configure ZSH shell."""
 
     shell = utils.Shell()

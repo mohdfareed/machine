@@ -3,7 +3,7 @@
 __all__ = ["Private"]
 
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 import typer
 
@@ -16,7 +16,7 @@ PrivateDirArg = Annotated[
 ]
 
 
-class Private(Plugin["config.Private", None]):
+class Private(Plugin["config.Private", Any]):
     """Setup private config files."""
 
     def __init__(self, private_config: "config.Private") -> None:
@@ -27,12 +27,13 @@ class Private(Plugin["config.Private", None]):
     def is_supported(cls) -> bool:
         return True
 
-    def setup(self, private_dir: PrivateDirArg = None) -> None:
+    def setup(self) -> None:
         """Set up private files."""
-        if not private_dir:
-            utils.LOGGER.warning("Private directory not provided.")
+
+    def ssh_keys(self, private_dir: PrivateDirArg) -> None:
+        """Set up private SSH keys."""
+        if not (private_dir := self.startup(private_dir)):
             return
-        utils.LOGGER.debug("Private directory: %s", private_dir)
 
         # copy ssh keys
         local_ssh_keys = private_dir / self.config.ssh_keys.name
@@ -44,6 +45,11 @@ class Private(Plugin["config.Private", None]):
                 "Private SSH keys directory does not exist at: %s", local_ssh_keys
             )
 
+    def env_file(self, private_dir: PrivateDirArg) -> None:
+        """Set up private environment variables."""
+        if not (private_dir := self.startup(private_dir)):
+            return
+
         # copy private
         local_private_env = private_dir / self.config.private_env.name
         if local_private_env.exists():
@@ -54,3 +60,12 @@ class Private(Plugin["config.Private", None]):
                 "Private environment file does not exist at: %s",
                 self.config.private_env,
             )
+
+    @staticmethod
+    def startup(private_dir: PrivateDirArg) -> Optional[Path]:
+        """Startup the plugin."""
+        if not private_dir:
+            utils.LOGGER.warning("Private directory not provided.")
+            return None
+        utils.LOGGER.debug("Private directory: %s", private_dir)
+        return private_dir

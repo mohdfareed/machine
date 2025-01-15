@@ -36,22 +36,32 @@ class Git(Plugin[GitConfig, GitEnv]):
     def setup(self) -> None:
         """Set up git."""
         utils.LOGGER.info("Setting up git...")
+        self.link()
+        self.install()
+        utils.LOGGER.debug("Git setup complete")
+
+    def link(self) -> None:
+        """Link git configuration files."""
         utils.link(self.config.gitconfig, self.env.GITCONFIG)
         utils.link(self.config.gitignore, self.env.GITIGNORE)
 
+    def install(self) -> None:
+        """Install git."""
+        utils.LOGGER.info("Installing git...")
         if Brew.is_supported():
             Brew().install(self.unix_packages)
         elif APT.is_supported():
-            self._linux_setup(self.unix_packages)
+            self.linux_install(self.unix_packages)
         elif Winget.is_supported():
             Winget().install(self.win_packages)
+
         else:
             utils.LOGGER.error("No supported package manager found.")
             raise typer.Abort
-        utils.LOGGER.debug("Git setup complete")
 
     @staticmethod
-    def _linux_setup(unix_packages: str) -> None:
+    def linux_install(unix_packages: str) -> None:
+        """Install git on a linux machine."""
         apt = APT()
         apt.add_keyring(
             "https://cli.github.com/packages/githubcli-archive-keyring.gpg",

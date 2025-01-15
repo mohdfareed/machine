@@ -44,8 +44,8 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
             utils.link(self.config.ssh_config, self.env.SSH_DIR / "config")
 
         # read ssh keys from directory
-        for key in _load_keys(self.config.ssh_keys):
-            _setup_key(key, self.env, self.shell)
+        for key in self.load_keys(self.config.ssh_keys):
+            self.setup_key(key, self.env, self.shell)
         LOGGER.info("SSH setup complete")
 
     def setup_server(self) -> None:
@@ -80,17 +80,16 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
     def generate_key_pair(
         self,
         name: str,
-        keys_dir: Path,
         email: str = "mohdf.fareed@icloud.com",
         passphrase: str = "",
     ) -> None:
         """Create a new ssh key pair."""
         LOGGER.info("Creating SSH key pair: %s", name)
-        keys_dir.mkdir(parents=True, exist_ok=True)
+        self.env.SSH_DIR.mkdir(parents=True, exist_ok=True)
 
         # define key paths
-        private_key = (keys_dir / name).with_suffix(PRIVATE_EXT)
-        public_key = (keys_dir / name).with_suffix(PUBLIC_EXT)
+        private_key = (self.env.SSH_DIR / name).with_suffix(PRIVATE_EXT)
+        public_key = (self.env.SSH_DIR / name).with_suffix(PUBLIC_EXT)
 
         # check if private key already exists
         if private_key.exists():
@@ -112,63 +111,64 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
         LOGGER.debug("Public key: %s", public_key)
         LOGGER.debug("Private key: %s", private_key)
 
+    def setup_key(
+        self, key: "SSHKeyPair", environment: SSHEnv, shell: utils.Shell
+    ) -> None:
+        """Setup an ssh key on a machine."""
+        LOGGER.info("Setting up SSH key: %s", key.name)
 
-def _load_keys(keys_dir: Path) -> list["_SSHKeyPair"]:
-    """Load ssh keys from the specified directory.
+        # symlink private key and set permissions
+        utils.link(key.private, environment.SSH_DIR / key.private.name)
+        key.private.chmod(0o600)
 
-    Returns:
-        dict[str, SSHKey]: A dict of key names to key pairs.
-    """
+        if key.public.exists():  # symlink public key and set permissions
+            utils.link(key.public, environment.SSH_DIR / key.public.name)
+            key.public.chmod(0o644)
 
-    # load private keys
-    private_keys = [
-        _SSHKeyPair(private=file)
-        for file in keys_dir.iterdir()
-        if file.suffix == PRIVATE_EXT
-    ]
+        # get key fingerprint
+        fingerprint = shell.execute(f"ssh-keygen -lf {key.private}")[1]
+        fingerprint = fingerprint.split(" ")[1]
+        LOGGER.debug("Key fingerprint: %s", fingerprint)
 
-    LOGGER.debug("Loaded %d ssh keys.", len(private_keys))
-    return private_keys
+        if utils.WINDOWS:  # set up ssh agent on windows
+            shell.execute("Get-Service ssh-agent | Set-Service -StartupType Automatic")
+            shell.execute("Start-Service ssh-agent")
+            cmd = f"ssh-add -l | Select-String -Pattern '{fingerprint}'"
+        else:  # command to check if key already exists in ssh agent
+            cmd = "ssh-add -l | grep -q " + fingerprint
 
+        # add key to ssh agent if it doesn't exist
+        if shell.execute(cmd, throws=False)[0] != 0:
+            if utils.MACOS:  # add key to keychain on macOS
+                shell.execute(f"ssh-add --apple-use-keychain '{key.private}'")
 
-def _setup_key(key: "_SSHKeyPair", environment: SSHEnv, shell: utils.Shell) -> None:
-    """Setup an ssh key on a machine."""
-    LOGGER.info("Setting up SSH key: %s", key.name)
+            else:  # add key to ssh agent on other operating systems
+                shell.execute(f"ssh-add '{key.private}'")
+            LOGGER.info("Added key to SSH agent")
+        else:
+            LOGGER.info("Key already exists in SSH agent")
 
-    # symlink private key and set permissions
-    utils.link(key.private, environment.SSH_DIR / key.private.name)
-    key.private.chmod(0o600)
+    @staticmethod
+    def load_keys(keys_dir: Path) -> list["SSHKeyPair"]:
+        """Load ssh keys from the specified directory.
 
-    if key.public.exists():  # symlink public key and set permissions
-        utils.link(key.public, environment.SSH_DIR / key.public.name)
-        key.public.chmod(0o644)
+        Returns:
+            dict[str, SSHKey]: A dict of key names to key pairs.
+        """
 
-    # get key fingerprint
-    fingerprint = shell.execute(f"ssh-keygen -lf {key.private}")[1]
-    fingerprint = fingerprint.split(" ")[1]
-    LOGGER.debug("Key fingerprint: %s", fingerprint)
+        # load private keys
+        private_keys = [
+            SSHKeyPair(private=file)
+            for file in keys_dir.iterdir()
+            if file.suffix == PRIVATE_EXT
+        ]
 
-    if utils.WINDOWS:  # set up ssh agent on windows
-        shell.execute("Get-Service ssh-agent | Set-Service -StartupType Automatic")
-        shell.execute("Start-Service ssh-agent")
-        cmd = f"ssh-add -l | Select-String -Pattern '{fingerprint}'"
-    else:  # command to check if key already exists in ssh agent
-        cmd = "ssh-add -l | grep -q " + fingerprint
-
-    # add key to ssh agent if it doesn't exist
-    if shell.execute(cmd, throws=False)[0] != 0:
-        if utils.MACOS:  # add key to keychain on macOS
-            shell.execute(f"ssh-add --apple-use-keychain '{key.private}'")
-
-        else:  # add key to ssh agent on other operating systems
-            shell.execute(f"ssh-add '{key.private}'")
-        LOGGER.info("Added key to SSH agent")
-    else:
-        LOGGER.info("Key already exists in SSH agent")
+        LOGGER.debug("Loaded %d ssh keys.", len(private_keys))
+        return private_keys
 
 
 @dataclass
-class _SSHKeyPair:
+class SSHKeyPair:
     """An SSH key pair of a private and optional public keys."""
 
     private: Path

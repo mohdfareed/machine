@@ -43,7 +43,7 @@ class Machine(Plugin[C, E], MachineProtocol):
 
     @property
     @abstractmethod
-    def plugins(self) -> List[Plugin[Any, Any]]:
+    def plugins(self) -> List[type[Plugin[Any, Any]]]:
         """List of plugins to be registered to the machine."""
 
     def __init__(self, configuration: C, environment: E) -> None:
@@ -66,7 +66,7 @@ class Machine(Plugin[C, E], MachineProtocol):
                 )
 
         plugins_app = typer.Typer(name="plugins", help="Manage machine plugins.")
-        for plugin in instance.plugins:
+        for plugin in instance._create_plugins():  # pylint: disable=protected-access
             plugins_app.add_typer(plugin.app(plugin))
 
         machine_app = super().app(instance)
@@ -77,5 +77,9 @@ class Machine(Plugin[C, E], MachineProtocol):
 
     def setup(self) -> None:
         """Machine setup."""
-        for plugin in self.plugins:
+        plugins = self._create_plugins()
+        for plugin in plugins:
             plugin.setup()
+
+    def _create_plugins(self) -> List[Plugin[Any, Any]]:
+        return [plugin(self.config, self.env) for plugin in self.plugins]
