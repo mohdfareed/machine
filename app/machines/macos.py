@@ -77,7 +77,12 @@ class MacOS(Machine[config.MacOS, env.MacOS]):
     def system_preferences(self) -> None:
         """Open macOS System Preferences."""
         utils.LOGGER.info("Opening System Preferences...")
-        self.shell.execute(f". {self.config.system_preferences}")
+        self.shell.execute(
+            (
+                f"HOSTNAME={self.config.hostname} && "
+                f". {self.config.system_preferences}"
+            )
+        )
 
     def enable_touch_id(self) -> None:
         """Enable Touch ID for sudo on macOS."""

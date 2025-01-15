@@ -68,6 +68,7 @@ class MacOS(Private, Default):
 
     machine_id: str = "macos"
     config: Path = Machine().config / machine_id
+    hostname: str = "mohds-macbook"
 
     brewfile: Path = config / "Brewfile"
     system_preferences: Path = config / "preferences.sh"
