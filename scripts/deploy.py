@@ -2,16 +2,17 @@
 """Script for deploying a new machine."""
 
 import argparse
+import atexit
 import os
 import shutil
 import subprocess
 import sys
+import traceback
 from pathlib import Path
-
-from scripts.helpers import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # Configuration
 DEFAULT_MACHINE_PATH = Path.home() / ".machine"
+REPOSITORY = "mohdfareed/machine.git"
 EXECUTABLE = "machine-setup"
 
 # Help message
@@ -53,6 +54,9 @@ def main(path: Path) -> None:
 
 
 def _validate(path: Path) -> None:
+    atexit.register(lambda: os.chdir(os.getcwd()))
+    os.chdir(Path(__file__).parent.parent)  # .py -> scripts -> machine
+
     path.parent.mkdir(parents=True, exist_ok=True)
     if not os.access(path.parent, os.W_OK):
         raise RuntimeError(f"Permission denied: {path.parent}")
@@ -194,6 +198,42 @@ def _link_executable(path: Path) -> None:
         )
 
 
+# region: - Logging and error handling
+
+
+class ScriptFormatter(
+    argparse.ArgumentDefaultsHelpFormatter,
+    argparse.RawDescriptionHelpFormatter,
+):
+    """Custom formatter for argparse help messages."""
+
+
+def log_error(msg: str) -> None:
+    """Log an error message."""
+    print(f"\033[31m{'ERROR'}\033[0m    {msg}")
+
+
+def log_success(msg: str) -> None:
+    """Log a success message."""
+    print(f"\033[35m{'SUCCESS'}\033[0m  {msg}")
+
+
+def log_warning(msg: str) -> None:
+    """Log a warning message."""
+    print(f"\033[33m{'WARNING'}\033[0m  {msg}")
+
+
+def log_info(msg: str) -> None:
+    """Log an info message."""
+    print(f"\033[34m{'INFO'}\033[0m     {msg}")
+
+
+def panic(msg: str) -> None:
+    """Log an error message and exit."""
+    print(f"\033[31;1m{msg}\033[0m")
+    sys.exit(1)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=USAGE,
@@ -213,5 +253,29 @@ if __name__ == "__main__":
     args = parser.parse_args()
     machine_path: Path = args.machine_path
 
-    # deploy machine
-    run_main(lambda: main(machine_path))
+    try:  # deploy machine
+        main(machine_path)
+
+    # Handle user interrupts
+    except KeyboardInterrupt:
+        print()
+        log_warning("Aborted!")
+
+    # Handle deployment errors
+    except RuntimeError as e:
+        log_error(f"{e}")
+        panic("Failed to deploy machine")
+
+    # Handle shell errors
+    except subprocess.CalledProcessError as e:
+        log_error(f"{e.returncode}: {' '.join(e.cmd)}")
+        panic("An error occurred while running a shell command")
+
+    # Handle unexpected errors
+    except Exception as e:  # pylint: disable=broad-except
+        print(f"Exception type: {type(e).__name__}")
+        log_error(f"{e}")
+        traceback.print_exc()
+        panic("An unexpected error occurred")
+
+# endregion
