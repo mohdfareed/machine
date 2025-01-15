@@ -16,6 +16,8 @@ REPOSITORY = "mohdfareed/machine.git"
 EXECUTABLE = "machine-setup"
 
 # Constants
+POETRY_SCRIPT = "https://install.python-poetry.org"
+POETRY_BUG_FIX = "sed 's/symlinks=False/symlinks=True/'"
 if sys.platform == "win32":
     EXECUTABLE_PATH = Path.home() / "AppData" / "Local" / EXECUTABLE
 else:
@@ -87,9 +89,9 @@ def _install_poetry(path: Path) -> Path:
 
 
 def _install_poetry_unix(path: Path) -> None:
-    script_url = "https://install.python-poetry.org"
+    cmd = f"curl -sSL {POETRY_SCRIPT}"
     subprocess.run(
-        f"curl -sSL {script_url} | python3 -",
+        f"{cmd} | {POETRY_BUG_FIX} | python3 -",
         env={"POETRY_HOME": path},
         check=True,
         shell=True,
@@ -97,9 +99,9 @@ def _install_poetry_unix(path: Path) -> None:
 
 
 def _install_poetry_windows(path: Path) -> None:
-    script_url = "https://install.python-poetry.org"
+    cmd = f"(wget -Uri {POETRY_SCRIPT} -UseBasicParsing).Content"
     subprocess.run(
-        f"(wget -Uri {script_url} -UseBasicParsing).Content | py -",
+        f"{cmd} | {POETRY_BUG_FIX} | py -",
         env={"POETRY_HOME": path},
         check=True,
         executable="powershell",
