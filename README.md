@@ -4,12 +4,17 @@
 
 Machine setup and configuration CLI app.
 
+**Requirements:**
+
+- Python 3.9.6+
+-
+
 ## Installation
 
 ```sh
 # install with poetry (installs poetry at the machine path)
-repo="https://raw.githubusercontent.com/mohdfareed/machine/main"
-curl -fsSL $repo/scripts/deploy.py | sh - [machine_path]
+repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
+curl -fsSL $repo/scripts/deploy.py | python3 - [machine_path]
 ```
 
 where `machine_path` is the path to install the machine CLI app.

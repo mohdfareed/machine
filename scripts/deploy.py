@@ -6,80 +6,106 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
-_home = os.environ.get("HOME", os.path.expanduser("~"))
-DEFAULT_MACHINE_PATH = os.path.join(_home, ".machine")
+from scripts.helpers import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-APP_URL = "https://github.com/mohdfareed/machine.git"
+# Configuration
+DEFAULT_MACHINE_PATH = Path.home() / ".machine"
 EXECUTABLE = "machine-setup"
 
-if os.name == "nt":
-    EXECUTABLE_PATH = os.path.join(_home, "AppData", "Local", EXECUTABLE)
+# Help message
+USAGE = """
+Deploy a new machine by installing the machine setup app.
+
+Installs the machine app using poetry and links the executable to the
+local bin directory.
+
+Installs poetry if not found. It is installed using the official script.
+The script is found at: https://install.python-poetry.org
+
+Requirements:
+    - git
+    - curl (for Unix)
+
+For macOS, Command Line Tools for Xcode is required. Install it using:
+xcode-select --install
+""".strip()
+
+# Constants
+if sys.platform == "win32":
+    EXECUTABLE_PATH = Path.home() / "AppData" / "Local" / EXECUTABLE
 else:
-    EXECUTABLE_PATH = os.path.join(
-        os.environ.get("XDG_LOCAL_HOME", os.path.expanduser("~/.local")),
-        "bin",
-        EXECUTABLE,
-    )
+    EXECUTABLE_PATH = Path("/") / "usr" / "local" / "bin" / EXECUTABLE
 
 
-def main(path: str) -> None:
+def main(path: Path) -> None:
     """Deploy a new machine."""
-    _log_info(f"Deploying machine to: {path}")
 
-    _validate_git()
+    log_info(f"Deploying machine to: {path}")
+
+    _validate(path)
     _clone_app(path)
     poetry = _install_poetry(path)
     _install_machine(path, poetry)
-    _link_executable(path)
 
-    _log_success("Machine deployed successfully")
+    log_success("Machine deployed successfully")
 
 
-def _validate_git() -> None:
-    if shutil.which("git"):
+def _validate(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not os.access(path.parent, os.W_OK):
+        raise RuntimeError(f"Permission denied: {path.parent}")
+
+    if not shutil.which("git"):
+        raise RuntimeError("Git is not installed")
+    if not shutil.which("wget") and sys.platform == "win32":
+        raise RuntimeError("Wget is not installed")
+    if not shutil.which("curl") and sys.platform != "win32":
+        raise RuntimeError("Curl is not installed")
+
+
+def _clone_app(path: Path) -> None:
+    if path.exists():
+        log_warning("Machine app already exists")
         return
 
-    _log_error("git is required")
-    sys.exit(1)
-
-
-def _clone_app(path: str) -> None:
-    if os.path.exists(path):
-        return
-
-    _log_info("Cloning machine app...")
+    log_info("Cloning machine app...")
     subprocess.run(
-        ["git", "clone", APP_URL, path, "--depth", "1"],
+        [
+            "git",
+            "clone",
+            f"https://github.com/{REPOSITORY}",
+            path,
+            "--depth",
+            "1",
+        ],
         check=True,
     )
 
 
-def _install_poetry(path: str) -> str:
+def _install_poetry(path: Path) -> Path:
     if poetry := shutil.which("poetry"):
-        return poetry
+        return Path(poetry)
 
-    _log_info("Installing poetry...")
-    poetry_path = os.path.join(path, ".poetry")
+    log_warning("Poetry not found")
+    log_info("Installing poetry...")
+    poetry_path = path / ".poetry"
 
     # Windows
     if os.name == "nt":
-        subprocess.run(
-            [
-                "(Invoke-WebRequest -Uri https://install.python-poetry.org "
-                "-UseBasicParsing).Content",
-                "|",
-                "py",
-                "-",
-            ],
-            env={"POETRY_HOME": poetry_path},
-            check=True,
-            executable="powershell",
-        )
-
+        _install_poetry_windows(poetry_path)
     # Unix
     else:
-        subprocess.run(
+        _install_poetry_unix(poetry_path)
+
+    log_success("Poetry installed successfully")
+    return poetry_path / "bin" / "poetry"
+
+
+def _install_poetry_unix(path: Path) -> None:
+    subprocess.run(
+        " ".join(
             [
                 "curl",
                 "-sSL",
@@ -87,73 +113,97 @@ def _install_poetry(path: str) -> str:
                 "|",
                 "python3",
                 "-",
-            ],
-            env={"POETRY_HOME": poetry_path},
-            check=True,
-        )
-
-    _log_success("Poetry installed successfully")
-    return os.path.join(poetry_path, "bin", "poetry")
-
-
-def _install_machine(path: str, poetry: str) -> None:
-    _log_info("Installing machine...")
-    subprocess.run(
-        [poetry, "env", "use", "3.9.6"],
-        env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
-        cwd=path,
+            ]
+        ),
+        env={"POETRY_HOME": path},
         check=True,
+        shell=True,
     )
+
+
+def _install_poetry_windows(path: Path) -> None:
+    subprocess.run(
+        " ".join(
+            [
+                "(wget -Uri https://install.python-poetry.org "
+                "-UseBasicParsing).Content",
+                "|",
+                "py",
+                "-",
+            ]
+        ),
+        env={"POETRY_HOME": path},
+        check=True,
+        executable="powershell",
+        shell=True,
+    )
+
+
+def _install_machine(path: Path, poetry: Path) -> None:
+    log_info("Installing machine...")
     subprocess.run(
         [poetry, "install"],
         env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
         cwd=path,
         check=True,
     )
+    _link_executable(path)
 
 
-def _link_executable(path: str) -> None:
-    machine_setup = os.path.join(path, ".venv", "bin", EXECUTABLE)
-    if os.path.islink(EXECUTABLE_PATH) or os.path.exists(EXECUTABLE_PATH):
-        os.remove(EXECUTABLE_PATH)
-    _log_info(f"Linking executable to: {EXECUTABLE_PATH}")
-    os.symlink(machine_setup, EXECUTABLE_PATH)
+def _link_executable(path: Path) -> None:
+    log_info(f"Linking executable to: {EXECUTABLE_PATH}")
+    machine_setup = path / ".venv" / "bin" / EXECUTABLE
 
-
-def _log_error(msg: str) -> None:
-    print(f"\033[31m{'ERROR'}\033[0m    {msg}")
-
-
-def _log_success(msg: str) -> None:
-    print(f"\033[35m{'SUCCESS'}\033[0m  {msg}")
-
-
-def _log_warning(msg: str) -> None:
-    print(f"\033[33m{'WARNING'}\033[0m  {msg}")
-
-
-def _log_info(msg: str) -> None:
-    print(f"\033[34m{'INFO'}\033[0m     {msg}")
+    if sys.platform != "win32":
+        subprocess.run(
+            ["sudo", "mkdir", "-p", EXECUTABLE_PATH.parent],
+            check=True,
+        )
+        subprocess.run(
+            ["sudo", "ln", "-sf", machine_setup, EXECUTABLE_PATH],
+            check=True,
+        )
+    else:  # Windows
+        subprocess.run(
+            [
+                "New-Item",
+                "-ItemType",
+                "Directory",
+                "-Force",
+                "-Path",
+                EXECUTABLE_PATH.parent,
+                "-ErrorAction",
+                "SilentlyContinue",
+            ],
+            check=True,
+            executable="powershell",
+        )
+        subprocess.run(
+            [
+                "New-Item",
+                "-ItemType",
+                "SymbolicLink",
+                "-Force",
+                "-Path",
+                EXECUTABLE_PATH,
+                "-Target",
+                machine_setup,
+            ],
+            check=True,
+            executable="powershell",
+        )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="""
-        Deploy a new machine by installing the machine app.
-
-        Installs the machine app using poetry and links the executable to the
-        local bin directory.
-
-        Installs poetry if not found. It is installed using pipx if available,
-        else it is installed using the official script.
-
-        Requirements: git.
-        """,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=USAGE,
+        formatter_class=ScriptFormatter,
     )
+
+    # Add arguments
     parser.add_argument(
         "machine_path",
-        type=str,
+        type=Path,
         help="machine installation path",
         nargs="?",
         default=DEFAULT_MACHINE_PATH,
@@ -161,14 +211,7 @@ if __name__ == "__main__":
 
     # Parse arguments
     args = parser.parse_args()
-    machine_path = args.machine_path
+    machine_path: Path = args.machine_path
 
-    try:
-        main(machine_path)
-    except KeyboardInterrupt:
-        _log_warning("Aborted!")
-        sys.exit(0)
-    except Exception as e:  # pylint: disable=broad-except
-        _log_error(f"{e}")
-        print(f"\033[31;1m{'Failed to deploy machine.'}\033[0m")
-        sys.exit(1)
+    # deploy machine
+    run_main(lambda: main(machine_path))
