@@ -39,11 +39,11 @@ def main(path: Path) -> None:
 def _validate(path: Path) -> None:
     cwd = os.getcwd()
     atexit.register(lambda: os.chdir(cwd))
-    os.chdir(path)  # machine
 
     path.parent.mkdir(parents=True, exist_ok=True)
     if not os.access(path.parent, os.W_OK):
         raise RuntimeError(f"Permission denied: {path.parent}")
+    os.chdir(path)  # machine
 
     if not shutil.which("git"):
         raise RuntimeError("Git is not installed")
