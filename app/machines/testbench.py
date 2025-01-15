@@ -2,7 +2,6 @@
 
 __all__ = ["Test"]
 
-from pathlib import Path
 from typing import Any
 
 from app import config, env, utils
@@ -13,25 +12,17 @@ from app.plugins import Private
 Environment = env.Unix if utils.UNIX else env.Windows
 
 
-class TestConfig(config.Private):
-    """Testing machine configuration files."""
-
-    valid_field: Path = utils.create_temp_file("valid_field")
-    invalid_field: int = 0
-
-
-class Test(Machine[TestConfig, env.Machine]):
+class Test(Machine[config.Machine, env.Machine]):
     """Testbench machine."""
 
     @property
-    def plugins(self) -> list[Plugin[Any, Any]]:
-        plugins: list[Plugin[Any, Any]] = [
-            Private(TestConfig()),
+    def plugins(self) -> list[type[Plugin[Any, Any]]]:
+        return [
+            Private,
         ]
-        return plugins
 
     def __init__(self) -> None:
-        super().__init__(TestConfig(), Environment())
+        super().__init__(config.Machine(), Environment())
 
     @classmethod
     def is_supported(cls) -> bool:

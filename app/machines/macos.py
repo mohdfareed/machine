@@ -26,43 +26,37 @@ class MacOS(Machine[config.MacOS, env.MacOS]):
     shell = utils.Shell()
 
     @property
-    def plugins(self) -> list[Plugin[Any, Any]]:
-        machine_plugins: list[Plugin[Any, Any]] = [
-            plugins.Fonts(),
-            plugins.Git(self.config, self.env),
-            plugins.Private(self.config),
-            plugins.Shell(self.config, self.env),
-            plugins.SSH(self.config, self.env),
-            plugins.Btop(),
-            plugins.NeoVim(self.config, self.env),
-            plugins.PowerShell(self.config, self.env),
-            plugins.Tailscale(),
-            plugins.Docker(),
-            plugins.Node(),
-            plugins.Python(self.env),
-            plugins.VSCode(self.config, self.env),
+    def plugins(self) -> list[type[Plugin[Any, Any]]]:
+        return [
+            plugins.Fonts,
+            plugins.Git,
+            plugins.Private,
+            plugins.ZSH,
+            plugins.SSH,
+            plugins.Btop,
+            plugins.NeoVim,
+            plugins.PowerShell,
+            plugins.Tailscale,
+            plugins.Docker,
+            plugins.Node,
+            plugins.Python,
+            plugins.VSCode,
         ]
-        return machine_plugins
 
     def __init__(self) -> None:
-        super().__init__(config.MacOS(), env.MacOS())
+        configuration = config.MacOS()
+        super().__init__(configuration, env.MacOS().load(configuration.zshenv))
 
     @classmethod
     def is_supported(cls) -> bool:
-        """Check if the plugin is supported."""
         return utils.MACOS
 
     def setup(self, private_dir: PrivateDirArg = None) -> None:
-        for plugin in self.plugins:
-            if isinstance(plugin, plugins.Private):
-                plugin.setup(private_dir=private_dir)
-                continue
-            if isinstance(plugin, plugins.VSCode):
-                plugin.setup_tunnels(VSCODE_TUNNELS_NAME)
-            if isinstance(plugin, plugins.SSH):
-                plugin.setup_server()
-            plugin.setup()
-
+        super().setup()
+        plugins.Private(self.config).ssh_keys(private_dir)
+        plugins.Private(self.config).env_file(private_dir)
+        plugins.VSCode(self.config, self.env).setup_tunnels(VSCODE_TUNNELS_NAME)
+        plugins.SSH(self.config, self.env).setup_server()
         self.setup_brew()
         self.system_preferences()
         self.enable_touch_id()
