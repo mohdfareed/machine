@@ -15,24 +15,6 @@ DEFAULT_MACHINE_PATH = Path.home() / ".machine"
 REPOSITORY = "mohdfareed/machine.git"
 EXECUTABLE = "machine-setup"
 
-# Help message
-USAGE = """
-Deploy a new machine by installing the machine setup app.
-
-Installs the machine app using poetry and links the executable to the
-local bin directory.
-
-Installs poetry if not found. It is installed using the official script.
-The script is found at: https://install.python-poetry.org
-
-Requirements:
-    - git
-    - curl (for Unix)
-
-For macOS, Command Line Tools for Xcode is required. Install it using:
-xcode-select --install
-""".strip()
-
 # Constants
 if sys.platform == "win32":
     EXECUTABLE_PATH = Path.home() / "AppData" / "Local" / EXECUTABLE
@@ -44,18 +26,20 @@ def main(path: Path) -> None:
     """Deploy a new machine."""
 
     log_info(f"Deploying machine to: {path}")
-
     _validate(path)
     _clone_app(path)
     poetry = _install_poetry(path)
     _install_machine(path, poetry)
-
     log_success("Machine deployed successfully")
 
 
+# region: Repository
+
+
 def _validate(path: Path) -> None:
-    atexit.register(lambda: os.chdir(os.getcwd()))
-    os.chdir(Path(__file__).parent.parent)  # .py -> scripts -> machine
+    cwd = os.getcwd()
+    atexit.register(lambda: os.chdir(cwd))
+    os.chdir(path)  # machine
 
     path.parent.mkdir(parents=True, exist_ok=True)
     if not os.access(path.parent, os.W_OK):
@@ -76,49 +60,36 @@ def _clone_app(path: Path) -> None:
 
     log_info("Cloning machine app...")
     subprocess.run(
-        [
-            "git",
-            "clone",
-            f"https://github.com/{REPOSITORY}",
-            path,
-            "--depth",
-            "1",
-        ],
+        f"git clone https://github.com/{REPOSITORY} {path} --depth 1",
         check=True,
+        shell=True,
     )
+
+
+# endregion
+
+# region: Poetry
 
 
 def _install_poetry(path: Path) -> Path:
     if poetry := shutil.which("poetry"):
         return Path(poetry)
-
     log_warning("Poetry not found")
     log_info("Installing poetry...")
     poetry_path = path / ".poetry"
 
-    # Windows
-    if os.name == "nt":
-        _install_poetry_windows(poetry_path)
-    # Unix
-    else:
+    if os.name != "nt":
         _install_poetry_unix(poetry_path)
-
+    else:  # Windows
+        _install_poetry_windows(poetry_path)
     log_success("Poetry installed successfully")
     return poetry_path / "bin" / "poetry"
 
 
 def _install_poetry_unix(path: Path) -> None:
+    script_url = "https://install.python-poetry.org"
     subprocess.run(
-        " ".join(
-            [
-                "curl",
-                "-sSL",
-                "https://install.python-poetry.org",
-                "|",
-                "python3",
-                "-",
-            ]
-        ),
+        f"curl -sSL {script_url} | python3 -",
         env={"POETRY_HOME": path},
         check=True,
         shell=True,
@@ -126,21 +97,19 @@ def _install_poetry_unix(path: Path) -> None:
 
 
 def _install_poetry_windows(path: Path) -> None:
+    script_url = "https://install.python-poetry.org"
     subprocess.run(
-        " ".join(
-            [
-                "(wget -Uri https://install.python-poetry.org "
-                "-UseBasicParsing).Content",
-                "|",
-                "py",
-                "-",
-            ]
-        ),
+        f"(wget -Uri {script_url} -UseBasicParsing).Content | py -",
         env={"POETRY_HOME": path},
         check=True,
         executable="powershell",
         shell=True,
     )
+
+
+# endregion
+
+# region: Executable
 
 
 def _install_machine(path: Path, poetry: Path) -> None:
@@ -168,37 +137,43 @@ def _link_executable(path: Path) -> None:
             check=True,
         )
     else:  # Windows
+        cmd = "New-Item -ItemType Directory -Force -Path"
         subprocess.run(
-            [
-                "New-Item",
-                "-ItemType",
-                "Directory",
-                "-Force",
-                "-Path",
-                EXECUTABLE_PATH.parent,
-                "-ErrorAction",
-                "SilentlyContinue",
-            ],
+            f"{cmd} {EXECUTABLE_PATH.parent} -ErrorAction SilentlyContinue",
             check=True,
             executable="powershell",
+            shell=True,
         )
+        cmd = "New-Item -ItemType SymbolicLink -Force -Path"
         subprocess.run(
-            [
-                "New-Item",
-                "-ItemType",
-                "SymbolicLink",
-                "-Force",
-                "-Path",
-                EXECUTABLE_PATH,
-                "-Target",
-                machine_setup,
-            ],
+            f"{cmd} {EXECUTABLE_PATH.parent} -Target {machine_setup}",
             check=True,
             executable="powershell",
+            shell=True,
         )
 
 
-# region: - Logging and error handling
+# endregion
+
+# region: Logging
+
+# Help message
+USAGE = """
+Deploy a new machine by installing the machine setup app.
+
+Installs the machine app using poetry and links the executable to the
+local bin directory.
+
+Installs poetry if not found. It is installed using the official script.
+The script is found at: https://install.python-poetry.org
+
+Requirements:
+    - git
+    - curl (for Unix)
+
+For macOS, Command Line Tools for Xcode is required. Install it using:
+xcode-select --install
+""".strip()
 
 
 class ScriptFormatter(
@@ -233,6 +208,10 @@ def panic(msg: str) -> None:
     print(f"\033[31;1m{msg}\033[0m")
     sys.exit(1)
 
+
+# endregion
+
+# region: CLI
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
