@@ -43,7 +43,6 @@ def _validate(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if not os.access(path.parent, os.W_OK):
         raise RuntimeError(f"Permission denied: {path.parent}")
-    os.chdir(path)  # machine
 
     if not shutil.which("git"):
         raise RuntimeError("Git is not installed")
@@ -64,6 +63,7 @@ def _clone_app(path: Path) -> None:
         check=True,
         shell=True,
     )
+    os.chdir(path)  # machine
 
 
 # endregion
