@@ -11,7 +11,7 @@ from typing_extensions import Self
 from app import utils
 
 
-class Machine(BaseSettings, ABC):
+class MachineEnv(BaseSettings, ABC):
     """Default machine environment variables."""
 
     model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
@@ -27,7 +27,7 @@ class Machine(BaseSettings, ABC):
         return self
 
 
-class Unix(Machine):
+class Unix(MachineEnv):
     """Unix environment variables."""
 
     XDG_CONFIG_HOME: Path = platformdirs.user_config_path()
@@ -51,10 +51,10 @@ class MacOS(Unix):
     """MacOS environment variables."""
 
     ICLOUD: Path = Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs"
-    GHOSTTY: Path = Unix.XDG_CONFIG_HOME / "ghostty" / "config.json"
+    GHOSTTY: Path = Unix().XDG_CONFIG_HOME / "ghostty" / "config.json"
 
 
-class Windows(Machine):
+class Windows(MachineEnv):
     """Windows environment variables."""
 
     USERPROFILE: Path = Path.home()

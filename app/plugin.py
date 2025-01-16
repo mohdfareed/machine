@@ -9,7 +9,7 @@ from typing import Generic, Optional, TypeVar
 import rich
 import typer
 
-from app import models
+from app import models, utils
 from app.models import PluginException
 
 C = TypeVar("C", bound=Optional[models.ConfigProtocol])
@@ -47,6 +47,8 @@ class Plugin(ABC, models.PluginProtocol, Generic[C, E]):
             # skip private methods
             if not name.startswith("_"):
                 plugin_app.command(name)(method)
+
+        utils.LOGGER.debug("Created plugin: %s", instance.name)
         return plugin_app
 
     @classmethod

@@ -5,12 +5,12 @@ __all__ = ["Gleason"]
 from typing import Any
 
 from app import config, env, plugins, utils
-from app.machine import Machine
+from app.machine import MachinePlugin
 from app.plugin import Plugin
 from app.plugins.pkg_managers.windows import Winget
 
 
-class Gleason(Machine[config.Gleason, env.Windows]):
+class Gleason(MachinePlugin[config.Gleason, env.Windows]):
     """Gleason machine configuration."""
 
     shell = utils.Shell()

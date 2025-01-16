@@ -19,7 +19,7 @@ PackageSpec = tuple[type[PackageManagerProtocol], Callable[[], None]]
 
 
 class PkgManagerPlugin(
-    PackageManagerProtocol, plugin.Plugin[config.Machine, env.Machine], ABC
+    PackageManagerProtocol, plugin.Plugin[config.MachineConfig, env.MachineEnv], ABC
 ):
     """Abstract base class for package managers."""
 

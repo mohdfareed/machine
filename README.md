@@ -12,9 +12,9 @@ Machine setup and configuration CLI app.
 ## Installation
 
 ```sh
-# install with poetry (installs poetry at the machine path)
+# install with poetry (installs at the provided path)
 repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsSL $repo/scripts/deploy.py | python3 - [machine_path]
+curl -fsSL $repo/scripts/deploy.py | python3 - [-h] [-p PATH] [branch]
 ```
 
 where `machine_path` is the path to install the machine CLI app.

@@ -11,7 +11,7 @@ from app import env, utils
 def test_env_fail() -> None:
     """Test the environment variables failing."""
     with pytest.raises(IsADirectoryError):
-        env.Machine().load(Path("."))
+        env.MachineEnv().load(Path("."))
 
 
 def test_unix_env(monkeypatch: MonkeyPatch) -> None:

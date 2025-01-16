@@ -5,7 +5,7 @@ __all__ = ["RPi"]
 from typing import Any
 
 from app import config, env, plugins, utils
-from app.machine import Machine
+from app.machine import MachinePlugin
 from app.plugin import Plugin
 from app.plugins.pkg_managers.linux import SnapStore
 
@@ -14,7 +14,7 @@ VSCODE_TUNNELS_NAME = "rpi"
 Environment = env.Unix if utils.UNIX else env.Windows
 
 
-class RPi(Machine[config.RPi, env.Unix]):
+class RPi(MachinePlugin[config.RPi, env.Unix]):
     """Raspberry Pi machine."""
 
     shell = utils.Shell()

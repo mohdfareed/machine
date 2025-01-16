@@ -5,14 +5,14 @@ __all__ = ["Windows"]
 from typing import Any
 
 from app import config, env, plugins, utils
-from app.machine import Machine
+from app.machine import MachinePlugin
 from app.plugin import Plugin
 from app.plugins.pkg_managers import Scoop, Winget
 
 VSCODE_TUNNELS_NAME = "pc"
 
 
-class Windows(Machine[config.Windows, env.Windows]):
+class Windows(MachinePlugin[config.Windows, env.Windows]):
     """Windows machine configuration."""
 
     shell = utils.Shell()

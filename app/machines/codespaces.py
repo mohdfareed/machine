@@ -6,11 +6,11 @@ import os
 from typing import Any
 
 from app import config, env, plugins, utils
-from app.machine import Machine
+from app.machine import MachinePlugin
 from app.plugin import Plugin
 
 
-class Codespace(Machine[config.Codespaces, env.Unix]):
+class Codespace(MachinePlugin[config.Codespaces, env.Unix]):
     """Github codespaces machine configuration."""
 
     shell = utils.Shell()

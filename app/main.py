@@ -6,7 +6,8 @@ from typing import Annotated
 
 import typer
 
-from app import APP_NAME, __version__, env, machines, utils
+from app import APP_NAME, __version__, env, utils
+from app.machine import machines_apps
 from app.pkg_manager import pkg_managers_app
 from app.utils.logging import log_file_path
 
@@ -17,9 +18,8 @@ app = typer.Typer(
 )
 
 # register machines and package managers
-for machine in (machines.MacOS, machines.Test):
-    if machine.is_supported():
-        app.add_typer(machine.machine_app(machine()))
+for machine in machines_apps():
+    app.add_typer(machine)
 app.add_typer(pkg_managers_app())
 
 

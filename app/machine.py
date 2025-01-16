@@ -1,6 +1,6 @@
 """Machine interface for configuring and setting up machines."""
 
-__all__ = ["Machine"]
+__all__ = ["MachinePlugin"]
 
 
 from abc import abstractmethod
@@ -22,7 +22,7 @@ C = TypeVar("C", bound=ConfigProtocol)
 E = TypeVar("E", bound=EnvironmentProtocol)
 
 
-class Machine(Plugin[C, E], MachineProtocol):
+class MachinePlugin(Plugin[C, E], MachineProtocol):
     """Base class for defining a machine with specific plugins."""
 
     @property
@@ -52,15 +52,15 @@ class Machine(Plugin[C, E], MachineProtocol):
         super().__init__(configuration, environment)
 
     @classmethod
-    def machine_app(cls, instance: "Machine[Any, Any]") -> typer.Typer:
+    def machine_app(cls, instance: "MachinePlugin[Any, Any]") -> typer.Typer:
         """Create a Typer app for the machine."""
 
         def app_callback() -> None:
-            if isinstance(instance.config, config.Machine):
+            if isinstance(instance.config, config.MachineConfig):
                 utils.LOGGER.debug(
                     "Configuration: %s", instance.config.model_dump_json(indent=2)
                 )
-            if isinstance(instance.env, env.Machine):
+            if isinstance(instance.env, env.MachineEnv):
                 utils.LOGGER.debug(
                     "Environment: %s", instance.env.model_dump_json(indent=2)
                 )
@@ -83,3 +83,13 @@ class Machine(Plugin[C, E], MachineProtocol):
 
     def _create_plugins(self) -> List[Plugin[Any, Any]]:
         return [plugin(self.config, self.env) for plugin in self.plugins]
+
+
+def machines_apps() -> list[typer.Typer]:
+    """List of supported machines apps."""
+    machines: list[typer.Typer] = []
+    for machine in MachinePlugin.__subclasses__():
+        if not machine.is_supported() or isabstract(machine):
+            continue
+        machines.append(machine.machine_app(machine()))
+    return machines

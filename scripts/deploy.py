@@ -12,6 +12,7 @@ from pathlib import Path
 
 # Configuration
 DEFAULT_MACHINE_PATH = Path.home() / ".machine"
+DEFAULT_BRANCH = "main"
 REPOSITORY = "mohdfareed/machine.git"
 EXECUTABLE = "machine-setup"
 
@@ -24,12 +25,12 @@ else:
     EXECUTABLE_PATH = Path("/") / "usr" / "local" / "bin" / EXECUTABLE
 
 
-def main(path: Path) -> None:
+def main(path: Path, branch: str) -> None:
     """Deploy a new machine."""
 
     log_info(f"Deploying machine to: {path}")
     _validate(path)
-    _clone_app(path)
+    _clone_app(path, branch)
     poetry = _install_poetry(path)
     _install_machine(path, poetry)
     log_success("Machine deployed successfully")
@@ -54,14 +55,15 @@ def _validate(path: Path) -> None:
         raise RuntimeError("Curl is not installed")
 
 
-def _clone_app(path: Path) -> None:
+def _clone_app(path: Path, branch: str) -> None:
     if path.exists():
         log_warning("Machine app already exists")
         return
 
-    log_info("Cloning machine app...")
+    log_info(f"Cloning machine app branch: {branch}")
+    url = f"https://github.com/{REPOSITORY}"
     subprocess.run(
-        f"git clone https://github.com/{REPOSITORY} {path} --depth 1",
+        f"git clone -b {branch} {url} {path} --depth 1",
         check=True,
         shell=True,
     )
@@ -223,19 +225,27 @@ if __name__ == "__main__":
 
     # Add arguments
     parser.add_argument(
-        "machine_path",
+        "-p",
+        "--path",
         type=Path,
         help="machine installation path",
-        nargs="?",
         default=DEFAULT_MACHINE_PATH,
+    )
+    parser.add_argument(
+        "branch",
+        type=Path,
+        help="machine repository branch",
+        nargs="?",
+        default=DEFAULT_BRANCH,
     )
 
     # Parse arguments
     args = parser.parse_args()
-    machine_path: Path = args.machine_path
+    machine_path: Path = args.path
+    branch_name: str = args.branch
 
     try:  # deploy machine
-        main(machine_path)
+        main(machine_path, branch_name)
 
     # Handle user interrupts
     except KeyboardInterrupt:

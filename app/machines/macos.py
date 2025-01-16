@@ -8,7 +8,7 @@ from typing import Any
 import typer
 
 from app import config, env, plugins, utils
-from app.machine import Machine
+from app.machine import MachinePlugin
 from app.plugin import Plugin
 from app.plugins import pkg_managers
 from app.plugins.private_files import PrivateDirArg
@@ -20,7 +20,7 @@ auth       sufficient     pam_tid.so
 VSCODE_TUNNELS_NAME = "macbook"
 
 
-class MacOS(Machine[config.MacOS, env.MacOS]):
+class MacOS(MachinePlugin[config.MacOS, env.MacOS]):
     """macOS machine configuration."""
 
     shell = utils.Shell()
