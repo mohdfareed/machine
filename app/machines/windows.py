@@ -2,11 +2,10 @@
 
 __all__ = ["Windows"]
 
-from typing import Any
 
 from app import config, env, plugins, utils
 from app.machine import MachinePlugin
-from app.plugin import Plugin
+from app.models import PluginProtocol
 from app.plugins.pkg_managers import Scoop, Winget
 
 VSCODE_TUNNELS_NAME = "pc"
@@ -18,7 +17,7 @@ class Windows(MachinePlugin[config.Windows, env.Windows]):
     shell = utils.Shell()
 
     @property
-    def plugins(self) -> list[type[Plugin[Any, Any]]]:
+    def plugins(self) -> list[type[PluginProtocol]]:
         return [
             plugins.Fonts,
             plugins.Git,
@@ -33,8 +32,9 @@ class Windows(MachinePlugin[config.Windows, env.Windows]):
         ]
 
     def __init__(self) -> None:
-        configuration = config.Windows()
-        super().__init__(configuration, env.Windows().load(configuration.ps_profile))
+        self.config = config.Windows()
+        self.env = env.Windows(env_file=self.config.ps_profile)
+        super().__init__()
 
     @classmethod
     def is_supported(cls) -> bool:

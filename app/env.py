@@ -1,8 +1,10 @@
 """Environment variables models."""
 
+__all__ = ["MachineEnv", "Unix", "MacOS", "Windows", "OS_ENV"]
+
 from abc import ABC
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import platformdirs
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,14 +16,22 @@ from app import utils
 class MachineEnv(BaseSettings, ABC):
     """Default machine environment variables."""
 
+    env_file: Optional[Path] = None
     model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
     SSH_DIR: Path = Path.home() / ".ssh"
 
-    def load(self, env_file: Path) -> Self:
-        """Load the environment variables from file."""
-        utils.LOGGER.debug("Loading environment from: %s", env_file)
+    def __init__(self, env_file: Optional[Path] = None, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.env_file = env_file
+        self.load()
 
-        env_vars = utils.load_env_vars(env_file)
+    def load(self) -> Self:
+        """Load the environment variables from file."""
+        if not self.env_file:
+            return self
+
+        utils.LOGGER.debug("Loading environment from: %s", self.env_file)
+        env_vars = utils.load_env_vars(self.env_file)
         for field in self.model_fields:
             setattr(self, field, env_vars.get(field, getattr(self, field)))
         return self
@@ -68,3 +78,6 @@ class Windows(MachineEnv):
     VSCODE: Path = APPDATA / "Code" / "User"
 
     COMPLETIONS_PATH: Optional[Path] = None
+
+
+OS_ENV = Unix if utils.UNIX else Windows if utils.WINDOWS else MacOS

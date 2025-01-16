@@ -16,12 +16,8 @@ PrivateDirArg = Annotated[
 ]
 
 
-class Private(Plugin["config.Private", Any]):
+class Private(Plugin[config.Private, Any]):
     """Setup private config files."""
-
-    def __init__(self, private_config: "config.Private") -> None:
-        """Initialize the plugin."""
-        super().__init__(private_config, None)
 
     @classmethod
     def is_supported(cls) -> bool:

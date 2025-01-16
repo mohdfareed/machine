@@ -2,32 +2,36 @@
 
 __all__ = ["Plugin"]
 
-import inspect
 from abc import ABC, abstractmethod
 from typing import Generic, Optional, TypeVar
 
 import rich
-import typer
 
-from app import models, utils
+from app import cli, models
 from app.models import PluginException
 
 C = TypeVar("C", bound=Optional[models.ConfigProtocol])
 E = TypeVar("E", bound=Optional[models.EnvironmentProtocol])
 
 
-class Plugin(ABC, models.PluginProtocol, Generic[C, E]):
+class Plugin(cli.Command, models.PluginProtocol, Generic[C, E], ABC):
     """Abstract base class for plugins."""
 
     @property
-    def name(self) -> str:
-        """The plugin name."""
-        return type(self).__name__
+    def config(self) -> C:
+        return self._config
+
+    @config.setter
+    def config(self, value: C) -> None:
+        self._config = value
 
     @property
-    def help(self) -> str:
-        """The plugin help message."""
-        return type(self).__doc__ or f"{self.name} plugin."
+    def env(self) -> E:
+        return self._env
+
+    @env.setter
+    def env(self, value: E) -> None:
+        self._env = value
 
     def __init__(self, configuration: C, environment: E) -> None:
         """Initialize the plugin."""
@@ -35,21 +39,7 @@ class Plugin(ABC, models.PluginProtocol, Generic[C, E]):
             raise PluginException(f"{self.name} is not supported.")
         self.config = configuration
         self.env = environment
-
-    @classmethod
-    def app(cls, instance: models.PluginProtocol) -> typer.Typer:
-        """Create a Typer app for the plugin."""
-        plugin_app = typer.Typer(name=instance.name.lower(), help=instance.help)
-        for name, method in inspect.getmembers(instance, predicate=inspect.ismethod):
-            # skip class methods
-            if method == getattr(cls, name):
-                continue
-            # skip private methods
-            if not name.startswith("_"):
-                plugin_app.command(name)(method)
-
-        utils.LOGGER.debug("Created plugin: %s", instance.name)
-        return plugin_app
+        cli.Command.__init__(self)
 
     @classmethod
     def is_supported(cls) -> bool:

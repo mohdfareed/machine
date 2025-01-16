@@ -1,11 +1,9 @@
 """Package manager interface for installing and managing software packages."""
 
-__all__ = ["PkgManagerPlugin", "install_from_specs", "pkg_managers_app"]
+__all__ = ["PkgManagerPlugin"]
 
 import shutil
 from abc import ABC, abstractmethod
-from inspect import isabstract
-from typing import Callable, TypeVar
 
 import rich
 import typer
@@ -14,13 +12,12 @@ from typing_extensions import override
 from app import config, env, plugin, utils
 from app.models import PackageManagerException, PackageManagerProtocol
 
-T = TypeVar("T", bound="PkgManagerPlugin")
-PackageSpec = tuple[type[PackageManagerProtocol], Callable[[], None]]
+Plugin = plugin.Plugin[config.MachineConfig, env.MachineEnv]
 
 
 class PkgManagerPlugin(
-    PackageManagerProtocol, plugin.Plugin[config.MachineConfig, env.MachineEnv], ABC
-):
+    Plugin, PackageManagerProtocol, ABC
+):  # pylint: disable=too-many-ancestors
     """Abstract base class for package managers."""
 
     shell = utils.Shell()
@@ -29,11 +26,15 @@ class PkgManagerPlugin(
 
     @property
     def command(self) -> str:
+        """The package manager's shell command."""
         return self.name.lower()
 
-    def __init__(self) -> None:  # pylint: disable=super-init-not-called
+    def __init__(self) -> None:
+        self.config: config.MachineConfig
+        self.env: env.MachineEnv
         if not self.is_supported():
             raise PackageManagerException(f"{self.name} is not supported.")
+        super().__init__(config.MachineConfig(), env.OS_ENV())
 
     @classmethod
     def manager_app(cls) -> typer.Typer:
@@ -105,28 +106,7 @@ class PkgManagerPlugin(
     def _install(self, package: str) -> None:
         """Package manager-specific install command."""
 
-    @classmethod
-    def is_installed(cls, instance: PackageManagerProtocol) -> bool:
+    @staticmethod
+    def is_installed(instance: PackageManagerProtocol) -> bool:
         """Check if the package manager is available on the system."""
         return shutil.which(instance.command) is not None
-
-
-def install_from_specs(specs: list[PackageSpec]) -> None:
-    """Install packages from a specification."""
-    for manager, installer in specs:
-        if manager.is_supported():
-            installer()
-            return
-
-    utils.LOGGER.error("No supported package manager found.")
-    raise typer.Abort
-
-
-def pkg_managers_app() -> typer.Typer:
-    """Create a Typer app for the package manager plugins."""
-    managers_app = typer.Typer(name="pkg", help="Package managers.")
-    for pkg_manager in PkgManagerPlugin.__subclasses__():
-        if not pkg_manager.is_supported() or isabstract(pkg_manager):
-            continue
-        managers_app.add_typer(pkg_manager.manager_app())
-    return managers_app

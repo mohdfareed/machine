@@ -3,11 +3,10 @@
 __all__ = ["Codespace"]
 
 import os
-from typing import Any
 
 from app import config, env, plugins, utils
 from app.machine import MachinePlugin
-from app.plugin import Plugin
+from app.models import PluginProtocol
 
 
 class Codespace(MachinePlugin[config.Codespaces, env.Unix]):
@@ -16,7 +15,7 @@ class Codespace(MachinePlugin[config.Codespaces, env.Unix]):
     shell = utils.Shell()
 
     @property
-    def plugins(self) -> list[type[Plugin[Any, Any]]]:
+    def plugins(self) -> list[type[PluginProtocol]]:
         return [
             plugins.Fonts,
             plugins.Git,
@@ -24,8 +23,9 @@ class Codespace(MachinePlugin[config.Codespaces, env.Unix]):
         ]
 
     def __init__(self) -> None:
-        configuration = config.Codespaces()
-        super().__init__(configuration, env.Unix().load(configuration.zshenv))
+        self.config = config.Codespaces()
+        self.env = env.Unix()
+        super().__init__()
 
     @classmethod
     def is_supported(cls) -> bool:

@@ -1,7 +1,22 @@
 """App models."""
 
+__all__ = [
+    "ConfigProtocol",
+    "EnvironmentProtocol",
+    "CommandProtocol",
+    "PluginProtocol",
+    "PackageManagerProtocol",
+    "MachineProtocol",
+    "CLIException",
+    "PluginException",
+    "PackageManagerException",
+    "MachineException",
+]
+
 from abc import abstractmethod
 from typing import Protocol
+
+import typer
 
 # MARK: Protocols
 
@@ -14,8 +29,8 @@ class EnvironmentProtocol(Protocol):  # pylint: disable=too-few-public-methods
     """Environment protocol. Defines what environment variables are needed."""
 
 
-class PluginProtocol(Protocol):
-    """Plugin protocol. Defines the plugin's app interface.
+class CommandProtocol(Protocol):
+    """CLI protocol. Defines a CLI interface.
     Member functions not starting with an underscore are automatically
     added as commands.
     """
@@ -32,12 +47,40 @@ class PluginProtocol(Protocol):
 
     @classmethod
     @abstractmethod
+    def app(cls, instance: "CommandProtocol") -> typer.Typer:
+        """Create a Typer app for a CLI command."""
+
+
+class PluginProtocol(CommandProtocol, Protocol):
+    """Plugin protocol. Defines the plugin's app interface."""
+
+    @property
+    @abstractmethod
+    def config(self) -> ConfigProtocol:
+        """The plugin configuration files."""
+
+    @property
+    @abstractmethod
+    def env(self) -> EnvironmentProtocol:
+        """The plugin environment variables."""
+
+    @classmethod
+    @abstractmethod
     def is_supported(cls) -> bool:
         """Check if the plugin is supported."""
 
     @abstractmethod
+    def setup(self) -> None:
+        """Set up the plugin."""
+
+    @abstractmethod
     def status(self) -> None:
         """Print the status of the plugin."""
+
+    @abstractmethod
+    def __init__(
+        self, configuration: ConfigProtocol, environment: EnvironmentProtocol
+    ) -> None: ...
 
 
 class PackageManagerProtocol(PluginProtocol, Protocol):
@@ -48,18 +91,9 @@ class PackageManagerProtocol(PluginProtocol, Protocol):
     def command(self) -> str:
         """The package manager's shell command."""
 
-    @classmethod
-    @abstractmethod
-    def is_installed(cls, instance: "PackageManagerProtocol") -> bool:
-        """Check if the package manager is installed."""
-
     @abstractmethod
     def install(self, package: str) -> None:
         """Install a package."""
-
-    @abstractmethod
-    def setup(self) -> None:
-        """Setup the package manager."""
 
     @abstractmethod
     def update(self) -> None:
@@ -69,16 +103,27 @@ class PackageManagerProtocol(PluginProtocol, Protocol):
     def cleanup(self) -> None:
         """Cleanup the package manager."""
 
+    @abstractmethod
+    def __init__(self) -> None: ...
+
 
 class MachineProtocol(PluginProtocol, Protocol):
     """Machine protocol. Defines the machine's interface."""
 
+    @property
     @abstractmethod
-    def setup(self) -> None:
-        """Setup the machine."""
+    def plugins(self) -> list[type[PluginProtocol]]:
+        """The machine's plugins."""
+
+    @abstractmethod
+    def __init__(self) -> None: ...
 
 
 # MARK: Exceptions
+
+
+class CLIException(Exception):
+    """Plugin exception."""
 
 
 class PluginException(Exception):

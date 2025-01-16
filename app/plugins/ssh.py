@@ -45,7 +45,14 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
 
         # read ssh keys from directory
         for key in self.load_keys(self.config.ssh_keys):
-            self.setup_key(key, self.env, self.shell)
+            # symlink private key and set permissions
+            utils.link(key.private, self.env.SSH_DIR / key.private.name)
+            key.private.chmod(0o600)
+
+            if key.public.exists():  # symlink public key and set permissions
+                utils.link(key.public, self.env.SSH_DIR / key.public.name)
+                key.public.chmod(0o644)
+            self.load_key(key, self.shell)
         LOGGER.info("SSH setup complete")
 
     def setup_server(self) -> None:
@@ -111,19 +118,16 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
         LOGGER.debug("Public key: %s", public_key)
         LOGGER.debug("Private key: %s", private_key)
 
-    def setup_key(
-        self, key: "SSHKeyPair", environment: SSHEnv, shell: utils.Shell
-    ) -> None:
+    def setup_key(self, name: str) -> None:
+        """Setup an ssh key on a machine."""
+        LOGGER.info("Setting up SSH key: %s", name)
+        key = SSHKeyPair(private=self.env.SSH_DIR / name)
+        self.load_key(key, self.shell)
+
+    @staticmethod
+    def load_key(key: "SSHKeyPair", shell: utils.Shell) -> None:
         """Setup an ssh key on a machine."""
         LOGGER.info("Setting up SSH key: %s", key.name)
-
-        # symlink private key and set permissions
-        utils.link(key.private, environment.SSH_DIR / key.private.name)
-        key.private.chmod(0o600)
-
-        if key.public.exists():  # symlink public key and set permissions
-            utils.link(key.public, environment.SSH_DIR / key.public.name)
-            key.public.chmod(0o644)
 
         # get key fingerprint
         fingerprint = shell.execute(f"ssh-keygen -lf {key.private}")[1]

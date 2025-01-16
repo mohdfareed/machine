@@ -2,11 +2,10 @@
 
 __all__ = ["RPi"]
 
-from typing import Any
 
 from app import config, env, plugins, utils
 from app.machine import MachinePlugin
-from app.plugin import Plugin
+from app.models import PluginProtocol
 from app.plugins.pkg_managers.linux import SnapStore
 
 VSCODE_TUNNELS_NAME = "rpi"
@@ -20,7 +19,7 @@ class RPi(MachinePlugin[config.RPi, env.Unix]):
     shell = utils.Shell()
 
     @property
-    def plugins(self) -> list[type[Plugin[Any, Any]]]:
+    def plugins(self) -> list[type[PluginProtocol]]:
         return [
             plugins.Private,
             plugins.Fonts,
@@ -37,8 +36,9 @@ class RPi(MachinePlugin[config.RPi, env.Unix]):
         ]
 
     def __init__(self) -> None:
-        configuration = config.RPi()
-        super().__init__(configuration, env.Unix().load(configuration.zshenv))
+        self.config = config.RPi()
+        self.env = env.Unix(env_file=self.config.zshenv)
+        super().__init__()
 
     @classmethod
     def is_supported(cls) -> bool:

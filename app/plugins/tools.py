@@ -114,9 +114,6 @@ class Tailscale(Plugin[None, None]):
 
     shell = utils.Shell()
 
-    def __init__(self) -> None:
-        super().__init__(None, None)
-
     def setup(self) -> None:
         """Set up tailscale."""
         LOGGER.info("Setting up tailscale...")
@@ -152,9 +149,6 @@ class Tailscale(Plugin[None, None]):
 
 class Python(Plugin[None, PythonEnv]):
     """Setup Python on a new machine."""
-
-    def __init__(self, env: PythonEnv) -> None:
-        super().__init__(None, env)
 
     def setup(self) -> None:
         LOGGER.info("Setting up Python...")

@@ -3,13 +3,12 @@
 __all__ = ["MacOS"]
 
 from pathlib import Path
-from typing import Any
 
 import typer
 
 from app import config, env, plugins, utils
 from app.machine import MachinePlugin
-from app.plugin import Plugin
+from app.models import PluginProtocol
 from app.plugins import pkg_managers
 from app.plugins.private_files import PrivateDirArg
 
@@ -26,7 +25,7 @@ class MacOS(MachinePlugin[config.MacOS, env.MacOS]):
     shell = utils.Shell()
 
     @property
-    def plugins(self) -> list[type[Plugin[Any, Any]]]:
+    def plugins(self) -> list[type[PluginProtocol]]:
         return [
             plugins.Fonts,
             plugins.Git,
@@ -44,8 +43,9 @@ class MacOS(MachinePlugin[config.MacOS, env.MacOS]):
         ]
 
     def __init__(self) -> None:
-        configuration = config.MacOS()
-        super().__init__(configuration, env.MacOS().load(configuration.zshenv))
+        self.config = config.MacOS()
+        self.env = env.MacOS(env_file=self.config.zshenv)
+        super().__init__()
 
     @classmethod
     def is_supported(cls) -> bool:
@@ -53,8 +53,8 @@ class MacOS(MachinePlugin[config.MacOS, env.MacOS]):
 
     def setup(self, private_dir: PrivateDirArg = None) -> None:
         super().setup()
-        plugins.Private(self.config).ssh_keys(private_dir)
-        plugins.Private(self.config).env_file(private_dir)
+        plugins.Private(self.config, self.env).ssh_keys(private_dir)
+        plugins.Private(self.config, self.env).env_file(private_dir)
         plugins.VSCode(self.config, self.env).setup_tunnels(VSCODE_TUNNELS_NAME)
         plugins.SSH(self.config, self.env).setup_server()
         self.setup_brew()
