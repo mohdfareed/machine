@@ -71,4 +71,14 @@ def load_env_vars(env_file: Path) -> dict[str, Optional[str]]:
         cmd = f"source '{env_file}' && env > '{gen_env_file}'"
     shell.execute(cmd)
 
+    # filter out invalid environment variables
+    gen_env_file.write_text(
+        "\n".join(
+            filter(
+                lambda l: "=" in l,  # invalid assignment
+                gen_env_file.read_text().splitlines(),
+            )
+        )
+    )
+
     return dotenv_values(gen_env_file)

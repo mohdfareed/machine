@@ -5,7 +5,7 @@ __all__ = ["Brew", "MAS"]
 from pathlib import Path
 
 from app import utils
-from app.models import PackageManagerException
+from app.models import PkgManagerException
 from app.pkg_manager import PkgManagerPlugin
 from app.utils import LOGGER
 
@@ -40,7 +40,7 @@ class Brew(PkgManagerPlugin):
             # Install Homebrew
             self.shell.execute('/bin/bash -c "$(curl -fsSL https://git.io/JIY6g)"')
         except utils.ShellError as ex:
-            raise PackageManagerException("Failed to install Homebrew.") from ex
+            raise PkgManagerException("Failed to install Homebrew.") from ex
 
     def _update(self) -> None:
         self.shell.execute("brew update && brew upgrade")
@@ -60,7 +60,7 @@ class MAS(PkgManagerPlugin):
 
     @classmethod
     def is_supported(cls) -> bool:
-        return utils.MACOS
+        return utils.MACOS and Brew.is_supported()
 
     def _setup(self) -> None:
         Brew().install("mas")

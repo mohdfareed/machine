@@ -9,82 +9,74 @@ from typing import Any, TypeVar
 
 import typer
 
-from app import config, env, utils
-from app.models import (
-    ConfigProtocol,
-    EnvironmentProtocol,
-    MachineException,
-    MachineProtocol,
-    PluginProtocol,
-)
-from app.plugin import Plugin
+from app import config, env, models, plugin, utils
 
-C = TypeVar("C", bound=ConfigProtocol)
-E = TypeVar("E", bound=EnvironmentProtocol)
+C = TypeVar("C", bound=config.MachineConfig)
+E = TypeVar("E", bound=env.MachineEnv)
 
 
-class MachinePlugin(
-    Plugin[C, E], MachineProtocol, ABC
-):  # pylint: disable=too-many-ancestors
+class MachinePlugin(plugin.Plugin[C, E], models.MachineProtocol, ABC):
     """Base class for defining a machine with specific plugins."""
 
     @property
     @abstractmethod
-    def plugins(self) -> list[type[PluginProtocol]]:
-        """List of plugins to be registered to the machine."""
+    def _config(self) -> C:
+        """The machine's configuration."""
 
+    @property
     @abstractmethod
+    def _env(self) -> E:
+        """The machine's environment."""
+
     def __init__(self) -> None:
-        self.config: C
-        self.env: E
-
         if not self.is_supported():
-            raise MachineException(f"{self.name} is not supported.")
-        super().__init__(self.config, self.env)
+            raise models.MachineException(f"{self.name} is not supported.")
+        super().__init__(self._config, self._env)
 
-    @classmethod
-    def machine_app(cls: "type[MachineProtocol]") -> typer.Typer:
-        """Create a Typer app for the machine."""
-        instance = cls()
-
+    @utils.hidden
+    def app(self) -> typer.Typer:
         def app_callback() -> None:
-            if isinstance(instance.config, config.MachineConfig):
-                utils.LOGGER.debug(
-                    "Configuration: %s", instance.config.model_dump_json(indent=2)
-                )
-            if isinstance(instance.env, env.MachineEnv):
-                utils.LOGGER.debug(
-                    "Environment: %s", instance.env.model_dump_json(indent=2)
-                )
+            utils.LOGGER.debug(
+                "Configuration: %s",
+                self.config.model_dump_json(indent=2),
+            )
+            utils.LOGGER.debug(
+                "Environment: %s",
+                self.config.model_dump_json(indent=2),
+            )
 
-        @wraps(instance.setup)
+        @wraps(self.setup)
         def setup_wrapper(*args: Any, **kwargs: Any) -> None:
+            """Set up the machine."""
             utils.LOGGER.info("Setting up machine...")
             utils.post_install_tasks += [
-                lambda: utils.LOGGER.info("Machine setup completed successfully")
+                lambda: utils.LOGGER.info("Machine setup completed.")
             ]
-            instance.setup(*args, **kwargs)
+            self.setup(*args, **kwargs)
 
         plugins_app = typer.Typer(name="plugins", help="Manage machine plugins.")
-        for plugin in MachinePlugin.create_plugins(instance):
-            plugins_app.add_typer(plugin.app(plugin))
+        for plugin_instance in self.create_plugins():
+            plugins_app.add_typer(plugin_instance.app())
 
-        machine_app = super().app(instance)
+        machine_app = super().app()
         machine_app.callback()(app_callback)
-        machine_app.command(help="Set up the machine.")(setup_wrapper)
+        machine_app.command()(setup_wrapper)
         machine_app.add_typer(plugins_app)
         return machine_app
 
     def setup(self) -> None:
-        """Machine setup."""
-        plugins = MachinePlugin.create_plugins(self)
-        for plugin in plugins:
-            plugin.setup()
+        """Set up the machine."""
+        plugins = self.create_plugins()
+        for plugin_instance in plugins:
+            plugin_instance.setup()
 
-    @staticmethod
-    def create_plugins(instance: "MachineProtocol") -> list[PluginProtocol]:
+    @utils.hidden
+    def create_plugins(self) -> list[models.PluginProtocol]:
         """Create plugins for the machine."""
         return [
-            plugin(configuration=instance.config, environment=instance.env)
-            for plugin in instance.plugins
+            plugin(
+                config=self.config,
+                env=self.env,
+            )
+            for plugin in self.plugins
         ]

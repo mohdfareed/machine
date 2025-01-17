@@ -1,19 +1,19 @@
 """Shell setup module."""
 
-__all__ = ["ZSH", "PowerShell"]
+__all__ = ["ZSH", "PowerShell", "NeoVim", "Btop"]
 
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import rich.status
 import typer
 
 from app import models, utils
 from app.plugin import Plugin
-from app.plugins.pkg_managers import APT, Brew, SnapStore, Winget
+from app.plugins.pkg_managers import APT, Brew, Scoop, SnapStore, Winget
 from app.utils import LOGGER
 
-# MARK: ZSH
+# region: ZSH
 
 ZSHENV_TEMPLATE = """
 export MACHINE="{machine}"
@@ -87,7 +87,9 @@ class ZSH(Plugin[ZSHConfig, ZSHEnv]):
         LOGGER.debug("Shell setup complete.")
 
 
-# MARK: PowerShell
+# endregion
+
+# region: PowerShell
 
 PS_PROFILE_TEMPLATE = """
 $env:MACHINE="{machine}"
@@ -101,7 +103,6 @@ class PowerShellConfig(models.ConfigProtocol, Protocol):
 
     machine_id: str
     machine: Path
-
     ps_profile: Path
 
 
@@ -115,8 +116,6 @@ class PowerShell(Plugin[PowerShellConfig, PowerShellEnv]):
     """Install PowerShell on a machine."""
 
     def setup(self) -> None:
-        """Set up PowerShell."""
-
         if Brew.is_supported():
             Brew().install_cask("powershell")
         elif Winget.is_supported():
@@ -134,3 +133,55 @@ class PowerShell(Plugin[PowerShellConfig, PowerShellEnv]):
         # create the PowerShell profile
         self.env.PS_PROFILE.parent.mkdir(parents=True, exist_ok=True)
         self.env.PS_PROFILE.write_text(ps_profile_content)
+
+
+# endregion
+# region: Tools
+
+
+class NeoVimConfig(models.ConfigProtocol, Protocol):
+    """NeoVim configuration files."""
+
+    vim: Path
+
+
+class NeoVimEnv(models.EnvironmentProtocol, Protocol):
+    """NeoVim environment variables."""
+
+    VIM: Path
+
+
+class NeoVim(Plugin[NeoVimConfig, NeoVimEnv]):
+    """Install NeoVim on a machine."""
+
+    def setup(self) -> None:
+        if Brew.is_supported():
+            Brew().install("nvim lazygit ripgrep fd")
+
+        elif Winget.is_supported():
+            Winget().install(
+                "Neovim.Neovim JesseDuffield.lazygit BurntSushi.ripgrep sharkdp.fd"
+            )
+
+        elif SnapStore.is_supported():
+            SnapStore().install("nvim lazygit-gm ")
+            SnapStore().install_classic("ripgrep")
+            APT().install("fd-find")
+
+        utils.link(self.config.vim, self.env.VIM)
+        LOGGER.debug("NeoVim setup complete.")
+
+
+class Btop(Plugin[Any, Any]):
+    """Install Btop on a machine."""
+
+    def setup(self) -> None:
+        if Brew.is_supported():
+            Brew().install("btop")
+        elif SnapStore.is_supported():
+            SnapStore().install("btop")
+        elif Scoop.is_supported():
+            Scoop().install("btop-lhm")
+
+
+# endregion

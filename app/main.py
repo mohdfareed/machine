@@ -1,5 +1,7 @@
 """Main module for the Typer Machine Setup CLI."""
 
+__all__ = ["app"]
+
 import os
 import platform
 from typing import Annotated

@@ -15,6 +15,14 @@ class Gleason(MachinePlugin[config.Gleason, env.Windows]):
     shell = utils.Shell()
 
     @property
+    def _config(self) -> config.Gleason:
+        return config.Gleason()
+
+    @property
+    def _env(self) -> env.Windows:
+        return env.Windows(env_file=self._config.ps_profile)
+
+    @property
     def plugins(self) -> list[type[PluginProtocol]]:
         return [
             plugins.Fonts,
@@ -28,11 +36,6 @@ class Gleason(MachinePlugin[config.Gleason, env.Windows]):
             plugins.Docker,
             plugins.Python,
         ]
-
-    def __init__(self) -> None:
-        self.config = config.Gleason()
-        self.env = env.Windows()
-        super().__init__()
 
     @classmethod
     def is_supported(cls) -> bool:

@@ -23,5 +23,5 @@ def apps() -> list[_typer.Typer]:
     for machine in _MachinePlugin.__subclasses__():  # type: ignore
         if not machine.is_supported() or _isabstract(machine):
             continue
-        machines.append(machine.machine_app())
+        machines.append(machine().app())  # type: ignore
     return machines

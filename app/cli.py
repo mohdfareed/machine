@@ -15,25 +15,21 @@ class Command(models.CommandProtocol, ABC):
 
     @property
     def name(self) -> str:
-        """The plugin name."""
         return type(self).__name__
 
     @property
     def help(self) -> str:
-        """The plugin help message."""
         return type(self).__doc__ or f"{self.name} plugin."
 
-    @classmethod
-    def app(cls, instance: models.CommandProtocol) -> typer.Typer:
-        """Create a Typer app for a CLI command."""
-        plugin_app = typer.Typer(name=instance.name.lower(), help=instance.help)
-        for name, method in inspect.getmembers(instance, predicate=inspect.ismethod):
-            # skip class methods
-            if method == getattr(cls, name):
-                continue
-            # skip private methods
-            if not name.startswith("_"):
-                plugin_app.command(name)(method)
-
-        utils.LOGGER.debug("Created app: %s", instance.name)
+    @utils.hidden
+    def app(self) -> typer.Typer:
+        plugin_app = typer.Typer(name=self.name.lower(), help=self.help)
+        for name, method in inspect.getmembers(self, predicate=inspect.ismethod):
+            if method == getattr(type(self), name):
+                continue  # skip class methods
+            if name.startswith("_"):
+                continue  # skip private methods
+            if utils.is_hidden(method):
+                continue  # skip hidden methods
+            plugin_app.command(name)(method)
         return plugin_app

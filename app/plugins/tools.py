@@ -5,10 +5,8 @@ __all__ = [
     "Tailscale",
     "Python",
     "VSCode",
-    "NeoVim",
     "Docker",
     "Node",
-    "Btop",
     "Zed",
 ]
 
@@ -47,18 +45,6 @@ class VSCodeEnv(models.EnvironmentProtocol, Protocol):
 
     VSCODE: Path
     """The path to the VSCode user settings directory."""
-
-
-class NeoVimConfig(models.ConfigProtocol, Protocol):
-    """NeoVim configuration files."""
-
-    vim: Path
-
-
-class NeoVimEnv(models.EnvironmentProtocol, Protocol):
-    """NeoVim environment variables."""
-
-    VIM: Path
 
 
 class ZedConfig(models.ConfigProtocol, Protocol):
@@ -109,7 +95,7 @@ class Fonts(Plugin[Any, Any]):
         LOGGER.debug("Fonts were setup successfully.")
 
 
-class Tailscale(Plugin[None, None]):
+class Tailscale(Plugin[Any, Any]):
     """Configure Tailscale."""
 
     shell = utils.Shell()
@@ -147,7 +133,7 @@ class Tailscale(Plugin[None, None]):
         LOGGER.debug("Tailscale was setup successfully.")
 
 
-class Python(Plugin[None, PythonEnv]):
+class Python(Plugin[Any, PythonEnv]):
     """Setup Python on a new machine."""
 
     def setup(self) -> None:
@@ -216,29 +202,6 @@ class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):
         LOGGER.debug("VSCode SSH tunnels were setup successfully.")
 
 
-class NeoVim(Plugin[NeoVimConfig, NeoVimEnv]):
-    """Install NeoVim on a machine."""
-
-    def setup(self) -> None:
-        """Set up NeoVim."""
-
-        if Brew.is_supported():
-            Brew().install("nvim lazygit ripgrep fd")
-
-        elif Winget.is_supported():
-            Winget().install(
-                "Neovim.Neovim JesseDuffield.lazygit BurntSushi.ripgrep sharkdp.fd"
-            )
-
-        elif SnapStore.is_supported():
-            SnapStore().install("nvim lazygit-gm ")
-            SnapStore().install_classic("ripgrep")
-            APT().install("fd-find")
-
-        utils.link(self.config.vim, self.env.VIM)
-        LOGGER.debug("NeoVim setup complete.")
-
-
 class Docker(Plugin[Any, Any]):
     """Setup Docker on a new machine."""
 
@@ -256,18 +219,6 @@ class Docker(Plugin[Any, Any]):
         else:
             raise PluginException("Unsupported operating system")
         LOGGER.debug("Docker was setup successfully.")
-
-
-class Btop(Plugin[Any, Any]):
-    """Install Btop on a machine."""
-
-    def setup(self) -> None:
-        if Brew.is_supported():
-            Brew().install("btop")
-        elif SnapStore.is_supported():
-            SnapStore().install("btop")
-        elif Scoop.is_supported():
-            Scoop().install("btop-lhm")
 
 
 class Node(Plugin[Any, Any]):

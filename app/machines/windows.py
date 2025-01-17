@@ -17,6 +17,14 @@ class Windows(MachinePlugin[config.Windows, env.Windows]):
     shell = utils.Shell()
 
     @property
+    def _config(self) -> config.Windows:
+        return config.Windows()
+
+    @property
+    def _env(self) -> env.Windows:
+        return env.Windows(env_file=self._config.ps_profile)
+
+    @property
     def plugins(self) -> list[type[PluginProtocol]]:
         return [
             plugins.Fonts,
@@ -30,11 +38,6 @@ class Windows(MachinePlugin[config.Windows, env.Windows]):
             plugins.Docker,
             plugins.SSH,
         ]
-
-    def __init__(self) -> None:
-        self.config = config.Windows()
-        self.env = env.Windows(env_file=self.config.ps_profile)
-        super().__init__()
 
     @classmethod
     def is_supported(cls) -> bool:

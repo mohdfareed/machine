@@ -25,6 +25,14 @@ class MacOS(MachinePlugin[config.MacOS, env.MacOS]):
     shell = utils.Shell()
 
     @property
+    def _config(self) -> config.MacOS:
+        return config.MacOS()
+
+    @property
+    def _env(self) -> env.MacOS:
+        return env.MacOS(env_file=self._config.zshenv)
+
+    @property
     def plugins(self) -> list[type[PluginProtocol]]:
         return [
             plugins.Fonts,
@@ -41,11 +49,6 @@ class MacOS(MachinePlugin[config.MacOS, env.MacOS]):
             plugins.Python,
             plugins.VSCode,
         ]
-
-    def __init__(self) -> None:
-        self.config = config.MacOS()
-        self.env = env.MacOS(env_file=self.config.zshenv)
-        super().__init__()
 
     @classmethod
     def is_supported(cls) -> bool:

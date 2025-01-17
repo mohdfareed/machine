@@ -6,18 +6,14 @@ import shutil
 from abc import ABC, abstractmethod
 
 import rich
-import typer
 from typing_extensions import override
 
-from app import config, env, plugin, utils
-from app.models import PackageManagerException, PackageManagerProtocol
+from app import config, env, models, plugin, utils
 
 Plugin = plugin.Plugin[config.MachineConfig, env.MachineEnv]
 
 
-class PkgManagerPlugin(
-    Plugin, PackageManagerProtocol, ABC
-):  # pylint: disable=too-many-ancestors
+class PkgManagerPlugin(Plugin, models.PkgManagerProtocol, ABC):
     """Abstract base class for package managers."""
 
     shell = utils.Shell()
@@ -26,55 +22,42 @@ class PkgManagerPlugin(
 
     @property
     def command(self) -> str:
-        """The package manager's shell command."""
         return self.name.lower()
 
     def __init__(self) -> None:
-        self.config: config.MachineConfig
-        self.env: env.MachineEnv
         if not self.is_supported():
-            raise PackageManagerException(f"{self.name} is not supported.")
-        super().__init__(config.MachineConfig(), env.OS_ENV())
+            raise models.PkgManagerException(f"{self.name} is not supported.")
+        super().__init__(config.MachineConfig(), env.OSEnvironment())
 
     @classmethod
-    def manager_app(cls) -> typer.Typer:
-        """Create a Typer app for the package manager."""
-        instance = cls()
-        return cls.app(instance)
+    def is_installed(cls) -> bool:
+        return shutil.which(cls().command) is not None
 
+    @utils.with_status("Setting up")
     def setup(self) -> None:
         if type(self).is_setup:
             return
         type(self).is_setup = True
 
         utils.post_install_tasks += [self.cleanup]
-        if self.is_installed(self):
+        if self.is_installed():
             return
-
-        utils.LOGGER.info("Setting up %s...", self.name)
-        utils.with_status("Setting up...")(self._setup)()
-        utils.LOGGER.debug("%s was set up successfully.", self.name)
+        self._setup()
 
     def update(self) -> None:
         self.setup()
-        utils.LOGGER.info("Updating %s...", self.name)
-        utils.with_status("Updating...")(self._update)()
-        utils.LOGGER.debug("%s was updated successfully.", self.name)
+        utils.with_status(f"Updating {self.name}")(self._update)()
 
     def cleanup(self) -> None:
-        utils.LOGGER.info("Cleaning up %s...", self.name)
-        utils.with_status("Cleaning up...")(self._cleanup)()
-        utils.LOGGER.debug("%s was cleaned up successfully.", self.name)
+        utils.with_status(f"Cleaning up {self.name}")(self._cleanup())
 
     def install(self, package: str) -> None:
         self.setup()
 
-        def wrapper(packages: list[str]) -> None:
-            utils.LOGGER.info("Installing %s...", packages)
+        def install_package(packages: list[str]) -> None:
             self._install(" ".join(packages))
-            utils.LOGGER.debug("%s was installed successfully.", packages)
 
-        utils.with_progress("Installing...")(wrapper)(package.split())
+        utils.with_progress("Installing")(install_package)(package.split())
 
     @override
     def status(self) -> None:
@@ -85,28 +68,29 @@ class PkgManagerPlugin(
         )
         is_installed = (
             "[bold green]installed[/]"
-            if self.is_installed(self)
+            if self.is_installed()
             else "[bold red]not installed[/]"
         )
         rich.print(f"{self.name} is {is_supported} and {is_installed}.")
 
+    # MARK: Abstract methods
+
+    @utils.hidden
     @abstractmethod
     def _setup(self) -> None:
         """Package manager-specific setup command."""
 
+    @utils.hidden
     @abstractmethod
     def _update(self) -> None:
         """Package manager-specific update steps."""
 
+    @utils.hidden
     @abstractmethod
     def _cleanup(self) -> None:
         """Package manager-specific cleanup command."""
 
+    @utils.hidden
     @abstractmethod
     def _install(self, package: str) -> None:
         """Package manager-specific install command."""
-
-    @staticmethod
-    def is_installed(instance: PackageManagerProtocol) -> bool:
-        """Check if the package manager is available on the system."""
-        return shutil.which(instance.command) is not None

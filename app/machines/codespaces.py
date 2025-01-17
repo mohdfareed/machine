@@ -15,17 +15,20 @@ class Codespace(MachinePlugin[config.Codespaces, env.Unix]):
     shell = utils.Shell()
 
     @property
+    def _config(self) -> config.Codespaces:
+        return config.Codespaces()
+
+    @property
+    def _env(self) -> env.Unix:
+        return env.Unix(env_file=self._config.zshenv)
+
+    @property
     def plugins(self) -> list[type[PluginProtocol]]:
         return [
             plugins.Fonts,
             plugins.Git,
             plugins.ZSH,
         ]
-
-    def __init__(self) -> None:
-        self.config = config.Codespaces()
-        self.env = env.Unix()
-        super().__init__()
 
     @classmethod
     def is_supported(cls) -> bool:

@@ -19,6 +19,14 @@ class RPi(MachinePlugin[config.RPi, env.Unix]):
     shell = utils.Shell()
 
     @property
+    def _config(self) -> config.RPi:
+        return config.RPi()
+
+    @property
+    def _env(self) -> env.Unix:
+        return env.Unix(env_file=self._config.zshenv)
+
+    @property
     def plugins(self) -> list[type[PluginProtocol]]:
         return [
             plugins.Private,
@@ -35,14 +43,8 @@ class RPi(MachinePlugin[config.RPi, env.Unix]):
             plugins.Python,
         ]
 
-    def __init__(self) -> None:
-        self.config = config.RPi()
-        self.env = env.Unix(env_file=self.config.zshenv)
-        super().__init__()
-
     @classmethod
     def is_supported(cls) -> bool:
-        """Check if the plugin is supported."""
         return True
 
     def setup(self) -> None:
@@ -64,6 +66,4 @@ class RPi(MachinePlugin[config.RPi, env.Unix]):
         self.shell.execute(
             "sudo touch $HOME/.hushlogin", throws=False
         )  # remove login message
-        self.shell.execute(
-            "sudo mkdir -p $HOME/.config", throws=False
-        )  # create config directory
+        self.shell.execute("sudo mkdir -p $HOME/.config", throws=False)
