@@ -3,12 +3,11 @@
 import logging
 import shutil
 from pathlib import Path
-from typing import Any, Generator, Literal
+from typing import Any, Generator
 from unittest.mock import patch
 
 import pytest
 
-from app import utils
 from app.utils import Shell, create_temp_dir, create_temp_file, link, load_env_vars
 from app.utils.logging import StripMarkupFilter
 
@@ -145,24 +144,3 @@ def test_env(temp_file: Path) -> None:
 
     env_vars = load_env_vars(temp_file)
     assert env_vars["TEST_ENV_VAR"] == "test"
-
-
-def test_with_status_decorator() -> None:
-    """Test the with_status decorator."""
-
-    @utils.with_status("Testing status")
-    def sample_function() -> Literal["Success"]:
-        return "Success"
-
-    result = sample_function()
-    assert result == "Success"
-
-
-def test_with_progress_decorator() -> None:
-    """Test the with_progress decorator."""
-
-    @utils.with_progress("Testing progress")
-    def sample_function(items: list[Any]) -> Any:
-        return items
-
-    sample_function([1, 2, 3])

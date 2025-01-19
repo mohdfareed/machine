@@ -8,12 +8,12 @@ from app.machine import MachinePlugin
 from app.models import PluginProtocol
 
 
-class Test(MachinePlugin[config.MachineConfig, env.OSEnvType]):
+class Test(MachinePlugin[config.Default, env.OSEnvType]):
     """Testbench machine."""
 
     @property
-    def _config(self) -> config.MachineConfig:
-        return config.MachineConfig()
+    def _config(self) -> config.Default:
+        return config.Default()
 
     @property
     def _env(self) -> env.OSEnvType:

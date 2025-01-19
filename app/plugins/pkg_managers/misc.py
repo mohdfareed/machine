@@ -2,15 +2,17 @@
 
 __all__ = ["PIPx"]
 
-from app.pkg_manager import PkgManagerPlugin
+from app import pkg_manager, utils
 
 from .linux import APT
 from .macos import Brew
 from .windows import Scoop
 
 
-class PIPx(PkgManagerPlugin):
+class PIPx(pkg_manager.PkgManagerPlugin):
     """PIPx package manager."""
+
+    shell = utils.Shell()
 
     @classmethod
     def is_supported(cls) -> bool:

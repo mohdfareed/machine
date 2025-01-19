@@ -14,6 +14,8 @@ from app.utils import LOGGER
 class APT(PkgManagerPlugin):
     """Advanced Package Tool (APT) package manager."""
 
+    shell = utils.Shell()
+
     @classmethod
     def is_supported(cls) -> bool:
         return shutil.which("apt") is not None
@@ -36,6 +38,7 @@ class APT(PkgManagerPlugin):
                 && sudo apt update
             """
         )
+        APT.shell.execute("sudo apt update")
         LOGGER.debug("Keyring %s was added successfully.", keyring)
 
     def from_url(self, url: str) -> None:
@@ -68,20 +71,17 @@ class APT(PkgManagerPlugin):
 class SnapStore(PkgManagerPlugin):
     """Snap Store package manager."""
 
+    shell = utils.Shell()
+
     @classmethod
     def is_supported(cls) -> bool:
         return APT.is_supported()
 
+    @utils.pkg_installer
     def install_classic(self, package: str) -> None:
         """Install a classic snap package."""
         self.setup()
-
-        def wrapper(packages: list[str]) -> None:
-            LOGGER.info("Installing snap package %s...", packages)
-            self._install_pkg(" ".join(packages), classic=True)
-            LOGGER.debug("Snap package %s was installed successfully.", packages)
-
-        utils.with_progress("Installing...")(wrapper)(package.split())
+        self._install_pkg(package, classic=True)
 
     def _setup(self) -> None:
         APT().install("snapd")

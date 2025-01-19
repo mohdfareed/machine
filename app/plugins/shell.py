@@ -5,7 +5,6 @@ __all__ = ["ZSH", "PowerShell", "NeoVim", "Btop"]
 from pathlib import Path
 from typing import Any, Protocol
 
-import rich.status
 import typer
 
 from app import models, utils
@@ -33,7 +32,7 @@ class ZSHConfig(models.ConfigProtocol, Protocol):
     tmux_config: Path
 
 
-class ZSHEnv(models.EnvironmentProtocol, Protocol):
+class ZSHEnv(models.EnvProtocol, Protocol):
     """Shell environment."""
 
     ZSHENV: Path
@@ -48,10 +47,9 @@ class ZSH(Plugin[ZSHConfig, ZSHEnv]):
 
     @classmethod
     def is_supported(cls) -> bool:
-        return not utils.WINDOWS
+        return not utils.Platform.WINDOWS
 
-    def setup(self) -> None:
-        LOGGER.info("Setting up shell...")
+    def _setup(self) -> None:
         if Brew.is_supported():
             Brew().install("zsh tmux bat eza")
         elif APT.is_supported():
@@ -73,10 +71,7 @@ class ZSH(Plugin[ZSHConfig, ZSHEnv]):
         utils.link(self.config.tmux_config, self.env.TMUX_CONFIG)
 
         # update zinit and its plugins
-        LOGGER.info("Updating zinit and its plugins...")
-        source_env = f"source {self.config.zshenv} && source {self.config.zshrc}"
-        with rich.status.Status("[bold green]Updating..."):
-            self.shell.execute(f"{source_env} && zinit self-update && zinit update")
+        self.update_zinit()
 
         # clean up
         LOGGER.debug("Cleaning up...")
@@ -84,7 +79,14 @@ class ZSH(Plugin[ZSHConfig, ZSHEnv]):
             "sudo rm -rf ~/.zcompdump* ~/.zshrc ~/.zsh_sessions ~/.zsh_history ~/.lesshst",
             throws=False,
         )
-        LOGGER.debug("Shell setup complete.")
+
+    @utils.loading_indicator("Updating zinit")
+    def update_zinit(self) -> None:
+        """Update zinit and its plugins."""
+        LOGGER.info("Updating zinit and its plugins...")
+        source_env = f"source {self.config.zshenv} && source {self.config.zshrc}"
+        self.shell.execute(f"{source_env} && zinit self-update && zinit update")
+        LOGGER.debug("Zinit update complete.")
 
 
 # endregion
@@ -106,7 +108,7 @@ class PowerShellConfig(models.ConfigProtocol, Protocol):
     ps_profile: Path
 
 
-class PowerShellEnv(models.EnvironmentProtocol, Protocol):
+class PowerShellEnv(models.EnvProtocol, Protocol):
     """PowerShell environment variables."""
 
     PS_PROFILE: Path
@@ -115,7 +117,7 @@ class PowerShellEnv(models.EnvironmentProtocol, Protocol):
 class PowerShell(Plugin[PowerShellConfig, PowerShellEnv]):
     """Install PowerShell on a machine."""
 
-    def setup(self) -> None:
+    def _setup(self) -> None:
         if Brew.is_supported():
             Brew().install_cask("powershell")
         elif Winget.is_supported():
@@ -145,7 +147,7 @@ class NeoVimConfig(models.ConfigProtocol, Protocol):
     vim: Path
 
 
-class NeoVimEnv(models.EnvironmentProtocol, Protocol):
+class NeoVimEnv(models.EnvProtocol, Protocol):
     """NeoVim environment variables."""
 
     VIM: Path
@@ -154,7 +156,7 @@ class NeoVimEnv(models.EnvironmentProtocol, Protocol):
 class NeoVim(Plugin[NeoVimConfig, NeoVimEnv]):
     """Install NeoVim on a machine."""
 
-    def setup(self) -> None:
+    def _setup(self) -> None:
         if Brew.is_supported():
             Brew().install("nvim lazygit ripgrep fd")
 
@@ -175,7 +177,7 @@ class NeoVim(Plugin[NeoVimConfig, NeoVimEnv]):
 class Btop(Plugin[Any, Any]):
     """Install Btop on a machine."""
 
-    def setup(self) -> None:
+    def _setup(self) -> None:
         if Brew.is_supported():
             Brew().install("btop")
         elif SnapStore.is_supported():

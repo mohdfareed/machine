@@ -41,17 +41,23 @@ class Windows(MachinePlugin[config.Windows, env.Windows]):
 
     @classmethod
     def is_supported(cls) -> bool:
-        return utils.WINDOWS
+        return bool(utils.Platform.WINDOWS)
 
     def setup(self) -> None:
-        super().setup()
-        plugins.SSH(self.config, self.env).generate_key_pair("personal")
-        plugins.SSH(self.config, self.env).setup_server()
-        plugins.VSCode(self.config, self.env).setup_tunnels(VSCODE_TUNNELS_NAME)
-
-        Winget().install("GoLang.Go Microsoft.DotNet.SDK")
-        Scoop().add_bucket("extras")
-        Scoop().install("extras/godot")
+        self.execute_setup(
+            [
+                lambda: plugins.SSH(self.config, self.env).generate_key_pair(
+                    "personal"
+                ),
+                plugins.SSH(self.config, self.env).setup_server,
+                lambda: plugins.VSCode(self.config, self.env).setup_tunnels(
+                    VSCODE_TUNNELS_NAME
+                ),
+                lambda: Winget().install("GoLang.Go Microsoft.DotNet.SDK"),
+                lambda: Scoop().add_bucket("extras"),
+                lambda: Scoop().install("extras/godot"),
+            ]
+        )
 
 
 # def setup_wsl(wsl_module: _ModuleType, setup_args: str = "") -> None:

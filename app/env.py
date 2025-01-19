@@ -20,8 +20,8 @@ class MachineEnv(BaseSettings, ABC):
     env_file: Optional[Path] = None
     model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
 
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, env_file: Optional[Path] = None, **kwargs: Any) -> None:
+        BaseSettings.__init__(self, env_file=env_file, **kwargs)
         if not self.env_file:
             return
 
@@ -75,6 +75,6 @@ class Windows(MachineEnv):
 
 
 OSEnvironment: type[Union[Unix, Windows, MacOS]] = (
-    Unix if utils.UNIX else Windows if utils.WINDOWS else MacOS
+    Unix if utils.Platform.UNIX else Windows if utils.Platform.WINDOWS else MacOS
 )
 OSEnvType = Union[Unix, Windows, MacOS]

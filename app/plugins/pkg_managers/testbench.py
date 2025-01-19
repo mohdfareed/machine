@@ -4,11 +4,10 @@ __all__ = ["Test"]
 
 
 from app import utils
-from app.models import DebugCommandProtocol
 from app.pkg_manager import PkgManagerPlugin
 
 
-class Test(PkgManagerPlugin, DebugCommandProtocol):
+class Test(PkgManagerPlugin):
     """Testbench package manager."""
 
     @utils.hidden

@@ -39,12 +39,15 @@ class Gleason(MachinePlugin[config.Gleason, env.Windows]):
 
     @classmethod
     def is_supported(cls) -> bool:
-        return utils.WINDOWS
+        return bool(utils.Platform.WINDOWS)
 
     def setup(self) -> None:
-        super().setup()
-        self.set_shell()
-        Winget().install("GoLang.Go Microsoft.DotNet.SDK")
+        self.execute_setup(
+            [
+                self.set_shell,
+                lambda: Winget().install("GoLang.Go Microsoft.DotNet.SDK"),
+            ],
+        )
 
     def set_shell(self, shell: str = "/usr/bin/zsh") -> None:
         """Set the machine's default shell."""

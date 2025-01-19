@@ -2,39 +2,64 @@
 
 __all__ = ["Plugin"]
 
-from abc import ABC
+import inspect
+from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-import rich
+import typer
 
-from app import cli, models
+from app import models, utils
 
 C = TypeVar("C", bound=models.ConfigProtocol)
-E = TypeVar("E", bound=models.EnvironmentProtocol)
+E = TypeVar("E", bound=models.EnvProtocol)
 
 
-class Plugin(cli.Command, models.PluginProtocol, Generic[C, E], ABC):
+class Plugin(models.PluginProtocol, Generic[C, E], ABC):
     """Abstract base class for plugins."""
 
-    def __init__(self, config: C, env: E) -> None:
-        """Initialize the plugin."""
-        if not self.is_supported():
-            raise models.PluginException(f"{self.name} is not supported.")
+    @property
+    def name(self) -> str:
+        """The name of the plugin."""
+        return type(self).__name__
 
+    @property
+    def help(self) -> str:
+        """The help message for the plugin."""
+        return type(self).__doc__ or f"{self.name} plugin."
+
+    def __init__(self, config: C, env: E) -> None:
+        if not self.is_supported():
+            raise models.AppError(f"{self.name} is not supported.")
         self.config: C = config
         self.env: E = env
-        cli.Command.__init__(self)
 
     @classmethod
     def is_supported(cls) -> bool:
-        """Check if the plugin is supported."""
         return True
 
-    def status(self) -> None:
-        """Print the status of the plugin."""
-        is_supported = (
-            "[bold green]supported[/]"
-            if self.is_supported()
-            else "[bold red]not supported[/]"
-        )
-        rich.print(f"{self.name} is {is_supported}.")
+    @utils.hidden
+    def app(self) -> typer.Typer:
+        plugin_app = typer.Typer(name=self.name.lower(), help=self.help)
+        for name, method in inspect.getmembers(self, predicate=inspect.ismethod):
+            name = utils.get_cmd_name(method) or name
+            docs = utils.get_cmd_help(method) or method.__doc__
+
+            if method == getattr(type(self), name, None):
+                continue  # skip class methods
+            if name.startswith("_"):
+                continue  # skip private methods
+            if utils.is_hidden(method):
+                continue  # skip hidden methods
+
+            plugin_app.command(name=name, help=docs)(method)
+        return plugin_app
+
+    def setup(self) -> None:
+        utils.LOGGER.info("Setting up %s...", self.name)
+        utils.loading_indicator(f"Setting up {self.name}")(self._setup)()
+        utils.LOGGER.info("Finished setting up %s.", self.name)
+
+    @utils.hidden
+    @abstractmethod
+    def _setup(self) -> None:
+        """Set up the plugin."""

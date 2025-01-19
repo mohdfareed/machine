@@ -52,17 +52,21 @@ class MacOS(MachinePlugin[config.MacOS, env.MacOS]):
 
     @classmethod
     def is_supported(cls) -> bool:
-        return utils.MACOS
+        return bool(utils.Platform.MACOS)
 
     def setup(self, private_dir: PrivateDirArg = None) -> None:
-        super().setup()
-        plugins.Private(self.config, self.env).ssh_keys(private_dir)
-        plugins.Private(self.config, self.env).env_file(private_dir)
-        plugins.VSCode(self.config, self.env).setup_tunnels(VSCODE_TUNNELS_NAME)
-        plugins.SSH(self.config, self.env).setup_server()
-        self.setup_brew()
-        self.system_preferences()
-        self.enable_touch_id()
+        tasks = [
+            lambda: plugins.Private(self.config, self.env).ssh_keys(private_dir),
+            lambda: plugins.Private(self.config, self.env).env_file(private_dir),
+            lambda: plugins.VSCode(self.config, self.env).setup_tunnels(
+                VSCODE_TUNNELS_NAME
+            ),
+            lambda: plugins.SSH(self.config, self.env).setup_server(),
+            self.setup_brew,
+            self.system_preferences,
+            self.enable_touch_id,
+        ]
+        self.execute_setup(tasks)
 
     def setup_brew(self) -> None:
         """Setup Homebrew and install packages."""

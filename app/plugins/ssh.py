@@ -26,7 +26,7 @@ class SSHConfig(models.ConfigProtocol, Protocol):
     ssh_config: Path
 
 
-class SSHEnv(models.EnvironmentProtocol, Protocol):
+class SSHEnv(models.EnvProtocol, Protocol):
     """SSH environment variables."""
 
     SSH_DIR: Path
@@ -37,9 +37,7 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
 
     shell = utils.Shell()
 
-    def setup(self) -> None:
-        """Set up SSH keys."""
-        LOGGER.info("Setting up SSH...")
+    def _setup(self) -> None:
         if self.config.ssh_config:  # symlink ssh config file
             utils.link(self.config.ssh_config, self.env.SSH_DIR / "config")
 
@@ -53,13 +51,12 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
                 utils.link(key.public, self.env.SSH_DIR / key.public.name)
                 key.public.chmod(0o644)
             self.load_key(key, self.shell)
-        LOGGER.info("SSH setup complete")
 
     def setup_server(self) -> None:
         """Setup an SSH server on a new machine."""
         LOGGER.info("Setting up SSH server...")
 
-        if utils.WINDOWS:
+        if utils.Platform.WINDOWS:
             self.shell.execute("Add-WindowsCapability -Online -Name OpenSSH.Server")
             self.shell.execute(
                 "Get-Service -Name sshd | Set-Service -StartupType Automatic"
@@ -68,7 +65,7 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
             LOGGER.debug("SSH server setup complete.")
             return
 
-        if utils.MACOS:
+        if utils.Platform.MACOS:
             try:
                 self.shell.execute("sudo systemsetup -setremotelogin on")
             except utils.ShellError as ex:
@@ -77,7 +74,7 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
             LOGGER.debug("SSH server setup complete.")
             return
 
-        if utils.LINUX:
+        if utils.Platform.LINUX:
             APT().install("openssh-server")
             self.shell.execute("sudo systemctl start ssh")
             self.shell.execute("sudo systemctl enable ssh")
@@ -127,14 +124,14 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
     @staticmethod
     def load_key(key: "SSHKeyPair", shell: utils.Shell) -> None:
         """Setup an ssh key on a machine."""
-        LOGGER.info("Setting up SSH key: %s", key.name)
+        LOGGER.info("Loading SSH key: %s", key.name)
 
         # get key fingerprint
         fingerprint = shell.execute(f"ssh-keygen -lf {key.private}")[1]
         fingerprint = fingerprint.split(" ")[1]
         LOGGER.debug("Key fingerprint: %s", fingerprint)
 
-        if utils.WINDOWS:  # set up ssh agent on windows
+        if utils.Platform.WINDOWS:  # set up ssh agent on windows
             shell.execute("Get-Service ssh-agent | Set-Service -StartupType Automatic")
             shell.execute("Start-Service ssh-agent")
             cmd = f"ssh-add -l | Select-String -Pattern '{fingerprint}'"
@@ -143,7 +140,7 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
 
         # add key to ssh agent if it doesn't exist
         if shell.execute(cmd, throws=False)[0] != 0:
-            if utils.MACOS:  # add key to keychain on macOS
+            if utils.Platform.MACOS:  # add key to keychain on macOS
                 shell.execute(f"ssh-add --apple-use-keychain '{key.private}'")
 
             else:  # add key to ssh agent on other operating systems
@@ -167,7 +164,7 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
             if file.suffix == PRIVATE_EXT
         ]
 
-        LOGGER.debug("Loaded %d ssh keys.", len(private_keys))
+        LOGGER.info("Loaded %d ssh keys.", len(private_keys))
         return private_keys
 
 

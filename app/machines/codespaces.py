@@ -32,11 +32,10 @@ class Codespace(MachinePlugin[config.Codespaces, env.Unix]):
 
     @classmethod
     def is_supported(cls) -> bool:
-        return utils.LINUX and os.getenv("CODESPACES") == "true"
+        return utils.Platform.LINUX and os.getenv("CODESPACES") == "true"
 
     def setup(self) -> None:
-        super().setup()
-        self.set_shell()
+        self.execute_setup([self.set_shell])
 
     def set_shell(self, shell: str = "/usr/bin/zsh") -> None:
         """Set the machine's default shell."""

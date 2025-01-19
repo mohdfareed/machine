@@ -5,15 +5,16 @@ __all__ = ["Winget", "Scoop"]
 
 from app import utils
 from app.pkg_manager import PkgManagerPlugin
-from app.utils import LOGGER
 
 
 class Winget(PkgManagerPlugin):
     """WinGet package manager."""
 
+    shell = utils.Shell()
+
     @classmethod
     def is_supported(cls) -> bool:
-        return utils.WINDOWS
+        return bool(utils.Platform.WINDOWS)
 
     def _setup(self) -> None:
         return None
@@ -30,19 +31,18 @@ class Winget(PkgManagerPlugin):
 class Scoop(PkgManagerPlugin):
     """Scoop package manager."""
 
+    shell = utils.Shell()
+
     @classmethod
     def is_supported(cls) -> bool:
         return Winget.is_supported()
 
-    def add_bucket(self, bucket: str) -> "Scoop":
+    def add_bucket(self, bucket: str) -> None:
         """Add a bucket to the scoop package manager."""
         self.setup()
-        LOGGER.info("Adding bucket %s to scoop...", bucket)
-
+        utils.LOGGER.info("Adding bucket %s to scoop...", bucket)
         self.shell.execute(f"scoop bucket add {bucket}", throws=False)
-
-        LOGGER.debug("Bucket %s was added successfully.", bucket)
-        return self
+        utils.LOGGER.debug("Bucket %s was added successfully.", bucket)
 
     def _setup(self) -> None:
         self.shell.execute(

@@ -30,8 +30,10 @@ def main() -> None:
     _validate()
     _setup_python()
     poetry = _resolve_poetry()
+
     _setup_environment(poetry)
     _setup_pre_commit_hooks(poetry)
+    _install_package()
 
     log_success("Machine set up successfully")
 
@@ -90,7 +92,7 @@ def _install_poetry() -> Path:
 
 
 def _setup_environment(poetry: Path) -> None:
-    log_info("Installing development dependencies with Poetry...")
+    log_info("Installing development dependencies...")
     subprocess.run(
         [poetry, "env", "use", shutil.which("python3.9") or "python3.9"],
         env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
@@ -107,6 +109,14 @@ def _setup_pre_commit_hooks(poetry: Path) -> None:
     log_info("Setting up pre-commit hooks...")
     subprocess.run(
         [poetry, "run", "pre-commit", "install", "--install-hooks"],
+        check=True,
+    )
+
+
+def _install_package() -> None:
+    log_info("Installing system package...")
+    subprocess.run(
+        ["pipx", "install", "--force", "--editable", "."],
         check=True,
     )
 

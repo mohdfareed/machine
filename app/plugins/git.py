@@ -20,7 +20,7 @@ class GitConfig(models.ConfigProtocol, Protocol):
     gitignore: Path
 
 
-class GitEnv(models.EnvironmentProtocol, Protocol):
+class GitEnv(models.EnvProtocol, Protocol):
     """Git environment variables."""
 
     GITCONFIG: Path
@@ -33,12 +33,9 @@ class Git(Plugin[GitConfig, GitEnv]):
     unix_packages = "git git-lfs gh"
     win_packages = "Git.Git GitHub.GitLFS GitHub.CLI Microsoft.GitCredentialManagerCore"
 
-    def setup(self) -> None:
-        """Set up git."""
-        utils.LOGGER.info("Setting up git...")
+    def _setup(self) -> None:
         self.link()
         self.install()
-        utils.LOGGER.debug("Git setup complete")
 
     def link(self) -> None:
         """Link git configuration files."""
@@ -47,7 +44,6 @@ class Git(Plugin[GitConfig, GitEnv]):
 
     def install(self) -> None:
         """Install git."""
-        utils.LOGGER.info("Installing git...")
         if Brew.is_supported():
             Brew().install(self.unix_packages)
         elif APT.is_supported():

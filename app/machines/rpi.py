@@ -7,10 +7,11 @@ from app import config, env, plugins, utils
 from app.machine import MachinePlugin
 from app.models import PluginProtocol
 from app.plugins.pkg_managers.linux import SnapStore
+from app.plugins.private_files import PrivateDirArg
 
 VSCODE_TUNNELS_NAME = "rpi"
 
-Environment = env.Unix if utils.UNIX else env.Windows
+Environment = env.Unix if utils.Platform.UNIX else env.Windows
 
 
 class RPi(MachinePlugin[config.RPi, env.Unix]):
@@ -47,13 +48,22 @@ class RPi(MachinePlugin[config.RPi, env.Unix]):
     def is_supported(cls) -> bool:
         return True
 
-    def setup(self) -> None:
-        super().setup()
-        plugins.SSH(self.config, self.env).generate_key_pair("personal")
-        plugins.SSH(self.config, self.env).setup_server()
-        plugins.VSCode(self.config, self.env).setup_tunnels(VSCODE_TUNNELS_NAME)
-        SnapStore().install_classic("go dotnet-sdk")
-        self.post_setup()
+    def setup(self, private_dir: PrivateDirArg = None) -> None:
+        self.execute_setup(
+            [
+                lambda: plugins.Private(self.config, self.env).ssh_keys(private_dir),
+                lambda: plugins.Private(self.config, self.env).env_file(private_dir),
+                lambda: plugins.SSH(self.config, self.env).generate_key_pair(
+                    "personal"
+                ),
+                plugins.SSH(self.config, self.env).setup_server,
+                lambda: plugins.VSCode(self.config, self.env).setup_tunnels(
+                    VSCODE_TUNNELS_NAME
+                ),
+                lambda: SnapStore().install_classic("go dotnet-sdk"),
+                self.post_setup,
+            ]
+        )
 
     def post_setup(self) -> None:
         """Post-setup tasks."""

@@ -2,7 +2,6 @@
 # =============================================================================
 
 source "$MACHINE/config/core/zshenv" # global environment variables
-source "$MACHINE/private/private.sh" # private environment variables
 
 # machine specific environment variables
 export DEV="$HOME/Developer"

@@ -1,4 +1,4 @@
-"""Btop setup module."""
+"""Tools setup module."""
 
 __all__ = [
     "Fonts",
@@ -16,10 +16,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Optional, Protocol
 
-import typer
-
 from app import models, utils
-from app.models import PluginException
 from app.plugin import Plugin
 from app.plugins.pkg_managers import APT, Brew, PIPx, Scoop, SnapStore, Winget
 from app.utils import LOGGER
@@ -27,7 +24,7 @@ from app.utils import LOGGER
 # region: - Configurations and Environments
 
 
-class PythonEnv(models.EnvironmentProtocol, Protocol):
+class PythonEnv(models.EnvProtocol, Protocol):
     """Python environment variables."""
 
     COMPLETIONS_PATH: Optional[Path]
@@ -40,7 +37,7 @@ class VSCodeConfig(models.ConfigProtocol, Protocol):
     """The path to the VSCode user settings directory."""
 
 
-class VSCodeEnv(models.EnvironmentProtocol, Protocol):
+class VSCodeEnv(models.EnvProtocol, Protocol):
     """VSCode environment variables."""
 
     VSCODE: Path
@@ -53,7 +50,7 @@ class ZedConfig(models.ConfigProtocol, Protocol):
     zed_settings: Path
 
 
-class ZedEnv(models.EnvironmentProtocol, Protocol):
+class ZedEnv(models.EnvProtocol, Protocol):
     """Zed environment variables."""
 
     ZED_SETTINGS: Path
@@ -65,7 +62,7 @@ class GhosttyConfig(models.ConfigProtocol, Protocol):
     ghostty: Path
 
 
-class GhosttyEnv(models.EnvironmentProtocol, Protocol):
+class GhosttyEnv(models.EnvProtocol, Protocol):
     """Ghostty environment variables."""
 
     GHOSTTY: Path
@@ -80,19 +77,16 @@ class GhosttyEnv(models.EnvironmentProtocol, Protocol):
 class Fonts(Plugin[Any, Any]):
     """Setup fonts on a new machine."""
 
-    def setup(self) -> None:
-        LOGGER.info("Setting up fonts...")
+    def _setup(self) -> None:
         if Brew.is_supported():
             Brew().install("font-computer-modern font-jetbrains-mono-nerd-font")
         elif APT.is_supported():
             APT().install("fonts-jetbrains-mono fonts-lmodern")
         elif Scoop.is_supported():
-            Scoop().add_bucket("nerd-fonts").install("nerd-fonts/JetBrains-Mono")
+            Scoop().add_bucket("nerd-fonts")
+            Scoop().install("nerd-fonts/JetBrains-Mono")
         else:
             utils.LOGGER.error("No supported package manager found.")
-            raise typer.Abort
-
-        LOGGER.debug("Fonts were setup successfully.")
 
 
 class Tailscale(Plugin[Any, Any]):
@@ -100,19 +94,17 @@ class Tailscale(Plugin[Any, Any]):
 
     shell = utils.Shell()
 
-    def setup(self) -> None:
-        """Set up tailscale."""
-        LOGGER.info("Setting up tailscale...")
+    def _setup(self) -> None:
         if Brew.is_supported():
             Brew().install_cask("tailscale")
 
-        elif utils.LINUX:
+        elif utils.Platform.LINUX:
             if not shutil.which("tailscale"):
                 self.shell.execute(
                     "curl -fsSL https://tailscale.com/install.sh | sh", info=True
                 )
 
-        elif utils.WINDOWS:
+        elif utils.Platform.WINDOWS:
             installer_url = "https://pkgs.tailscale.com/stable/tailscale-setup.exe"
             installer_path = Path(os.environ["TEMP"]) / "tailscale-setup.exe"
             urllib.request.urlretrieve(installer_url, installer_path)
@@ -123,8 +115,9 @@ class Tailscale(Plugin[Any, Any]):
             os.remove(installer_path)
 
         else:
-            raise PluginException("Unsupported operating system")
+            utils.LOGGER.error("Unsupported operating system.")
 
+    @utils.loading_indicator("Updating Tailscale")
     def update(self) -> None:
         """Update tailscale."""
         result = self.shell.execute("sudo tailscale update", info=True, throws=False)
@@ -136,9 +129,7 @@ class Tailscale(Plugin[Any, Any]):
 class Python(Plugin[Any, PythonEnv]):
     """Setup Python on a new machine."""
 
-    def setup(self) -> None:
-        LOGGER.info("Setting up Python...")
-
+    def _setup(self) -> None:
         if Brew.is_supported():
             Brew().install("python pipx pyenv")
         elif APT.is_supported():
@@ -147,13 +138,19 @@ class Python(Plugin[Any, PythonEnv]):
                 utils.Shell().execute("curl https://pyenv.run | bash")
         elif Scoop.is_supported():
             Scoop().install("pipx pyenv")
+        else:
+            utils.LOGGER.error("No supported package manager found.")
 
         PIPx().install("poetry")
-        if utils.UNIX and shutil.which("poetry"):
-            utils.Shell().execute(
-                f"poetry completions zsh > {self.env.COMPLETIONS_PATH}/_poetry"
-            )
-        LOGGER.debug("Python was setup successfully.")
+        if not utils.Platform.UNIX:
+            return
+        if not shutil.which("poetry"):
+            utils.LOGGER.warning("Poetry completion could not be installed.")
+            return
+
+        utils.Shell().execute(
+            f"poetry completions zsh > {self.env.COMPLETIONS_PATH}/_poetry"
+        )
 
 
 class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):
@@ -161,13 +158,10 @@ class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):
 
     shell = utils.Shell()
 
-    def setup(self) -> None:
-        """Set up VSCode."""
-        LOGGER.info("Setting up VSCode...")
+    def _setup(self) -> None:
         self.install()
         for file in self.config.vscode.iterdir():
             utils.link(file, self.env.VSCODE / file.name)
-        LOGGER.debug("VSCode was setup successfully.")
 
     def link(self) -> None:
         """Link VSCode configuration files."""
@@ -176,7 +170,6 @@ class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):
 
     def install(self) -> None:
         """Install VSCode extensions."""
-        LOGGER.info("Installing VSCode...")
         if Brew.is_supported():
             Brew().install_cask("visual-studio-code")
         elif Winget.is_supported():
@@ -185,13 +178,11 @@ class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):
             SnapStore().install_classic("code")
         else:
             utils.LOGGER.error("No supported package manager found.")
-            raise typer.Abort
 
     def setup_tunnels(self, name: str) -> None:
         """Setup VSCode SSH tunnels as a service."""
         if not shutil.which("code"):
-            LOGGER.error("VSCode is not installed.")
-            raise typer.Abort
+            utils.LOGGER.error("VSCode is not installed.")
 
         LOGGER.info("Setting up VSCode SSH tunnels...")
         cmd = (
@@ -205,69 +196,60 @@ class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):
 class Docker(Plugin[Any, Any]):
     """Setup Docker on a new machine."""
 
-    def setup(self) -> None:
-        LOGGER.info("Setting up Docker...")
-        if utils.MACOS and utils.ARM:
+    def _setup(self) -> None:
+        if utils.Platform.MACOS and utils.Platform.ARM:
             LOGGER.warning("Docker is not supported on Apple Silicon.")
             LOGGER.warning("Download manually from: https://www.docker.com")
 
-        elif utils.UNIX:
+        elif utils.Platform.UNIX:
             utils.Shell().execute("curl -fsSL https://get.docker.com | sh")
-        elif utils.WINDOWS:
+        elif utils.Platform.WINDOWS:
             Winget().install("Docker.DockerDesktop")
 
         else:
-            raise PluginException("Unsupported operating system")
-        LOGGER.debug("Docker was setup successfully.")
+            utils.LOGGER.error("Unsupported operating system.")
 
 
 class Node(Plugin[Any, Any]):
     """Setup Node on a new machine."""
 
-    def setup(self) -> None:
-        """Set up Ghostty."""
+    def _setup(self) -> None:
         self.install()
 
     def install(self) -> None:
         """Install Node."""
-        LOGGER.info("Installing Node...")
         if Brew.is_supported():
             Brew().install("nvm")
         elif Winget.is_supported():
             Winget().install("Schniz.fnm")
-        elif utils.LINUX and not shutil.which("nvm"):
+        elif utils.Platform.LINUX and not shutil.which("nvm"):
             url = "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh"
             utils.Shell().execute(f"curl -o- {url} | bash")
         else:
-            raise PluginException("Unsupported operating system")
-        LOGGER.debug("Node was setup successfully.")
+            utils.LOGGER.error("Unsupported operating system.")
 
 
 class Zed(Plugin[ZedConfig, ZedEnv]):
     """Setup the Zed text editor on a new machine."""
 
-    def setup(self) -> None:
-        LOGGER.info("Setting up Zed...")
-        if utils.WINDOWS:
-            raise PluginException("Zed is not supported on Windows.")
+    def _setup(self) -> None:
+        if utils.Platform.WINDOWS:
+            utils.LOGGER.error("Zed is not supported on Windows.")
+            return
+
         if Brew.is_supported():
             Brew().install("zed")
         else:
             utils.Shell().execute("curl -f https://zed.dev/install.sh | sh")
-
         utils.link(self.config.zed_settings, self.env.ZED_SETTINGS)
-        LOGGER.debug("Zed was setup successfully.")
 
 
 class Ghostty(Plugin[GhosttyConfig, GhosttyEnv]):
     """Install Ghostty on a machine."""
 
-    def setup(self) -> None:
-        """Set up Ghostty."""
-        LOGGER.info("Setting up Ghostty...")
+    def _setup(self) -> None:
         self.install()
         self.link()
-        LOGGER.debug("Ghostty was setup successfully.")
 
     def link(self) -> None:
         """Link Ghostty configuration files."""
@@ -275,10 +257,7 @@ class Ghostty(Plugin[GhosttyConfig, GhosttyEnv]):
 
     def install(self) -> None:
         """Install Ghostty."""
-        LOGGER.info("Setting up Ghostty...")
         if Brew.is_supported():
             Brew().install_cask("ghostty")
         else:
             LOGGER.error("No supported package manager found.")
-            raise typer.Abort
-        LOGGER.debug("Ghostty was setup successfully.")

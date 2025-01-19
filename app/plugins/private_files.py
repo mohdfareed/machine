@@ -23,9 +23,6 @@ class Private(Plugin[config.Private, Any]):
     def is_supported(cls) -> bool:
         return True
 
-    def setup(self) -> None:
-        """Set up private files."""
-
     def ssh_keys(self, private_dir: PrivateDirArg) -> None:
         """Set up private SSH keys."""
         if not (private_dir := self.startup(private_dir)):
@@ -65,3 +62,6 @@ class Private(Plugin[config.Private, Any]):
             return None
         utils.LOGGER.debug("Private directory: %s", private_dir)
         return private_dir
+
+    @utils.hidden
+    def _setup(self) -> None: ...
