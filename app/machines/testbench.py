@@ -22,3 +22,6 @@ class Test(MachinePlugin[config.Default, env.OSEnvType]):
     @property
     def plugins(self) -> list[type[PluginProtocol]]:
         return [plugins.Test]
+
+    def setup(self) -> None:
+        self.execute_setup()

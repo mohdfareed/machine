@@ -105,6 +105,11 @@ class MachinePlugin(plugin.Plugin[C, E], models.MachineProtocol, ABC):
         utils.progress.remove_task(task_id)
         utils.LOGGER.info("Machine setup complete.")
 
+    # Disconnect inherited plugin setup method
+
+    @abstractmethod
+    def setup(self) -> None: ...
+
     @utils.hidden
     def _setup(self) -> None: ...
 

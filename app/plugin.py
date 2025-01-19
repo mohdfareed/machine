@@ -41,8 +41,6 @@ class Plugin(models.PluginProtocol, Generic[C, E], ABC):
     def app(self) -> typer.Typer:
         plugin_app = typer.Typer(name=self.name.lower(), help=self.help)
         for name, method in inspect.getmembers(self, predicate=inspect.ismethod):
-            name = utils.get_cmd_name(method) or name
-            docs = utils.get_cmd_help(method) or method.__doc__
 
             if method == getattr(type(self), name, None):
                 continue  # skip class methods
@@ -51,7 +49,7 @@ class Plugin(models.PluginProtocol, Generic[C, E], ABC):
             if utils.is_hidden(method):
                 continue  # skip hidden methods
 
-            plugin_app.command(name=name, help=docs)(method)
+            plugin_app.command(name=name)(method)
         return plugin_app
 
     def setup(self) -> None:

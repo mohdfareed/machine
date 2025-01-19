@@ -10,9 +10,6 @@ __all__ = [
     "loading_indicator",
     "hidden",
     "is_hidden",
-    "cmd",
-    "get_cmd_name",
-    "get_cmd_help",
 ]
 
 import atexit
@@ -20,15 +17,13 @@ import platform
 import sys
 from enum import Flag
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Any, Callable, TypeVar, Union
 
 import rich.progress
 
 from .logging import LOGGER, app_console
 
 CLI_VISIBILITY_KEY = "__cli_command_hidden__"
-CLI_NAME_KEY = "__cli_command_name__"
-CLI_HELP_KEY = "__cli_command_help__"
 
 
 SetupTask = Callable[[], None]
@@ -142,26 +137,3 @@ def hidden(func: C) -> C:
 def is_hidden(func: Command) -> bool:
     """Check if a function is hidden from the CLI app."""
     return getattr(func, CLI_VISIBILITY_KEY, False)
-
-
-def cmd(
-    name: Optional[str] = None, msg: Optional[str] = None
-) -> Callable[..., Command]:
-    """Decorator to set the CLI command name and help message."""
-
-    def decorator(func: C) -> C:
-        setattr(func, CLI_NAME_KEY, name or func.__name__)
-        setattr(func, CLI_HELP_KEY, msg or func.__doc__)
-        return func
-
-    return decorator
-
-
-def get_cmd_name(func: Command) -> str:
-    """Get the CLI command name."""
-    return getattr(func, CLI_NAME_KEY, func.__name__)
-
-
-def get_cmd_help(func: Command) -> Optional[str]:
-    """Get the CLI command help message."""
-    return getattr(func, CLI_HELP_KEY, func.__doc__)

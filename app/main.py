@@ -4,7 +4,6 @@ __all__ = ["app"]
 
 import os
 import platform
-import time
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -54,24 +53,23 @@ def main(
     utils.LOGGER.debug("Log file: %s", log_file_path)
 
     # setup post installation tasks
-    utils.add_post_setup_task(install)
+    utils.add_post_setup_task(install_completion)
 
 
-@app_completion.command()
-def install() -> None:
+@app_completion.command(name="install")
+def install_completion() -> None:
     """Install shell completions."""
     command = f"poetry run {APP_NAME} {COMPLETION_APP}"
-    time.sleep(5)
 
     if not utils.Platform.UNIX:
         utils.LOGGER.error("Unsupported platform for auto shell completions.")
-        code, _ = utils.Shell().execute(f"{command} install-completion")
-        raise typer.Exit(code)
+        utils.Shell().execute(f"{command} install-completion")
+        raise typer.Exit(1)
 
     if not os.environ.get("MACHINE"):
         utils.LOGGER.error("MACHINE environment variable is not set.")
-        code, _ = utils.Shell().execute(f"{command} install-completion")
-        raise typer.Exit(code)
+        utils.Shell().execute(f"{command} install-completion")
+        raise typer.Exit(1)
 
     if not env.Unix().COMPLETIONS_PATH.exists():
         env.Unix().COMPLETIONS_PATH.mkdir(parents=True, exist_ok=True)
@@ -94,8 +92,8 @@ def show_completion(ctx: typer.Context, shell: Optional[str] = None) -> None:
     typer.completion.show_callback(ctx, None, shell)  # type: ignore
 
 
-@app_completion.command(hidden=True)
-def install_completion(ctx: typer.Context, shell: Optional[str] = None) -> None:
+@app_completion.command(name="install-completion", hidden=True)
+def install(ctx: typer.Context, shell: Optional[str] = None) -> None:
     """Wrapper around built-in Typer completion command."""
     shell = shell or Path(utils.OS_EXECUTABLE.value).name
     typer.completion.install_callback(ctx, None, shell)  # type: ignore

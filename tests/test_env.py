@@ -1,5 +1,6 @@
 """Machine configuration tests."""
 
+from enum import Flag
 from pathlib import Path
 
 import pytest
@@ -64,7 +65,12 @@ def test_unix_loaded_env(monkeypatch: MonkeyPatch) -> None:
         """.strip()
     )
 
-    monkeypatch.setattr(utils, "WINDOWS", False)
+    class PatchedPlatform(Flag):
+        """Patched platform class."""
+
+        WINDOWS = False
+
+    monkeypatch.setattr(utils, utils.Platform.__name__, PatchedPlatform)
     unix_env = env.Unix(env_file=temp_file)
     assert Path(unix_env.GITCONFIG) == Path("test")
 
@@ -79,6 +85,11 @@ def test_windows_loaded_env(monkeypatch: MonkeyPatch) -> None:
         """.strip()
     )
 
-    monkeypatch.setattr(utils, "WINDOWS", True)
+    class PatchedPlatform(Flag):
+        """Patched platform class."""
+
+        WINDOWS = False
+
+    monkeypatch.setattr(utils, utils.Platform.__name__, PatchedPlatform)
     windows_env = env.Windows(env_file=temp_file)
     assert Path(windows_env.GITCONFIG) == Path("test")
