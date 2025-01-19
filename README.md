@@ -17,7 +17,7 @@ repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
 curl -fsSL $repo/scripts/deploy.py | python3 - [-h] [-p PATH] [branch]
 ```
 
-where `machine_path` is the path to install the machine CLI app.
+where `PATH` is the path to download the machine CLI app.
 Defaults to `~/.machine`.
 
 ### Development
