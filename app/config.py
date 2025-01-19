@@ -1,14 +1,26 @@
 """Machine configuration files models."""
 
+__all__ = [
+    "MachineConfig",
+    "Private",
+    "Default",
+    "Codespaces",
+    "Gleason",
+    "MacOS",
+    "RPi",
+    "Windows",
+]
+
+from abc import ABC
 from pathlib import Path
 
 import typer
+from pydantic import BaseModel
 
-from app import APP_NAME, plugins
-from app.models import ConfigFiles
+from app import APP_NAME
 
 
-class Machine(ConfigFiles):
+class MachineConfig(BaseModel, ABC):
     """Machine configuration files."""
 
     machine: Path = Path(__file__).parent.parent
@@ -16,31 +28,19 @@ class Machine(ConfigFiles):
     data: Path = Path(typer.get_app_dir(APP_NAME))
 
 
-class Private(ConfigFiles):
+class Private(MachineConfig):
     """Private configuration files."""
 
-    SSH_KEYS_DIRNAME: str = "keys"
-    PRIVATE_ENV_FILENAME: str = "private.sh"
-
-    config: Path = Machine().config / "private"
-    private_env: Path = config / PRIVATE_ENV_FILENAME
-    ssh_keys: Path = config / SSH_KEYS_DIRNAME
+    config: Path = MachineConfig().config.parent / "private"
+    private_env: Path = config / "env.sh"
+    ssh_keys: Path = config / "keys"
 
 
-class Default(
-    Machine,
-    plugins.GitConfig,
-    plugins.NeoVimConfig,
-    plugins.PowerShellConfig,
-    plugins.ShellConfig,
-    plugins.SSHConfig,
-    plugins.VSCodeConfig,
-    plugins.ZedConfig,
-):
+class Default(MachineConfig):
     """Default machine configuration files."""
 
     machine_id: str = "core"
-    config: Path = Machine().config / machine_id
+    config: Path = MachineConfig().config / machine_id
 
     vim: Path = config / "vim"
     vscode: Path = config / "vscode"
@@ -60,8 +60,7 @@ class Codespaces(Default):
     """Github codespaces configuration files."""
 
     machine_id: str = "codespaces"
-    config: Path = Machine().config / machine_id
-
+    config: Path = MachineConfig().config / machine_id
     zshrc: Path = config / "zshrc"
 
 
@@ -69,8 +68,7 @@ class Gleason(Default):
     """Gleason configuration files."""
 
     machine_id: str = "gleason"
-    config: Path = Machine().config / machine_id
-
+    config: Path = MachineConfig().config / machine_id
     gitconfig: Path = config / ".gitconfig"
 
 
@@ -78,21 +76,25 @@ class MacOS(Private, Default):
     """macOS configuration files."""
 
     machine_id: str = "macos"
-    config: Path = Machine().config / machine_id
+    config: Path = MachineConfig().config / machine_id
+    hostname: str = "mohds-macbook"
 
-    brewfile: Path = config / "Brewfile"
-    system_preferences: Path = config / "preferences.sh"
-    ssh_config: Path = config / "ssh.config"
     zshenv: Path = config / "zshenv"
     zshrc: Path = config / "zshrc"
     ghostty: Path = config / "ghostty.config"
+
+    gitconfig: Path = config / ".gitconfig"
+    gitignore: Path = config / ".gitignore"
+    ssh_config: Path = config / "ssh.config"
+    brewfile: Path = config / "Brewfile"
+    system_preferences: Path = config / "preferences.sh"
 
 
 class RPi(Private, Default):
     """Raspberry Pi configuration files."""
 
     machine_id: str = "rpi"
-    config: Path = Machine().config / machine_id
+    config: Path = MachineConfig().config / machine_id
 
     ssh_config: Path = config / "ssh.config"
     zshenv: Path = config / "zshenv"
@@ -103,7 +105,6 @@ class Windows(Private, Default):
     """Windows configuration files."""
 
     machine_id: str = "windows"
-    config: Path = Machine().config / machine_id
-
+    config: Path = MachineConfig().config / machine_id
     ps_profile: Path = config / "ps_profile.ps1"
     ssh_config: Path = config / "ssh.config"

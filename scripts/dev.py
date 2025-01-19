@@ -12,47 +12,41 @@ from pathlib import Path
 
 # Configuration
 REPOSITORY = "mohdfareed/machine.git"
-
-# Help message
-USAGE = """
-Set up a local development environment.
-
-Creates a virtual environment with Poetry and installs the development
-dependencies. Other development tools are also set up.
-The script must be run in the repository.
-
-Requirements:
-    - python 3.9.6 or pyenv
-    - poetry or pipx
-
-If Poetry is not installed, pipx is used to install it.
-If Python 3.9.6 is not installed, pyenv is used to install it.
-""".strip()
+REQUIRED_PATHS = [
+    ".git",
+    "pyproject.toml",
+    ".pre-commit-config.yaml",
+]
 
 # Constants
 PYTHON_VERSION = "3.9.6"
 
 
 def main() -> None:
-    """Main function to set up the local development environment."""
+    """Set up the local development environment."""
 
     log_info("Setting up development environment...")
 
     _validate()
     _setup_python()
     poetry = _resolve_poetry()
+
     _setup_environment(poetry)
     _setup_pre_commit_hooks(poetry)
+    _install_package()
 
     log_success("Machine set up successfully")
+
+
+# region: Setup
 
 
 def _validate() -> None:
     atexit.register(lambda: os.chdir(os.getcwd()))
     os.chdir(Path(__file__).parent.parent)  # .py -> scripts -> machine
-
-    if not Path("pyproject.toml").exists():
-        raise RuntimeError("This script must be run from the repository.")
+    for path in REQUIRED_PATHS:
+        if not Path(path).exists():
+            raise RuntimeError(f"Invalid repository: {path} not found")
 
 
 def _setup_python() -> None:
@@ -62,7 +56,8 @@ def _setup_python() -> None:
 
     log_warning(f"Python {version_output} is not supported.")
     if not shutil.which("pyenv"):
-        raise RuntimeError(f"Pyenv is required to install Python {PYTHON_VERSION}.")
+        err = f"Pyenv is required to install Python {PYTHON_VERSION}."
+        raise RuntimeError(err)
     _install_python()
 
 
@@ -91,8 +86,13 @@ def _install_poetry() -> Path:
     sys.exit()
 
 
+# endregion
+
+# region: Environment
+
+
 def _setup_environment(poetry: Path) -> None:
-    log_info("Installing development dependencies with Poetry...")
+    log_info("Installing development dependencies...")
     subprocess.run(
         [poetry, "env", "use", shutil.which("python3.9") or "python3.9"],
         env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
@@ -113,7 +113,33 @@ def _setup_pre_commit_hooks(poetry: Path) -> None:
     )
 
 
-# region: - Logging and error handling
+def _install_package() -> None:
+    log_info("Installing system package...")
+    subprocess.run(
+        ["pipx", "install", "--force", "--editable", "."],
+        check=True,
+    )
+
+
+# endregion
+
+# region: Logging
+
+
+USAGE = """
+Set up a local development environment.
+
+Creates a virtual environment with Poetry and installs the development
+dependencies. Other development tools are also set up.
+The script must be run in the repository.
+
+Requirements:
+    - python 3.9.6 or pyenv
+    - poetry or pipx
+
+If Poetry is not installed, pipx is used to install it.
+If Python 3.9.6 is not installed, pyenv is used to install it.
+""".strip()
 
 
 class ScriptFormatter(
@@ -148,6 +174,10 @@ def panic(msg: str) -> None:
     print(f"\033[31;1m{msg}\033[0m")
     sys.exit(1)
 
+
+# endregion
+
+# region: CLI
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

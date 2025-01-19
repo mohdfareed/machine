@@ -1,9 +1,9 @@
 """Machine configuration tests."""
 
+from enum import Flag
 from pathlib import Path
 
 import pytest
-import typer
 from pytest import MonkeyPatch
 
 from app import env, utils
@@ -11,8 +11,8 @@ from app import env, utils
 
 def test_env_fail() -> None:
     """Test the environment variables failing."""
-    with pytest.raises(typer.Abort):
-        env.Machine().load(Path("."))
+    with pytest.raises(IsADirectoryError):
+        env.MachineEnv(env_file=Path("."))
 
 
 def test_unix_env(monkeypatch: MonkeyPatch) -> None:
@@ -30,8 +30,13 @@ def test_unix_env_defaults(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.delenv("COMPLETIONS_PATH", raising=False)
     unix_env = env.Unix()
 
-    assert unix_env.XDG_CONFIG_HOME == Path.home() / ".config"
-    assert unix_env.COMPLETIONS_PATH is None
+    if utils.Platform.MACOS:
+        assert (
+            unix_env.XDG_CONFIG_HOME == Path.home() / "Library" / "Application Support"
+        )
+    else:
+        assert unix_env.XDG_CONFIG_HOME == Path.home() / ".config"
+    assert unix_env.SSH_DIR == Path.home() / ".ssh"
 
 
 def test_windows_env(monkeypatch: MonkeyPatch) -> None:
@@ -56,27 +61,35 @@ def test_unix_loaded_env(monkeypatch: MonkeyPatch) -> None:
     temp_file = utils.create_temp_file()
     temp_file.write_text(
         """
-        export GITCONFIG="test"
-        """
+        export GITCONFIG="./test"
+        """.strip()
     )
 
-    monkeypatch.setattr(utils, "WINDOWS", False)
-    monkeypatch.setenv("MACHINE", "test")
-    unix_env = env.Unix().load(temp_file)
-    assert unix_env.GITCONFIG != Path("test")
+    class PatchedPlatform(Flag):
+        """Patched platform class."""
+
+        WINDOWS = False
+
+    monkeypatch.setattr(utils, utils.Platform.__name__, PatchedPlatform)
+    unix_env = env.Unix(env_file=temp_file)
+    assert Path(unix_env.GITCONFIG) == Path("test")
 
 
 def test_windows_loaded_env(monkeypatch: MonkeyPatch) -> None:
     """Test Windows environment variables."""
 
-    temp_file = utils.create_temp_file()
+    temp_file = utils.create_temp_file(".ps1")
     temp_file.write_text(
         """
-        $env:GITCONFIG="test"
-        """
+        $env:GITCONFIG="./test"
+        """.strip()
     )
 
-    monkeypatch.setattr(utils, "WINDOWS", True)
-    monkeypatch.setenv("MACHINE", "test")
-    windows_env = env.Windows().load(temp_file)
-    assert windows_env.GITCONFIG != Path("test")
+    class PatchedPlatform(Flag):
+        """Patched platform class."""
+
+        WINDOWS = False
+
+    monkeypatch.setattr(utils, utils.Platform.__name__, PatchedPlatform)
+    windows_env = env.Windows(env_file=temp_file)
+    assert Path(windows_env.GITCONFIG) == Path("test")

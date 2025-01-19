@@ -1,6 +1,6 @@
 """Logging setup module."""
 
-__all__ = ["LOGGER", "init_logging"]
+__all__ = ["LOGGER", "app_console", "setup_logging"]
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -13,7 +13,10 @@ from rich.text import Text
 from app import APP_NAME
 
 LOGGER = logging.getLogger(APP_NAME)
-"""App logger."""
+"""Application logger."""
+
+app_console = Console()
+"""The application console."""
 
 log_file_path = Path(__file__).parent.parent.parent / "app.log"
 """Log file path."""
@@ -29,23 +32,28 @@ class StripMarkupFilter(logging.Filter):  # pylint: disable=too-few-public-metho
         return True
 
 
-def init_logging(debug_mode: bool) -> None:
+def setup_logging(debug_mode: bool) -> None:
     """Set up and initialize app logging."""
 
     # debug logger
-    debug = RichHandler(markup=True, show_path=False, show_time=False)
+    debug = RichHandler(
+        console=app_console, markup=True, show_path=False, show_time=False
+    )
     debug.setFormatter(logging.Formatter(r"[black]%(message)s[/]"))
     debug.setLevel(logging.DEBUG)
     debug.addFilter(lambda msg: msg.levelno < logging.INFO if debug_mode else False)
 
     # stdout logger
-    stdout = RichHandler(markup=True, show_path=False, show_time=False)
+    stdout = RichHandler(
+        console=app_console, markup=True, show_path=False, show_time=False
+    )
     stdout.setLevel(logging.INFO)
     stdout.addFilter(lambda msg: msg.levelno < logging.ERROR)
 
     # stderr logger
-    console = Console(stderr=True)
-    stderr = RichHandler(console=console, markup=True, show_path=False, show_time=False)
+    stderr = RichHandler(
+        console=app_console, markup=True, show_path=False, show_time=False
+    )
     stderr.setLevel(logging.ERROR)
 
     # setup file logger

@@ -3,16 +3,14 @@
 __all__ = ["MacOS"]
 
 from pathlib import Path
-from typing import Any
 
 import typer
 
 from app import config, env, plugins, utils
+from app.machine import MachinePlugin
+from app.models import PluginProtocol
 from app.plugins import pkg_managers
-from app.plugins.plugin import Plugin, SetupFunc
 from app.plugins.private_files import PrivateDirArg
-
-from .machine import Machine
 
 PAM_SUDO_PATH = Path("/") / "etc" / "pam.d" / "sudo_local"
 PAM_SUDO_CONTENT = """
@@ -21,78 +19,71 @@ auth       sufficient     pam_tid.so
 VSCODE_TUNNELS_NAME = "macbook"
 
 
-class MacOS(Machine[config.MacOS, env.MacOS]):
+class MacOS(MachinePlugin[config.MacOS, env.MacOS]):
     """macOS machine configuration."""
 
+    shell = utils.Shell()
+
     @property
-    def plugins(self) -> list[Plugin[Any, Any]]:
-        machine_plugins: list[Plugin[Any, Any]] = [
-            plugins.Fonts(),
-            plugins.Git(self.config, self.env),
-            plugins.Private(self.config),
-            plugins.Shell(self.config, self.env),
-            plugins.SSH(self.config, self.env),
-            plugins.Btop(),
-            plugins.NeoVim(self.config, self.env),
-            plugins.PowerShell(self.config, self.env),
-            plugins.Tailscale(),
-            plugins.Docker(),
-            plugins.Node(),
-            plugins.Python(self.env),
-            plugins.VSCode(self.config, self.env),
+    def _config(self) -> config.MacOS:
+        return config.MacOS()
+
+    @property
+    def _env(self) -> env.MacOS:
+        return env.MacOS(env_file=self._config.zshenv)
+
+    @property
+    def plugins(self) -> list[type[PluginProtocol]]:
+        return [
+            plugins.Fonts,
+            plugins.Git,
+            plugins.Private,
+            plugins.ZSH,
+            plugins.SSH,
+            plugins.Btop,
+            plugins.NeoVim,
+            plugins.PowerShell,
+            plugins.Tailscale,
+            plugins.Docker,
+            plugins.Node,
+            plugins.Python,
+            plugins.VSCode,
         ]
-        return machine_plugins
-
-    @property
-    def machine_setup(self) -> SetupFunc:
-        return self._setup
-
-    def __init__(self) -> None:
-        super().__init__(config.MacOS(), env.MacOS())
-
-    def app(self) -> typer.Typer:
-        machine_app = super().app()
-        machine_app.command()(self.system_preferences)
-        machine_app.command()(self.enable_touch_id)
-        machine_app.command()(self.accept_xcode_license)
-        return machine_app
 
     @classmethod
     def is_supported(cls) -> bool:
-        """Check if the plugin is supported."""
-        return utils.MACOS
+        return bool(utils.Platform.MACOS)
 
-    def _setup(self, private_dir: PrivateDirArg) -> None:
-
-        for plugin in self.plugins:
-            if isinstance(plugin, plugins.Private):
-                plugin.plugin_setup(private_dir=private_dir)
-                continue
-            if isinstance(plugin, plugins.VSCode):
-                plugin.setup_tunnels(VSCODE_TUNNELS_NAME)
-            if isinstance(plugin, plugins.SSH):
-                plugin.setup_server()
-            if isinstance(plugin, plugins.Shell):
-                plugin.plugin_setup(machine_id=self.config.machine_id)
-                continue
-            plugin.plugin_setup()
-
-        self.setup_brew()
-        self.system_preferences()
-        self.enable_touch_id()
+    def setup(self, private_dir: PrivateDirArg = None) -> None:
+        tasks = [
+            lambda: plugins.Private(self.config, self.env).ssh_keys(private_dir),
+            lambda: plugins.Private(self.config, self.env).env_file(private_dir),
+            lambda: plugins.VSCode(self.config, self.env).setup_tunnels(
+                VSCODE_TUNNELS_NAME
+            ),
+            lambda: plugins.SSH(self.config, self.env).setup_server(),
+            self.setup_brew,
+            self.system_preferences,
+            self.enable_touch_id,
+        ]
+        self.execute_setup(tasks)
 
     def setup_brew(self) -> None:
         """Setup Homebrew and install packages."""
         brew = pkg_managers.Brew()
         brew.install_brewfile(self.config.brewfile)
         brew.install("go")
-        brew.install("dotnet-sdk", cask=True)
-        brew.install("godot-mono", cask=True)
+        brew.install_cask("dotnet-sdk godot-mono")
 
     def system_preferences(self) -> None:
         """Open macOS System Preferences."""
         utils.LOGGER.info("Opening System Preferences...")
-        self.shell.execute(f". {self.config.system_preferences}")
+        self.shell.execute(
+            (
+                f"HOSTNAME={self.config.hostname} && "
+                f". {self.config.system_preferences}"
+            )
+        )
 
     def enable_touch_id(self) -> None:
         """Enable Touch ID for sudo on macOS."""

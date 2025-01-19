@@ -4,59 +4,80 @@ __all__ = ["Brew", "MAS"]
 
 from pathlib import Path
 
-import typer
+from typing_extensions import override
 
-from app import utils
-from app.models import PackageManagerException
-from app.utils import LOGGER
+from app import models, pkg_manager, utils
 
-from .pkg_manager import PkgManager
+brew: Path = Path("/home/linuxbrew/.linuxbrew/bin/brew")
+if utils.Platform.MACOS and utils.Platform.ARM:
+    brew = Path("/opt/homebrew/bin/brew")
+elif utils.Platform.MACOS:
+    brew = Path("/usr/local/bin/brew")
 
 
-class Brew(PkgManager):
+class Brew(pkg_manager.PkgManagerPlugin):
     """Homebrew package manager."""
 
+    shell = utils.Shell()
+
     @classmethod
     def is_supported(cls) -> bool:
-        return utils.MACOS or not utils.ARM
+        return bool(utils.Platform.MACOS) or not bool(utils.Platform.ARM)
 
-    def setup(self) -> None:
-        try:
-            # Install Homebrew
-            self.shell.execute('/bin/bash -c "$(curl -fsSL https://git.io/JIY6g)"')
-        except utils.ShellError as ex:
-            raise PackageManagerException("Failed to install Homebrew.") from ex
-
-    def update(self) -> None:
-        self.shell.execute("brew update && brew upgrade")
-
-    def cleanup(self) -> None:
-        self.shell.execute("brew cleanup --prune=all", throws=False)
-
-    def install(self, package: str, cask: bool = False) -> None:
-        self.shell.execute(f"brew install {'--cask' if cask else ''} {package}")
-
+    @utils.loading_indicator("Installing packages")
     def install_brewfile(self, filepath: Path) -> None:
         """Install Homebrew packages from a Brewfile."""
-        LOGGER.info("Installing Homebrew packages from: %s", filepath)
-        self.shell.execute(f"brew bundle install --file={filepath}")
-        LOGGER.debug("Homebrew packages were installed successfully.")
+        self.setup()
+        utils.LOGGER.info("Installing Homebrew packages from: %s", filepath)
+        self.shell.execute(f"{brew} bundle install --file={filepath}")
+        utils.LOGGER.debug("Homebrew packages were installed successfully.")
 
-    def app(self) -> typer.Typer:
-        machine_app = super().app()
-        machine_app.command()(self.install_brewfile)
-        return machine_app
+    @utils.pkg_installer
+    def install_cask(self, package: str) -> None:
+        """Install a cask package."""
+        self.setup()
+        self._install_pkg(package, cask=True)
+
+    @override
+    @classmethod
+    def is_installed(cls) -> bool:
+        return brew.exists()
+
+    def _setup(self) -> None:
+        try:  # Install Homebrew
+            self.shell.execute('/bin/bash -c "$(curl -fsSL https://git.io/JIY6g)"')
+        except utils.ShellError as ex:
+            raise models.AppError("Failed to install Homebrew.") from ex
+
+    def _update(self) -> None:
+        self.shell.execute(f"{brew} update && {brew} upgrade")
+
+    def _cleanup(self) -> None:
+        self.shell.execute("{brew} cleanup --prune=all", throws=False)
+
+    def _install(self, package: str) -> None:
+        self._install_pkg(package, cask=False)
+
+    def _install_pkg(self, package: str, cask: bool) -> None:
+        self.shell.execute(f"{brew} install {'--cask' if cask else ''} {package}")
 
 
-class MAS(PkgManager):
+class MAS(pkg_manager.PkgManagerPlugin):
     """Mac App Store."""
+
+    shell = utils.Shell()
 
     @classmethod
     def is_supported(cls) -> bool:
-        return utils.MACOS
+        return bool(utils.Platform.MACOS) and Brew.is_supported()
 
-    def setup(self) -> None:
+    def _setup(self) -> None:
         Brew().install("mas")
 
-    def update(self) -> None:
+    def _update(self) -> None:
         self.shell.execute("mas upgrade")
+
+    def _install(self, package: str) -> None:
+        self.shell.execute(f"mas install {package}")
+
+    def _cleanup(self) -> None: ...

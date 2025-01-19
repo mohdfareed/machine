@@ -7,7 +7,7 @@ source $MACHINE/config/core/zshrc
 # Functions and Aliases
 # =============================================================================
 
-alias setup-machine="$MACHINE/bootstrap.py macos"
+alias setup-machine="machine-setup $MACHINE_ID"
 alias cleanup='brew::cleanup && zsh::clean'
 alias update='brew::update && zsh::update && cleanup'
 

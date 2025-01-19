@@ -1,23 +1,26 @@
 """Git plugin."""
 
-__all__ = ["Git", "GitConfig", "GitEnv"]
+__all__ = ["Git"]
 
 from pathlib import Path
+from typing import Protocol
+
+import typer
 
 from app import models, utils
+from app.plugin import Plugin
 
 from .pkg_managers import APT, Brew, Winget
-from .plugin import Plugin, SetupFunc
 
 
-class GitConfig(models.ConfigFiles):
+class GitConfig(models.ConfigProtocol, Protocol):
     """Git configuration files."""
 
     gitconfig: Path
     gitignore: Path
 
 
-class GitEnv(models.Environment):
+class GitEnv(models.EnvProtocol, Protocol):
     """Git environment variables."""
 
     GITCONFIG: Path
@@ -30,26 +33,31 @@ class Git(Plugin[GitConfig, GitEnv]):
     unix_packages = "git git-lfs gh"
     win_packages = "Git.Git GitHub.GitLFS GitHub.CLI Microsoft.GitCredentialManagerCore"
 
-    @property
-    def plugin_setup(self) -> SetupFunc:
-        return self._setup
-
     def _setup(self) -> None:
-        utils.LOGGER.info("Setting up git...")
+        self.link()
+        self.install()
+
+    def link(self) -> None:
+        """Link git configuration files."""
         utils.link(self.config.gitconfig, self.env.GITCONFIG)
         utils.link(self.config.gitignore, self.env.GITIGNORE)
 
-        utils.install_from_specs(
-            [
-                (Brew, lambda: Brew().install(self.unix_packages)),
-                (APT, lambda: self._linux_setup(self.unix_packages)),
-                (Winget, lambda: Winget().install(self.win_packages)),
-            ]
-        )
-        utils.LOGGER.debug("Git setup complete")
+    def install(self) -> None:
+        """Install git."""
+        if Brew.is_supported():
+            Brew().install(self.unix_packages)
+        elif APT.is_supported():
+            self.linux_install(self.unix_packages)
+        elif Winget.is_supported():
+            Winget().install(self.win_packages)
+
+        else:
+            utils.LOGGER.error("No supported package manager found.")
+            raise typer.Abort
 
     @staticmethod
-    def _linux_setup(unix_packages: str) -> None:
+    def linux_install(unix_packages: str) -> None:
+        """Install git on a linux machine."""
         apt = APT()
         apt.add_keyring(
             "https://cli.github.com/packages/githubcli-archive-keyring.gpg",

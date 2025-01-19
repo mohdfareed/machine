@@ -1,83 +1,99 @@
 """App models."""
 
-from abc import ABC
-from pathlib import Path
-from typing import Callable, Protocol, TypeVar
+__all__ = [
+    "ConfigProtocol",
+    "EnvProtocol",
+    "PluginProtocol",
+    "PkgManagerProtocol",
+    "MachineProtocol",
+    "AppError",
+]
+
+from abc import abstractmethod
+from typing import Protocol, runtime_checkable
 
 import typer
-from pydantic import BaseModel
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from app import utils
-
-T = TypeVar("T", bound="Environment")
 
 
-# MARK: Types
+@runtime_checkable
+class ConfigProtocol(Protocol):  # pylint: disable=too-few-public-methods
+    """Configuration protocol. Defines configuration files."""
 
 
-class ConfigFiles(BaseModel, ABC):
-    """Configuration files."""
+@runtime_checkable
+class EnvProtocol(Protocol):  # pylint: disable=too-few-public-methods
+    """Environment protocol. Defines environment variables."""
 
 
-class Environment(BaseSettings, ABC):
-    """Environment variables."""
-
-    model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
-
-    @classmethod
-    def load(cls: type[T], env_file: Path) -> T:
-        """Load the environment variables from file."""
-        return utils.load_env(cls(), env_file)
-
-
-PackageSpec = tuple[type["PackageManagerProtocol"], Callable[[], None]]
-
-
-# MARK: Protocols
-
-
-class PackageManagerProtocol(Protocol):
-    """Package manager protocol."""
-
-    def app(self) -> typer.Typer:
-        """The package manager's Typer app."""
-        raise NotImplementedError
-
-    @classmethod
-    def is_supported(cls) -> bool:
-        """Check if the package manager is supported."""
-        raise NotImplementedError
-
-
+@runtime_checkable
 class PluginProtocol(Protocol):
-    """Plugin protocol required for registration to a machine."""
+    """Plugin protocol. Defines a plugin that can be set up on a machine."""
 
-    plugin_app: typer.Typer
+    @abstractmethod
+    def __init__(
+        self,
+        config: ConfigProtocol,
+        env: EnvProtocol,
+    ) -> None: ...
 
+    @classmethod
+    @abstractmethod
+    def is_supported(cls) -> bool:
+        """Check if the plugin is supported."""
+
+    @abstractmethod
     def setup(self) -> None:
-        """Setup the plugin."""
+        """Set up the plugin."""
+
+    @abstractmethod
+    def app(self) -> typer.Typer:
+        """Create a Typer app for the plugin.
+
+        The app will create commands for public methods. Methods can be hidden
+        using `@utils.hidden` decorator.
+        """
 
 
-class MachineProtocol(Protocol):
-    """Machine protocol."""
+@runtime_checkable
+class PkgManagerProtocol(PluginProtocol, Protocol):
+    """Package manager protocol. Defines the package manager's interface."""
 
-    machine_app: typer.Typer
+    @abstractmethod
+    def __init__(self) -> None: ...
 
-    def setup(self) -> None:
-        """Setup the machine."""
+    @classmethod
+    @abstractmethod
+    def is_installed(cls) -> bool:
+        """Check if the package manager is available on the system."""
+
+    @abstractmethod
+    def install(self, package: str) -> None:
+        """Install a package."""
+
+    @abstractmethod
+    def update(self) -> None:
+        """Update the package manager and its packages."""
+
+    @abstractmethod
+    def status(self) -> None:
+        """Print the status of the package manager."""
+
+
+@runtime_checkable
+class MachineProtocol(PluginProtocol, Protocol):
+    """Machine protocol. Defines the machine's interface."""
+
+    @property
+    @abstractmethod
+    def plugins(self) -> list[type[PluginProtocol]]:
+        """The machine's plugins."""
+
+    @abstractmethod
+    def __init__(self) -> None: ...
 
 
 # MARK: Exceptions
 
 
-class PluginException(Exception):
-    """Plugin exception."""
-
-
-class PackageManagerException(Exception):
-    """Base exception for package manager errors."""
-
-
-class MachineException(Exception):
-    """Base exception for machine errors."""
+class AppError(Exception):
+    """An application error exception."""

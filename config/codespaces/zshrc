@@ -7,4 +7,4 @@ source $MACHINE/config/core/zshrc
 # Functions and Aliases
 # =============================================================================
 
-alias setup-machine="$MACHINE/setup.sh codespaces"
+alias setup-machine="machine-setup codespaces"

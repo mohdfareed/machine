@@ -1,13 +1,13 @@
 # Configuration: Raspberry Pi
 # =============================================================================
 
-# load core machine configuration
-source $MACHINE/config/core/zshrc
+source "$MACHINE/config/core/zshrc" # global environment variables
 
 # Functions and Aliases
 # =============================================================================
 
 alias reboot='sudo reboot'
+alias setup-machine="machine-setup rpi"
 
 # update the system
 function update {

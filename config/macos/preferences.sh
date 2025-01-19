@@ -1,5 +1,5 @@
 # set local host name
-scutil --set LocalHostName "mohds-macbook"
+scutil --set LocalHostName $HOSTNAME
 # switch windows in same space
 defaults write NSGlobalDomain AppleSpacesSwitchOnActivate -bool false
 # double click title bar to maximize

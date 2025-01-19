@@ -2,7 +2,7 @@
 # =============================================================================
 
 # private environment
-export PRIVATE_ENV="$MACHINE/config/private.sh"
+export PRIVATE_ENV="$MACHINE/private/env.sh"
 if [[ -f "$PRIVATE_ENV" ]]; then source "$PRIVATE_ENV"; fi
 
 # XDG Base Directory Specification

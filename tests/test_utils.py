@@ -7,18 +7,8 @@ from typing import Any, Generator
 from unittest.mock import patch
 
 import pytest
-import typer
 
-from app.utils import (
-    Shell,
-    create_temp_dir,
-    create_temp_file,
-    is_dir,
-    is_file,
-    link,
-    path_exists,
-    validate,
-)
+from app.utils import Shell, create_temp_dir, create_temp_file, link, load_env_vars
 from app.utils.logging import StripMarkupFilter
 
 
@@ -75,13 +65,22 @@ def test_link(temp_dir: Path) -> None:
 def test_create_temp_dir() -> None:
     """Test the create_temp_dir function."""
     with patch("atexit.register") as mock_register:
-        file = create_temp_dir("test")
+        file = create_temp_dir()
 
         assert file.exists()
         assert file.is_dir()
 
         mock_register.assert_called_once()
         shutil.rmtree(file)
+
+
+def test_create_temp_dir_cleanup() -> None:
+    """Test the create_temp_dir function cleanup."""
+    temp_dir = create_temp_dir()
+    assert temp_dir.exists()
+    assert temp_dir.is_dir()
+    shutil.rmtree(temp_dir)
+    assert not temp_dir.exists()
 
 
 def test_create_temp_file() -> None:
@@ -97,55 +96,14 @@ def test_create_temp_file() -> None:
         file.unlink()
 
 
-def test_validate_path(temp_file: Path) -> None:
-    """Test the validate function with a valid path."""
-    validator = validate(path_exists)
-    assert validator(temp_file) == temp_file
-
-
-def test_validate_dir(temp_dir: Path) -> None:
-    """Test the validate function with a valid directory."""
-    validator = validate(is_dir)
-    assert validator(temp_dir) == temp_dir
-
-
-def test_validate_file(temp_file: Path) -> None:
-    """Test the validate function with a valid file."""
-    validator = validate(is_file)
-    assert validator(temp_file) == temp_file
-
-
-def test_is_path_valid(temp_file: Path) -> None:
-    """Test the is_path function with a valid path."""
-    assert path_exists(temp_file) == temp_file
-
-
-def test_is_path_invalid() -> None:
-    """Test the is_path function with an invalid path."""
-    with pytest.raises(typer.BadParameter):
-        path_exists(Path("invalid_path"))
-
-
-def test_is_dir_valid(temp_dir: Path) -> None:
-    """Test the is_dir function with a valid directory."""
-    assert is_dir(temp_dir) == temp_dir
-
-
-def test_is_dir_invalid() -> None:
-    """Test the is_dir function with an invalid directory."""
-    with pytest.raises(typer.BadParameter):
-        is_dir(Path("invalid_dir"))
-
-
-def test_is_file_valid(temp_file: Path) -> None:
-    """Test the is_file function with a valid file."""
-    assert is_file(temp_file) == temp_file
-
-
-def test_is_file_invalid() -> None:
-    """Test the is_file function with an invalid file."""
-    with pytest.raises(typer.BadParameter):
-        is_file(Path("invalid_file.txt"))
+def test_create_temp_file_cleanup() -> None:
+    """Test the create_temp_file function cleanup."""
+    temp_file = create_temp_file()
+    temp_file.touch()
+    assert temp_file.exists()
+    assert temp_file.is_file()
+    temp_file.unlink()
+    assert not temp_file.exists()
 
 
 def test_shell() -> None:
@@ -157,3 +115,32 @@ def test_shell() -> None:
     shell.execute("echo 'warning test'")
     shell.execute("echo 'info test'", info=True)
     shell.execute("echo")
+
+
+def test_shell_execute_with_info() -> None:
+    """Test the shell execute function with info logging."""
+    shell = Shell()
+    result = shell.execute("echo 'info test'", info=True)
+    assert result.returncode == 0
+    assert "info test" in result.output
+
+
+def test_shell_execute_with_error() -> None:
+    """Test the shell execute function with error logging."""
+    shell = Shell()
+    result = shell.execute("echo 'error test'", throws=False)
+    assert result.returncode == 0
+    assert "error test" in result.output
+
+
+def test_env(temp_file: Path) -> None:
+    """Test loading env vars from a file."""
+
+    temp_file.write_text(
+        """
+        export TEST_ENV_VAR="test"
+        """.strip()
+    )
+
+    env_vars = load_env_vars(temp_file)
+    assert env_vars["TEST_ENV_VAR"] == "test"

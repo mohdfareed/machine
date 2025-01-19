@@ -12,50 +12,36 @@ from pathlib import Path
 
 # Configuration
 DEFAULT_MACHINE_PATH = Path.home() / ".machine"
+DEFAULT_BRANCH = "main"
 REPOSITORY = "mohdfareed/machine.git"
 EXECUTABLE = "machine-setup"
 
-# Help message
-USAGE = """
-Deploy a new machine by installing the machine setup app.
-
-Installs the machine app using poetry and links the executable to the
-local bin directory.
-
-Installs poetry if not found. It is installed using the official script.
-The script is found at: https://install.python-poetry.org
-
-Requirements:
-    - git
-    - curl (for Unix)
-
-For macOS, Command Line Tools for Xcode is required. Install it using:
-xcode-select --install
-""".strip()
-
 # Constants
+POETRY_SCRIPT = "https://install.python-poetry.org"
+POETRY_BUG_FIX = "sed 's/symlinks=False/symlinks=True/'"
 if sys.platform == "win32":
     EXECUTABLE_PATH = Path.home() / "AppData" / "Local" / EXECUTABLE
 else:
     EXECUTABLE_PATH = Path("/") / "usr" / "local" / "bin" / EXECUTABLE
 
 
-def main(path: Path) -> None:
+def main(path: Path, branch: str) -> None:
     """Deploy a new machine."""
 
     log_info(f"Deploying machine to: {path}")
-
     _validate(path)
-    _clone_app(path)
+    _clone_app(path, branch)
     poetry = _install_poetry(path)
     _install_machine(path, poetry)
-
     log_success("Machine deployed successfully")
 
 
+# region: Repository
+
+
 def _validate(path: Path) -> None:
-    atexit.register(lambda: os.chdir(os.getcwd()))
-    os.chdir(Path(__file__).parent.parent)  # .py -> scripts -> machine
+    cwd = os.getcwd()
+    atexit.register(lambda: os.chdir(cwd))
 
     path.parent.mkdir(parents=True, exist_ok=True)
     if not os.access(path.parent, os.W_OK):
@@ -69,56 +55,45 @@ def _validate(path: Path) -> None:
         raise RuntimeError("Curl is not installed")
 
 
-def _clone_app(path: Path) -> None:
+def _clone_app(path: Path, branch: str) -> None:
     if path.exists():
         log_warning("Machine app already exists")
         return
 
-    log_info("Cloning machine app...")
+    log_info(f"Cloning machine app branch: {branch}")
+    url = f"https://github.com/{REPOSITORY}"
     subprocess.run(
-        [
-            "git",
-            "clone",
-            f"https://github.com/{REPOSITORY}",
-            path,
-            "--depth",
-            "1",
-        ],
+        f"git clone -b {branch} {url} {path} --depth 1",
         check=True,
+        shell=True,
     )
+    os.chdir(path)  # machine
+
+
+# endregion
+
+# region: Poetry
 
 
 def _install_poetry(path: Path) -> Path:
     if poetry := shutil.which("poetry"):
         return Path(poetry)
-
     log_warning("Poetry not found")
     log_info("Installing poetry...")
     poetry_path = path / ".poetry"
 
-    # Windows
-    if os.name == "nt":
-        _install_poetry_windows(poetry_path)
-    # Unix
-    else:
+    if os.name != "nt":
         _install_poetry_unix(poetry_path)
-
+    else:  # Windows
+        _install_poetry_windows(poetry_path)
     log_success("Poetry installed successfully")
     return poetry_path / "bin" / "poetry"
 
 
 def _install_poetry_unix(path: Path) -> None:
+    cmd = f"curl -sSL {POETRY_SCRIPT}"
     subprocess.run(
-        " ".join(
-            [
-                "curl",
-                "-sSL",
-                "https://install.python-poetry.org",
-                "|",
-                "python3",
-                "-",
-            ]
-        ),
+        f"{cmd} | {POETRY_BUG_FIX} | python3 -",
         env={"POETRY_HOME": path},
         check=True,
         shell=True,
@@ -126,21 +101,19 @@ def _install_poetry_unix(path: Path) -> None:
 
 
 def _install_poetry_windows(path: Path) -> None:
+    cmd = f"(wget -Uri {POETRY_SCRIPT} -UseBasicParsing).Content"
     subprocess.run(
-        " ".join(
-            [
-                "(wget -Uri https://install.python-poetry.org "
-                "-UseBasicParsing).Content",
-                "|",
-                "py",
-                "-",
-            ]
-        ),
+        f"{cmd} | {POETRY_BUG_FIX} | py -",
         env={"POETRY_HOME": path},
         check=True,
         executable="powershell",
         shell=True,
     )
+
+
+# endregion
+
+# region: Executable
 
 
 def _install_machine(path: Path, poetry: Path) -> None:
@@ -168,37 +141,43 @@ def _link_executable(path: Path) -> None:
             check=True,
         )
     else:  # Windows
+        cmd = "New-Item -ItemType Directory -Force -Path"
         subprocess.run(
-            [
-                "New-Item",
-                "-ItemType",
-                "Directory",
-                "-Force",
-                "-Path",
-                EXECUTABLE_PATH.parent,
-                "-ErrorAction",
-                "SilentlyContinue",
-            ],
+            f"{cmd} {EXECUTABLE_PATH.parent} -ErrorAction SilentlyContinue",
             check=True,
             executable="powershell",
+            shell=True,
         )
+        cmd = "New-Item -ItemType SymbolicLink -Force -Path"
         subprocess.run(
-            [
-                "New-Item",
-                "-ItemType",
-                "SymbolicLink",
-                "-Force",
-                "-Path",
-                EXECUTABLE_PATH,
-                "-Target",
-                machine_setup,
-            ],
+            f"{cmd} {EXECUTABLE_PATH.parent} -Target {machine_setup}",
             check=True,
             executable="powershell",
+            shell=True,
         )
 
 
-# region: - Logging and error handling
+# endregion
+
+# region: Logging
+
+# Help message
+USAGE = """
+Deploy a new machine by installing the machine setup app.
+
+Installs the machine app using poetry and links the executable to the
+local bin directory.
+
+Installs poetry if not found. It is installed using the official script.
+The script is found at: https://install.python-poetry.org
+
+Requirements:
+    - git
+    - curl (for Unix)
+
+For macOS, Command Line Tools for Xcode is required. Install it using:
+xcode-select --install
+""".strip()
 
 
 class ScriptFormatter(
@@ -234,6 +213,10 @@ def panic(msg: str) -> None:
     sys.exit(1)
 
 
+# endregion
+
+# region: CLI
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=USAGE,
@@ -242,19 +225,27 @@ if __name__ == "__main__":
 
     # Add arguments
     parser.add_argument(
-        "machine_path",
+        "-p",
+        "--path",
         type=Path,
         help="machine installation path",
-        nargs="?",
         default=DEFAULT_MACHINE_PATH,
+    )
+    parser.add_argument(
+        "branch",
+        type=Path,
+        help="machine repository branch",
+        nargs="?",
+        default=DEFAULT_BRANCH,
     )
 
     # Parse arguments
     args = parser.parse_args()
-    machine_path: Path = args.machine_path
+    machine_path: Path = args.path
+    branch_name: str = args.branch
 
     try:  # deploy machine
-        main(machine_path)
+        main(machine_path, branch_name)
 
     # Handle user interrupts
     except KeyboardInterrupt:

@@ -1,6 +1,6 @@
 """Shell commands execution."""
 
-__all__ = ["Shell", "ShellResults", "ShellError", "Executable"]
+__all__ = ["Shell", "ShellResults", "ShellError", "Executable", "OS_EXECUTABLE"]
 
 import logging
 import os
@@ -47,10 +47,10 @@ class Shell:  # pylint: disable=too-few-public-methods
 
     def __init__(
         self,
-        executable: Executable = OS_EXECUTABLE,
+        executable: Optional[Executable] = OS_EXECUTABLE,
         env: Optional[dict[str, Any]] = None,
     ) -> None:
-        self.executable = executable
+        self.executable = executable or OS_EXECUTABLE
         self.env = env
 
     def execute(
