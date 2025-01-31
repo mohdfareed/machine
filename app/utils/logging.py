@@ -22,13 +22,10 @@ log_file_path = Path(__file__).parent.parent.parent / "app.log"
 """Log file path."""
 
 
-class StripMarkupFilter(logging.Filter):  # pylint: disable=too-few-public-methods
-    """Strip Rich markup from log records."""
-
+class _StripMarkupFilter(logging.Filter):  # pylint: disable=too-few-public-methods
     def filter(self, record: logging.LogRecord) -> bool:
-        """Filter the log record message."""
         if hasattr(record, "msg") and isinstance(record.msg, str):
-            record.msg = Text.from_markup(record.msg).plain
+            record.msg = Text.from_markup(Text.from_ansi(record.msg).plain).plain
         return True
 
 
@@ -58,7 +55,7 @@ def setup_logging(debug_mode: bool) -> None:
 
     # setup file logger
     log_file = RotatingFileHandler(log_file_path, maxBytes=2**20, backupCount=3)
-    log_file.addFilter(StripMarkupFilter())
+    log_file.addFilter(_StripMarkupFilter())
     log_file.setLevel(logging.NOTSET)
     log_file.setFormatter(
         logging.Formatter(
