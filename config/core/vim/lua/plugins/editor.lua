@@ -1,53 +1,56 @@
 return {
-  { -- auto-detect indents
-    'tpope/vim-sleuth',
-  },
-
-  { -- todo comments manager
-    'folke/todo-comments.nvim',
-    opts = { highlight = { keyword = 'fg' }, },
-  },
-
-  { -- code folding
-    'kevinhwang91/nvim-ufo',
-    dependencies = { 'kevinhwang91/promise-async' },
+  { -- one dark theme
+    'navarasu/onedark.nvim',
     config = function()
-      require('ufo').setup({ -- default to syntax based
-        provider_selector = function() return { 'treesitter', 'indent' } end
+      require('onedark').setup({
+        transparent = true,
+        lualine = { transparent = true },
+        highlights = {
+          NormalFloat = { bg = 'none' },
+          FloatBorder = { bg = 'none' },
+        }
       })
-    end,
-    init = function()
-      UFO = require('ufo')
+      require('onedark').load()
     end,
   },
 
   { -- file explorer
     'nvim-neo-tree/neo-tree.nvim',
     opts = {
+      window = { position = "float" },
       popup_border_style = 'rounded',
-      buffers = {
-        follow_current_file = { enabled = true },
-      },
-      filesystem = {
-        follow_current_file = { enabled = true },
-      },
     },
-    init = function()
-      NeoTree = require('neo-tree')
+  },
 
-      NeoTree.toggle = function()
-        require("neo-tree.command").execute({
-          toggle = true,
-          position = 'float',
-          dir = require("lazyvim.util").get_root()
-        })
-      end
+  { -- git editor utilities
+    'lewis6991/gitsigns.nvim',
+    opts = {
+      preview_config = { border = 'rounded' },
+    },
+  },
 
-      NeoTree.toggle_cwd = function()
-        require("neo-tree.command").execute({
-          toggle = true, position = 'float', dir = vim.loop.cwd()
-        })
-      end
-    end
+  { -- auto-completion
+    'saghen/blink.cmp',
+    opts = {
+      completion = {
+        menu = {
+          border = "rounded",
+          winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+
+        },
+        documentation = {
+          window = {
+            border = "rounded",
+          },
+        },
+      },
+    }
+  },
+
+  { -- keybinds window
+    'folke/which-key.nvim',
+    opts = {
+      win = { border = 'rounded' },
+    },
   },
 }

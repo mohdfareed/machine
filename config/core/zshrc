@@ -11,6 +11,7 @@ source $ZINIT_HOME/zinit.zsh
 if [[ -f "/opt/homebrew/bin/brew" ]]; then
     eval "$(/opt/homebrew/bin/brew shellenv)" # activate homebrew
     FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}" # completions
+    export PATH="$(brew --prefix python)/libexec/bin:$PATH" # python
 
     # nvm
     if [ -s "$(brew --prefix nvm)/nvm.sh" ]; then
@@ -49,16 +50,16 @@ _dotnet_zsh_complete()
 # =============================================================================
 # examples: https://zdharma-continuum.github.io/zinit/wiki/GALLERY
 
-# zinit plugins
-zinit light zdharma-continuum/zinit-annex-as-monitor # remote file updater
-zinit light zdharma-continuum/zinit-annex-patch-dl # download with dl"URL file"
-
 # oh-my-posh theme
 if [[ ! $(command -v oh-my-posh) ]]; then
     curl -s https://ohmyposh.dev/install.sh | bash -s
 fi
 local theme="$POSH_THEMES_PATH/pure.omp.json"
 eval "$(oh-my-posh init zsh --config "$theme")"
+
+# zinit plugins
+zinit light zdharma-continuum/zinit-annex-as-monitor # remote file updater
+zinit light zdharma-continuum/zinit-annex-patch-dl # download with dl"URL file"
 
 # syntax highlighting, autosuggestions, completions
 zinit wait lucid light-mode for \
@@ -120,14 +121,14 @@ alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'
 alias llst='lls -T'
 
-# copy ssh key to machine, default user is current user
+# copy ssh key to a new machine for the current user
 ssh::copy() {
     usage="usage: $0 host [user]"
     if (($# < 1 || $# > 2)); then echo $usage && return 1; fi
     ssh-copy-id ${2-$USER}@$1
 }
 
-# time the startup of shell
+# time shell startup
 zsh::time() {
     usage="usage: $0 [iterations]"
     if (($# > 1)); then echo $usage && return 1; fi

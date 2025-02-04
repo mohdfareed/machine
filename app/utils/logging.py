@@ -22,7 +22,7 @@ log_file_path = Path(__file__).parent.parent.parent / "app.log"
 """Log file path."""
 
 
-class _StripMarkupFilter(logging.Filter):  # pylint: disable=too-few-public-methods
+class StripMarkupFilter(logging.Filter):  # pylint: disable=too-few-public-methods
     def filter(self, record: logging.LogRecord) -> bool:
         if hasattr(record, "msg") and isinstance(record.msg, str):
             record.msg = Text.from_markup(Text.from_ansi(record.msg).plain).plain
@@ -36,7 +36,7 @@ def setup_logging(debug_mode: bool) -> None:
     debug = RichHandler(
         console=app_console, markup=True, show_path=False, show_time=False
     )
-    debug.setFormatter(logging.Formatter(r"[black]%(message)s[/]"))
+    debug.setFormatter(logging.Formatter(r"[bright_black]%(message)s[/]"))
     debug.setLevel(logging.DEBUG)
     debug.addFilter(lambda msg: msg.levelno < logging.INFO if debug_mode else False)
 
@@ -55,7 +55,7 @@ def setup_logging(debug_mode: bool) -> None:
 
     # setup file logger
     log_file = RotatingFileHandler(log_file_path, maxBytes=2**20, backupCount=3)
-    log_file.addFilter(_StripMarkupFilter())
+    log_file.addFilter(StripMarkupFilter())
     log_file.setLevel(logging.NOTSET)
     log_file.setFormatter(
         logging.Formatter(
