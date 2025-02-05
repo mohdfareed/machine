@@ -33,18 +33,20 @@ return {
     'saghen/blink.cmp',
     opts = {
       completion = {
+        documentation = { window = { border = "rounded" } },
         menu = {
           border = "rounded",
           winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
-
-        },
-        documentation = {
-          window = {
-            border = "rounded",
-          },
         },
       },
     }
+  },
+
+  { -- hover documentation
+    "folke/noice.nvim",
+    opts = {
+      presets = { lsp_doc_border = true },
+    },
   },
 
   { -- keybinds window
