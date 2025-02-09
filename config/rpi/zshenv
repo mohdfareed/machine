@@ -1,7 +1,4 @@
-# Environment: Raspberry Pi
-# =============================================================================
+source "$MACHINE/config/core/zshenv" # global variables
 
-source "$MACHINE/config/core/zshenv" # global environment variables
-
-# machine specific environment variables
+# machine environment variables
 export PATH="$PATH:/snap/bin"

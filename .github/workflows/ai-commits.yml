@@ -5,7 +5,7 @@ on:
     branches:
       - 'dev*'
 
-jobs: # FIXME: don't run on merge commits
+jobs:
   chatgpt-commit-message:
     name: ChatGPT commit message
     timeout-minutes: 10

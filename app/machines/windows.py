@@ -56,6 +56,10 @@ class Windows(MachinePlugin[config.Windows, env.Windows]):
                 lambda: Winget().install("GoLang.Go Microsoft.DotNet.SDK"),
                 lambda: Scoop().add_bucket("extras"),
                 lambda: Scoop().install("extras/godot"),
+                lambda: self.shell.execute(
+                    "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
+                )
+                and None,
             ]
         )
 

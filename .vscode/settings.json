@@ -1,58 +1,38 @@
 {
+    // debugging
     "python.testing.pytestArgs": [
         "tests"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "debugpy.debugJustMyCode": false,
-    "bandit.importStrategy": "fromEnvironment",
-    "bandit.path": [
-        "~/.venv/python",
-        "-m",
-        "bandit"
+    // formatting
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+        },
+    },
+    "black-formatter.args": [
+        "--line-length",
+        "79"
     ],
-    "bandit.ignorePatterns": [
-        "tests/*.py",
-        "scripts/*.py"
+    "isort.args": [
+        "--profile",
+        "black"
     ],
+    // spelling
     "cSpell.ignorePaths": [
-        ".vscode",
         ".git",
-        ".venv",
-        ".pre-commit-config.yaml",
-        ".gitignore",
         ".github",
-        "vim",
+        ".venv",
+        ".vscode",
+        ".gitignore",
+        ".pre-commit-config.yaml",
+        "config",
     ],
     "cSpell.words": [
-        "aarch",
-        "btop",
-        "Codespace",
-        "Codespaces",
-        "dotenv",
-        "ghostty",
-        "levelname",
-        "levelno",
-        "linuxbrew",
-        "LOCALAPPDATA",
-        "macbook",
-        "mohdfareed",
-        "msecs",
-        "mypy",
-        "nvim",
-        "pipx",
-        "platformdirs",
-        "pwsh",
-        "pydantic",
-        "pyenv",
-        "pylint",
-        "pytest",
-        "Tailscale",
-        "testbench",
-        "typer",
-        "venv",
-        "winget",
-        "ZDOTDIR",
-        "zinit"
+        "PWSH"
     ],
 }

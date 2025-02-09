@@ -1,10 +1,5 @@
 #!/usr/bin/env pwsh
 
-# set execution policy
-if ($IsWindows) {
-    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-}
-
 # homebrew
 if (Test-Path -Path "/opt/homebrew/bin/brew") {
     $(/opt/homebrew/bin/brew shellenv) | Invoke-Expression

@@ -20,7 +20,7 @@
     ; rebase local commits on top of the updated upstream branch
     rebase = true
 [rerere]
-    ; enable reuse recorded resolution (remember conflict resolutions)
+    ; remember conflict resolutions
     enabled = true
 
 ; terminal settings
@@ -36,9 +36,9 @@
 
 ; vim editor
 [core]
-    editor = nvim
     ; convert windows line endings to unix
     autocrlf = input
+    editor = nvim
 [diff]
     tool = nvimdiff
 [difftool "nvimdiff"]

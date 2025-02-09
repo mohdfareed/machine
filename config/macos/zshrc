@@ -1,10 +1,6 @@
+source $MACHINE/config/core/zshrc # global configuration
+
 # Configuration: macOS
-# =============================================================================
-
-# load core machine configuration
-source $MACHINE/config/core/zshrc
-
-# Functions and Aliases
 # =============================================================================
 
 alias setup-machine="machine-setup $MACHINE_ID"

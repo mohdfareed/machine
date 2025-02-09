@@ -1,9 +1,6 @@
+source "$MACHINE/config/core/zshrc" # global configuration
+
 # Configuration: Raspberry Pi
-# =============================================================================
-
-source "$MACHINE/config/core/zshrc" # global environment variables
-
-# Functions and Aliases
 # =============================================================================
 
 alias reboot='sudo reboot'

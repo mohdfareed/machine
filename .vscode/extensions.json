@@ -1,8 +1,6 @@
 {
     "recommendations": [
         "donjayamanne.python-extension-pack",
-        "ms-python.mypy-type-checker",
-        "ms-python.pylint",
         "ms-python.black-formatter",
         "ms-python.isort",
         "streetsidesoftware.code-spell-checker",

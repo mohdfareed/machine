@@ -81,21 +81,20 @@
   "git.allowForcePush": true,
   "git.autofetch": "all",
   "git.ignoreLegacyWarning": true,
+  "git.ignoreRebaseWarning": true,
   "git.confirmSync": false,
   "git.rebaseWhenSync": true,
   "git.enableSmartCommit": true,
   "git.replaceTagsWhenPull": true,
+  "git.openRepositoryInParentFolders": "never",
   "diffEditor.renderSideBySide": false,
   "diffEditor.ignoreTrimWhitespace": true,
   "gitlens.statusBar.enabled": false,
   "gitlens.hovers.currentLine.over": "line",
   "gitlens.graph.minimap.enabled": true,
-  "multiDiffEditor.experimental.enabled": true,
   "gitlens.codeLens.enabled": false,
   "gitlens.currentLine.enabled": false,
-  // # endregion
-  // MARK: copilot
-  // #region ===================================================================
+  "multiDiffEditor.experimental.enabled": true,
   "github.copilot.enable": {
     "*": true,
     "markdown": true
@@ -198,10 +197,6 @@
     "editor.defaultFormatter": "golang.go"
   },
   // # endregion
-  "git.openRepositoryInParentFolders": "never",
-  "git.ignoreRebaseWarning": true,
-  "security.workspace.trust.untrustedFiles": "open",
-  "editor.minimap.enabled": false,
-  "chat.editing.alwaysSaveWithGeneratedChanges": true
+  "editor.minimap.enabled": true
   // REVIEW - new customizations above =========================================
 }
