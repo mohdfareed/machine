@@ -2,14 +2,39 @@
 name = "machine"
 version = "0.2.0"
 description = "Machine setup CLI app."
+license = { text = "MIT" }
+readme = "README.md"
 authors = [
     {name = "Mohammed Fareed", email = "mohdf.fareed@icloud.com"}
 ]
-readme = "README.md"
-repository = "https://github.com/mohdfareed/machine"
+urls = { repository = "https://github.com/mohdfareed/machine" }
 
-requires-python = ">=3.9.6,<4.0" # default macos version
-dynamic = [ "dependencies" ]
+# MARK: Dependencies
+
+requires-python = ">=3.9.6" # default macos version
+
+dependencies = [
+    "poetry",
+    "typer",
+    "pydantic",
+    "pydantic-settings",
+    "platformdirs",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit", # pre-commit formatting hooks
+    "pytest",     # testing
+    "pytest-cov", # test coverage
+    "pylance",    # language server
+    "black",      # code formatting
+    "isort",      # import formatting
+]
+
+# MARK: Poetry
+
+[project.scripts]
+machine-setup = "app.main:app"
 
 [tool.poetry]
 packages = [
@@ -19,32 +44,25 @@ include = [
     { path = "config" }
 ]
 
-[project.scripts]
-machine-setup = "app.main:app"
-
-[tool.poetry.dependencies]
-poetry = "^2.0.1"
-typer = "^0.15.1"
-pydantic = "^2.10.5"
-pydantic-settings = "^2.7.1"
-platformdirs = "^4.3.6"
-
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^4.0.1"
-pylint = "^3.3.3"
-mypy = "^1.14.1"
-pytest = "^8.3.4"
-pytest-cov = "^6.0.0"
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.mypy]
-strict = true
+# MARK: Tools
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
 
 [tool.coverage.run]
 omit = [
     "app/machines/*",
     "app/plugins/*",
 ]
+
+[tool.black]
+line-length = 79
+
+[tool.isort]
+profile = "black"
