@@ -1,0 +1,25 @@
+# APT PACKAGES
+# =============================================================================
+
+apt snapd
+apt git git-lfs gh
+apt zsh tmux bat eza openssh-server
+apt python3 python3-pip python3-venv pipx
+apt fonts-jetbrains-mono fonts-lmodern
+
+# SNAP PACKAGES
+# =============================================================================
+
+snap powershell
+snap btop
+
+classic code
+classic go
+classic dotnet-sdk
+
+# NVIM
+# =============================================================================
+
+apt fd-find
+snap nvim lazygit-gm fd-find
+classic ripgrep

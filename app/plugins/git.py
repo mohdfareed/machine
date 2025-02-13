@@ -30,8 +30,10 @@ class GitEnv(models.EnvProtocol, Protocol):
 class Git(Plugin[GitConfig, GitEnv]):
     """Configure git."""
 
-    unix_packages = "git git-lfs gh"
-    win_packages = "Git.Git GitHub.GitLFS GitHub.CLI Microsoft.GitCredentialManagerCore"
+    unix_packages = "git git-lfs"
+    win_packages = (
+        "Git.Git GitHub.GitLFS GitHub.CLI Microsoft.GitCredentialManagerCore"
+    )
 
     def _setup(self) -> None:
         self.link()

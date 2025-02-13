@@ -33,6 +33,7 @@
         "config",
     ],
     "cSpell.words": [
-        "PWSH"
+        "PWSH",
+        "Tailscale"
     ],
 }
