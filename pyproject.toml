@@ -14,7 +14,6 @@ urls = { repository = "https://github.com/mohdfareed/machine" }
 requires-python = ">=3.9.6" # default macos version
 
 dependencies = [
-    "poetry",
     "typer",
     "pydantic",
     "pydantic-settings",
