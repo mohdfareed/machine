@@ -57,7 +57,7 @@ class APT(PkgManagerPlugin):
         temp_file.unlink()
 
     def _update(self) -> None:
-        self.shell.execute("sudo apt update && sudo apt upgrade -y")
+        self.shell.execute("sudo apt update && sudo apt full-upgrade -y")
 
     def _cleanup(self) -> None:
         self.shell.execute("sudo apt autoremove -y")
@@ -96,4 +96,6 @@ class SnapStore(PkgManagerPlugin):
     def _cleanup(self) -> None: ...
 
     def _install_pkg(self, package: str, classic: bool) -> None:
-        self.shell.execute(f"snap install {package} {'--classic' if classic else ''}")
+        self.shell.execute(
+            f"snap install {package} {'--classic' if classic else ''}"
+        )

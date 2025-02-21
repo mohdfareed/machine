@@ -1,37 +1,78 @@
+# PACKAGES
+# =============================================================================
+
+# development
+brew "git"
+brew "gh"
+brew "git-lfs"
+brew "python"
+brew "pyenv"
+brew "pipx"
+brew "go"
+
+# shell
+brew "bat"
+brew "btop"
+brew "eza"
+brew "mas"
+brew "tmux"
+brew "zsh"
+
+# vim
+brew "neovim"
+brew "lazygit"
+brew "ripgrep"
+brew "fd"
+
 # CASKS
 # =============================================================================
 
 # general
-cask "chatgpt"            # chatbot
+cask "chatgpt"     # chatbot
+cask "raycast"     # spotlight replacement
+cask "tailscale"   # personal VPN
+# cask "figma"       # design
+# cask "tradingview" # trading
+# cask "sf-symbols"  # system symbols
+# cask "utm"         # virtual machines
+
+# development
 cask "ghostty"            # terminal
-cask "raycast"            # spotlight replacement
-cask "zed"                # text editor
-cask "utm"                # virtual machines
+cask "visual-studio-code" # code editor
+cask "docker"             # containerization
+cask "dotnet-sdk"         # .NET SDK
+# cask "powershell"         # powershell
+# cask "godot-mono"         # game engine
 
 # utilities
 cask "setapp"         # apps subscription service
 cask "iina"           # video player
-cask "sf-symbols"     # system font symbols
 cask "the-unarchiver" # unzip files
 cask "mos"            # mouse scroll smoothing (65, 1, 2.5)
 cask "monitorcontrol" # external monitor utility
+# cask "swish"          # trackpad gestures (setapp)
+
+# fonts
+cask "font-jetbrains-mono-nerd-font"
+cask "font-computer-modern"
 
 # MAC APP STORE
 # =============================================================================
 
 # apple
-mas "Keynote", id: 409183694      # presentation software
-mas "Numbers", id: 409203825      # spreadsheet software
-mas "Pages", id: 409201541        # word processor software
-mas "Xcode", id: 497799835        # xcode
+mas "Keynote", id: 409183694 # presentation software
+mas "Numbers", id: 409203825 # spreadsheet software
+mas "Pages",   id: 409201541 # word processor software
+# mas "Xcode",   id: 497799835 # xcode
 
 # productivity
-mas "Craft", id: 1487937127      # note-taking app
-mas "Copilot", id: 1447330651    # finances app
-mas "TechniCalc", id: 1504965415 # scientifc calculator
+# mas "Craft",      id: 1487937127 # note-taking app (setapp)
+mas "Copilot",    id: 1447330651 # finances app
+# mas "TechniCalc", id: 1504965415 # scientifc calculator
+# mas "DetailsPro", id: 1524366536 # software design
 
 # utilities
-mas "Noir", id: 1592917505      # safari dark mode
-mas "AdGuard", id: 1440147259   # safari ad-blocker
-mas "Peek", id: 1554235898      # quicklook plugin
-# mas "iPreview", id: 1519213509  # zip quicklook plugin
+mas "Noir",     id: 1592917505 # safari dark mode
+mas "AdGuard",  id: 1440147259 # safari ad-blocker
+mas "Peek",     id: 1554235898 # quicklook plugin
+# mas "iPreview", id: 1519213509 # zip quicklook plugin (conflict)

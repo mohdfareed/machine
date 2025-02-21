@@ -79,7 +79,9 @@ class Fonts(Plugin[Any, Any]):
 
     def _setup(self) -> None:
         if Brew.is_supported():
-            Brew().install("font-computer-modern font-jetbrains-mono-nerd-font")
+            Brew().install(
+                "font-computer-modern font-jetbrains-mono-nerd-font"
+            )
         elif APT.is_supported():
             APT().install("fonts-jetbrains-mono fonts-lmodern")
         elif Scoop.is_supported():
@@ -101,11 +103,14 @@ class Tailscale(Plugin[Any, Any]):
         elif utils.Platform.LINUX:
             if not shutil.which("tailscale"):
                 self.shell.execute(
-                    "curl -fsSL https://tailscale.com/install.sh | sh", info=True
+                    "curl -fsSL https://tailscale.com/install.sh | sh",
+                    info=True,
                 )
 
         elif utils.Platform.WINDOWS:
-            installer_url = "https://pkgs.tailscale.com/stable/tailscale-setup.exe"
+            installer_url = (
+                "https://pkgs.tailscale.com/stable/tailscale-setup.exe"
+            )
             installer_path = Path(os.environ["TEMP"]) / "tailscale-setup.exe"
             urllib.request.urlretrieve(installer_url, installer_path)
             self.shell.execute(
@@ -120,10 +125,20 @@ class Tailscale(Plugin[Any, Any]):
     @utils.loading_indicator("Updating Tailscale")
     def update(self) -> None:
         """Update tailscale."""
-        result = self.shell.execute("sudo tailscale update", info=True, throws=False)
+        result = self.shell.execute(
+            "sudo tailscale update", info=True, throws=False
+        )
         if not result.returncode == 0:
             LOGGER.warning("Failed to update tailscale.")
         LOGGER.debug("Tailscale was setup successfully.")
+
+    def status(self) -> None:
+        """Check the status of Tailscale."""
+        self.shell.execute("tailscale status", info=True)
+
+    def start(self) -> None:
+        """Start the Tailscale service."""
+        self.shell.execute("sudo tailscale up", info=True)
 
 
 class Python(Plugin[Any, PythonEnv]):

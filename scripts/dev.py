@@ -99,7 +99,7 @@ def _setup_environment(poetry: Path) -> None:
         check=True,
     )
     subprocess.run(
-        [poetry, "install", "--with", "dev"],
+        [poetry, "install", "-E", "dev"],
         env={"POETRY_VIRTUALENVS_IN_PROJECT": "true"},
         check=True,
     )
