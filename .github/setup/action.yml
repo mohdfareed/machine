@@ -15,7 +15,7 @@ runs:
     # set up dev environment dependencies
     - run: | # ensure poetry uses cached pip packages
         poetry config virtualenvs.create false
-        poetry install --with dev
+        poetry install -E dev
       shell: sh
 
     # set up author information

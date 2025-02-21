@@ -31,7 +31,7 @@ jobs:
           reviewdog_flags: '-tee'
 
       - name: Type checker
-        uses: tsuyoshicho/action-mypy@master
+        uses: jordemort/action-pyright@main
         env:
           POETRY_VIRTUALENVS_IN_PROJECT: "true"
         with:
@@ -55,14 +55,10 @@ jobs:
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: pre-commit
 
-      - name: Install
-        run: poetry run pre-commit install --install-hooks
-        shell: sh
-
       - name: Pre-commit hooks
         id: hooks
         run: |
-          poetry run pre-commit run --all-files --show-diff-on-failure 2>&1 | tee pre-commit-output.txt
+          ./scripts/hooks.sh 2>&1 | tee pre-commit-output.txt
           echo "status=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
 
       - name: Annotate
