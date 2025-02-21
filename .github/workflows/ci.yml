@@ -55,6 +55,11 @@ jobs:
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: pre-commit
 
+      - name: Install
+        id: install
+        run: poetry run pre-commit install --install-hooks
+
+
       - name: Pre-commit hooks
         id: hooks
         run: |
