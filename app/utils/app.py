@@ -63,7 +63,9 @@ def post_setup(*_: Any, **__: Any) -> None:
     )
 
     for task in set(post_install_tasks):
-        task_id = progress.add_task(f"[green]Running {task.__name__}...", total=None)
+        task_id = progress.add_task(
+            f"[green]Running {task.__name__}...", total=None
+        )
         task()
         progress.remove_task(task_id)
 
@@ -89,7 +91,9 @@ def pkg_installer(func: Callable[..., None]) -> Callable[..., None]:
 
         if len(packages) < 2:
             LOGGER.info("Installing %s...", package)
-            task_id = progress.add_task(f"[green]Installing {package}...", total=None)
+            task_id = progress.add_task(
+                f"[green]Installing {package}...", total=None
+            )
             func(self, package, *args, **kwargs)
             progress.remove_task(task_id)
             LOGGER.debug("Installed %s.", package)

@@ -56,8 +56,12 @@ class MacOS(MachinePlugin[config.MacOS, env.MacOS]):
 
     def setup(self, private_dir: PrivateDirArg = None) -> None:
         tasks = [
-            lambda: plugins.Private(self.config, self.env).ssh_keys(private_dir),
-            lambda: plugins.Private(self.config, self.env).env_file(private_dir),
+            lambda: plugins.Private(self.config, self.env).ssh_keys(
+                private_dir
+            ),
+            lambda: plugins.Private(self.config, self.env).env_file(
+                private_dir
+            ),
             lambda: plugins.VSCode(self.config, self.env).setup_tunnels(
                 VSCODE_TUNNELS_NAME
             ),

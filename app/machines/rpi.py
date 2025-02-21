@@ -51,8 +51,12 @@ class RPi(MachinePlugin[config.RPi, env.Unix]):
     def setup(self, private_dir: PrivateDirArg = None) -> None:
         self.execute_setup(
             [
-                lambda: plugins.Private(self.config, self.env).ssh_keys(private_dir),
-                lambda: plugins.Private(self.config, self.env).env_file(private_dir),
+                lambda: plugins.Private(self.config, self.env).ssh_keys(
+                    private_dir
+                ),
+                lambda: plugins.Private(self.config, self.env).env_file(
+                    private_dir
+                ),
                 lambda: plugins.SSH(self.config, self.env).generate_key_pair(
                     "personal"
                 ),

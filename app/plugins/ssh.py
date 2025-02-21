@@ -57,7 +57,9 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
         LOGGER.info("Setting up SSH server...")
 
         if utils.Platform.WINDOWS:
-            self.shell.execute("Add-WindowsCapability -Online -Name OpenSSH.Server")
+            self.shell.execute(
+                "Add-WindowsCapability -Online -Name OpenSSH.Server"
+            )
             self.shell.execute(
                 "Get-Service -Name sshd | Set-Service -StartupType Automatic"
             )
@@ -100,7 +102,9 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
             LOGGER.warning("Private key already exists: %s", private_key)
 
             if not public_key.exists():  # regenerate public key
-                self.shell.execute(f"ssh-keygen -y -f {private_key} > {public_key}")
+                self.shell.execute(
+                    f"ssh-keygen -y -f {private_key} > {public_key}"
+                )
                 LOGGER.info("Public key regenerated: %s", public_key)
             return  # don't overwrite existing key pair
 
@@ -132,7 +136,9 @@ class SSH(Plugin[SSHConfig, SSHEnv]):
         LOGGER.debug("Key fingerprint: %s", fingerprint)
 
         if utils.Platform.WINDOWS:  # set up ssh agent on windows
-            shell.execute("Get-Service ssh-agent | Set-Service -StartupType Automatic")
+            shell.execute(
+                "Get-Service ssh-agent | Set-Service -StartupType Automatic"
+            )
             shell.execute("Start-Service ssh-agent")
             cmd = f"ssh-add -l | Select-String -Pattern '{fingerprint}'"
         else:  # command to check if key already exists in ssh agent

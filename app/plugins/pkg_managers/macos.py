@@ -45,7 +45,9 @@ class Brew(pkg_manager.PkgManagerPlugin):
 
     def _setup(self) -> None:
         try:  # Install Homebrew
-            self.shell.execute('/bin/bash -c "$(curl -fsSL https://git.io/JIY6g)"')
+            self.shell.execute(
+                '/bin/bash -c "$(curl -fsSL https://git.io/JIY6g)"'
+            )
         except utils.ShellError as ex:
             raise models.AppError("Failed to install Homebrew.") from ex
 
@@ -59,7 +61,9 @@ class Brew(pkg_manager.PkgManagerPlugin):
         self._install_pkg(package, cask=False)
 
     def _install_pkg(self, package: str, cask: bool) -> None:
-        self.shell.execute(f"{brew} install {'--cask' if cask else ''} {package}")
+        self.shell.execute(
+            f"{brew} install {'--cask' if cask else ''} {package}"
+        )
 
 
 class MAS(pkg_manager.PkgManagerPlugin):

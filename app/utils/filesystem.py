@@ -52,7 +52,9 @@ def create_temp_file(suffix: str = "") -> Path:
 def load_env_vars(env_file: Path) -> dict[str, Optional[str]]:
     """Load the environment variables from a file."""
 
-    shell = Shell(Executable.PWSH if env_file.suffix == ".ps1" else OS_EXECUTABLE)
+    shell = Shell(
+        Executable.PWSH if env_file.suffix == ".ps1" else OS_EXECUTABLE
+    )
     suffix = ".ps1" if shell.executable == Executable.PWSH else env_file.suffix
     env_data = env_file.read_text()
 

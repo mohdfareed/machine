@@ -13,7 +13,7 @@ def test_app() -> None:
     """Test the app executing normally."""
 
     try:
-        from app import __main__ as _  # pylint: disable=import-outside-toplevel
+        from app import __main__ as _
 
     except SystemExit as ex:
         assert ex.code == 2
@@ -76,7 +76,9 @@ def test_pkg_manager() -> None:
     assert result.exit_code == 0
     result = runner.invoke(app, ["test", "pkg", "test", "install", "test"])
     assert result.exit_code == 0
-    result = runner.invoke(app, ["test", "pkg", "test", "install", "test1 test2"])
+    result = runner.invoke(
+        app, ["test", "pkg", "test", "install", "test1 test2"]
+    )
     assert result.exit_code == 0
     result = runner.invoke(app, ["test", "pkg", "test", "update"])
     assert result.exit_code == 0

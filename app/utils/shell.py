@@ -1,6 +1,12 @@
 """Shell commands execution."""
 
-__all__ = ["Shell", "ShellResults", "ShellError", "Executable", "OS_EXECUTABLE"]
+__all__ = [
+    "Shell",
+    "ShellResults",
+    "ShellError",
+    "Executable",
+    "OS_EXECUTABLE",
+]
 
 import logging
 import os
@@ -19,7 +25,9 @@ T = TypeVar("T")
 ERROR_TOKEN = "error"
 SUDO_TOKEN = "sudo"
 
-ShellResults = NamedTuple("ShellResults", [("returncode", int), ("output", str)])
+ShellResults = NamedTuple(
+    "ShellResults", [("returncode", int), ("output", str)]
+)
 """Shell command results."""
 
 
@@ -76,7 +84,9 @@ class Shell:  # pylint: disable=too-few-public-methods
             results = _exec_process(process, info)
 
         if throws and results.returncode != 0:
-            LOGGER.error("Command failed: [%d] %s", results.returncode, results.output)
+            LOGGER.error(
+                "Command failed: [%d] %s", results.returncode, results.output
+            )
             raise ShellError(results)
         return results
 
@@ -122,7 +132,9 @@ class ShellError(Exception):
     """Exception due to a shell error."""
 
 
-def _exec_process(process: subprocess.Popen[str], info: bool = False) -> ShellResults:
+def _exec_process(
+    process: subprocess.Popen[str], info: bool = False
+) -> ShellResults:
     output = ""  # if the process has no output
     if process.stdout is None:
         raise ShellError("Process output file not found.")

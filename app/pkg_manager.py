@@ -11,7 +11,9 @@ from typing_extensions import override
 from app import models, plugin, utils
 
 
-class PkgManagerPlugin(plugin.Plugin[None, None], models.PkgManagerProtocol, ABC):
+class PkgManagerPlugin(
+    plugin.Plugin[None, None], models.PkgManagerProtocol, ABC
+):
     """Abstract base class for package managers."""
 
     @property

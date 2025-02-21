@@ -40,7 +40,9 @@ class Plugin(models.PluginProtocol, Generic[C, E], ABC):
     @utils.hidden
     def app(self) -> typer.Typer:
         plugin_app = typer.Typer(name=self.name.lower(), help=self.help)
-        for name, method in inspect.getmembers(self, predicate=inspect.ismethod):
+        for name, method in inspect.getmembers(
+            self, predicate=inspect.ismethod
+        ):
 
             if method == getattr(type(self), name, None):
                 continue  # skip class methods
