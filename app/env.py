@@ -54,7 +54,9 @@ class Unix(MachineEnv):
 class MacOS(Unix):
     """MacOS environment variables."""
 
-    ICLOUD: Path = Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs"
+    ICLOUD: Path = (
+        Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs"
+    )
     GHOSTTY: Path = Unix().XDG_CONFIG_HOME / "ghostty" / "config.json"
 
 
@@ -68,13 +70,17 @@ class Windows(MachineEnv):
     GITCONFIG: Path = USERPROFILE / ".gitconfig"
     GITIGNORE: Path = USERPROFILE / ".gitignore"
     VIM: Path = LOCALAPPDATA / "nvim"
-    PS_PROFILE: Path = USERPROFILE / "Documents" / "WindowsPowerShell" / "profile.ps1"
+    PS_PROFILE: Path = (
+        USERPROFILE / "Documents" / "WindowsPowerShell" / "profile.ps1"
+    )
     VSCODE: Path = APPDATA / "Code" / "User"
 
     COMPLETIONS_PATH: Optional[Path] = None
 
 
 OSEnvironment: type[Union[Unix, Windows, MacOS]] = (
-    Unix if utils.Platform.UNIX else Windows if utils.Platform.WINDOWS else MacOS
+    Unix
+    if utils.Platform.UNIX
+    else Windows if utils.Platform.WINDOWS else MacOS
 )
 OSEnvType = Union[Unix, Windows, MacOS]

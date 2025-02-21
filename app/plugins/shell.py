@@ -84,8 +84,12 @@ class ZSH(Plugin[ZSHConfig, ZSHEnv]):
     def update_zinit(self) -> None:
         """Update zinit and its plugins."""
         LOGGER.info("Updating zinit and its plugins...")
-        source_env = f"source {self.config.zshenv} && source {self.config.zshrc}"
-        self.shell.execute(f"{source_env} && zinit self-update && zinit update")
+        source_env = (
+            f"source {self.config.zshenv} && source {self.config.zshrc}"
+        )
+        self.shell.execute(
+            f"{source_env} && zinit self-update && zinit update"
+        )
         LOGGER.debug("Zinit update complete.")
 
 

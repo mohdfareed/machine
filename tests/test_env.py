@@ -32,7 +32,8 @@ def test_unix_env_defaults(monkeypatch: MonkeyPatch) -> None:
 
     if utils.Platform.MACOS:
         assert (
-            unix_env.XDG_CONFIG_HOME == Path.home() / "Library" / "Application Support"
+            unix_env.XDG_CONFIG_HOME
+            == Path.home() / "Library" / "Application Support"
         )
     else:
         assert unix_env.XDG_CONFIG_HOME == Path.home() / ".config"

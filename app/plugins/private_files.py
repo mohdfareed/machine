@@ -35,7 +35,8 @@ class Private(Plugin[config.Private, Any]):
             utils.LOGGER.info("Loaded private data: %s", local_ssh_keys)
         else:
             utils.LOGGER.warning(
-                "Private SSH keys directory does not exist at: %s", local_ssh_keys
+                "Private SSH keys directory does not exist at: %s",
+                local_ssh_keys,
             )
 
     def env_file(self, private_dir: PrivateDirArg) -> None:

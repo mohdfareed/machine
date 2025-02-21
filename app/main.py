@@ -36,14 +36,18 @@ for available_machine in machine.machines():
 def main(
     debug_mode: Annotated[
         bool,
-        typer.Option("--debug", "-d", help="Log debug messages to the console."),
+        typer.Option(
+            "--debug", "-d", help="Log debug messages to the console."
+        ),
     ] = False,
 ) -> None:
     """Machine setup CLI."""
 
     # initialize logging
     utils.setup_logging(debug_mode)
-    platform_info = f"[blue]{platform.platform().replace('-', '[black]|[/]')}[/]"
+    platform_info = (
+        f"[blue]{platform.platform().replace('-', '[black]|[/]')}[/]"
+    )
 
     # debug information
     utils.LOGGER.debug("Machine version: %s", __version__)

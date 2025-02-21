@@ -8,7 +8,13 @@ from unittest.mock import patch
 
 import pytest
 
-from app.utils import Shell, create_temp_dir, create_temp_file, link, load_env_vars
+from app.utils import (
+    Shell,
+    create_temp_dir,
+    create_temp_file,
+    link,
+    load_env_vars,
+)
 from app.utils.logging import StripMarkupFilter
 
 

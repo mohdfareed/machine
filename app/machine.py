@@ -45,7 +45,9 @@ class MachinePlugin(plugin.Plugin[C, E], models.MachineProtocol, ABC):
                 self.env.model_dump_json(indent=2),
             )
 
-        plugins_app = typer.Typer(name="plugins", help="Manage machine plugins.")
+        plugins_app = typer.Typer(
+            name="plugins", help="Manage machine plugins."
+        )
         for plugin_instance in self.create_plugins():
             plugins_app.add_typer(plugin_instance.app())
 
