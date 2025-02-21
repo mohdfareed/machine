@@ -13,7 +13,7 @@ runs:
       shell: sh
 
     # set up dev environment dependencies
-    - run: | # ensure poetry uses cached pip packages
+    - run: | # use cached pip packages
         poetry config virtualenvs.create false
         poetry install -E dev
       shell: sh

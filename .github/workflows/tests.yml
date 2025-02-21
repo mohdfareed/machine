@@ -1,0 +1,76 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+            fetch-depth: 0
+
+      - name: Set up environment
+        uses: ./.github/setup
+
+      - name: Run tests
+        run: |
+            set -o pipefail
+            poetry run pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
+            ./scripts/coverage.sh | tee pytest-coverage.txt
+        continue-on-error: true
+
+      - name: Generate coverage report
+        id: coverage
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+            pytest-coverage-path: ./pytest-coverage.txt
+            junitxml-path: ./pytest.xml
+
+      - name: Create artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: test-report
+          path: pytest-coverage.txt
+
+  badges:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+            fetch-depth: 0
+
+      - uses: actions/download-artifact@main
+        id: package
+        with:
+          name: test-report
+
+      - name: Pytest coverage report
+        id: coverage
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+            hide-comment: true
+            pytest-coverage-path: pytest-coverage.txt
+
+      - name: Update README coverage badge
+        run: |
+            sed -i -E "s/(<a><img alt=\"Coverage\" src=\"https:\/\/img.shields.io\/badge\/Coverage-)[0-9]+%25-[a-z]+(.svg\" \/>)/\1${{ steps.coverage.outputs.coverage }}25-${{ steps.coverage.outputs.color }}\2/" README.md
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@main
+        with:
+            add-paths: README.md
+            token: ${{ secrets.GITHUB_TOKEN }}
+            commit-message: 'chores: update docs'
+            title: 'Update documentation'
+            branch: 'docs'
+            labels: 'CD'
