@@ -1,5 +1,7 @@
 #!/usr/bin/env pwsh
 
+Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+
 # homebrew
 if (Test-Path -Path "/opt/homebrew/bin/brew") {
     $(/opt/homebrew/bin/brew shellenv) | Invoke-Expression
