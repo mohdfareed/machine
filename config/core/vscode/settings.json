@@ -30,6 +30,7 @@
   "editor.minimap.autohide": true,
   "editor.minimap.showRegionSectionHeaders": true,
   // theme ---------------------------------------------------------------------
+  "workbench.iconTheme": "vscode-icons",
   "workbench.colorTheme": "One Dark Pro",
   "oneDarkPro.bold": true,
   "oneDarkPro.vivid": true,
@@ -47,13 +48,15 @@
   // #region ===================================================================
   "editor.suggest.preview": true,
   "editor.inlineSuggest.enabled": true,
-  "cSpell.showAutocompleteSuggestions": false,
+  "cSpell.showAutocompleteDirectiveSuggestions": false,
   "cSpell.enabledFileTypes": {
     "*": true
   },
   "cSpell.userWords": [
     "endregion",
-    "Fareed"
+    "Fareed",
+    "fastmcp",
+    "mohdfareed"
   ],
   // # endregion
   // MARK: terminal
@@ -74,7 +77,7 @@
   "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.smoothScrolling": true,
-  "terminal.integrated.fontLigatures": true,
+  "terminal.integrated.fontLigatures.enabled": true,
   // # endregion
   // MARK: git
   // #region ===================================================================
@@ -88,19 +91,24 @@
   "git.replaceTagsWhenPull": true,
   "git.openRepositoryInParentFolders": "never",
   "diffEditor.renderSideBySide": false,
-  "diffEditor.ignoreTrimWhitespace": true,
-  "gitlens.statusBar.enabled": false,
-  "gitlens.hovers.currentLine.over": "line",
-  "gitlens.graph.minimap.enabled": true,
-  "gitlens.codeLens.enabled": false,
-  "gitlens.currentLine.enabled": false,
+  "diffEditor.ignoreTrimWhitespace": false,
   "multiDiffEditor.experimental.enabled": true,
+  "gitlens.codeLens.authors.enabled": false,
+  "gitlens.codeLens.recentChange.enabled": false,
+  // # endregion
+  // MARK: Copilot
+  // #region ===================================================================
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
   "github.copilot.enable": {
     "*": true,
-    "markdown": true
+    "plaintext": true,
+    "markdown": true,
+    "scminput": false
   },
+  "chat.useFileStorage": true,
+  "chat.tools.autoApprove": true,
   // # endregion
-  // MARK: comment anchors
+  // MARK: comments
   // #region ===================================================================
   "commentAnchors.scrollPosition": "center",
   "commentAnchors.workspace.lazyLoad": false,
@@ -126,7 +134,6 @@
   "markdown.preview.scrollPreviewWithEditor": false,
   "markdown.preview.scrollEditorWithPreview": false,
   "[markdown]": {
-    "editor.defaultFormatter": "yzhang.markdown-all-in-one",
     "editor.codeActionsOnSave": {
       "source.fixAll.markdownlint": "always"
     },
@@ -135,6 +142,18 @@
       "strings": "on",
       "other": "on"
     }
+  },
+  // # endregion
+  // MARK: json
+  // #region ===================================================================
+  "[json]": {
+    "editor.indentSize": 2
+  },
+  // # endregion
+  // MARK: swift
+  // #region ===================================================================
+  "[swift]": {
+    "editor.inlayHints.enabled": "offUnlessPressed"
   },
   // # endregion
   // MARK: python
@@ -183,10 +202,9 @@
       "source.addMissingImports": "explicit"
     },
     "editor.formatOnPaste": true,
-    "editor.formatOnSave": true,
-    "editor.formatOnType": false
+    "editor.formatOnSave": true
   },
-  "omnisharp.organizeImportsOnFormat": true,
+  "dotnet.formatting.organizeImportsOnFormat": true,
   "dotnet.codeLens.enableReferencesCodeLens": false,
   "godotTools.editorPath.godot4": "${GODOT}",
   // # endregion
@@ -196,7 +214,9 @@
   "[go]": {
     "editor.defaultFormatter": "golang.go"
   },
-  // # endregion
-  "editor.minimap.enabled": true
+  "diffEditor.experimental.showMoves": true,
+  "errorLens.enabled": false,
+  "gitlens.mode.active": "review",
+  "github.copilot.nextEditSuggestions.enabled": true,
   // REVIEW - new customizations above =========================================
 }

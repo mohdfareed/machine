@@ -72,7 +72,6 @@ export HISTDUP=erase
 [ -f "$HISTFILE" ] || touch "$HISTFILE"
 
 # misc
-export EDITOR="$(which nvim)"              # default to neovim as the editor
 export PIP_REQUIRE_VIRTUALENV=true         # require virtual env for pip
 export POETRY_VIRTUALENVS_IN_PROJECT=true  # create virtual envs in project
 

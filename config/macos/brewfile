@@ -1,22 +1,28 @@
-# PACKAGES
+# MARK: PACKAGES
 # =============================================================================
 
-# development
+# git
 brew "git"
 brew "gh"
 brew "git-lfs"
+
+# python
 brew "python"
 brew "pyenv"
 brew "pipx"
+
+# development
 brew "go"
+brew "docker-compose"
 
 # shell
-brew "bat"
-brew "btop"
-brew "eza"
-brew "mas"
-brew "tmux"
-brew "zsh"
+brew "bat"      # cat replacement
+brew "btop"     # top replacement
+brew "eza"      # ls replacement
+brew "gnu-time" # timing
+brew "mas"      # mac app store
+brew "tmux"     # terminal multiplexer
+brew "zsh"      # shell
 
 # vim
 brew "neovim"
@@ -24,7 +30,7 @@ brew "lazygit"
 brew "ripgrep"
 brew "fd"
 
-# CASKS
+# MARK: CASKS
 # =============================================================================
 
 # general
@@ -56,23 +62,22 @@ cask "monitorcontrol" # external monitor utility
 cask "font-jetbrains-mono-nerd-font"
 cask "font-computer-modern"
 
-# MAC APP STORE
+# MARK: MAC APP STORE
 # =============================================================================
 
 # apple
 mas "Keynote", id: 409183694 # presentation software
 mas "Numbers", id: 409203825 # spreadsheet software
 mas "Pages",   id: 409201541 # word processor software
-# mas "Xcode",   id: 497799835 # xcode
+mas "Xcode",   id: 497799835 # swift development
 
 # productivity
 # mas "Craft",      id: 1487937127 # note-taking app (setapp)
 mas "Copilot",    id: 1447330651 # finances app
-# mas "TechniCalc", id: 1504965415 # scientifc calculator
+mas "TechniCalc", id: 1504965415 # scientifc calculator
 # mas "DetailsPro", id: 1524366536 # software design
 
 # utilities
 mas "Noir",     id: 1592917505 # safari dark mode
 mas "AdGuard",  id: 1440147259 # safari ad-blocker
 mas "Peek",     id: 1554235898 # quicklook plugin
-# mas "iPreview", id: 1519213509 # zip quicklook plugin (conflict)

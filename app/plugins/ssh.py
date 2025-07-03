@@ -15,7 +15,7 @@ from .pkg_managers import APT
 
 PUBLIC_EXT: str = ".pub"
 """The extension of the public key filenames."""
-PRIVATE_EXT: str = ".key"
+PRIVATE_EXT: str = ""
 """The extension of the private key filenames."""
 
 

@@ -7,18 +7,23 @@ local repo="https://github.com/zdharma-continuum/zinit.git"
 [ ! -d $ZINIT_HOME/.git ] && git clone $repo $ZINIT_HOME
 source $ZINIT_HOME/zinit.zsh
 
-# homebrew
-if [[ -f "/opt/homebrew/bin/brew" ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)" # activate homebrew
+# homebrew (macos)
+
+# activate homebrew
+if [[ -f "/opt/homebrew/bin/brew" ]]; then # arm macos
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+if [[ -f "/usr/local/bin/brew" ]]; then # intel macos
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then # linux
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+# REVIEW: check for arm linux support
+
+if command -v brew 1>/dev/null 2>&1; then
     FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}" # completions
     export PATH="$(brew --prefix python)/libexec/bin:$PATH" # python
-
-    # nvm
-    if [ -s "$(brew --prefix nvm)/nvm.sh" ]; then
-        source "$(brew --prefix nvm)/nvm.sh" # load nvm
-        [ -s "$(brew --prefix nvm)/etc/bash_completion.d/nvm" ] && \
-        source "$(brew --prefix nvm)/etc/bash_completion.d/nvm" # completions
-    fi
 fi
 
 # pyenv (python version manager)
@@ -121,6 +126,10 @@ alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'
 alias llst='lls -T'
 
+if [ "$TERM_PROGRAM" = "vscode" ]; then
+    alias clear='clear && clear'
+fi
+
 # copy ssh key to a new machine for the current user
 ssh::copy() {
     usage="usage: $0 host [user]"
@@ -133,6 +142,19 @@ zsh::time() {
     usage="usage: $0 [iterations]"
     if (($# > 1)); then echo $usage && return 1; fi
     for i in $(seq 1 ${1-1}); do time $SHELL -i -c exit; done
+}
+
+# load dotenv file as exported variables
+env::load() {
+    usage="usage: $0 [dotenv]"
+    if (($# > 1)); then echo $usage && return 1; fi
+
+    env=${1-.env}
+    if [[ ! -f "$env" ]]; then
+        echo "No dotenv file found"
+        return 1
+    fi
+    source $env
 }
 
 # activate python virtual environment
