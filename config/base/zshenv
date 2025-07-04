@@ -1,0 +1,47 @@
+# Environment (shared across machines)
+# =============================================================================
+
+# private
+export PRIVATE="$MACHINE/private"
+if [[ -f "$PRIVATE/env.sh" ]]; then source "$PRIVATE/env.sh"; fi
+
+# tools
+export GOPATH="$HOME/go"
+export PYENV_ROOT="$HOME/.pyenv"
+export ZINIT_HOME="$HOME/.config/zinit/zinit.git"
+
+# dotnet
+if [[ "$OSTYPE" == "darwin"* ]]; then # macos
+    export DOTNET_ROOT="/usr/local/share/dotnet"
+else # linux/wsl
+    export DOTNET_ROOT="/usr/share/dotnet"
+fi
+
+# env path
+export PATH="$DOTNET_ROOT:$PATH"        # dotnet
+export PATH="$HOME/.dotnet/tools:$PATH" # dotnet tools
+export PATH="$PYENV_ROOT/shims:$PATH"   # python
+export PATH="$GOPATH/bin:$PATH"         # go
+
+#endregion
+
+# region: Shell Configuration
+# =============================================================================
+
+# shell
+export COMPLETIONS_PATH="$(dirname $ZINIT_HOME)/completions"
+export SHELL_SESSIONS_DISABLE=1
+export HISTSIZE=5000
+export SAVEHIST=$HISTSIZE
+export HISTDUP=erase
+
+# python
+export PIP_REQUIRE_VIRTUALENV=true         # require virtual env for pip
+export POETRY_VIRTUALENVS_IN_PROJECT=true  # create virtual envs in project
+
+# pager
+export LESS="-R --ignore-case" # use less with colors, ignoring case
+export SYSTEMD_LESS=$LESS      # less arguments of systemd pager
+export BAT_PAGER="less $LESS"  # use less as the pager for bat
+
+# endregion

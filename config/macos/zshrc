@@ -1,11 +1,7 @@
-source $MACHINE/config/core/zshrc # global configuration
+source $MACHINE/config/base/zshrc # global configuration
 
 # Configuration: macOS
 # =============================================================================
-
-alias setup-machine="machine-setup $MACHINE_ID"
-alias cleanup='brew::cleanup && zsh::clean'
-alias update='brew::update && zsh::update && cleanup'
 
 # profile a command with gnu time
 function profile {

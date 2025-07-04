@@ -1,15 +1,22 @@
-# Environment Setup
+# Configuration
 # =============================================================================
 
-# set up zinit
-local repo="https://github.com/zdharma-continuum/zinit.git"
-[ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
-[ ! -d $ZINIT_HOME/.git ] && git clone $repo $ZINIT_HOME
-source $ZINIT_HOME/zinit.zsh
+# disable login message
+[ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
 
-# homebrew (macos)
+# history
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
 
-# activate homebrew
+# Environment
+# =============================================================================
+
+# homebrew
 if [[ -f "/opt/homebrew/bin/brew" ]]; then # arm macos
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
@@ -19,11 +26,15 @@ fi
 if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then # linux
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
-# REVIEW: check for arm linux support
 
+# brew tools
 if command -v brew 1>/dev/null 2>&1; then
     FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}" # completions
     export PATH="$(brew --prefix python)/libexec/bin:$PATH" # python
+
+    # oh-my-posh theme
+    local theme="$(brew --prefix oh-my-posh)/themes/pure.omp.json"
+    eval "$(oh-my-posh init zsh --config "$theme")"
 fi
 
 # pyenv (python version manager)
@@ -33,15 +44,13 @@ fi
 
 # dotnet completions, source:
 # https://learn.microsoft.com/en-us/dotnet/core/tools/enable-tab-autocomplete
-_dotnet_zsh_complete()
-{
+_dotnet_zsh_complete() {
     if [[ ! $(command -v dotnet) ]]; then
         return
     fi
 
     local completions=("$(dotnet complete "$words")")
-    if [ -z "$completions" ]
-    then
+    if [ -z "$completions" ]; then
         _arguments '*::arguments: _normal'
         return
     fi
@@ -49,26 +58,26 @@ _dotnet_zsh_complete()
     # this is not variable assignment, do not modify!
     _values = "${(ps:\n:)completions}"
 }
+# compdef _dotnet_zsh_complete dotnet (handled by zinit)
 # endregion
 
-# region - Shell
+# region - ZINIT (zsh plugin manager)
 # =============================================================================
 # examples: https://zdharma-continuum.github.io/zinit/wiki/GALLERY
 
-# oh-my-posh theme
-if [[ ! $(command -v oh-my-posh) ]]; then
-    curl -s https://ohmyposh.dev/install.sh | bash -s
-fi
-local theme="$POSH_THEMES_PATH/pure.omp.json"
-eval "$(oh-my-posh init zsh --config "$theme")"
+# set up zinit
+local repo="https://github.com/zdharma-continuum/zinit.git"
+[ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
+[ ! -d $ZINIT_HOME/.git ] && git clone $repo $ZINIT_HOME
+source $ZINIT_HOME/zinit.zsh
 
-# zinit plugins
+# plugins
 zinit light zdharma-continuum/zinit-annex-as-monitor # remote file updater
 zinit light zdharma-continuum/zinit-annex-patch-dl # download with dl"URL file"
 
 # syntax highlighting, autosuggestions, completions
 zinit wait lucid light-mode for \
-  atinit"zicompinit; zicdreplay; compdef _dotnet_zsh_complete dotnet;" \
+  atinit"zicompinit; zicdreplay; compdef _dotnet_zsh_complete dotnet" \
       zdharma-continuum/fast-syntax-highlighting \
   atload"_zsh_autosuggest_start" \
       zsh-users/zsh-autosuggestions \
@@ -76,6 +85,11 @@ zinit wait lucid light-mode for \
       zsh-users/zsh-completions
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' \
 'r:|[._-]=* r:|=* l:|=*' # case-insensitive completion, ignore dots and hyphens
+
+# fzf (fuzzy finder)
+zinit ice wait lucid as"program" from"gh-r" mv"fzf* -> fzf" pick"fzf" \
+      atload"eval \"\$(fzf --zsh)\"" # key bindings for fzf (ctrl-t, ctrl-r)
+zinit light junegunn/fzf
 
 # fzf (fuzzy finder) tab completion
 zinit ice wait lucid
@@ -89,38 +103,17 @@ zstyle ':fzf-tab:*' switch-group '<' '>'
 zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 # source: https://github.com/Aloxaf/fzf-tab?tab=readme-ov-file#configure
 
-# fzf (fuzzy finder)
-zinit ice wait lucid as"program" from"gh-r" mv"fzf* -> fzf" pick"fzf" \
-      atload"eval \"\$(fzf --zsh)\"" # key bindings for fzf (ctrl-t, ctrl-r)
-zinit light junegunn/fzf
-
-# history
-setopt appendhistory
-setopt sharehistory
-setopt hist_ignore_space
-setopt hist_ignore_all_dups
-setopt hist_save_no_dups
-setopt hist_ignore_dups
-setopt hist_find_no_dups
-zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/zcompcache"
-
-# disable login message
-[ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
 # endregion
 
-# region - Functions and Aliases
+# region - Functions and Aliases # TODO: separate
 # =============================================================================
 
 alias zsh::reload='exec $SHELL'
-alias zsh::source='source $ZDOTDIR/.zshrc'
-alias zsh::update='zinit update && zinit self-update'
-alias zsh::clean='zinit delete --clean'
-alias brew::update='brew update && brew upgrade'
-alias brew::cleanup='brew autoremove && brew cleanup'
 alias ssh::gen-key='ssh-keygen -t ed25519 -C'
 
 alias cat='bat --paging=never'
 alias vim='nvim'
+
 alias ls='eza --icons --group-directories-first --sort=Name'
 alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'

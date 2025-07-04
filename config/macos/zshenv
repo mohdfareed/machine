@@ -1,10 +1,9 @@
-source "$MACHINE/config/core/zshenv" # global variables
-
-# machine environment variables
-export DEV="$HOME/Developer"
-export ICLOUD="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
-export GODOT="/Applications/Godot_mono.app/Contents/MacOS/Godot"
+source "$MACHINE/config/base/zshenv" # global variables
 
 # development environment
+export DEV="$HOME/Developer"
 export PATH="$DEV/bin:$PATH" # local binaries
-export PATH="$PYENV_ROOT/shims:$PATH" # python
+
+# machine environment variables
+export ICLOUD="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
+export GODOT="/Applications/Godot_mono.app/Contents/MacOS/Godot"
