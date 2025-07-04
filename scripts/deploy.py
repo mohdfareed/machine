@@ -25,24 +25,27 @@ from typing import Union
 
 # Configuration
 DEFAULT_MACHINE_PATH = Path.home() / ".machine"
-DEFAULT_BRANCH = "main"
 REPOSITORY = "mohdfareed/machine"
 EXECUTABLE = "machine-setup"
 
 # Constants
 POETRY_SCRIPT = "https://install.python-poetry.org"
 POETRY_BUG_FIX = "sed 's/symlinks=False/symlinks=True/'"
+
+# Environment
 ENV = os.environ.copy()
+ENV["POETRY_VIRTUALENVS_IN_PROJECT"] = "true"
 
 
-def main(path: Path, branch: str, dev: bool) -> None:
+def main(path: Path) -> None:
     """Install application."""
-    ENV["POETRY_HOME"] = str(path / ".poetry")
-    ENV["POETRY_VIRTUALENVS_IN_PROJECT"] = "true"
+    poetry_home = path / ".poetry"
+    ENV["POETRY_HOME"] = str(poetry_home)
+
     if sys.platform == "win32":
-        executable = path / "Scripts" / f"{EXECUTABLE}.exe"
+        executable = poetry_home / "Scripts" / f"{EXECUTABLE}.exe"
     else:  # Unix-based
-        executable = path / "bin" / EXECUTABLE
+        executable = poetry_home / "bin" / EXECUTABLE
 
     # resolve installation path
     pip_info = run("pip show pip").stdout.decode()
@@ -52,7 +55,9 @@ def main(path: Path, branch: str, dev: bool) -> None:
         raise RuntimeError(
             "Failed to find pip installation location.", pip_info
         )
-    executable_path = Path(bin.strip()) / executable
+    executable_path = (Path(bin.strip()) / EXECUTABLE).with_suffix(
+        ".exe" if sys.platform == "win32" else ""
+    )
 
     if not shutil.which("git"):
         print("Error: Git is not installed.", file=sys.stderr)
@@ -61,7 +66,7 @@ def main(path: Path, branch: str, dev: bool) -> None:
 
     print(f"Deploying machine to: {path}")
     repo = f"https://github.com/{REPOSITORY}.git"
-    run(f"git clone -b {branch} {repo} {path} --depth 1")
+    run(f"git clone {repo} {path} --depth 1")
     os.chdir(path)  # machine
 
     if not (poetry := shutil.which("poetry")):
@@ -71,11 +76,12 @@ def main(path: Path, branch: str, dev: bool) -> None:
         else:  # Windows
             cmd = f"(wget -Uri {POETRY_SCRIPT} -UseBasicParsing).Content"
             run(f"{cmd} | {POETRY_BUG_FIX} | py -")
-        poetry = Path(ENV["POETRY_HOME"]) / "bin" / "poetry"
+        poetry = poetry_home / "bin" / "poetry"
 
     print("Installing application...")
-    run(f"{poetry} install " + "-E dev" if dev else "")
+    run(f"{poetry} install")
     executable_path.symlink_to(executable)
+
     print(f"Linked executable: {executable_path} -> {executable}")
     print("Machine deployed successfully.")
 
@@ -107,23 +113,11 @@ if __name__ == "__main__":
         help="machine installation path",
         default=DEFAULT_MACHINE_PATH,
     )
-    parser.add_argument(
-        "branch",
-        type=Path,
-        help="machine repository branch",
-        nargs="?",
-        default=DEFAULT_BRANCH,
-    )
-    parser.add_argument(
-        "--dev",
-        action="store_true",
-        help="install in development mode",
-    )
 
     # Parse arguments
     args = parser.parse_args()
     try:  # Install the application
-        main(args.path, args.branch, args.dev)
+        main(args.path)
 
     # Handle user interrupts
     except KeyboardInterrupt:

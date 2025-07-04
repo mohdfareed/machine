@@ -17,7 +17,7 @@ import platform
 import sys
 from enum import Flag
 from functools import wraps
-from typing import Any, Callable, TypeVar, Union
+from typing import Any, Callable, TypeVar
 
 import rich.progress
 
@@ -74,12 +74,9 @@ def post_setup(*_: Any, **__: Any) -> None:
     LOGGER.info("Post setup tasks completed.")
 
 
-def add_post_setup_task(task: Union[SetupTask, list[SetupTask]]) -> None:
+def add_post_setup_task(task: SetupTask) -> None:
     """Add a task to the post installation tasks."""
-    if isinstance(task, list):
-        post_install_tasks.extend(task)
-    else:
-        post_install_tasks.append(task)
+    post_install_tasks.append(task)
 
 
 def pkg_installer(func: Callable[..., None]) -> Callable[..., None]:

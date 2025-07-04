@@ -1,6 +1,6 @@
 [project]
 name = "machine"
-version = "0.2.0"
+version = "1.0.0"
 description = "Machine setup CLI app."
 license = { text = "MIT" }
 readme = "README.md"
@@ -10,6 +10,7 @@ authors = [
 urls = { repository = "https://github.com/mohdfareed/machine" }
 
 # MARK: Dependencies
+# =============================================================================
 
 requires-python = ">=3.9.6" # default macos version
 
@@ -32,6 +33,7 @@ dev = [
 ]
 
 # MARK: Poetry
+# =============================================================================
 
 [project.scripts]
 machine-setup = "app.main:app"
@@ -48,7 +50,8 @@ include = [
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-# MARK: Tools
+# MARK: Testing
+# =============================================================================
 
 [tool.pytest.ini_options]
 testpaths = [
@@ -60,6 +63,9 @@ omit = [
     "app/machines/*",
     "app/plugins/*",
 ]
+
+# MARK: Tools
+# =============================================================================
 
 [tool.black]
 line-length = 79

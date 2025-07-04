@@ -2,6 +2,7 @@
 
 __all__ = ["LOGGER", "app_console", "setup_logging"]
 
+import datetime
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -77,3 +78,12 @@ def setup_logging(debug_mode: bool) -> None:
     logging.captureWarnings(True)
     logging.getLogger().setLevel(logging.NOTSET)
     logging.getLogger().handlers = [debug, stdout, stderr, log_file]
+
+    # session separator
+    session_separator = (
+        f"{'=' * 80}\n"
+        f"SESSION: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        f"{'=' * 80}\n"
+    )
+    with open(log_file_path, "a") as f:
+        f.write(session_separator)
