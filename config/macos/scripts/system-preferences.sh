@@ -1,32 +1,54 @@
-# set local host name
-scutil --set LocalHostName $HOSTNAME
-# switch windows in same space
+#!/bin/bash
+# Apply macOS system preferences
+
+echo "Applying macOS system preferences..."
+
+# Read hostname from environment or use default
+HOSTNAME=${HOSTNAME:-$(scutil --get LocalHostName)}
+
+echo "Setting hostname to: $HOSTNAME"
+
+# Set local host name
+scutil --set LocalHostName "$HOSTNAME"
+
+# Switch windows in same space
 defaults write NSGlobalDomain AppleSpacesSwitchOnActivate -bool false
-# double click title bar to maximize
+
+# Double click title bar to maximize
 defaults write NSGlobalDomain AppleActionOnDoubleClick -string "Fill"
-# keyboard repeat rate
+
+# Keyboard repeat rate
 defaults write NSGlobalDomain KeyRepeat -int 2
-# keyboard repeat delay
+
+# Keyboard repeat delay
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
-# keyboard navigation
+
+# Keyboard navigation
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 2
-# tap to click
+
+# Tap to click
 defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
-# drag with trackpad
+
+# Drag with trackpad
 defaults write com.apple.AppleMultitouchTrackpad Dragging -bool true
 
-# auto-hide dock
+# Auto-hide dock
 defaults write com.apple.dock autohide -bool true
-# hide recent apps
+
+# Hide recent apps
 defaults write com.apple.dock show-recents -bool false
-# minimize with scaling
+
+# Minimize with scaling
 defaults write com.apple.dock mineffect -string "scale"
-# dock size
+
+# Dock size
 defaults write com.apple.dock tilesize -int 48
-# enable app expose
+
+# Enable app expose
 defaults write com.apple.dock showAppExposeGestureEnabled -bool true
-# rearrange spaces based on most recent use
+
+# Rearrange spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
 
-# reduce wallpaper tinting in windows
-defaults write .GlobalPreferences AppleReduceDesktopTinting -bool true
+echo "✓ macOS system preferences applied successfully"
+echo "Note: Some changes may require a restart to take effect"

@@ -15,6 +15,7 @@ requires-python = ">=3.9.6" # default macos version
 
 dependencies = [
     "typer",
+    "rich",
     "pydantic",
     "pydantic-settings",
     "platformdirs",

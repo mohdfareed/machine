@@ -984,4 +984,4 @@ dev = ["black", "isort", "pre-commit", "pylance", "pytest", "pytest-cov"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9.6"
-content-hash = "16b515053e29a66f617493fa7a9b7a6fa7fa21eeeabcbac4abbbd28a17e8963e"
+content-hash = "fd1eee08efbc62b1c6b35c99b5b7d486bc263de8d325df329a3a8b579b69be85"
