@@ -1,0 +1,4 @@
+[include]
+    path = {MACHINE}/config/.gitconfig
+[include]
+    path = {MACHINE}/config/{MACHINE_ID}/.gitconfig

@@ -1,4 +1,1 @@
-source "$MACHINE/config/base/zshenv" # global variables
-
-# machine environment variables
 export PATH="$PATH:/snap/bin"

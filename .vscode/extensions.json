@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "donjayamanne.python-extension-pack",
+        "ms-python.vscode-python-envs",
         "ms-python.black-formatter",
         "ms-python.isort",
         "streetsidesoftware.code-spell-checker",

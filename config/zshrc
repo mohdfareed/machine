@@ -1,0 +1,2 @@
+source "$MACHINE/config/base/zshrc"
+source "$MACHINE/config/$MACHINE_ID/zshrc"
