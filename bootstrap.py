@@ -14,6 +14,8 @@ For macOS, Command Line Tools for Xcode is required. Install it using:
 xcode-select --install
 """
 
+# FIXME: Deploy using Chezmoi
+
 import argparse
 import os
 import re
