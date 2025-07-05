@@ -4,10 +4,6 @@ Deploy a new machine using Chezmoi.
 
 Installs Chezmoi and bootstraps a new machine using the the official script at:
 https://www.chezmoi.io/install/#one-line-binary-install
-
-Requirements:
-    - git
-
 On macOS, Command Line Tools for Xcode are required. Install them using:
 xcode-select --install
 """
@@ -27,7 +23,7 @@ CHEZMOI = f'sh -c "$(curl -fsLS get.chezmoi.io)" --'
 def main(path: Path, branch: str, dry_run: bool) -> None:
     """Install application."""
     repo = f"git@github.com:{REPOSITORY}.git"
-    options = f"--branch {branch} --source-dir {path}"
+    options = f"--branch {branch} --source {path}"
 
     print(f"Deploying machine to: {path}")
     if dry_run:
@@ -45,7 +41,11 @@ def run(cmd: Union[str, list[str]]) -> subprocess.CompletedProcess[bytes]:
 # region: CLI
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=(__doc__ or "").strip())
+    parser = argparse.ArgumentParser(
+        description=(__doc__ or "").strip(),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
     parser.add_argument(
         "-p",
         "--path",
