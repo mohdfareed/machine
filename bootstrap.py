@@ -9,32 +9,42 @@ xcode-select --install
 """
 
 import argparse
+import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Union
+from tempfile import TemporaryDirectory
 
 REPOSITORY = "mohdfareed/machine"
-DEFAULT_BRANCH = "main"
+DEFAULT_BRANCH = "dev-refactor"  # FIXME: switch to main
 DEFAULT_MACHINE_PATH = Path.home() / ".machine"
 CHEZMOI = f'sh -c "$(curl -fsLS get.chezmoi.io)" --'
 
 
-def main(path: Path, branch: str, dry_run: bool) -> None:
+def main(
+    bin: Path, path: Path, branch: str, local: bool, dry_run: bool
+) -> None:
     """Install application."""
+    path = path.expanduser().resolve()
+    bin = bin.expanduser().resolve()
+
     repo = f"git@github.com:{REPOSITORY}.git"
-    options = f"--branch {branch} --source {path}"
+    chezmoi = f"{CHEZMOI} -b {bin}"
+    if shutil.which("chezmoi"):
+        chezmoi = "chezmoi"
+
+    options = f"--source {path}"
+    if not local:
+        options += f" --branch {branch} {repo}"
+    if dry_run:
+        options += f" --dry-run"
 
     print(f"bootstrapping machine at: {path}")
-    if dry_run:
-        run(f"{CHEZMOI} init --apply {repo} {options} --dry-run")
-    else:
-        run(f"{CHEZMOI} init --apply {repo} {options}")
+    run(f"{chezmoi} init --apply {options}")
     print("machine bootstrapped successfully")
 
 
-def run(cmd: Union[str, list[str]]) -> subprocess.CompletedProcess[bytes]:
-    cmd = cmd if isinstance(cmd, str) else " ".join(cmd)
+def run(cmd: str) -> subprocess.CompletedProcess[bytes]:
     return subprocess.run(cmd, shell=True, check=True)
 
 
@@ -47,8 +57,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "-p",
-        "--path",
+        "path",
         type=Path,
         help="machine installation path",
         default=DEFAULT_MACHINE_PATH,
@@ -61,10 +70,14 @@ if __name__ == "__main__":
         default=DEFAULT_BRANCH,
     )
     parser.add_argument("--dry-run", action="store_true", help="dry run")
+    parser.add_argument("--local", action="store_true", help="use local repo")
     args = parser.parse_args()
 
     try:  # Run script
-        main(args.path, args.branch, args.dry_run)
+        with TemporaryDirectory() as tempdir:
+            main(
+                Path(tempdir), args.path, args.branch, args.local, args.dry_run
+            )
     except KeyboardInterrupt:
         print("aborted!")
         sys.exit(1)

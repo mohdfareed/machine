@@ -1,10 +1,10 @@
 {{- /* Interactive machine selection */ -}}
 {{- $machines := list "gleason" "macbook" "rpi" "pc" "codespaces" -}}
-{{- $machine := promptChoiceOnce . "machine" "Select machine" $machines -}}
+{{- $machine := promptChoice "Select machine" $machines -}}
 
 {{- /* Prompt for machine and private data paths */ -}}
-{{- $machinePath := promptStringOnce . "machinePath" "Enter the machine path" -}}
-{{- $privatePath := promptStringOnce . "privatePath" "Enter the private path" .chezmoi.sourceDir -}}
+{{- $machinePath := promptString "Enter the machine path" .chezmoi.workingTree -}}
+{{- $privatePath := promptString "Enter the private path" .privatePath -}}
 
 {{- /* Detect OS */ -}}
 {{- $os := .chezmoi.os -}}
@@ -15,6 +15,7 @@
 {{- end -}}
 
 sourceDir = {{ $machinePath | quote }}
+workingTree = {{ $machinePath | quote }}
 progress = true
 
 [data]
