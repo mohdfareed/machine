@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       release:
-        description: 'Create a new release'
+        description: "Create a new release"
         default: true
         type: boolean
       increment:
-        description: 'Version increment type'
-        default: 'patch'
+        description: "Version increment type"
+        default: "patch"
         type: choice
         options:
           - major
@@ -37,7 +37,7 @@ jobs:
       - name: Get current version
         id: previous-version
         run: |
-          version=$(poetry version | cut -d' ' -f2)
+          version=$(uv version | cut -d' ' -f2)
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Update version
@@ -63,7 +63,7 @@ jobs:
         id: update_version
         env:
           version: ${{ steps.resolver.outputs.version }}
-        run: poetry version ${{ env.version }}
+        run: uv version ${{ env.version }}
 
       - name: Update repository
         env:

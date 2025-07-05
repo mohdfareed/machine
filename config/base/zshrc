@@ -1,7 +1,7 @@
-# Configuration
+# region - Configuration
 # =============================================================================
 
-# disable login message
+# disable sessions
 [ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
 
 # history
@@ -13,33 +13,37 @@ setopt hist_save_no_dups
 setopt hist_ignore_dups
 setopt hist_find_no_dups
 
-# Environment
+# endregion
+
+# region - Environment
 # =============================================================================
 
 # homebrew
-if [[ -f "/opt/homebrew/bin/brew" ]]; then # arm macos
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
-fi
-if [[ -f "/usr/local/bin/brew" ]]; then # intel macos
+fi # arm macos
+if [[ -f "/usr/local/bin/brew" ]]; then
     eval "$(/usr/local/bin/brew shellenv)"
-fi
-if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then # linux
+fi # intel macos
+if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
+fi # linux/wsl
 
 # brew tools
 if command -v brew 1>/dev/null 2>&1; then
     FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}" # completions
     export PATH="$(brew --prefix python)/libexec/bin:$PATH" # python
 
-    # oh-my-posh theme
-    local theme="$(brew --prefix oh-my-posh)/themes/pure.omp.json"
-    eval "$(oh-my-posh init zsh --config "$theme")"
 fi
 
-# pyenv (python version manager)
-if command -v pyenv 1>/dev/null 2>&1; then
-    eval "$(pyenv init -)"
+# oh-my-posh theme
+local theme="$(oh-my-posh cache path)/themes/pure.omp.json"
+eval "$(oh-my-posh init zsh --config "$theme")"
+
+# uv (python version manager)
+if command -v uv 1>/dev/null 2>&1; then
+    eval "$(uv generate-shell-completion zsh)"
+    eval "$(uvx --generate-shell-completion zsh)"
 fi
 
 # dotnet completions, source:
@@ -59,6 +63,7 @@ _dotnet_zsh_complete() {
     _values = "${(ps:\n:)completions}"
 }
 # compdef _dotnet_zsh_complete dotnet (handled by zinit)
+
 # endregion
 
 # region - ZINIT (zsh plugin manager)
@@ -66,6 +71,7 @@ _dotnet_zsh_complete() {
 # examples: https://zdharma-continuum.github.io/zinit/wiki/GALLERY
 
 # set up zinit
+export ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 local repo="https://github.com/zdharma-continuum/zinit.git"
 [ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
 [ ! -d $ZINIT_HOME/.git ] && git clone $repo $ZINIT_HOME

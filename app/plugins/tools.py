@@ -146,26 +146,13 @@ class Python(Plugin[Any, PythonEnv]):
 
     def _setup(self) -> None:
         if Brew.is_supported():
-            Brew().install("python pipx pyenv")
+            Brew().install("python uv")
         elif APT.is_supported():
-            APT().install("python3 python3-pip python3-venv pipx")
-            if not shutil.which("pyenv"):
-                utils.Shell().execute("curl https://pyenv.run | bash")
+            APT().install("python3 uv")
         elif Scoop.is_supported():
-            Scoop().install("pipx pyenv")
+            Scoop().install("pipx uv")
         else:
             utils.LOGGER.error("No supported package manager found.")
-
-        PIPx().install("poetry")
-        if not utils.Platform.UNIX:
-            return
-        if not shutil.which("poetry"):
-            utils.LOGGER.warning("Poetry completion could not be installed.")
-            return
-
-        utils.Shell().execute(
-            f"poetry completions zsh > {self.env.COMPLETIONS_PATH}/_poetry"
-        )
 
 
 class VSCode(Plugin[VSCodeConfig, VSCodeEnv]):

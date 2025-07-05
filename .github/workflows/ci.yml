@@ -21,21 +21,17 @@ jobs:
 
       - name: Linter
         uses: dciborow/action-pylint@main
-        env:
-          POETRY_VIRTUALENVS_IN_PROJECT: "true"
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-check
-          reviewdog_flags: '-tee'
+          reviewdog_flags: "-tee"
 
       - name: Type checker
         uses: jordemort/action-pyright@main
-        env:
-          POETRY_VIRTUALENVS_IN_PROJECT: "true"
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-check
-          reviewdog_flags: '-tee'
+          reviewdog_flags: "-tee"
 
   spelling:
     runs-on: ubuntu-latest
@@ -51,4 +47,4 @@ jobs:
           level: warning
           locale: "US"
           exclude: |
-              *.lock
+            *.lock

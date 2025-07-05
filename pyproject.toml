@@ -1,9 +1,14 @@
+# MARK: Project
+# =============================================================================
+
 [project]
 name = "machine"
-version = "1.0.0"
+version = "0.2.1"
+
 description = "Machine setup CLI app."
-license = { text = "MIT" }
 readme = "README.md"
+license = "MIT"
+
 authors = [
     {name = "Mohammed Fareed", email = "mohdf.fareed@icloud.com"}
 ]
@@ -32,23 +37,19 @@ dev = [
     "isort",      # import formatting
 ]
 
-# MARK: Poetry
+# MARK: Entry Point
 # =============================================================================
 
 [project.scripts]
-machine-setup = "app.main:app"
-
-[tool.poetry]
-packages = [
-    { include = "app", from = "." },
-]
-include = [
-    { path = "config" }
-]
+machine = "app.main:app"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# project sources
+[tool.setuptools]
+packages = ["app"]
 
 # MARK: Testing
 # =============================================================================

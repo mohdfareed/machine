@@ -7,14 +7,13 @@ Machine setup and configuration CLI app.
 **Requirements:**
 
 - Python 3.9.6+
--
 
 ## Installation
 
 ```sh
-# install with poetry (installs at the provided path)
+# deploy the machine CLI app
 repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsSL $repo/scripts/deploy.py | python3 - [-h] [-p PATH] [branch]
+curl -fsSL $repo/scripts/deploy.py | python3 - [-h] [-p PATH]
 ```
 
 where `PATH` is the path to download the machine CLI app.
@@ -31,17 +30,8 @@ cd machine
 ./scripts/dev.py
 ```
 
-### Releases
-
-The package can be installed from the latest release with pipx using:
-
-```sh
-repo="https://raw.githubusercontent.com/mohdfareed/machine/main"
-pipx install $(curl -fsSL $repo/scripts/release.sh | sh -)
-```
-
 ## Usage
 
 ```sh
-machine-setup --help
+machine --help
 ```

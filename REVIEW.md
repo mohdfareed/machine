@@ -1,8 +1,151 @@
 # Machine Setup Project Review
 
-## Project Status: NEW ARCHITECTURE IMPLEMENTED ✅
+## Project Status: MIGRATION TO CHEZMOI PLANNED
 
-The new minimal architecture has been successfully implemented and tested. The complex plugin/machine system has been replaced with a simple, maintainable CLI.
+**DECISION**: Full migration to Chezmoi - no Python needed!
+
+**Research findings from https://chezmoi.io:**
+- ✅ **Scripts handle everything**: `run_once_`, `run_onchange_`, template scripts 
+- ✅ **Package management**: Cross-platform templated scripts
+- ✅ **Machine detection**: Built-in `.chezmoi.os`, `.chezmoi.hostname`, custom config
+- ✅ **Secrets**: Multiple password managers + encryption built-in
+- ✅ **One-command bootstrap**: `chezmoi init --apply repo`
+- ✅ **Standard locations**: No path configuration needed
+
+**What Chezmoi scripts can replace:**
+- Package installation (brew/winget/apt) via `run_onchange_install-packages.sh.tmpl`
+- System setup (SSH keys, preferences) via `run_once_setup-system.sh`
+- Tool configuration via templated files and scripts
+- Private file handling via password manager integration or encryption
+
+**Python eliminated** - Chezmoi's Go binary + shell scripts handle everything.
+
+**HOW PROFESSIONAL TOOLS SOLVE THIS (Research Results)**:
+
+**Top Modern Options (2024-2025):**
+1. **Chezmoi** (15k+ stars) - Still the dominant choice
+   - Go-based, cross-platform, mature ecosystem
+   - Built-in templating, secrets management, machine detection
+   - Work/home profiles, 1Password integration
+   
+2. **Nix Home Manager** - Growing rapidly
+   - Declarative configuration, package management included
+   - Reproducible environments, version locking
+   - Learning curve but very powerful
+   
+3. **Rust alternatives** (newer, smaller communities):
+   - **Dotter** (1k stars) - Windows/Linux/Mac support
+   - **Comtrya** (556 stars) - Configuration management
+   - **Rotz** - Cross-platform, but limited adoption
+
+**Key Insight**: Chezmoi is still the clear winner in 2024/2025. The Rust alternatives haven't gained significant traction, and Nix Home Manager is powerful but has a steeper learning curve.
+
+**Recommendation**: Try Chezmoi first - it directly solves your templating, cross-platform, and secrets problems. If it covers 80% of your needs, use it and build custom scripts for the remaining 20%.
+
+## CHEZMOI WORKFLOW ANALYSIS
+
+Based on research, here's how your workflows would look with Chezmoi:
+
+### 📦 **Bootstrap New Machine**
+```bash
+# Single command setup (replaces your entire deploy script)
+chezmoi init --apply https://github.com/yourusername/dotfiles.git
+
+# With private repo
+chezmoi init --apply git@github.com:yourusername/dotfiles.git
+
+# What it does:
+# 1. Clones to ~/.local/share/chezmoi/ (standardized location)
+# 2. Detects machine type automatically (via chezmoi.toml config)
+# 3. Applies all dotfiles with templates processed
+# 4. Handles secrets via password manager integration
+```
+
+### 🔧 **Add/Track New Tool**
+```bash
+# Add a new config file to tracking
+chezmoi add ~/.zshrc
+chezmoi add ~/.config/nvim/init.lua
+
+# Add with templating (for machine-specific differences)
+chezmoi add --template ~/.gitconfig
+chezmoi add --template ~/.ssh/config
+
+# Commit changes
+chezmoi cd  # Go to source directory
+git add . && git commit -m "Add new tool config"
+git push
+```
+
+### ⚙️ **Configure Machine-Specific Things**
+```bash
+# Templates use built-in variables:
+{{ .chezmoi.os }}          # "darwin", "linux", "windows"  
+{{ .chezmoi.arch }}        # "amd64", "arm64"
+{{ .chezmoi.hostname }}    # "MacBook-Pro", "rpi4"
+
+# Example .zshrc template:
+{{- if eq .chezmoi.os "darwin" }}
+export ICLOUD="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
+export DEV="$HOME/Developer"
+{{- else if eq .chezmoi.os "linux" }}
+export DEV="$HOME/projects"  
+{{- end }}
+
+# Custom variables in ~/.config/chezmoi/chezmoi.toml:
+[data]
+    machine_type = "laptop"
+    work = true
+```
+
+### 🔄 **Sync Changes**
+```bash
+# Pull latest changes from repo and apply
+chezmoi update
+
+# See what would change before applying
+chezmoi diff
+
+# Push local changes
+chezmoi cd
+git add . && git commit -m "Update configs"
+git push
+```
+
+### 🔐 **Handle Private Files**
+```bash
+# Method 1: Templates with password manager
+chezmoi add --template ~/.ssh/id_rsa
+
+# In template, reference 1Password:
+{{ (onepassword "SSH Key" "Personal").privateKey }}
+
+# Method 2: External private files (like your current system)
+# Keep private files separate, reference in templates:
+{{ .chezmoi.sourceDir }}/../private/ssh_keys/id_rsa
+
+# Method 3: Age encryption (built-in)
+chezmoi add --encrypt ~/.ssh/id_rsa
+```
+
+### 🎯 **Key Advantages Over Your Current System**
+1. **No template variables** - Built-in machine detection
+2. **Standard locations** - `~/.local/share/chezmoi/` (no path confusion)
+3. **One command bootstrap** - Replaces your deploy script
+4. **Built-in secrets** - Password manager integration
+5. **Automatic updates** - `chezmoi update` pulls and applies
+
+### 🔧 **What You'd Still Need Python For**
+- Package installation (brew bundle, etc.)
+- System preferences (macOS defaults)
+- SSH key generation
+- Service setup (Docker, etc.)
+
+But these could be simple `run_once_` scripts in Chezmoi.
+
+**WHAT YOU ACTUALLY NEED**: 
+- Pick a standard location pattern like the pros
+- Stop fighting the fundamental complexity - embrace it with a cleaner pattern
 
 ## Current Implementation Status
 
@@ -27,10 +170,12 @@ The new minimal architecture has been successfully implemented and tested. The c
 5. **Project Config**: Review .github/, .vscode/, pyproject.toml
 
 ### 📝 Immediate Action Items
-1. **Fix Test Suite**: Rewrite tests with proper assertions and coverage
-2. **Audit Config Structure**: Verify template generation vs direct linking is working correctly
-3. **Define Base Dependencies**: Create explicit requirements for all machines
-4. **Update Documentation**: Comprehensive README rewrite
+1. **Deployment Strategy**: Implement uv-based installation with cross-platform support
+2. **Environment Variable Strategy**: Implement system-wide environment variables (not just shell-specific)
+3. **Multi-Shell Support**: Detect and configure all available shells, not just zsh/pwsh
+4. **XDG Compliance**: Use proper system directories with user override options
+5. **Fix Test Suite**: Rewrite tests with proper assertions and coverage
+6. **Update Documentation**: Comprehensive README rewrite
 
 ## New Architecture Overview
 ```

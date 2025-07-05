@@ -63,7 +63,7 @@ def main(
 @app_completion.command(name="install")
 def install_completion() -> None:
     """Install shell completions."""
-    command = f"poetry run {APP_NAME} {COMPLETION_APP}"
+    command = f"uv run {APP_NAME} {COMPLETION_APP}"
 
     if not utils.Platform.UNIX:
         utils.LOGGER.error("Unsupported platform for auto shell completions.")

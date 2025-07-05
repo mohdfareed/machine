@@ -1,5 +1,2 @@
 export MACHINE="{MACHINE}"
 export MACHINE_ID="{MACHINE_ID}"
-
-source "$MACHINE/config/base/zshenv"
-source "$MACHINE/config/$MACHINE_ID/zshenv"

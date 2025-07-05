@@ -2,19 +2,18 @@
 """
 Set up a local development environment.
 
-Creates a virtual environment with Poetry and installs the development
+Creates a virtual environment with UV and installs the development
 dependencies. Other development tools are also set up.
 
 Requirements:
-    - python 3.9.6
-    - poetry
+    - git
+    - uv
 
 Note: The script must be run from the repository.
 """
 
 import argparse
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -25,8 +24,8 @@ REPOSITORY = "mohdfareed/machine.git"
 PYTHON_VERSION = "3.9.6"  # default macos version
 
 # Environment
+VENV = Path(".venv")
 ENV = os.environ.copy()
-ENV["POETRY_VIRTUALENVS_IN_PROJECT"] = "true"
 
 
 def main() -> None:
@@ -34,35 +33,21 @@ def main() -> None:
     # Change to the repository root directory
     os.chdir(Path(__file__).parent.parent)  # .py -> scripts -> machine
 
-    # Check if Poetry is installed
-    if not shutil.which("poetry"):
-        print("Error: Poetry not found.", file=sys.stderr)
-        sys.exit(1)
-
-    # Check if Python version is correct
-    python = shutil.which("python3.9") or "python3.9" or sys.executable
-    if python.split()[1] != PYTHON_VERSION:
-        print(f"Error: Python {PYTHON_VERSION} is required.", file=sys.stderr)
-        sys.exit(1)
-
-    # Clean up existing virtual environment
-    if Path(".venv").exists():
-        print("Cleaning up existing...")
-        shutil.rmtree(".venv")
-
     # Fetch updates from the repository
     print("Fetching changes...")
-    run("git fetch --unshallow")
-    run("git fetch --all --tags")
+    if (Path(".git") / "shallow").exists():
+        run("git fetch --unshallow")
+    run("git fetch --all --tags --prune")
 
     # Install the application
     print("Installing app...")
-    run(f"poetry env use {python}")
-    run("poetry install -E dev")
+    run(f"uv python install {PYTHON_VERSION}")
+    run(f"uv venv {VENV} --python {PYTHON_VERSION}")
+    run("uv sync --extra dev")
 
     # Install pre-commit hooks
     print("Installing hooks...")
-    run("poetry run pre-commit install --install-hooks")
+    run("uv run pre-commit install --install-hooks")
     print("Environment setup complete.")
 
 

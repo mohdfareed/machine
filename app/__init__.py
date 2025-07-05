@@ -4,5 +4,5 @@ __all__ = ["APP_NAME", "__version__"]
 
 from importlib.metadata import version
 
-APP_NAME = "machine-setup"
+APP_NAME = "machine"
 __version__ = version("machine")

@@ -4,18 +4,17 @@ description: Set up the project's development environment
 runs:
   using: "composite"
   steps:
-    # set up and cache poetry
+    # set up and cache uv
     - uses: actions/setup-python@main
       with:
         python-version: "3.9"
         cache: "pip"
-    - run: pip install poetry
+    - run: pip install uv
       shell: sh
 
     # set up dev environment dependencies
     - run: | # use cached pip packages
-        poetry config virtualenvs.create false
-        poetry install -E dev
+        uv sync --system --extra dev
       shell: sh
 
     # set up author information

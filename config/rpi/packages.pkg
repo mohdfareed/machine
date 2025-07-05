@@ -13,9 +13,9 @@ apt fonts-jetbrains-mono fonts-lmodern
 snap powershell
 snap btop
 
-classic code
-classic go
-classic dotnet-sdk
+snap code --classic or snap-classic code
+snap-classic go
+snap-classic dotnet-sdk
 
 # NVIM
 # =============================================================================

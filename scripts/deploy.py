@@ -26,7 +26,7 @@ from typing import Union
 # Configuration
 DEFAULT_MACHINE_PATH = Path.home() / ".machine"
 REPOSITORY = "mohdfareed/machine"
-EXECUTABLE = "machine-setup"
+EXECUTABLE = "machine"
 
 # Constants
 POETRY_SCRIPT = "https://install.python-poetry.org"

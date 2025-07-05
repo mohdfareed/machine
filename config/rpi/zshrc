@@ -1,5 +1,5 @@
 alias reboot='sudo reboot'
-alias setup-machine="machine-setup rpi"
+alias setup-machine="machine rpi"
 
 # display the cpu and gpt temperature of raspberry pi
 function temp {
