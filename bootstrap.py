@@ -25,12 +25,12 @@ def main(path: Path, branch: str, dry_run: bool) -> None:
     repo = f"git@github.com:{REPOSITORY}.git"
     options = f"--branch {branch} --source {path}"
 
-    print(f"Deploying machine to: {path}")
+    print(f"bootstrapping machine at: {path}")
     if dry_run:
         run(f"{CHEZMOI} init --apply {repo} {options} --dry-run")
     else:
         run(f"{CHEZMOI} init --apply {repo} {options}")
-    print("Machine deployed successfully.")
+    print("machine bootstrapped successfully")
 
 
 def run(cmd: Union[str, list[str]]) -> subprocess.CompletedProcess[bytes]:
@@ -66,10 +66,10 @@ if __name__ == "__main__":
     try:  # Run script
         main(args.path, args.branch, args.dry_run)
     except KeyboardInterrupt:
-        print("Aborted!")
+        print("aborted!")
         sys.exit(1)
     except subprocess.CalledProcessError as error:
-        print(f"Error: {error}", file=sys.stderr)
+        print(f"error: {error}", file=sys.stderr)
         sys.exit(1)
 
 # endregion
