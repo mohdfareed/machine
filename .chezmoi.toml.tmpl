@@ -1,0 +1,21 @@
+{{- /* Interactive machine selection */ -}}
+{{- $machines := list "gleason" "macbook" "rpi" "pc" "codespaces" -}}
+{{- $machine := promptChoiceOnce . "machine" "Select machine" $machines -}}
+
+{{- /* Prompt for machine and private data paths */ -}}
+{{- $machinePath := promptStringOnce . "machinePath" "Enter the machine path" -}}
+{{- $privatePath := promptStringOnce . "privatePath" "Enter the private path" -}}
+
+{{- /* Detect OS */ -}}
+{{- $os := .chezmoi.os -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   if (.chezmoi.kernel | lower | contains "microsoft") -}}
+{{-     $os = "wsl" -}}
+{{-   end -}}
+{{- end -}}
+
+[data]
+machine = {{ $machine | quote }}
+machinePath = {{ $machinePath | quote }}
+privatePath = {{ $privatePath | quote }}
+os = {{ $os | quote }}
