@@ -1,0 +1,6 @@
+# shellcheck source=/dev/null
+source "{{ .machinePath }}/config/shell/zshrc"
+if [[ -f "{{ .machinePath }}/machines/{{ .machine }}/zshrc" ]]; then
+    # shellcheck source=/dev/null
+    source "{{ .machinePath }}/machines/{{ .machine }}/zshrc"
+fi

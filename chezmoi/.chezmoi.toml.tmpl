@@ -1,10 +1,18 @@
 {{- /* Interactive machine selection */ -}}
 {{- $machines := list "gleason" "macbook" "rpi" "pc" "codespaces" -}}
-{{- $machine := promptChoice "Select machine" $machines -}}
+{{- $machine := promptChoice "Select machine" $machines (get . "machine") -}}
 
 {{- /* Prompt for machine and private data paths */ -}}
 {{- $machinePath := promptString "Enter the machine path" .chezmoi.workingTree -}}
-{{- $privatePath := promptString "Enter the private path" .privatePath -}}
+{{- $privatePath := promptString "Enter the private path" (get . "privatePath") -}}
+
+{{- /* Machine path variables */ -}}
+{{- $configPath := printf "%s/config" $machinePath -}}
+{{- $machinesPath := printf "%s/machines" $machinePath -}}
+{{- $scriptsPath := printf "%s/scripts" $machinePath -}}
+
+{{- /* Convenience path variables */ -}}
+{{- $machineConfigPath := printf "%s/machines/%s" $machinePath $machine -}}
 
 {{- /* Detect OS */ -}}
 {{- $os := .chezmoi.os -}}
@@ -14,12 +22,27 @@
 {{-   end -}}
 {{- end -}}
 
+# Chezmoi
 sourceDir = {{ $machinePath | quote }}
 workingTree = {{ $machinePath | quote }}
 progress = true
 
-[data]
+[data] # ======================================================================
+
+
+# Machine configuration
+os = {{ $os | quote }}
+arch = {{ .chezmoi.arch | quote }}
 machine = {{ $machine | quote }}
+
+# Deployment paths
 machinePath = {{ $machinePath | quote }}
 privatePath = {{ $privatePath | quote }}
-os = {{ $os | quote }}
+
+# Machine paths
+configPath = {{ $configPath | quote }}
+machinesPath = {{ $machinesPath | quote }}
+scriptsPath = {{ $scriptsPath | quote }}
+
+# Convenience paths
+machineConfigPath = {{ $machineConfigPath | quote }}

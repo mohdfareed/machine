@@ -1,0 +1,15 @@
+{{- if eq .chezmoi.os "darwin" -}}
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+{{- end -}}
+
+{{- $base := printf "%s/ssh.config" .configPath -}}
+{{- if stat $base -}}
+{{- include $base -}}
+{{- end -}}
+
+{{- $machine := printf "%s/ssh.config" .machineConfigPath -}}
+{{- if stat $machine -}}
+{{- include $machine -}}
+{{- end -}}

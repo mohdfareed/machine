@@ -1,5 +1,3 @@
-source $MACHINE/config/base/shell/zshrc # global configuration
-
 # Configuration: macOS
 # =============================================================================
 

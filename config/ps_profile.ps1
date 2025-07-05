@@ -1,2 +1,0 @@
-$Env:MACHINE = "{MACHINE}"
-$Env:MACHINE_ID = "{MACHINE_ID}"

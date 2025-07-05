@@ -1,8 +1,0 @@
-# Test package file
-# Add packages here, one per line
-# This is a test/template file
-
-# Basic tools
-git
-curl
-vim

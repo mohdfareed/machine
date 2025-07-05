@@ -1,4 +1,7 @@
 {
+    "shellcheck.customArgs": [
+        "--shell=bash" // REVIEW: Find zsh equivalent tool
+    ],
     // python
     "debugpy.debugJustMyCode": false,
     "[python]": {
@@ -31,6 +34,7 @@
         "macbook",
         "mohdfareed",
         "pwsh",
+        "shellcheck",
         "tailscale",
         "unshallow",
         "venv"

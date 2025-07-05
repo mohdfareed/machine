@@ -20,8 +20,9 @@ if command -v brew 1>/dev/null 2>&1; then
 fi
 
 # oh-my-posh theme
-local theme="$(oh-my-posh cache path)/themes/pure.omp.json"
+theme="$(oh-my-posh cache path)/themes/pure.omp.json"
 eval "$(oh-my-posh init zsh --config "$theme")"
+unset theme
 
 # dotnet completions, source:
 # https://learn.microsoft.com/en-us/dotnet/core/tools/enable-tab-autocomplete
@@ -57,5 +58,5 @@ setopt hist_ignore_dups
 setopt hist_find_no_dups
 
 # zinit and aliases
-source "$MACHINE/config/base/shell/zinit.sh"
-source "$MACHINE/config/base/shell/aliases.sh"
+source "$MACHINE/config/shell/zinit.sh"
+source "$MACHINE/config/shell/aliases.sh"
