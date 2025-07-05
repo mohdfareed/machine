@@ -1,0 +1,61 @@
+# Environment
+# =============================================================================
+
+# homebrew
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi # arm macos
+if [[ -f "/usr/local/bin/brew" ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+fi # intel macos
+if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi # linux/wsl
+
+# brew tools
+if command -v brew 1>/dev/null 2>&1; then
+    FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}" # completions
+    export PATH="$(brew --prefix python)/libexec/bin:$PATH" # python
+
+fi
+
+# oh-my-posh theme
+local theme="$(oh-my-posh cache path)/themes/pure.omp.json"
+eval "$(oh-my-posh init zsh --config "$theme")"
+
+# dotnet completions, source:
+# https://learn.microsoft.com/en-us/dotnet/core/tools/enable-tab-autocomplete
+_dotnet_zsh_complete() {
+    if [[ ! $(command -v dotnet) ]]; then
+        return
+    fi
+
+    local completions=("$(dotnet complete "$words")")
+    if [ -z "$completions" ]; then
+        _arguments '*::arguments: _normal'
+        return
+    fi
+
+    # this is not variable assignment, do not modify!
+    _values = "${(ps:\n:)completions}"
+}
+# compdef _dotnet_zsh_complete dotnet # (handled by zinit)
+
+# Configuration
+# =============================================================================
+
+# disable sessions
+[ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
+
+# history
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+
+# zinit and aliases
+source "$MACHINE/config/base/shell/zinit.sh"
+source "$MACHINE/config/base/shell/aliases.sh"

@@ -37,9 +37,11 @@
         "config",
     ],
     "cSpell.words": [
+        "chezmoi",
+        "macbook",
         "mohdfareed",
-        "PWSH",
-        "Tailscale",
+        "pwsh",
+        "tailscale",
         "unshallow"
     ],
 }

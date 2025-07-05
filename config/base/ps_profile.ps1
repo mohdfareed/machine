@@ -32,5 +32,3 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
-
-. "$Env:MACHINE/config/$Env:MACHINE_ID/zshenv.ps1"

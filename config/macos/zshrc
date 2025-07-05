@@ -1,4 +1,4 @@
-source $MACHINE/config/base/zshrc # global configuration
+source $MACHINE/config/base/shell/zshrc # global configuration
 
 # Configuration: macOS
 # =============================================================================

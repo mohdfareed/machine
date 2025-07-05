@@ -1,11 +1,61 @@
 # Machine Setup Project Review
 
-## Project Status: MIGRATION TO CHEZMOI PLANNED
+## Project Status: CHEZMOI MIGRATION - MAJOR PROGRESS ✅
 
-**DECISION**: Full migration to Chezmoi - no Python needed!
+**COMPLETED:**
+- ✅ **Clean Structure**: Eliminated duplicate files, organized in `.chezmoiscripts/` and `.chezmoidata/`
+- ✅ **Bootstrap Simplified**: Removed complex Python/shell bootstraps - now uses native Chezmoi one-liner
+- ✅ **Core Dotfiles Migrated**: zshrc, zshenv, gitconfig, VS Code settings all templated
+- ✅ **Documentation**: Complete README.md with workflows, helper script, and aliases
+- ✅ **User-Friendly**: Simple 3-command workflow with helpful aliases
+
+**REMAINING**: Migrate remaining config files, test full workflow, document secrets management.
+
+## CHEZMOI DOCUMENTATION TRACKING
+
+**Core User Guide References:**
+- https://www.chezmoi.io/user-guide/command-overview/ - Basic commands (init, add, edit, apply, update)
+- https://www.chezmoi.io/user-guide/setup/ - Initial setup, config files, templates
+- https://www.chezmoi.io/user-guide/daily-operations/ - Common workflows
+- https://www.chezmoi.io/user-guide/manage-different-types-of-file/ - File type handling
+- https://www.chezmoi.io/user-guide/include-files-from-elsewhere/ - External file inclusion
+- https://www.chezmoi.io/user-guide/manage-machine-to-machine-differences/ - Templates, conditionals
+- https://www.chezmoi.io/user-guide/use-scripts-to-perform-actions/ - run_once_, run_onchange_ scripts
+- https://www.chezmoi.io/user-guide/templating/ - Template syntax, functions
+
+**Machine-Specific Documentation:**
+- https://www.chezmoi.io/user-guide/machines/general/ - CPU detection, general machine info
+- https://www.chezmoi.io/user-guide/machines/linux/ - Linux-specific features
+- https://www.chezmoi.io/user-guide/machines/macos/ - macOS-specific features
+- https://www.chezmoi.io/user-guide/machines/windows/ - Windows-specific features
+- https://www.chezmoi.io/user-guide/machines/containers-and-vms/ - Container/VM handling
+
+## CHEZMOI STRUCTURE PRINCIPLES
+
+Based on the official documentation, here's how to properly organize Chezmoi:
+
+**Special Directories (all optional):**
+- `.chezmoiscripts/` - Better organization for scripts (replaces root-level run_* files)
+- `.chezmoitemplates/` - Shared templates and includes
+- `.chezmoidata/` - Static data files
+- `.chezmoiexternals/` - External file management
+
+**Naming Conventions:**
+- `dot_filename` → `.filename` (dotfiles)
+- `run_script.sh` → Script executed every time
+- `run_onchange_script.sh` → Script runs when content changes
+- `run_once_script.sh` → Script runs once per unique content
+- `before_` / `after_` → Script timing (e.g., `run_once_before_setup.sh`)
+- `.tmpl` suffix → Template files
+
+**Better Organization Strategy:**
+1. Use `.chezmoiscripts/` for all automation scripts
+2. Use `.chezmoitemplates/` for shared configs
+3. Group related dotfiles logically
+4. Use descriptive script names instead of cryptic prefixes
 
 **Research findings from https://chezmoi.io:**
-- ✅ **Scripts handle everything**: `run_once_`, `run_onchange_`, template scripts 
+- ✅ **Scripts handle everything**: `run_once_`, `run_onchange_`, template scripts
 - ✅ **Package management**: Cross-platform templated scripts
 - ✅ **Machine detection**: Built-in `.chezmoi.os`, `.chezmoi.hostname`, custom config
 - ✅ **Secrets**: Multiple password managers + encryption built-in
@@ -27,12 +77,12 @@
    - Go-based, cross-platform, mature ecosystem
    - Built-in templating, secrets management, machine detection
    - Work/home profiles, 1Password integration
-   
+
 2. **Nix Home Manager** - Growing rapidly
    - Declarative configuration, package management included
    - Reproducible environments, version locking
    - Learning curve but very powerful
-   
+
 3. **Rust alternatives** (newer, smaller communities):
    - **Dotter** (1k stars) - Windows/Linux/Mac support
    - **Comtrya** (556 stars) - Configuration management
@@ -80,7 +130,7 @@ git push
 ### ⚙️ **Configure Machine-Specific Things**
 ```bash
 # Templates use built-in variables:
-{{ .chezmoi.os }}          # "darwin", "linux", "windows"  
+{{ .chezmoi.os }}          # "darwin", "linux", "windows"
 {{ .chezmoi.arch }}        # "amd64", "arm64"
 {{ .chezmoi.hostname }}    # "MacBook-Pro", "rpi4"
 
@@ -89,7 +139,7 @@ git push
 export ICLOUD="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
 export DEV="$HOME/Developer"
 {{- else if eq .chezmoi.os "linux" }}
-export DEV="$HOME/projects"  
+export DEV="$HOME/projects"
 {{- end }}
 
 # Custom variables in ~/.config/chezmoi/chezmoi.toml:
@@ -143,7 +193,7 @@ chezmoi add --encrypt ~/.ssh/id_rsa
 
 But these could be simple `run_once_` scripts in Chezmoi.
 
-**WHAT YOU ACTUALLY NEED**: 
+**WHAT YOU ACTUALLY NEED**:
 - Pick a standard location pattern like the pros
 - Stop fighting the fundamental complexity - embrace it with a cleaner pattern
 

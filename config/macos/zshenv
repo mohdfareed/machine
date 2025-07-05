@@ -1,5 +1,3 @@
-source "$MACHINE/config/base/zshenv" # global variables
-
 # development environment
 export DEV="$HOME/Developer"
 export PATH="$DEV/bin:$PATH" # local binaries
@@ -7,3 +5,8 @@ export PATH="$DEV/bin:$PATH" # local binaries
 # machine environment variables
 export ICLOUD="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
 export GODOT="/Applications/Godot_mono.app/Contents/MacOS/Godot"
+
+if [[ -f "$MACHINE_PRIVATE/env.sh" ]]; then
+    source "$MACHINE_PRIVATE/env.sh" # private variables
+fi
+source "$MACHINE/config/base/shell/zshenv" # global variables
