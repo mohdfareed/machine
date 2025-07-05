@@ -1,5 +1,7 @@
 {
     "recommendations": [
+        "ms-vscode.powershell",
+        "timonwong.shellcheck",
         "donjayamanne.python-extension-pack",
         "ms-python.vscode-python-envs",
         "ms-python.black-formatter",

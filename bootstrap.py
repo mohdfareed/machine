@@ -34,7 +34,6 @@ POETRY_BUG_FIX = "sed 's/symlinks=False/symlinks=True/'"
 
 # Environment
 ENV = os.environ.copy()
-ENV["POETRY_VIRTUALENVS_IN_PROJECT"] = "true"
 
 
 def main(path: Path) -> None:
@@ -93,19 +92,8 @@ def run(cmd: Union[str, list[str]]) -> subprocess.CompletedProcess[bytes]:
 
 # region: CLI
 
-
-class ScriptFormatter(
-    argparse.ArgumentDefaultsHelpFormatter,
-    argparse.RawDescriptionHelpFormatter,
-): ...
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description=(__doc__ or "").strip(), formatter_class=ScriptFormatter
-    )
-
-    # Add arguments
+    parser = argparse.ArgumentParser(description=(__doc__ or "").strip())
     parser.add_argument(
         "-p",
         "--path",
@@ -114,20 +102,16 @@ if __name__ == "__main__":
         default=DEFAULT_MACHINE_PATH,
     )
 
-    # Parse arguments
     args = parser.parse_args()
-    try:  # Install the application
+    try:  # Run script
         main(args.path)
 
-    # Handle user interrupts
+    # Handle exceptions
     except KeyboardInterrupt:
         print("Aborted!")
         sys.exit(1)
-
-    # Handle shell errors
     except subprocess.CalledProcessError as error:
         print(f"Error: {error}", file=sys.stderr)
         sys.exit(1)
-
 
 # endregion

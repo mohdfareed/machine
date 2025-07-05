@@ -1,16 +1,6 @@
 {
-    // project
-    "python-envs.defaultEnvManager": "ms-python.python:uv",
-    "python-envs.defaultPackageManager": "ms-python.python:uv",
-    "python-envs.pythonProjects": [],
-    // debugging
-    "python.testing.pytestArgs": [
-        "tests"
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
+    // python
     "debugpy.debugJustMyCode": false,
-    // formatting
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true,
@@ -42,6 +32,7 @@
         "mohdfareed",
         "pwsh",
         "tailscale",
-        "unshallow"
+        "unshallow",
+        "venv"
     ],
 }

@@ -10,28 +10,14 @@ permissions:
   checks: write
 
 jobs:
-  code-quality:
+  shellcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
         with:
           fetch-depth: 0
-      - name: Set up environment
-        uses: ./.github/setup
 
-      - name: Linter
-        uses: dciborow/action-pylint@main
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-          reviewdog_flags: "-tee"
-
-      - name: Type checker
-        uses: jordemort/action-pyright@main
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-          reviewdog_flags: "-tee"
+      - uses: ludeeus/action-shellcheck@master
 
   spelling:
     runs-on: ubuntu-latest

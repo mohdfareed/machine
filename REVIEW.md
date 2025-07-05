@@ -1,15 +1,127 @@
 # Machine Setup Project Review
 
-## Project Status: CHEZMOI MIGRATION - MAJOR PROGRESS ✅
+## Project Status: RESTRUCTURING TO HOST-FIRST ARCHITECTURE 🔄
 
 **COMPLETED:**
-- ✅ **Clean Structure**: Eliminated duplicate files, organized in `.chezmoiscripts/` and `.chezmoidata/`
-- ✅ **Bootstrap Simplified**: Removed complex Python/shell bootstraps - now uses native Chezmoi one-liner
-- ✅ **Core Dotfiles Migrated**: zshrc, zshenv, gitconfig, VS Code settings all templated
-- ✅ **Documentation**: Complete README.md with workflows, helper script, and aliases
-- ✅ **User-Friendly**: Simple 3-command workflow with helpful aliases
+- ✅ **Legacy Analysis**: Comprehensive analysis of platform vs machine vs shared differences
+- ✅ **Structure Decision**: Host-first architecture with shared/ and machines/ separation
+- ✅ **Platform Differences Identified**: Package managers, file paths, SSH config, keychain integration
+- ✅ **Migration Strategy**: Templates only orchestrate includes, content stays pure config
 
-**REMAINING**: Migrate remaining config files, test full workflow, document secrets management.
+**CURRENT TASK**: Implementing base→os→machine layered structure with feature parity tracking
+
+## LEGACY FEATURE INVENTORY & MIGRATION STATUS
+
+## LEGACY FEATURE INVENTORY & MIGRATION STATUS
+
+**Python App Features (app/):**
+- [x] **Machine Detection**: ✅ Replaced with interactive prompt + OS detection in `.chezmoi.toml.tmpl`
+- [ ] **Plugin System**: ⏳ Replaced with layered YAML configs + templated scripts
+- [x] **Package Management**: ✅ Implemented in layered configs + `install-packages.sh.tmpl`
+- [ ] **SSH Setup**: ⏳ Need to migrate SSH key generation and agent setup
+- [ ] **Private Files**: ⏳ Need to implement secure file management
+- [x] **Shell Config**: ✅ Migrated ZSH configuration with layered includes
+- [x] **Git Config**: ✅ Migrated with layered configuration merging
+- [ ] **Tools Setup**: ⏳ Need to migrate VSCode, Docker, Node, etc. setup scripts
+
+**Legacy Config Features (config/):**
+- [x] **Base Layer**: ✅ Migrated shared configurations to `base/config.yaml`
+  - [x] Git config, zshrc shared content, environment variables
+- [x] **OS Layer**: ✅ Created platform-specific configs
+  - [x] macOS: Homebrew packages, system defaults, keychain integration
+  - [x] Linux: APT packages, systemd services, desktop preferences
+  - [x] Windows: Winget/Scoop packages, registry settings, PowerShell
+  - [x] WSL: Mixed Linux + Windows integration, performance optimizations
+- [x] **Machine Layer**: ✅ Created sample host-specific configs
+  - [x] work_laptop: Work-specific packages, git config, SSH hosts
+  - [x] personal_mac: Personal packages, gaming setup, homelab SSH
+
+**New Structure Implemented:**
+```
+chezmoi/
+├── .chezmoi.toml.tmpl           ✅ Interactive machine selection
+├── base/                        ✅ Shared configurations (80% of content)
+│   ├── config.yaml             ✅ Base packages, environment, git, shell
+│   ├── home/
+│   │   ├── .zshrc.tmpl         ✅ Layered shell config with includes
+│   │   └── .gitconfig.tmpl     ✅ Layered git config with includes
+│   └── scripts/
+│       └── install-packages.sh.tmpl ✅ Multi-platform package installer
+├── os/                          ✅ Platform-specific overrides
+│   ├── macos/config.yaml       ✅ Homebrew, system defaults, keychain
+│   ├── linux/config.yaml       ✅ APT, systemd, desktop environment
+│   ├── windows/config.yaml     ✅ Winget/Scoop, registry, PowerShell
+│   └── wsl/config.yaml         ✅ WSL integration, performance tuning
+└── machine/                     ✅ Host-specific overrides
+    ├── work_laptop/config.yaml ✅ Work packages, git, SSH, security
+    └── personal_mac/config.yaml ✅ Personal packages, gaming, homelab
+```
+
+**Migration Progress:**
+1. ✅ **Structure Creation**: Built base→os→machine hierarchy
+2. ✅ **Base Layer**: Migrated shared configs from `config/base/`
+3. ✅ **OS Layer**: Migrated all platform-specific configs
+4. ✅ **Machine Layer**: Created sample host-specific configs
+5. ✅ **Interactive Selection**: Implemented machine selection prompt
+6. ✅ **YAML Merging**: Implemented config layering logic in templates
+
+## ✅ **SOLUTION: PURE FILES + PLATFORM-AWARE DEPLOYMENT**
+
+**Fixed the templating contamination problem:**
+
+1. **Pure Configuration Files** (No templating, full IDE support):
+   - `base/config.yaml` - Pure YAML, no `{{ }}` templates
+   - `base/home/dot_config/powershell/Microsoft.PowerShell_profile.ps1` - Pure PowerShell (Unix)
+   - `base/home/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1` - Pure PowerShell (Windows)
+   - `base/home/dot_config/zsh/dot_zshrc` - Pure ZSH
+   - `base/home/dot_gitconfig.tmpl` - Still templated for user-specific git config
+
+2. **Platform-Specific Scripts** (Chezmoi runs appropriate script per platform):
+   - `.chezmoiscripts/run_once_01_install_packages.sh` - Unix (Bash + Homebrew + APT)
+   - `.chezmoiscripts/run_once_01_install_packages.ps1` - Windows (PowerShell + Scoop + Winget)
+
+3. **Correct PowerShell Profile Paths** (Platform-specific `$PROFILE` locations):
+   - **Windows**: `Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1`
+   - **macOS/Linux**: `dot_config/powershell/Microsoft.PowerShell_profile.ps1`
+
+4. **Built-in Cross-Platform Logic** (Inside pure files):
+   - PowerShell: Uses `$IsWindows` for platform detection
+   - ZSH: Uses standard Unix tools and conditional checks
+   - Both handle their platform differences internally
+
+**Key Benefits:**
+- ✅ **Full IDE Support**: Pure files get syntax highlighting, IntelliSense, linting
+- ✅ **Cross-Platform**: PowerShell runs on Windows/Unix, ZSH runs on Unix
+- ✅ **No Template Pollution**: Configuration content is clean and readable
+- ✅ **Windows Support**: Proper PowerShell + Scoop + Winget integration
+- ✅ **Correct Profile Paths**: Platform-specific `$PROFILE` locations respected
+- ✅ **Maintainable**: Easy to modify shell/PowerShell configs without breaking templates
+
+**Eliminated Files with Template Pollution:**
+- ❌ `dot_zshrc.tmpl` (185 lines of mixed templating + ZSH)
+- ❌ `Microsoft.PowerShell_profile.ps1.tmpl` (mixed templating + PowerShell)
+- ❌ `install-packages.sh.tmpl` (Bash script with PowerShell commands mixed in)
+
+## PLATFORM ANALYSIS RESULTS
+
+**Platform-Specific (OS-level):**
+- **Package Managers**: Homebrew (macOS/Linux) vs Winget/Scoop (Windows)
+- **File Paths**: XDG directories (Unix) vs AppData (Windows)
+- **Shell Environment**: Different tool paths (DOTNET_ROOT, Homebrew paths)
+- **SSH Config**: UseKeychain on macOS vs standard on Linux/Windows
+- **Keychain**: Different SSH key addition commands per platform
+
+**Machine-Specific (individual devices):**
+- **Environment Variables**: DEV paths, ICLOUD paths, tool-specific paths
+- **Package Selections**: Different tools per machine (Godot, etc.)
+- **SSH Keys**: Different key files and hosts per machine
+- **Git Config**: Different user.email/user.name per machine
+
+**Shared Content (cross-platform):**
+- **Git Configuration**: Most settings, aliases, base configuration
+- **Shell Content**: Most zshrc aliases/functions, base environment
+- **Editor Configs**: VS Code settings, Neovim configuration
+- **Base Environment**: Python, dotnet, general development tools
 
 ## CHEZMOI DOCUMENTATION TRACKING
 
