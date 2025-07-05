@@ -4,7 +4,7 @@
 
 {{- /* Prompt for machine and private data paths */ -}}
 {{- $machinePath := promptStringOnce . "machinePath" "Enter the machine path" -}}
-{{- $privatePath := promptStringOnce . "privatePath" "Enter the private path" -}}
+{{- $privatePath := promptStringOnce . "privatePath" "Enter the private path" .chezmoi.sourceDir -}}
 
 {{- /* Detect OS */ -}}
 {{- $os := .chezmoi.os -}}

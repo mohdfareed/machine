@@ -1,95 +1,45 @@
 #!/usr/bin/env python3
 """
-Deploy a new machine by installing the machine setup app.
+Deploy a new machine using Chezmoi.
 
-Clones the machine repository and installs the application using Poetry.
-If Poetry is not installed, it is installed locally first. The executable is
-symlinked to the pip installation path.
+Installs Chezmoi and bootstraps a new machine using the the official script at:
+https://www.chezmoi.io/install/#one-line-binary-install
 
 Requirements:
     - git
-    - pip
 
-For macOS, Command Line Tools for Xcode is required. Install it using:
+On macOS, Command Line Tools for Xcode are required. Install them using:
 xcode-select --install
 """
 
-# FIXME: Deploy using Chezmoi
-
 import argparse
-import os
-import re
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Union
 
-# Configuration
-DEFAULT_MACHINE_PATH = Path.home() / ".machine"
 REPOSITORY = "mohdfareed/machine"
-EXECUTABLE = "machine"
-
-# Constants
-POETRY_SCRIPT = "https://install.python-poetry.org"
-POETRY_BUG_FIX = "sed 's/symlinks=False/symlinks=True/'"
-
-# Environment
-ENV = os.environ.copy()
+DEFAULT_BRANCH = "main"
+DEFAULT_MACHINE_PATH = Path.home() / ".machine"
+CHEZMOI = f'sh -c "$(curl -fsLS get.chezmoi.io)" --'
 
 
-def main(path: Path) -> None:
+def main(path: Path, branch: str, dry_run: bool) -> None:
     """Install application."""
-    poetry_home = path / ".poetry"
-    ENV["POETRY_HOME"] = str(poetry_home)
-
-    if sys.platform == "win32":
-        executable = poetry_home / "Scripts" / f"{EXECUTABLE}.exe"
-    else:  # Unix-based
-        executable = poetry_home / "bin" / EXECUTABLE
-
-    # resolve installation path
-    pip_info = run("pip show pip").stdout.decode()
-    location_match = re.search(r"^Location:\s*(.*)$", pip_info, re.MULTILINE)
-    bin = location_match.group(1) if location_match else None
-    if not bin or not bin.strip():
-        raise RuntimeError(
-            "Failed to find pip installation location.", pip_info
-        )
-    executable_path = (Path(bin.strip()) / EXECUTABLE).with_suffix(
-        ".exe" if sys.platform == "win32" else ""
-    )
-
-    if not shutil.which("git"):
-        print("Error: Git is not installed.", file=sys.stderr)
-        sys.exit(1)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    repo = f"git@github.com:{REPOSITORY}.git"
+    options = f"--branch {branch} --source-dir {path}"
 
     print(f"Deploying machine to: {path}")
-    repo = f"https://github.com/{REPOSITORY}.git"
-    run(f"git clone {repo} {path} --depth 1")
-    os.chdir(path)  # machine
-
-    if not (poetry := shutil.which("poetry")):
-        print("Installing poetry...")
-        if os.name != "nt":
-            run(f"curl -sSL {POETRY_SCRIPT} | {POETRY_BUG_FIX} | python3 -")
-        else:  # Windows
-            cmd = f"(wget -Uri {POETRY_SCRIPT} -UseBasicParsing).Content"
-            run(f"{cmd} | {POETRY_BUG_FIX} | py -")
-        poetry = poetry_home / "bin" / "poetry"
-
-    print("Installing application...")
-    run(f"{poetry} install")
-    executable_path.symlink_to(executable)
-
-    print(f"Linked executable: {executable_path} -> {executable}")
+    if dry_run:
+        run(f"{CHEZMOI} init --apply {repo} {options} --dry-run")
+    else:
+        run(f"{CHEZMOI} init --apply {repo} {options}")
     print("Machine deployed successfully.")
 
 
 def run(cmd: Union[str, list[str]]) -> subprocess.CompletedProcess[bytes]:
     cmd = cmd if isinstance(cmd, str) else " ".join(cmd)
-    return subprocess.run(cmd, shell=True, env=ENV, check=True)
+    return subprocess.run(cmd, shell=True, check=True)
 
 
 # region: CLI
@@ -103,12 +53,18 @@ if __name__ == "__main__":
         help="machine installation path",
         default=DEFAULT_MACHINE_PATH,
     )
-
+    parser.add_argument(
+        "-b",
+        "--branch",
+        type=str,
+        help="machine repo branch",
+        default=DEFAULT_BRANCH,
+    )
+    parser.add_argument("--dry-run", action="store_true", help="dry run")
     args = parser.parse_args()
-    try:  # Run script
-        main(args.path)
 
-    # Handle exceptions
+    try:  # Run script
+        main(args.path, args.branch, args.dry_run)
     except KeyboardInterrupt:
         print("Aborted!")
         sys.exit(1)
