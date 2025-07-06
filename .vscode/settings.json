@@ -3,6 +3,7 @@
     "files.associations": {
         "*.tmpl": "go",
         "symlink_*": "go",
+        "*.py.tmpl": "python",
         // specific files
         ".chezmoiignore": "go",
     },

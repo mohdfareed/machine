@@ -1,0 +1,27 @@
+{{/*
+  Load packages template - loads base and machine-specific packages.
+
+  Usage:
+  {{ template "load-packages" . }}
+
+  Args:
+    ctx: the template context (pass .)
+*/}}
+
+{{- $basePackages := dict -}}
+{{- $machinePackages := dict -}}
+
+{{- /* Load base packages */ -}}
+{{- $basePath := joinPath .configPath "packages.yaml" -}}
+{{- if stat $basePath -}}
+{{- $basePackages = include $basePath | fromYaml -}}
+{{- end -}}
+
+{{- /* Load machine-specific packages */ -}}
+{{- $machinePath := joinPath .machineConfigPath "packages.yaml" -}}
+{{- if stat $machinePath -}}
+{{- $machinePackages = include $machinePath | fromYaml -}}
+{{- end -}}
+
+{{- /* Return raw data for script to merge */ -}}
+{{- dict "base" $basePackages "machine" $machinePackages | toJson -}}

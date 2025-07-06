@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""Install packages when package configuration changes."""
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+# scripts
+scripts_dir = Path("{{ .scriptsPath }}")
+script = scripts_dir / "packages.py"
+
+# packages
+packages = """
+{{ template "packages" . }}
+"""
+
+# environment
+env = os.environ.copy()
+env["CHEZMOI_PACKAGES"] = packages
+
+# run script
+result = subprocess.run(
+    [sys.executable, str(script)],
+    env=env,
+    check=False,
+)
+sys.exit(result.returncode)
