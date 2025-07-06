@@ -1,0 +1,10 @@
+packages:
+  brew:
+    - git
+    - git-lfs
+    - gh
+    - python3
+  apt:
+    - git
+    - git-lfs
+    - python3

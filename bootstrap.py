@@ -6,6 +6,9 @@ Installs Chezmoi and bootstraps a new machine using the the official script at:
 https://www.chezmoi.io/install/#one-line-binary-install
 On macOS, Command Line Tools for Xcode are required. Install them using:
 xcode-select --install
+
+Requirements:
+    - Python 3.9.6 or later (macOS pre-installed version)
 """
 
 import argparse
