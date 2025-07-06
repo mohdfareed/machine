@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument("--local", action="store_true", help="use local repo")
     args, extra = parser.parse_known_args()
 
-    try:  # Run script
+    try:  # run script
         with TemporaryDirectory() as tempdir:
             main(args.path, args.local, Path(tempdir), extra)
     except KeyboardInterrupt:

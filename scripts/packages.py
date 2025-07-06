@@ -3,6 +3,16 @@
 Cross-platform package installer.
 Reads JSON from CHEZMOI_PACKAGES and installs packages using
 the specified package managers.
+
+Expected JSON structure:
+{
+    "base": {
+        "manager": ["pkg"],
+    },
+    "machine": {
+        "manager": ["pkg"],
+    }
+}
 """
 
 import json
@@ -22,13 +32,13 @@ def main() -> None:
 def load_packages(source: str) -> dict[str, list[str]]:
     try:
         data = json.loads(os.environ.get("CHEZMOI_PACKAGES", ""))
-        return data.get(source, {}).get("packages", {})
+        return data.get(source, {})
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid CHEZMOI_PACKAGES: {e}") from e
 
 
 if __name__ == "__main__":
-    try:  # Run script
+    try:  # run script
         main()
     except KeyboardInterrupt:
         print("aborted!")

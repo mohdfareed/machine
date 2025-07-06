@@ -7,16 +7,16 @@ from pathlib import Path
 
 # scripts
 scripts_dir = Path("{{ .scriptsPath }}")
-script = scripts_dir / "packages.py"
+script = scripts_dir / "scripts.py"
 
-# packages
-packages = """
-{{ template "packages" . }}
+# setup scripts
+scripts = """
+{{ template "scripts" . }}
 """
 
 # environment
 env = os.environ.copy()
-env["CHEZMOI_PACKAGES"] = packages
+env["CHEZMOI_SCRIPTS"] = scripts
 
 # run script
 result = subprocess.run(

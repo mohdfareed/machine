@@ -1,10 +1,11 @@
-packages:
-  brew:
-    - git
-    - git-lfs
-    - gh
-    - python3
-  apt:
-    - git
-    - git-lfs
-    - python3
+# TODO: reafactor *.pkg files
+
+brew:
+  - git
+  - git-lfs
+  - gh
+  - python3
+apt:
+  - git
+  - git-lfs
+  - python3

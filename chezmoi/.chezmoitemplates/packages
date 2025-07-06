@@ -2,7 +2,7 @@
   Load packages template - loads base and machine-specific packages.
 
   Usage:
-  {{ template "load-packages" . }}
+  {{ template "packages" . }}
 
   Args:
     ctx: the template context (pass .)
