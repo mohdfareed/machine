@@ -3,8 +3,8 @@
 {{- $machine := promptChoice "Select machine" $machines (get . "machine") -}}
 
 {{- /* Prompt for machine and private data paths */ -}}
-{{- $machinePath := promptString "Enter the machine path" .chezmoi.workingTree -}}
-{{- $privatePath := promptString "Enter the private path" (get . "privatePath") -}}
+{{- $machinePath := promptString "Enter the machine path" (env "MACHINE" | default .chezmoi.workingTree) -}}
+{{- $privatePath := promptString "Enter the private path" (env "MACHINE_PRIVATE" | default (get . "privatePath")) -}}
 
 {{- /* Machine path variables */ -}}
 {{- $configPath := printf "%s/config" $machinePath -}}

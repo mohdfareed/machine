@@ -16,31 +16,22 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 REPOSITORY = "mohdfareed/machine"
-DEFAULT_BRANCH = "dev-refactor"  # FIXME: switch to main
-DEFAULT_MACHINE_PATH = Path.home() / ".machine"
 CHEZMOI = f'sh -c "$(curl -fsLS get.chezmoi.io)" --'
 
 
-def main(
-    bin: Path, path: Path, branch: str, local: bool, dry_run: bool
-) -> None:
+def main(path: Path, local: bool, bin: Path, args: list[str]) -> None:
     """Install application."""
     path = path.expanduser().resolve()
     bin = bin.expanduser().resolve()
+    options = " ".join(args).strip()
 
-    repo = f"git@github.com:{REPOSITORY}.git"
+    repo = f"git@github.com:{REPOSITORY}.git" if not local else ""
     chezmoi = f"{CHEZMOI} -b {bin}"
     if shutil.which("chezmoi"):
         chezmoi = "chezmoi"
 
-    options = f"--source {path}"
-    if not local:
-        options += f" --branch {branch} {repo}"
-    if dry_run:
-        options += f" --dry-run"
-
     print(f"bootstrapping machine at: {path}")
-    run(f"{chezmoi} init --apply {options}")
+    run(f"{chezmoi} init --apply --source {path} {repo} {options}")
     print("machine bootstrapped successfully")
 
 
@@ -60,24 +51,14 @@ if __name__ == "__main__":
         "path",
         type=Path,
         help="machine installation path",
-        default=DEFAULT_MACHINE_PATH,
+        default=Path.home() / ".machine",
     )
-    parser.add_argument(
-        "-b",
-        "--branch",
-        type=str,
-        help="machine repo branch",
-        default=DEFAULT_BRANCH,
-    )
-    parser.add_argument("--dry-run", action="store_true", help="dry run")
     parser.add_argument("--local", action="store_true", help="use local repo")
-    args = parser.parse_args()
+    args, extra = parser.parse_known_args()
 
     try:  # Run script
         with TemporaryDirectory() as tempdir:
-            main(
-                Path(tempdir), args.path, args.branch, args.local, args.dry_run
-            )
+            main(args.path, args.local, Path(tempdir), extra)
     except KeyboardInterrupt:
         print("aborted!")
         sys.exit(1)
