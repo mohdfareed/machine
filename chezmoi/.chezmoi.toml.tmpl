@@ -1,18 +1,27 @@
+# MARK: Prompts
+# =============================================================================
+
 {{- /* Interactive machine selection */ -}}
 {{- $machines := list "gleason" "macbook" "rpi" "pc" "codespaces" -}}
 {{- $machine := promptChoice "Select machine" $machines (get . "machine") -}}
 
-{{- /* Prompt for machine and private data paths */ -}}
-{{- $machinePath := promptString "Enter the machine path" (env "MACHINE" | default .chezmoi.workingTree) -}}
-{{- $privatePath := promptString "Enter the private path" (env "MACHINE_PRIVATE" | default (get . "privatePath")) -}}
+{{- /* Prompt for machine path */ -}}
+{{- $machinePath := promptString "Enter the machine path"
+	(env "MACHINE" | default .chezmoi.workingTree)
+-}}
+
+{{- /* Prompt for private path */ -}}
+{{- $privatePath := promptString "Enter the private path"
+	(env "MACHINE_PRIVATE" | default (get . "privatePath"))
+-}}
+
+# MARK: Configuration
+# =============================================================================
 
 {{- /* Machine path variables */ -}}
 {{- $configPath := printf "%s/config" $machinePath -}}
-{{- $machinesPath := printf "%s/machines" $machinePath -}}
-{{- $scriptsPath := printf "%s/scripts" $machinePath -}}
-
-{{- /* Convenience path variables */ -}}
 {{- $machineConfigPath := printf "%s/machines/%s" $machinePath $machine -}}
+{{- $scriptsPath := printf "%s/scripts" $machinePath -}}
 
 {{- /* Detect OS */ -}}
 {{- $os := .chezmoi.os -}}
@@ -22,27 +31,26 @@
 {{-   end -}}
 {{- end -}}
 
-# Chezmoi
+# MARK: Chezmoi
+# =============================================================================
+
 sourceDir = {{ $machinePath | quote }}
 workingTree = {{ $machinePath | quote }}
 progress = true
 
-[data] # ======================================================================
+# MARK: Configuration
+# =============================================================================
 
-
-# Machine configuration
+[data]
 os = {{ $os | quote }}
 arch = {{ .chezmoi.arch | quote }}
-machine = {{ $machine | quote }}
 
-# Deployment paths
+# Deployment Config
+machine = {{ $machine | quote }}
 machinePath = {{ $machinePath | quote }}
 privatePath = {{ $privatePath | quote }}
 
-# Machine paths
+# Machine Paths
 configPath = {{ $configPath | quote }}
-machinesPath = {{ $machinesPath | quote }}
-scriptsPath = {{ $scriptsPath | quote }}
-
-# Convenience paths
 machineConfigPath = {{ $machineConfigPath | quote }}
+scriptsPath = {{ $scriptsPath | quote }}

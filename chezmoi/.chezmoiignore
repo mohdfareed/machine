@@ -3,7 +3,7 @@ Library/**
 {{ end }}
 
 {{ if ne .chezmoi.os "linux" }}
-dot_config/Code/**
+.config/Code/**
 {{ end }}
 
 {{ if ne .chezmoi.os "windows" }}
@@ -12,5 +12,5 @@ AppData/**
 {{ end }}
 
 {{ if eq .chezmoi.os "windows" }}
-dot_config/powershell/**
+.config/powershell/**
 {{ end }}

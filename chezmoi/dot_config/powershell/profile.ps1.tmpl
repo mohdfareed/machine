@@ -1,14 +1,1 @@
-$env:MACHINE = "{{ .machinePath }}"
-$env:MACHINE_ID = "{{ .machine }}"
-
-$env:MACHINE_PRIVATE = "{{ .privatePath }}"
-$env:MACHINE_SHARED = "{{ .configPath }}"
-$env:MACHINE_CONFIG = "{{ .machineConfigPath }}"
-
-if (Test-Path -Path "$env:MACHINE_PRIVATE") {
-    . "$env:MACHINE_PRIVATE/profile.ps1"
-}
-. "$env:MACHINE_SHARED/shell/profile.ps1"
-if (Test-Path -Path "$env:MACHINE_CONFIG/profile.ps1") {
-    . "$env:MACHINE_CONFIG/profile.ps1"
-}
+{{- template "profile.ps1" . -}}

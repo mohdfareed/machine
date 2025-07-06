@@ -1,4 +1,1 @@
-[include]
-    path = {{ .configPath }}/git/.gitconfig
-[include]
-    path = {{ .machineConfigPath }}/.gitconfig
+{{- template ".gitconfig" . -}}

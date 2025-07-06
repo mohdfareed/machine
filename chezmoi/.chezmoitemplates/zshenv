@@ -1,0 +1,22 @@
+# Inputs
+export MACHINE="{{ .machinePath }}"
+export MACHINE_ID="{{ .machine }}"
+export MACHINE_PRIVATE="{{ .privatePath }}"
+
+# Convenience
+export MACHINE_SHARED="{{ .configPath }}"
+export MACHINE_CONFIG="{{ .machineConfigPath }}"
+export MACHINE_SCRIPTS="{{ .scriptsPath }}"
+
+if [[ -f "$MACHINE_PRIVATE/zshenv" ]]; then
+    # shellcheck source=/dev/null
+    source "$MACHINE_PRIVATE/zshenv"
+fi
+
+# shellcheck source=/dev/null
+source "$MACHINE/config/shell/zshenv"
+
+if [[ -f "$MACHINE/machines/$MACHINE_ID/zshenv" ]]; then
+    # shellcheck source=/dev/null
+    source "$MACHINE/machines/$MACHINE_ID/zshenv"
+fi
