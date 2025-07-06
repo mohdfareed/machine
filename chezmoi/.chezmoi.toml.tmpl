@@ -1,22 +1,21 @@
-# MARK: Prompts
-# =============================================================================
-
 {{- /* Interactive machine selection */ -}}
 {{- $machines := list "gleason" "macbook" "rpi" "pc" "codespaces" -}}
-{{- $machine := promptChoice "Select machine" $machines (get . "machine") -}}
+{{- $machine := "" -}}
+{{- if hasKey . "machine" -}}
+{{- 	$machine = promptChoice "Select machine" $machines .machine -}}
+{{- else -}}
+{{- 	$machine = promptChoice "Select machine" $machines -}}
+{{- end -}}
 
 {{- /* Prompt for machine path */ -}}
 {{- $machinePath := promptString "Enter the machine path"
-	(env "MACHINE" | default .chezmoi.workingTree)
+	.chezmoi.workingTree
 -}}
 
 {{- /* Prompt for private path */ -}}
 {{- $privatePath := promptString "Enter the private path"
-	(env "MACHINE_PRIVATE" | default (get . "privatePath"))
+	(get . "privatePath")
 -}}
-
-# MARK: Configuration
-# =============================================================================
 
 {{- /* Machine path variables */ -}}
 {{- $configPath := printf "%s/config" $machinePath -}}
