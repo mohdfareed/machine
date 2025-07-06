@@ -1,17 +1,16 @@
-{{- if eq .os "darwin" }}
-dot_config/Code/**
-Documents/**
-symlink_AppData/**
-{{- end }}
+{{ if ne .chezmoi.os "darwin" }}
+Library/**
+{{ end }}
 
-{{- if eq .os "linux" }}
-symlink_Library/**
-Documents/**
-symlink_AppData/**
-{{- end }}
-
-{{- if eq .os "windows" }}
-symlink_Library/**
+{{ if ne .chezmoi.os "linux" }}
 dot_config/Code/**
+{{ end }}
+
+{{ if ne .chezmoi.os "windows" }}
+Documents/**
+AppData/**
+{{ end }}
+
+{{ if eq .chezmoi.os "windows" }}
 dot_config/powershell/**
-{{- end }}
+{{ end }}

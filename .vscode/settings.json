@@ -1,4 +1,12 @@
 {
+    // chezmoi
+    "files.associations": {
+        "*.tmpl": "go",
+        "symlink_*": "go",
+        // specific files
+        ".chezmoiignore": "go",
+    },
+    // shell
     "shellcheck.customArgs": [
         "--shell=bash" // REVIEW: Find zsh equivalent tool
     ],

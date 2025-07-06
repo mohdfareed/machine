@@ -1,8 +1,1 @@
-{{- $machineConfig := printf "%s/vim" .machineConfigPath -}}
-{{- $baseConfig := printf "%s/vim" .configPath -}}
-
-{{- if stat $machineConfig -}}
-{{- $machineConfig -}}
-{{- else -}}
-{{- $baseConfig -}}
-{{- end -}}
+{{- template "symlink" (dict "ctx" . "cfg"  "vim" ) -}}
