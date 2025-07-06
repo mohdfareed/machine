@@ -1,0 +1,7 @@
+{{- $machineConfig := printf "%s/ssh.config" .machineConfigPath -}}
+{{- $baseConfig := printf "%s/ssh.config" .configPath -}}
+{{- if stat $machineConfig -}}
+{{- $machineConfig -}}
+{{- else -}}
+{{- $baseConfig -}}
+{{- end -}}

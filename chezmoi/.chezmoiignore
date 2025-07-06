@@ -1,11 +1,17 @@
 {{- if eq .os "darwin" }}
-Documents/*
+dot_config/Code/**
+Documents/**
+symlink_AppData/**
 {{- end }}
 
 {{- if eq .os "linux" }}
-Documents/*
+symlink_Library/**
+Documents/**
+symlink_AppData/**
 {{- end }}
 
 {{- if eq .os "windows" }}
-dot_config/powershell/*
+symlink_Library/**
+dot_config/Code/**
+dot_config/powershell/**
 {{- end }}

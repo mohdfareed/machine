@@ -1,0 +1,8 @@
+{{- $machineConfig := printf "%s/.gitignore" .machineConfigPath -}}
+{{- $baseConfig := printf "%s/git/.gitignore" .configPath -}}
+
+{{- if stat $machineConfig -}}
+{{- $machineConfig -}}
+{{- else -}}
+{{- $baseConfig -}}
+{{- end -}}

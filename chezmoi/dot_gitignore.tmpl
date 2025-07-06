@@ -1,9 +1,0 @@
-{{- $base := printf "%s/git/.gitignore" .configPath -}}
-{{- if stat $base -}}
-{{- include $base -}}
-{{- end -}}
-
-{{- $machine := printf "%s/.gitignore" .machineConfigPath -}}
-{{- if stat $machine -}}
-{{- include $machine -}}
-{{- end -}}

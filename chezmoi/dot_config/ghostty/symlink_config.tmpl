@@ -1,0 +1,8 @@
+{{- $machineConfig := printf "%s/ghostty.config" .machineConfigPath -}}
+{{- $baseConfig := printf "%s/ghostty.config" .configPath -}}
+
+{{- if stat $machineConfig -}}
+{{- $machineConfig -}}
+{{- else -}}
+{{- $baseConfig -}}
+{{- end -}}
