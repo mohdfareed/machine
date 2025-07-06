@@ -1,9 +1,5 @@
 winget:
   - tailscale.tailscale # tailscale
-
-  # development
-  - golang.Go # go lang
-  - microsoft.DotNet.SDK # dotnet
   - docker.DockerDesktop # docker
 
   # apps
