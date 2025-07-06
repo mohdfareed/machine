@@ -1,0 +1,48 @@
+brew:
+  # development
+  - go # go-lang
+  - cask: powershell # pwsh
+  - cask: dotnet-sdk # .net
+  - cask: visual-studio-code # vscode
+  # - cask: godot-mono # game engine
+
+  # apps
+  - cask: tailscale # VPN
+  - cask: ghostty # Terminal
+  - cask: chatgpt # AI assistant
+  # - cask: docker # REVIEW: cask doesn't support arm
+
+  # utilities
+  - mas # app store cli
+  - gnu-time # timing utility
+  - cask: iina # video player
+  - cask: the_unarchiver # archive utility
+  - cask: mos # mouse utility
+  - cask: monitorcontrol # monitor utility
+
+  # - cask: swish # trackpad gestures
+  # - cask: figma # design
+  # - cask: tradingview # trading
+  # - cask: sf-symbols # system symbols
+  # - cask: utm # virtual machines
+
+  # fonts
+  - font-computer-modern # Fonts plugin
+  - font-jetbrains-mono-nerd-font # Fonts plugin
+
+mas:
+  # apple
+  - 409183694 # Keynote
+  - 409203825 # Numbers
+  - 409201541 # Pages
+  - 497799835 # Xcode
+
+  # productivity
+  - 1487937127 # Craft
+  - 1447330651 # Copilot
+  - 1504965415 # TechniCalc
+
+  # utilities
+  - 1592917505 # Noir
+  - 1440147259 # AdGuard
+  - 1554235898 # Peek

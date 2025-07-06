@@ -12,7 +12,7 @@ machines/{machine}/
 ├── zshenv             # Machine-specific environment variables
 ├── ssh.config         # SSH configuration for this machine
 ├── .gitconfig         # Git configuration overrides
-├── packages.pkg       # Package definitions (see Package Format)
+├── packages.yaml       # Package definitions (see Package Format)
 ├── scripts/           # Machine-specific scripts
 │   ├── setup.sh       # Initial setup script
 │   └── *.sh           # Other utility scripts
@@ -29,31 +29,7 @@ machines/{machine}/
 - **zshenv**: Sourced after `config/shell/zshenv`, for machine-specific environment variables
 - **ssh.config**: Included in SSH config after base SSH configuration
 - **.gitconfig**: Included in Git config after base Git configuration
-- **packages.pkg**: Machine-specific package requirements
-
-## Package Format (packages.pkg)
-
-Use comments to separate package managers:
-
-```
-# APT PACKAGES
-apt package-name
-apt another-package
-
-# HOMEBREW PACKAGES
-brew package-name
-brew tap some/tap
-
-# SNAP PACKAGES
-snap package-name
-snap-classic package-name
-
-# PIP PACKAGES
-pip package-name
-
-# NPM PACKAGES
-npm package-name
-```
+- **packages.yaml**: Machine-specific package requirements
 
 ## Naming Conventions
 

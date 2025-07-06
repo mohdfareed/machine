@@ -1,19 +1,6 @@
 # Configuration: macOS
 # =============================================================================
 
-# profile a command with gnu time
-function profile {
-    usage="usage: $0 command [args...]"
-    if (($# < 1)); then echo $usage && return 1; fi
-
-    format="\
-    ===Profiling Report===
-    ===Real time:    %es
-    ===Memory usage: %MKB
-    ===File size:    $(du -sh $(which "$1") | cut -f1)"
-    gtime -f "$format" "$@"
-}
-
 # add all ssh keys to keychain
 function ssh::fix-keychain {
     for file in ~/.ssh/*; do
@@ -25,32 +12,15 @@ function ssh::fix-keychain {
     done
 }
 
-# zip a folder with password without compression
-function zip-encrypt {
-    usage="usage: $0 dir"
-	if (($# != 1)); then echo $usage && return 1; fi
+# profile a command with gnu time
+function profile {
+    usage="usage: $0 command [args...]"
+    if (($# < 1)); then echo $usage && return 1; fi
 
-    if [[ ! -d "$1" ]]; then
-        echo "'$1' is not a directory"
-        return 1
-    fi
-
-    cd "$1"
-    dir_name=${PWD##*/}
-    zip -er0 "$dir_name.zip" . -x ".DS_Store" -x "._*"
-    mv "$dir_name.zip" ..
-    cd - >/dev/null
-}
-
-# unzip a folder with password
-function unzip-encrypt {
-    usage="usage: $0 file"
-    if (($# != 1)); then echo $usage && return 1; fi
-
-    if [[ ! -f "$1" ]]; then
-        echo "'$1' is not a file"
-        return 1
-    fi
-
-    unzip -P $(openssl rand -base64 32 | tr -d /=+) "$1"
+    format="\
+    ===Profiling Report===
+    ===Real time:    %es
+    ===Memory usage: %MKB
+    ===File size:    $(du -sh $(which "$1") | cut -f1)"
+    gtime -f "$format" "$@"
 }

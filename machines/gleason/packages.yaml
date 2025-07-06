@@ -1,0 +1,10 @@
+winget:
+  # development
+  - golang.Go # go lang
+  - microsoft.DotNet.SDK # dotnet
+  - docker.DockerDesktop # docker
+
+  # apps
+  - microsoft.VisualStudioCode # vscode
+  - microsoft.WindowsTerminal # terminal
+  - microsoft.PowerToys # utilities

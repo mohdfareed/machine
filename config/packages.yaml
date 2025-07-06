@@ -1,11 +1,54 @@
-# TODO: reafactor *.pkg files
+# MACOS
+# =============================================================================
 
 brew:
-  - git
-  - git-lfs
-  - gh
-  - python3
+  - git git-lfs gh # git
+  - zsh bat eza btop oh-my-posh. # shell
+  - neovim lazygit ripgrep fd # nvim
+  - python uv # python
+
+  # fonts
+  - font-computer-modern
+  - font-jetbrains-mono-nerd-font
+
+# LINUX
+# =============================================================================
+
 apt:
-  - git
-  - git-lfs
-  - python3
+  - openssh-server snapd # snap package manager
+  - keyring: # github cli
+      - key: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+      - repo: https://cli.github.com/packages stable main
+      - name: github-cli
+
+  - git git-lfs gh # git
+  - zsh bat eza fd-find # shell
+  - script: curl -s https://ohmyposh.dev/install.sh | bash -s
+  - python3 uv # python
+
+  # fonts
+  - fonts-jetbrains-mono # Fonts plugin
+  - fonts-lmodern # Fonts plugin
+
+snap:
+  - btop nvim lazygit-gm # nvim
+
+# windows
+# =============================================================================
+
+winget:
+  # git
+  - git.git github.gitLFS github.cli # git
+  - microsoft.gitCredentialManagerCore # credentials
+
+  # shell
+  - microsoft.powershell JanDeDobbeleer.OhMyPosh
+  # nvim
+  - neovim.neovim JesseDuffield.lazygit BurntSushi.ripgrep sharkdp.fd
+  # python
+  - python.python astral-sh.uv
+  # fonts
+  - devcom.JetBrainsMonoNerdFont
+
+scoop:
+  - btop-lhm # btop

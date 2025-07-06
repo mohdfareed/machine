@@ -1,0 +1,19 @@
+# Raspberry Pi machine-specific packages
+# Core packages are automatically inherited from config/packages.yaml
+
+apt:
+  - go # go-lang
+  - script: curl -s https://dot.net/v1/dotnet-install.sh | bash # dotnet
+  - script: curl -fsSL https://get.docker.com | sh # docker
+
+  - snapd # Snap package manager
+  - script: curl -fsSL https://tailscale.com/install.sh | sh
+  - python3-pip # Python package manager
+  - python3-venv # Python virtual environments
+
+# Note: Most packages are now in core config - this machine mainly needs basic setup tools
+
+snap:
+  - powershell # dev
+  - btop nvim lazygit-gm # shell
+  - code ripgrep --classic # editors

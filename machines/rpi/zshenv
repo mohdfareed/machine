@@ -1,2 +1,1 @@
-export MACHINE_PRIVATE="$MACHINE/private"
 export PATH="$PATH:/snap/bin"

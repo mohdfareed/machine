@@ -45,9 +45,6 @@ _dotnet_zsh_complete() {
 # Configuration
 # =============================================================================
 
-# disable sessions
-[ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
-
 # history
 setopt appendhistory
 setopt sharehistory
