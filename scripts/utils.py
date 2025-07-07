@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
-__all__ = ["PackageManager", "run"]
+__all__ = ["PackageManager", "run", "execute_script"]
 
 import enum
+import platform
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 
 class PackageManager(enum.Enum):
@@ -26,7 +28,7 @@ class PackageManager(enum.Enum):
 
     def is_supported(self) -> bool:
         if self == PackageManager.BREW:
-            return sys.platform.startswith("darwin")  # macOS
+            return platform.system().lower().startswith("darwin")  # macOS
         elif self == PackageManager.MAS:
             return PackageManager.BREW.is_supported()  # brew
 
@@ -70,3 +72,38 @@ class PackageManager(enum.Enum):
 
 def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
     return subprocess.run(cmd.strip(), shell=True, check=check)
+
+
+def execute_script(script: str) -> None:
+    system = platform.system().lower()
+    path = Path(script)
+    suffixes = [s.lower() for s in path.suffixes]
+
+    # PowerShell scripts (.ps1 and .win.ps1)
+    if any(s == ".ps1" for s in suffixes):
+        run(f"powershell -ExecutionPolicy Bypass -File {script}")
+        return
+
+    # Windows-specific executables (.win)
+    if suffixes and suffixes[-1] == ".win" and system == "windows":
+        run(script)
+        return
+
+    # Unix-like scripts (.sh, .linux, .macos, .unix)
+    if (
+        suffixes
+        and suffixes[-1] in {".sh", ".linux", ".macos", ".unix"}
+        and system in {"linux", "darwin"}
+    ):
+        run(script)
+        return
+
+    # Python scripts
+    if suffixes and suffixes[-1] == ".py":
+        run(f"{sys.executable} {script}")
+        return
+
+    try:  # Fallback to executing directly if executable
+        run(script)
+    except (OSError, subprocess.CalledProcessError):
+        print(f"Skipping unsupported script: {script}")

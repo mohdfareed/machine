@@ -1,5 +1,8 @@
-# set local host name
-scutil --set LocalHostName $HOSTNAME
+#!/bin/bash
+# System defaults for macOS
+
+echo "setting system defaults..."
+
 # switch windows in same space
 defaults write NSGlobalDomain AppleSpacesSwitchOnActivate -bool false
 # double click title bar to maximize
@@ -30,3 +33,5 @@ defaults write com.apple.dock mru-spaces -bool false
 
 # reduce wallpaper tinting in windows
 defaults write .GlobalPreferences AppleReduceDesktopTinting -bool true
+
+echo "system defaults set successfully"
