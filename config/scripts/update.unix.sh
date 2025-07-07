@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-echo "updating zinit plugins..."
+echo "updating unix tools..."
 
 # shellcheck source=/dev/null
 source "$MACHINE_SHARED/shell/zshenv"
@@ -8,4 +8,4 @@ source "$MACHINE_SHARED/shell/zshenv"
 source "$ZINIT_HOME/zinit.zsh"
 zinit update --all
 
-echo "zinit plugins updated successfully"
+echo "unix tools updated successfully"

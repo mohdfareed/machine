@@ -3,9 +3,8 @@
 
 brew:
   - script: >-
-      repo=\"https://raw.githubusercontent.com/Homebrew/install\";
-      command -v brew 1>/dev/null 2>&1 ||
-      /bin/bash -c \"$(curl -fsSL $repo/HEAD/install.sh)\"
+      command -v brew &>/dev/null ||
+      /bin/bash -c \"$(curl -fsSL https://git.io/JIY6g)\"
 
   - git git-lfs gh # git
   - zsh bat eza btop oh-my-posh # shell
