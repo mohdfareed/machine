@@ -1,20 +1,21 @@
 # Machine Setup & Dotfiles
 
-## Missing Features
+## TODO
 
-SSH:
+- Update `README.md`
+- Update copilot instructions
 
-  - loading ssh keys from private dir and set permissions
-  - Add keys to agent
-  - Keychain integration
-  - Key pair generation
+- SSH:
+    - Load ssh keys from private dir and set permissions
+    - Add keys to agent
+    - Keychain integration
+    - Key pair generation
 
-Others:
+- Others:
+    - Change default shell to zsh/pwsh
+    - Hostname configuration
+    - WSL support
 
-  - change default shell to zsh/pwsh
-  - install package managers (scripts)
-  - hostname configuration
-  - xcode license
-  - set `CODESPACES` environment variable
-  - wsl support
-  - `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` on windows
+- CI/CD:
+    - Restore python formatting checks in ci
+    - Add update script for updating dependencies during cd

@@ -25,15 +25,15 @@ jobs:
       - name: Set up environment
         uses: ./.github/setup
 
-      - name: Update dependencies
-        run: ./scripts/update.sh
+      # - name: Update dependencies
+      #   run: ./scripts/update.sh
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: update dependencies'
-          title: 'Update dependencies'
-          branch: 'deps'
+          commit-message: "chore: update dependencies"
+          title: "Update dependencies"
+          branch: "deps"
           sign-commits: true
-          labels: 'CD'
+          labels: "CD"
