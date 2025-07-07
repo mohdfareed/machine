@@ -13,9 +13,9 @@ if [[ -f "$MACHINE_PRIVATE/zshenv" ]]; then
 fi
 
 # shellcheck source=/dev/null
-source "$MACHINE/config/shell/zshenv"
+source "$MACHINE_SHARED/shell/zshenv"
 
-if [[ -f "$MACHINE/machines/$MACHINE_ID/zshenv" ]]; then
+if [[ -f "$MACHINE_CONFIG/zshenv" ]]; then
     # shellcheck source=/dev/null
-    source "$MACHINE/machines/$MACHINE_ID/zshenv"
+    source "$MACHINE_CONFIG/zshenv"
 fi
