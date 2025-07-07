@@ -39,7 +39,7 @@ def main(path: Path, local: bool, bin: Path, args: list[str]) -> None:
 
 
 def run(cmd: str) -> subprocess.CompletedProcess[bytes]:
-    return subprocess.run(cmd, shell=True, check=True)
+    return subprocess.run(cmd.strip(), shell=True, check=True)
 
 
 # region: CLI

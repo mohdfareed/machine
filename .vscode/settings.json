@@ -47,6 +47,7 @@
         "shellcheck",
         "tailscale",
         "unshallow",
-        "venv"
+        "venv",
+        "WINGET"
     ],
 }

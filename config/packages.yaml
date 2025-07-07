@@ -2,10 +2,16 @@
 # =============================================================================
 
 brew:
+  - script: >-
+      repo=\"https://raw.githubusercontent.com/Homebrew/install\";
+      command -v brew 1>/dev/null 2>&1 ||
+      /bin/bash -c \"$(curl -fsSL $repo/HEAD/install.sh)\"
+
   - git git-lfs gh # git
-  - zsh bat eza btop oh-my-posh. # shell
+  - zsh bat eza btop oh-my-posh # shell
   - neovim lazygit ripgrep fd # nvim
   - python uv # python
+  - powershell --cask # pwsh
 
   # fonts
   - font-computer-modern
@@ -15,13 +21,8 @@ brew:
 # =============================================================================
 
 apt:
-  - openssh-server snapd # snap package manager
-  - keyring: # github cli
-      - key: https://cli.github.com/packages/githubcli-archive-keyring.gpg
-      - repo: https://cli.github.com/packages stable main
-      - name: github-cli
-
-  - git git-lfs gh # git
+  - snapd # snap package manager
+  - git git-lfs # git
   - zsh bat eza fd-find # shell
   - script: curl -s https://ohmyposh.dev/install.sh | bash -s
   - python3 uv # python
@@ -31,7 +32,9 @@ apt:
   - fonts-lmodern # Fonts plugin
 
 snap:
-  - btop nvim lazygit-gm # nvim
+  - gh btop nvim lazygit-gm # git, shell, nvim
+  - ripgrep --classic # nvim
+  - powershell # pwsh
 
 # windows
 # =============================================================================
@@ -40,7 +43,6 @@ winget:
   # git
   - git.git github.gitLFS github.cli # git
   - microsoft.gitCredentialManagerCore # credentials
-
   # shell
   - microsoft.powershell JanDeDobbeleer.OhMyPosh
   # nvim
@@ -51,4 +53,5 @@ winget:
   - devcom.JetBrainsMonoNerdFont
 
 scoop:
+  - script: Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
   - btop-lhm # btop

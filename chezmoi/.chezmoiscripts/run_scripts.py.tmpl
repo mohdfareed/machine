@@ -1,27 +1,19 @@
-#!/usr/bin/env python3
+{{- $baseScripts := dict -}}
+{{- $machineScripts := dict -}}
+{{- $data := dict -}}
 
-import os
-import subprocess
-import sys
-from pathlib import Path
+{{- /* Load base scripts */ -}}
+{{- $basePath := joinPath .configPath "scripts.yaml" -}}
+{{- if stat $basePath -}}
+{{- $baseScripts = include $basePath | fromYaml -}}
+{{- end -}}
 
-# scripts
-scripts_dir = Path("{{ .scriptsPath }}")
-script = scripts_dir / "scripts.py"
+{{- /* Load machine-specific scripts */ -}}
+{{- $machinePath := joinPath .machineConfigPath "scripts.yaml" -}}
+{{- if stat $machinePath -}}
+{{- $machineScripts = include $machinePath | fromYaml -}}
+{{- end -}}
 
-# setup scripts
-scripts = """
-{{ template "scripts" . }}
-"""
-
-# environment
-env = os.environ.copy()
-env["CHEZMOI_SCRIPTS"] = scripts
-
-# run script
-result = subprocess.run(
-    [sys.executable, str(script)],
-    env=env,
-    check=False,
-)
-sys.exit(result.returncode)
+{{- /* Return raw data for script to merge */ -}}
+{{- $data = dict "base" $baseScripts "machine" $machineScripts -}}
+{{- template "script_runner.py" (dict "ctx" . "script" "scripts.py" "data" $data) -}}

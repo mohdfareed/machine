@@ -34,18 +34,17 @@ def main() -> None:
 
 def load_scripts(source: str) -> list[str]:
     try:
-        data = json.loads(os.environ.get("CHEZMOI_SCRIPTS", ""))
+        data = json.loads(os.environ.get("CHEZMOI_DATA", ""))
         return data.get(source, {}).get("scripts", [])
     except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid CHEZMOI_SCRIPTS: {e}") from e
+        raise ValueError(f"Invalid CHEZMOI_DATA: {e}") from e
 
 
 if __name__ == "__main__":
     try:  # run script
         main()
     except KeyboardInterrupt:
-        print("aborted!")
         sys.exit(1)
     except Exception as error:
-        print(f"error: {error}", file=sys.stderr)
+        print(f"scripts error: {error}", file=sys.stderr)
         sys.exit(1)
