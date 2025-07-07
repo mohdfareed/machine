@@ -35,12 +35,11 @@ RESERVED_PREFIXES = [
 
 
 def main(prefix: str) -> None:
+    print(f"running scripts with prefix: {prefix or 'all'}")
     base = load_scripts("base")
     machine = load_scripts("machine")
 
     for script in base + machine:
-        if not script.startswith(prefix):
-            continue
         if prefix == "" and is_scheduled_script(script):
             continue
 
@@ -57,7 +56,8 @@ def load_scripts(source: str) -> list[str]:
 
 
 def is_scheduled_script(script: str) -> bool:
-    return any(script.startswith(prefix) for prefix in RESERVED_PREFIXES)
+    filename = os.path.basename(script)
+    return any(filename.startswith(prefix) for prefix in RESERVED_PREFIXES)
 
 
 if __name__ == "__main__":
