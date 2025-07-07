@@ -3,11 +3,12 @@
 Script runner template - symlinks a config file, allowing machine override.
 
 Usage:
-template "script_runner.py" (dict "ctx" . "script"  "packages" "data" .packages)
+  template "script_runner.py" (dict "ctx" . "script"  "pkgs.py" "data" .pkgs)
 
 Args:
   ctx: the template context (pass .)
-  cfg: the relative path from the config root
+  script: the script to run
+  data: the data to pass to the script
 """
 
 import os
@@ -16,8 +17,7 @@ import sys
 from pathlib import Path
 
 # scripts
-scripts_dir = Path("{{ .ctx.scriptsPath }}")
-script = scripts_dir / "{{ .script }}"
+script = Path("{{ .ctx.scriptsPath }}") / "{{ .script }}"
 script_data = """
 {{ .data | toJson }}
 """
@@ -26,9 +26,18 @@ script_data = """
 env = os.environ.copy()
 env["CHEZMOI_DATA"] = script_data
 
+env["MACHINE"] = "{{ .ctx.machinePath }}"
+env["MACHINE_ID"] = "{{ .ctx.machine }}"
+env["MACHINE_PRIVATE"] = "{{ .ctx.privatePath }}"
+
+env["MACHINE_SHARED"] = "{{ .ctx.configPath }}"
+env["MACHINE_CONFIG"] = "{{ .ctx.machineConfigPath }}"
+
 try:  # run script
-    r = subprocess.run([sys.executable, str(script)], env=env, check=False)
-    sys.exit(r.returncode)
+    result = subprocess.run(
+        f"{sys.executable} {script}", shell=True, env=env, check=False
+    )
+    sys.exit(result.returncode)
 
 except KeyboardInterrupt:
     sys.exit(1)

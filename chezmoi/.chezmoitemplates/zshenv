@@ -6,7 +6,6 @@ export MACHINE_PRIVATE="{{ .privatePath }}"
 # Convenience
 export MACHINE_SHARED="{{ .configPath }}"
 export MACHINE_CONFIG="{{ .machineConfigPath }}"
-export MACHINE_SCRIPTS="{{ .scriptsPath }}"
 
 if [[ -f "$MACHINE_PRIVATE/zshenv" ]]; then
     # shellcheck source=/dev/null

@@ -54,9 +54,9 @@ def install_package(pkg_manager: utils.PackageManager, pkg: Any) -> None:
         print(f"running script: {command}")
         utils.run(command)
 
-    elif isinstance(pkg, str):
+    elif isinstance(pkg, str) or isinstance(pkg, int):
         print(f"{pkg_manager} installing {pkg}...")
-        pkg_manager.install(pkg)
+        pkg_manager.install(str(pkg))
 
     else:
         print(f"invalid package format: {pkg}")
