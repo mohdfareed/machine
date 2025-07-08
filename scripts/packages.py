@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Cross-platform package installer.
-Reads JSON from CHEZMOI_PACKAGES and installs packages using
+Reads JSON from CHEZMOI_DATA and installs packages using
 the specified package managers.
 
 Expected JSON structure:

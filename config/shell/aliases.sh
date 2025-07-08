@@ -3,6 +3,8 @@
 # Functions and Aliases
 # =============================================================================
 
+alias code::machine='code $(chezmoi source-path)/..'
+
 alias zsh::reload='exec $SHELL'
 alias ssh::gen-key='ssh-keygen -t ed25519 -C'
 

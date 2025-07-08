@@ -6,7 +6,7 @@ Reads JSON from CHEZMOI_DATA and runs scripts using the appropriate shell.
 Expected JSON structure:
 {
     "base": [
-        "script1.py",
+        "script.py",
     ],
     "machine": [
         "script.sh",
