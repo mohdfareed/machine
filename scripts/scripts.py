@@ -50,7 +50,7 @@ def load_scripts(source: str) -> list[str]:
         data = json.loads(os.environ.get("CHEZMOI_DATA", ""))
         return data.get(source, {})
     except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid CHEZMOI_DATA: {e}") from e
+        raise ValueError(f"invalid CHEZMOI_DATA: {e}") from e
 
 
 def is_scheduled_script(script: str) -> bool:

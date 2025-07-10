@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-PY_VERSION="3.9.6"  # default macos version
+PY_VERSION="3.8"  # default macos version
 VENV=".venv"  # virtual environment
 
 # fetch full git history

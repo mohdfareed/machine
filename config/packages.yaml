@@ -11,6 +11,7 @@ brew:
   - neovim lazygit ripgrep fd # nvim
   - python uv # python
   - powershell --cask # pwsh
+  - chezmoi # chezmoi
 
   # fonts
   - font-computer-modern
@@ -34,23 +35,25 @@ snap:
   - gh btop nvim lazygit-gm # git, shell, nvim
   - ripgrep --classic # nvim
   - powershell # pwsh
+  - chezmoi --classic # chezmoi
 
 # windows
 # =============================================================================
 
 winget:
+  - script: Invoke-WebRequest -Uri https://get.scoop.sh | Invoke-Expression
   # git
   - git.git github.gitLFS github.cli # git
-  - microsoft.gitCredentialManagerCore # credentials
   # shell
   - microsoft.powershell JanDeDobbeleer.OhMyPosh
   # nvim
-  - neovim.neovim JesseDuffield.lazygit BurntSushi.ripgrep sharkdp.fd
+  - neovim.neovim JesseDuffield.lazygit BurntSushi.ripgrep.MSVC sharkdp.fd
   # python
-  - python.python astral-sh.uv
+  - python.python.3.13 astral-sh.uv # REVIEW: win python version
+  # chezmoi
+  - twpayne.chezmoi
   # fonts
   - devcom.JetBrainsMonoNerdFont
 
 scoop:
-  - script: Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
   - btop-lhm # btop

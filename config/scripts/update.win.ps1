@@ -1,8 +1,6 @@
-#!/usr/bin/env pwsh
-
 Write-Host "updating windows tools..."
 
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+wsl --update
 
 winget upgrade --all --include-unknown
 if (Get-Command scoop -ErrorAction SilentlyContinue) {

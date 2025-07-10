@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__all__ = ["PackageManager", "run", "execute_script"]
+__all__ = ["PackageManager", "execute_script", "run"]
 
 import enum
 import platform
@@ -9,6 +9,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+WINDOWS = sys.platform.lower().startswith("win")
+LINUX = sys.platform.lower().startswith("linux")
+MACOS = sys.platform.lower().startswith("darwin")
+UNIX = LINUX or MACOS
 
 class PackageManager(enum.Enum):
     BREW = "brew"
@@ -67,11 +71,11 @@ class PackageManager(enum.Enum):
 
         else:
             raise NotImplementedError(f"{self.value} is not implemented")
-        run(command)
 
-
-def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
-    return subprocess.run(cmd.strip(), shell=True, check=check)
+        try:
+            run(command)
+        except:
+            print(f"{self.value} failed to install {package}")
 
 
 def execute_script(script: str) -> None:
@@ -79,31 +83,22 @@ def execute_script(script: str) -> None:
     path = Path(script)
     suffixes = [s.lower() for s in path.suffixes]
 
-    # PowerShell scripts (.ps1 and .win.ps1)
-    if any(s == ".ps1" for s in suffixes):
-        run(f"powershell -ExecutionPolicy Bypass -File {script}")
+    # OS-specific scripts
+    if not WINDOWS and ".win" in suffixes :
+        return
+    if not LINUX and ".linux" in suffixes :
+        return
+    if not MACOS and ".macos" in suffixes :
+        return
+    if not UNIX and ".unix" in suffixes :
         return
 
-    # Windows-specific executables (.win)
-    if suffixes and suffixes[-1] == ".win" and system == "windows":
-        run(script)
-        return
+    # Universal scripts
+    print(f"running script: {script}")
+    script  = f"{sys.executable} {script}" if path.suffix == ".py" else script
+    run(script)
 
-    # Unix-like scripts (.sh, .linux, .macos, .unix)
-    if (
-        suffixes
-        and suffixes[-1] in {".sh", ".linux", ".macos", ".unix"}
-        and system in {"linux", "darwin"}
-    ):
-        run(script)
-        return
 
-    # Python scripts
-    if suffixes and suffixes[-1] == ".py":
-        run(f"{sys.executable} {script}")
-        return
-
-    try:  # Fallback to executing directly if executable
-        run(script)
-    except (OSError, subprocess.CalledProcessError):
-        print(f"Skipping unsupported script: {script}")
+def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
+    exe = shutil.which("powershell.exe") if WINDOWS else None
+    return subprocess.run(cmd.strip(), shell=True, check=check, executable=exe)

@@ -40,10 +40,6 @@ def install_packages(manager: str, pkgs: list[Any]) -> None:
     pkg_manager = utils.PackageManager(manager)
     if not pkg_manager.is_supported():
         return
-    if not pkg_manager.is_available():
-        print(f"{manager} is not available, skipping...")
-        return
-
     for pkg in pkgs:
         install_package(pkg_manager, pkg)
 
@@ -55,11 +51,10 @@ def install_package(pkg_manager: utils.PackageManager, pkg: Any) -> None:
         utils.run(command)
 
     elif isinstance(pkg, str) or isinstance(pkg, int):
+        if not pkg_manager.is_available():
+            return
         print(f"{pkg_manager} installing {pkg}...")
         pkg_manager.install(str(pkg))
-
-    else:
-        print(f"invalid package format: {pkg}")
 
 
 def load_packages(source: str) -> dict[str, list[Any]]:
@@ -67,7 +62,7 @@ def load_packages(source: str) -> dict[str, list[Any]]:
         data = json.loads(os.environ.get("CHEZMOI_DATA", ""))
         return data.get(source, {})
     except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid CHEZMOI_DATA: {e}") from e
+        raise ValueError(f"invalid CHEZMOI_DATA: {e}") from e
 
 
 if __name__ == "__main__":

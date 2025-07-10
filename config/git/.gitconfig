@@ -31,9 +31,9 @@
 
 ; vim editor
 [core]
+    editor = nvim
     ; convert windows line endings to unix
     autocrlf = input
-    editor = nvim
 [diff]
     tool = nvimdiff
 [difftool "nvimdiff"]

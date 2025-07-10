@@ -2,14 +2,44 @@
 
 ## Requirements
 
-- Python 3.9.6+ (macOS default)
+- Python 3.8+
+- Xcode Command Line Tools (macOS)
+- PowerShell 7.0+ (Windows)
 
-### macOS
+Xcode Command Line Tools can be installed with:
 
 ```sh
 xcode-select --install
 sudo xcodebuild -license accept
 ```
+
+Windows can install Python and PowerShell from the Microsoft Store or using:
+
+```powershell
+winget install Python.Python3.12 # 3.8+
+winget install Microsoft.Powershell # 7.0+
+```
+
+## Installation
+
+Run the following command to install Chezmoi and bootstrap a machine:
+
+```sh
+repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
+curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [--local] [args...]
+```
+
+```powershell
+$repo = "https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
+curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [--local] [args...]
+```
+
+where,
+
+- `<path>` is the path where the machine will be bootstrapped (default: `~/.machine`).
+- `--local` flag is used to use the local repository instead of the remote one.
+- `-h` or `--help` shows the help message.
+- `args...` are extra arguments passed to Chezmoi.
 
 ## TODO
 
@@ -30,3 +60,13 @@ sudo xcodebuild -license accept
 - CI/CD:
     - Restore python formatting checks in ci
     - Add update script for updating dependencies during cd
+
+## Issues
+
+* win generated git config:
+
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
