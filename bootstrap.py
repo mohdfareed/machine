@@ -25,10 +25,11 @@ from tempfile import TemporaryDirectory
 
 REPOSITORY = "mohdfareed/machine"
 CHEZMOI = 'sh -c "$(curl -fsLS get.chezmoi.io)" --'
-CHEZMOI_WIN = 'winget install twpayne.chezmoi'
+CHEZMOI_WIN = "winget install twpayne.chezmoi"
 
 DEFAULT_MACHINE = Path("~/.machine").expanduser().resolve()
 WINDOWS = sys.platform.lower().startswith("win32")
+
 
 def main(path: Path, local: bool, bin: Path, args: list[str]) -> None:
     """Install application."""
@@ -52,7 +53,7 @@ def install_chezmoi(bin: Path) -> str:
     print(f"installing chezmoi...")
     if WINDOWS:
         run(CHEZMOI_WIN)
-    else: # windows
+    else:  # windows
         run(f"{CHEZMOI} -b {bin}")
     return str(bin / "chezmoi.exe" if WINDOWS else "chezmoi")
 
@@ -71,7 +72,11 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "path", type=Path, help="machine path", default=DEFAULT_MACHINE,
+        "path",
+        type=Path,
+        help="machine path",
+        default=DEFAULT_MACHINE,
+        nargs="?",
     )
     parser.add_argument("--local", action="store_true", help="use local repo")
     args, extra = parser.parse_known_args()
@@ -79,6 +84,7 @@ if __name__ == "__main__":
     try:  # run script
         with TemporaryDirectory() as temp:  # temp bin for chezmoi
             main(args.path, args.local, Path(temp), extra)
+        print("done!")
     except KeyboardInterrupt:
         print("aborted!")
         sys.exit(1)
