@@ -14,6 +14,7 @@ LINUX = sys.platform.lower().startswith("linux")
 MACOS = sys.platform.lower().startswith("darwin")
 UNIX = LINUX or MACOS
 
+
 class PackageManager(enum.Enum):
     BREW = "brew"
     MAS = "mas"
@@ -79,23 +80,22 @@ class PackageManager(enum.Enum):
 
 
 def execute_script(script: str) -> None:
-    system = platform.system().lower()
     path = Path(script)
     suffixes = [s.lower() for s in path.suffixes]
 
     # OS-specific scripts
-    if not WINDOWS and ".win" in suffixes :
+    if not WINDOWS and ".win" in suffixes:
         return
-    if not LINUX and ".linux" in suffixes :
+    if not LINUX and ".linux" in suffixes:
         return
-    if not MACOS and ".macos" in suffixes :
+    if not MACOS and ".macos" in suffixes:
         return
-    if not UNIX and ".unix" in suffixes :
+    if not UNIX and ".unix" in suffixes:
         return
 
     # Universal scripts
     print(f"running script: {script}")
-    script  = f"{sys.executable} {script}" if path.suffix == ".py" else script
+    script = f"{sys.executable} {script}" if path.suffix == ".py" else script
     run(script)
 
 

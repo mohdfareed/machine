@@ -1,6 +1,12 @@
+{{- $machine := "" -}}
+{{- $machinePath := "" -}}
+{{- $privatePath := "" -}}
+
+{{- /* Non-interactive for Codespaces */ -}}
+{{- if (env "CODESPACES" | not | not) }}
+
 {{- /* Interactive machine selection */ -}}
 {{- $machines := list "gleason" "macbook" "rpi" "pc" "codespaces" -}}
-{{- $machine := "" -}}
 {{- if hasKey . "machine" -}}
 {{- 	$machine = promptChoice "Select machine" $machines .machine -}}
 {{- else -}}
@@ -8,14 +14,20 @@
 {{- end -}}
 
 {{- /* Prompt for machine path */ -}}
-{{- $machinePath := promptString "Enter the machine path"
+{{- $machinePath = promptString "Enter the machine path"
 	.chezmoi.workingTree
 -}}
 
 {{- /* Prompt for private path */ -}}
-{{- $privatePath := promptString "Enter the private path"
+{{- $privatePath = promptString "Enter the private path"
 	(get . "privatePath")
 -}}
+
+{{- else }} {{/* Codespaces */}}
+{{- $machine := env "MACHINE" | default "codespaces" -}}
+{{- $machinePath := env "MACHINE_PATH" | default .chezmoi.workingTree -}}
+{{- $privatePath := env "PRIVATE_PATH" | default "~/.private" -}}
+{{- end }}
 
 {{- /* Machine path variables */ -}}
 {{- $configPath := printf "%s/config" $machinePath -}}
@@ -29,6 +41,7 @@
 {{-     $os = "wsl" -}}
 {{-   end -}}
 {{- end -}}
+
 
 # MARK: Chezmoi
 # =============================================================================
@@ -53,3 +66,6 @@ privatePath = {{ $privatePath | quote }}
 configPath = {{ $configPath | quote }}
 machineConfigPath = {{ $machineConfigPath | quote }}
 scriptsPath = {{ $scriptsPath | quote }}
+
+# General Config
+gitHubAccount = {{ get . "mohdfareed" | quote }}

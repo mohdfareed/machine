@@ -41,6 +41,16 @@ where,
 - `-h` or `--help` shows the help message.
 - `args...` are extra arguments passed to Chezmoi.
 
+
+## Usage
+
+```sh
+chezmoi init --apply # apply machine config
+chezmoi update # update repo and reapply config
+chezmoi status # show status of the config
+code $(chezmoi source-path)/.. # open repo in vscode
+```
+
 ## TODO
 
 - Update `README.md`
@@ -53,7 +63,6 @@ where,
     - Key pair generation
 
 - Others:
-    - Change default shell to zsh/pwsh
     - Hostname configuration
     - WSL support
 
@@ -62,11 +71,3 @@ where,
     - Add update script for updating dependencies during cd
 
 ## Issues
-
-* win generated git config:
-
-[filter "lfs"]
-	process = git-lfs filter-process
-	required = true
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f

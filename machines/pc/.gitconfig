@@ -2,3 +2,9 @@
     name = Mohammed Fareed
     email = mohdf.fareed@icloud.com
     signingkey = ~/.ssh/personal.pub
+
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
