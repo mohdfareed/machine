@@ -31,7 +31,7 @@ DEFAULT_MACHINE = Path("~/.machine").expanduser().resolve()
 WINDOWS = sys.platform.lower().startswith("win32")
 
 
-def main(path: Path, local: bool, bin: Path, args: list[str]) -> None:
+def main(path: Path, bin: Path, args: list[str]) -> None:
     """Install application."""
     path = path.expanduser().resolve()
     options = " ".join(args).strip()
@@ -78,12 +78,11 @@ if __name__ == "__main__":
         default=DEFAULT_MACHINE,
         nargs="?",
     )
-    parser.add_argument("--local", action="store_true", help="use local repo")
     args, extra = parser.parse_known_args()
 
     try:  # run script
         with TemporaryDirectory() as temp:  # temp bin for chezmoi
-            main(args.path, args.local, Path(temp), extra)
+            main(args.path, Path(temp), extra)
         print("done!")
     except KeyboardInterrupt:
         print("aborted!")

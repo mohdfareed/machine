@@ -92,6 +92,7 @@
   "git.openRepositoryInParentFolders": "never",
   "diffEditor.renderSideBySide": false,
   "diffEditor.ignoreTrimWhitespace": false,
+  "diffEditor.experimental.showMoves": true,
   "multiDiffEditor.experimental.enabled": true,
   "gitlens.codeLens.authors.enabled": false,
   "gitlens.codeLens.recentChange.enabled": false,
@@ -214,9 +215,7 @@
   "[go]": {
     "editor.defaultFormatter": "golang.go"
   },
-  "diffEditor.experimental.showMoves": true,
   "errorLens.enabled": false,
-  "gitlens.mode.active": "review",
   "github.copilot.nextEditSuggestions.enabled": true,
   // REVIEW - new customizations above =========================================
 }

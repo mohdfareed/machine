@@ -70,6 +70,5 @@ code $(chezmoi source-path)/.. # open repo in vscode
     - Restore python formatting checks in ci
     - Add update script for updating dependencies during cd
 
-## Issues
-
 - Windows/Unix git config (line endings) issues
+- Windows terminal configuration

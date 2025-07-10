@@ -32,6 +32,7 @@
 ; vim editor
 [core]
     editor = nvim
+    excludesfile = ~/.gitignore
     autocrlf = input
 [diff]
     tool = nvimdiff
