@@ -2,8 +2,6 @@
     name = Mohammed Fareed
     email = mfareed@gleason.com
 
-[filter "lfs"]
-	process = git-lfs filter-process
-	required = true
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
+[core]
+    ; convert windows line endings to unix
+    autocrlf = input

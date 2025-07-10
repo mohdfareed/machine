@@ -38,8 +38,10 @@ snap:
 
 winget:
   - script: Invoke-WebRequest -Uri https://get.scoop.sh | Invoke-Expression
+  # c compiler
+  - llvm.llvm
   # git
-  - git.git github.gitLFS github.cli # git
+  - git.git github.gitLFS github.cli
   # shell
   - microsoft.powershell JanDeDobbeleer.OhMyPosh
   # nvim

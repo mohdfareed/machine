@@ -32,7 +32,6 @@
 ; vim editor
 [core]
     editor = nvim
-    ; convert windows line endings to unix
     autocrlf = input
 [diff]
     tool = nvimdiff
@@ -45,7 +44,7 @@
 
 ; lfs (large file system)
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f

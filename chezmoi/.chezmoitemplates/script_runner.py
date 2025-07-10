@@ -34,6 +34,7 @@ env["MACHINE_SHARED"] = "{{ .ctx.configPath }}"
 env["MACHINE_CONFIG"] = "{{ .ctx.machineConfigPath }}"
 
 try:  # run script
+    script = env["MACHINE"] / script
     result = subprocess.run(
         f"{sys.executable} {script}", shell=True, env=env, check=False
     )

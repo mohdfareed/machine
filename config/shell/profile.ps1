@@ -3,6 +3,10 @@
 # configuration
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 
+# PATH
+$env:PATH += ";C:\Program Files\LLVM\bin" # c compiler
+$env:PATH += ";$HOME/.local/bin" # user local bin
+
 # homebrew
 if (Test-Path -Path "/opt/homebrew/bin/brew") {
     $(/opt/homebrew/bin/brew shellenv) | Invoke-Expression

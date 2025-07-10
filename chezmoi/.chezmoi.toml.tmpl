@@ -3,7 +3,7 @@
 {{- $privatePath := "" -}}
 
 {{- /* Non-interactive for Codespaces */ -}}
-{{- if (env "CODESPACES" | not | not) }}
+{{- if (env "CODESPACES" | not) }}
 
 {{- /* Interactive machine selection */ -}}
 {{- $machines := list "gleason" "macbook" "rpi" "pc" "codespaces" -}}
@@ -66,6 +66,3 @@ privatePath = {{ $privatePath | quote }}
 configPath = {{ $configPath | quote }}
 machineConfigPath = {{ $machineConfigPath | quote }}
 scriptsPath = {{ $scriptsPath | quote }}
-
-# General Config
-gitHubAccount = {{ get . "mohdfareed" | quote }}
