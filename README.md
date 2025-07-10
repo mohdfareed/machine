@@ -71,3 +71,5 @@ code $(chezmoi source-path)/.. # open repo in vscode
     - Add update script for updating dependencies during cd
 
 ## Issues
+
+- Windows/Unix git config (line endings) issues

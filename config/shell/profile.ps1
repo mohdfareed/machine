@@ -19,7 +19,12 @@ if (Test-Path -Path "/home/linuxbrew/.linuxbrew/bin/brew") {
 } # linux/wsl
 
 # oh-my-posh
-$theme = Join-Path (oh-my-posh cache path) 'themes/pure.omp.json'
+if ($IsWindows) {
+    $theme = "$env:LOCALAPPDATA\Programs\oh-my-posh\themes\pure.omp.json"
+}
+else {
+    $theme = "$((oh-my-posh cache path))/themes/pure.omp.json"
+}
 oh-my-posh init pwsh --config "$theme" | Invoke-Expression
 Remove-Variable -Name "theme"
 
