@@ -1,3 +1,5 @@
+#!/usr/bin/env zsh
+
 # development environment
 export DEV="$HOME/Developer"
 export PATH="$DEV/bin:$PATH" # local binaries

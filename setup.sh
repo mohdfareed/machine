@@ -10,11 +10,11 @@ options:
   -h  Show this help message and exit."
 
 if [ "$#" -eq 1 ] && [ "$1" = "-h" ]; then
-    echo "$HELP"
-    exit 0
+  echo "$HELP"
+  exit 0
 elif [ "$#" -gt 1 ]; then
-    echo "$HELP" >&2
-    exit 1
+  echo "$HELP" >&2
+  exit 1
 fi
 
 
@@ -26,8 +26,8 @@ VENV=".venv"  # virtual environment
 
 # fetch full git history
 if [ -f .git/shallow ]; then
-    echo "Fetching full git history..."
-    git fetch --unshallow
+  echo "Fetching full git history..."
+  git fetch --unshallow
 fi
 
 # ensure git is up to date
