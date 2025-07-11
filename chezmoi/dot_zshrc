@@ -4,5 +4,3 @@ if [[ -f "$MACHINE_CONFIG/zshrc" ]]; then
     # shellcheck source=/dev/null
     source "$MACHINE_CONFIG/zshrc"
 fi
-
-echo TEST
