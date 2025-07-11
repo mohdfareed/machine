@@ -76,3 +76,8 @@ code $MACHINE # open repo in vscode
 - CI/CD:
   - Restore python formatting checks in ci
   - Add update script for updating dependencies during cd
+
+- Updating scripts:
+  - Package managers
+  - `zinit`
+  - Theme on linux

@@ -1,13 +1,22 @@
 #!/usr/bin/env sh
 set -eu
 
-HELP="Usage: setup.sh [options]
+HELP="usage: setup.sh [-h]
 
-Set up a development environment.
+Set up a development environment. Fetches full git history, updates git tags,
+installs Python and sets up a virtual environment using \`uv\`.
 
-Options:
-  -h, --help    Show this help message
-"
+options:
+  -h  Show this help message and exit."
+
+if [ "$#" -eq 1 ] && [ "$1" = "-h" ]; then
+    echo "$HELP"
+    exit 0
+elif [ "$#" -gt 1 ]; then
+    echo "$HELP" >&2
+    exit 1
+fi
+
 
 # SCRIPT
 # =============================================================================

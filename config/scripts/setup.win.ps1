@@ -7,13 +7,13 @@ New-ItemProperty `
     -Value $(Get-Command powershell.exe).Source `
     -PropertyType String -Force
 
-# update wsl and scoop
+# wsl
 wsl --update
+wsl --install
+
+# scoop
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Invoke-WebRequest -Uri https://get.scoop.sh | Invoke-Expression
-}
-else {
-    scoop update
 }
 
 Write-Host "windows set up successfully"
