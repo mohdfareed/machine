@@ -1,18 +1,13 @@
 Write-Host "setting up windows tools..."
 
 # set default ssh shell
-$command = @'
-New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" `
-    -Name DefaultShell `
-    -Value (Get-Command powershell.exe).Source `
-    -PropertyType String `
-    -Force
-'@
-$encodedCommand = [Convert]::ToBase64String(
-    [System.Text.Encoding]::Unicode.GetBytes($command)
-)
-Start-Process powershell.exe -Verb RunAs `
-    -ArgumentList "-NoProfile", "-EncodedCommand", $encodedCommand
+$command = 'New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value (Get-Command powershell.exe).Source -PropertyType String -Force'
+Start-Process -FilePath "powershell.exe" `
+    -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $command `
+    -Verb RunAs -Wait
+
+# restart the SSH service so the change takes effect
+Restart-Service sshd -Force
 
 # wsl
 $wslFeature = Get-WindowsOptionalFeature -Online `
