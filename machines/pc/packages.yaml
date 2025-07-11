@@ -13,7 +13,7 @@ winget:
   - valve.SteamLink
   - epicGames.EpicGamesLauncher
   - riotGames.Valorant.NA # riot client
-  - blizzard.BattleNet --location "C:\Program Files (x86)\Battle.net"
+  - blizzard.BattleNet --location 'C:\Program Files (x86)\Battle.net'
 
   # utilities
   - martiCliment.UniGetUI
