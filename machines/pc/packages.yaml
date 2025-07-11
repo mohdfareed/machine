@@ -13,10 +13,10 @@ winget:
   - valve.SteamLink
   - epicGames.EpicGamesLauncher
   - riotGames.Valorant.NA # riot client
-  - blizzard.BattleNet
+  - blizzard.BattleNet --location "C:\Program Files (x86)\Battle.net"
 
   # utilities
   - martiCliment.UniGetUI
-  - apple.iCloud # icloud
+  - 9PKTQ5699M62 # icloud
   - 9pfhdd62mxs1 # apple music
   - 9nblggh30xj3 # xbox accessories

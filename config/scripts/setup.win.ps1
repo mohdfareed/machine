@@ -1,16 +1,25 @@
 Write-Host "setting up windows tools..."
 
 # set default ssh shell
-# FIXME: requested registry access is not allowed
-New-ItemProperty `
-    -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\OpenSSH" `
-    -Name DefaultShell `
-    -Value $(Get-Command powershell.exe).Source `
+$command = @'
+New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" \
+    -Name DefaultShell \
+    -Value "$((Get-Command powershell.exe).Source)" \
     -PropertyType String -Force
+'@
+$encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
+Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -EncodedCommand $encodedCommand"
+
 
 # wsl
-wsl --update
-wsl --install # FIXME: freezes then throws error that distro exists
+$feature = Microsoft-Windows-Subsystem-Linux
+$wslFeature = Get-WindowsOptionalFeature -Online -FeatureName $feature
+if ($wslFeature.State -eq "Enabled") {
+    wsl --update
+}
+else {
+    wsl --install
+}
 
 # scoop
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
