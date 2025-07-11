@@ -67,6 +67,7 @@ code $MACHINE # open repo in vscode
   - Add keys to agent
   - Keychain integration
   - Key pair generation
+  - Add keys to authorized_keys
 
 - Windows:
   - WSL support

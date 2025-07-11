@@ -3,7 +3,13 @@
 # Functions and Aliases
 # =============================================================================
 
-function GenSSHKey {
+if ($env:TERM_PROGRAM -eq 'vscode') {
+    function Clear {
+        Clear-Host; Clear-Host
+    }
+}
+
+function GenKey {
     param (
         [Parameter(Mandatory = $true)][string]$KeyName,
         [Parameter(Mandatory = $true)][string]$Email,

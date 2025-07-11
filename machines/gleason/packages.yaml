@@ -8,3 +8,6 @@ winget:
   - microsoft.VisualStudioCode # vscode
   - microsoft.WindowsTerminal # terminal
   - microsoft.PowerToys # utilities
+
+  # admin tools
+  - microsoft.sysinternals
