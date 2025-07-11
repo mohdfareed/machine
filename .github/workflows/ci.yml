@@ -18,6 +18,8 @@ jobs:
           fetch-depth: 0
 
       - uses: ludeeus/action-shellcheck@master
+        env:
+          SHELLCHECK_OPTS: -e SC1071
 
   spelling:
     runs-on: ubuntu-latest

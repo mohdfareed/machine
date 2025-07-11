@@ -12,6 +12,9 @@
     "shellcheck.customArgs": [
         "--shell=bash" // REVIEW: Find zsh equivalent tool
     ],
+    "shellcheck.exclude": [
+        "1071" // allow zsh
+    ],
     // python
     "debugpy.debugJustMyCode": false,
     "[python]": {
