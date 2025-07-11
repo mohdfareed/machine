@@ -37,15 +37,13 @@ snap:
 # =============================================================================
 
 winget:
-  - script: Invoke-WebRequest -Uri https://get.scoop.sh | Invoke-Expression
-  # c compiler
-  - llvm.llvm
   # git
   - git.git github.gitLFS github.cli
   # shell
   - microsoft.powershell JanDeDobbeleer.OhMyPosh
   # nvim
-  - neovim.neovim JesseDuffield.lazygit BurntSushi.ripgrep.MSVC sharkdp.fd
+  - neovim.neovim JesseDuffield.lazygit
+  - BurntSushi.ripgrep.MSVC sharkdp.fd llvm.llvm
   # python
   - python.python.3.13 astral-sh.uv # REVIEW: win python version
   # chezmoi

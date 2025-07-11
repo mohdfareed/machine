@@ -26,19 +26,18 @@ Run the following command to install Chezmoi and bootstrap a machine:
 
 ```sh
 repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [--local] [args...]
+curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [args...]
 ```
 
 ```powershell
 $repo = "https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [--local] [args...]
+curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [args...]
 ```
 
 where,
 
-- `<path>` is the path where the machine will be bootstrapped (default: `~/.machine`).
-- `--local` flag is used to use the local repository instead of the remote one.
 - `-h` or `--help` shows the help message.
+- `<path>` is where the machine will be set up (default: `~/.machine`).
 - `args...` are extra arguments passed to Chezmoi.
 
 
@@ -48,7 +47,7 @@ where,
 chezmoi init --apply # apply machine config
 chezmoi update # update repo and reapply config
 chezmoi status # show status of the config
-code $(chezmoi source-path)/.. # open repo in vscode
+code $MACHINE # open repo in vscode
 ```
 
 ## TODO

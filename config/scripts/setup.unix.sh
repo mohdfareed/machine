@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-echo "updating unix tools..."
+echo "setting up unix..."
 
 # shellcheck source=/dev/null
 source "$MACHINE_SHARED/shell/zshenv"
@@ -8,4 +8,4 @@ source "$MACHINE_SHARED/shell/zshenv"
 source "$ZINIT_HOME/zinit.zsh"
 zinit update --all
 
-echo "unix tools updated successfully"
+echo "unix set up successfully"

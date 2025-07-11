@@ -1,6 +1,7 @@
 {
     // chezmoi
     "files.associations": {
+        "*.json": "jsonc",
         "*.tmpl": "go",
         "symlink_*": "go",
         "*.py.tmpl": "python",

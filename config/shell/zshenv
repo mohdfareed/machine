@@ -4,20 +4,13 @@
 # python
 export PIP_REQUIRE_VIRTUALENV=true # require virtual env for pip
 
-# dotnet
-if [[ "$OSTYPE" == "darwin"* ]]; then # macos
-    export DOTNET_ROOT="/usr/local/share/dotnet"
-else # linux/wsl
-    export DOTNET_ROOT="/usr/share/dotnet"
-fi
+# snap store
+export PATH="$PATH:/snap/bin"
 
 # zinit
 export ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 export COMPLETIONS_PATH="$(dirname $ZINIT_HOME)/completions"
-
-# shell paths
-export PATH="$DOTNET_ROOT:$PATH"          # dotnet
-export FPATH="$COMPLETIONS_PATH:${FPATH}" # zinit completions
+export FPATH="$COMPLETIONS_PATH:${FPATH}" # completions
 
 # shell history
 export SHELL_SESSIONS_DISABLE=1

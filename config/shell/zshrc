@@ -10,13 +10,12 @@ if [[ -f "/usr/local/bin/brew" ]]; then
 fi # intel macos
 if [[ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi # linux/wsl
+fi # linux/wsl (arm64 or x86_64)
 
 # brew tools
 if command -v brew &>/dev/null; then
     FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}" # completions
     export PATH="$(brew --prefix python)/libexec/bin:$PATH" # python
-
 fi
 
 # oh-my-posh theme
@@ -40,6 +39,10 @@ _dotnet_zsh_complete() {
     # this is not variable assignment, do not modify!
     _values = "${(ps:\n:)completions}"
 }
+
+# dotnet
+export DOTNET_ROOT="$(dirname $(realpath $(which dotnet)))"
+export PATH="$DOTNET_ROOT:$PATH"
 # compdef _dotnet_zsh_complete dotnet # (handled by zinit)
 
 # Configuration

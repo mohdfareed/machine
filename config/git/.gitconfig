@@ -1,39 +1,39 @@
-; git settings
+[user]
+    name = Mohammed Fareed
+    email = mohdf.fareed@icloud.com
+
+; sign commits
+[user]
+    signingkey = ~/.ssh/personal.pub
 [commit]
-    ; sign commits
     gpgsign = true
 [gpg]
-    ; use ssh key for signing
-    format = ssh
+    format = ssh ; use ssh key for signing
+
+; git settings
+[core]
+    excludesfile = ~/.gitignore
+    autocrlf = input
 [init]
-    ; use main as default branch name
-    defaultBranch = main
+    defaultBranch = main ; use main as default branch name
 [fetch]
-    ; remove remote-tracking branches for deleted remote branches
-    prune = true
+    prune = true ; remove remote-tracking branches for deleted remote branches
 [pull]
-    ; rebase local commits on top of the updated upstream branch
-    rebase = true
+    rebase = true ; rebase local commits on top of the updated upstream branch
 [rerere]
-    ; remember conflict resolutions
-    enabled = true
+    enabled = true ; remember conflict resolutions
 
 ; terminal settings
 [status]
-    ; git status uses --short by default
-    short = true
+    short = true ; git status uses --short by default
 [color]
-    ; colorize git output
-    ui = auto
+    ui = auto ; colorize git output
 [help]
-    ; prompt to correct typos in git commands
-    autoCorrect = prompt
+    autoCorrect = prompt ; prompt to correct typos in git commands
 
 ; vim editor
 [core]
     editor = nvim
-    excludesfile = ~/.gitignore
-    autocrlf = input
 [diff]
     tool = nvimdiff
 [difftool "nvimdiff"]

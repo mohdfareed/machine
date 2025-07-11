@@ -1,11 +1,9 @@
-#!/usr/bin/env pwsh
+# Environment
+# =============================================================================
 
-# configuration
-Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
-
-# PATH
-$env:PATH += ";C:\Program Files\LLVM\bin" # c compiler
 $env:PATH += ";$HOME/.local/bin" # user local bin
+$env:PIP_REQUIRE_VIRTUALENV = $true  # python
+$env:PATH += ";C:\Program Files\LLVM\bin" # c compiler (nvim)
 
 # homebrew
 if (Test-Path -Path "/opt/homebrew/bin/brew") {
@@ -20,19 +18,13 @@ if (Test-Path -Path "/home/linuxbrew/.linuxbrew/bin/brew") {
 
 # oh-my-posh
 if ($IsWindows) {
-    $theme = "$env:LOCALAPPDATA\Programs\oh-my-posh\themes\pure.omp.json"
+    $theme = "$env:LOCALAPPDATA/Programs/oh-my-posh/themes/pure.omp.json"
 }
 else {
     $theme = "$((oh-my-posh cache path))/themes/pure.omp.json"
 }
 oh-my-posh init pwsh --config "$theme" | Invoke-Expression
 Remove-Variable -Name "theme"
-
-# uv (python version manager)
-if (Get-Command uv -ErrorAction SilentlyContinue) {
-    (& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
-    (& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
-}
 
 # dotnet completions
 Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
@@ -42,15 +34,17 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
     }
 }
 
+# uv (python version manager)
+if (Get-Command uv -ErrorAction SilentlyContinue) {
+    (& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
+    (& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
+}
 
-# MARK: Aliases
+# Configuration
 # =============================================================================
 
-function GenSSHKey {
-    param (
-        [Parameter(Mandatory = $true)][string]$KeyName,
-        [Parameter(Mandatory = $true)][string]$Email,
-        [Parameter(Mandatory = $true)][SecureString]$Passphrase
-    )
-    ssh-keygen -t ed25519 -f "$HOME/.ssh/$KeyName" -C "$Email" -N "$Passphrase"
-}
+# configuration
+Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+
+# functions & aliases
+. "$env:MACHINE_SHARED/shell/aliases.ps1"

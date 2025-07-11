@@ -1,4 +1,18 @@
 {
+    "Line Separator - Hashtag": {
+        "prefix": "line-hashtag",
+        "body": [
+            "# ============================================================================="
+        ],
+        "description": "Insert a line separator comment with a hashtag"
+    },
+    "Line Separator - Slash": {
+        "prefix": "line-slash",
+        "body": [
+            "// ============================================================================"
+        ],
+        "description": "Insert a line separator comment with a slash"
+    },
     // reference: https://github.com/chickensoft-games/GodotGame/blob/main/.vscode/launch.json
     "macOS Godot C# Launch Settings": {
         "prefix": "godotcsharp-launch-macos",

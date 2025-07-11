@@ -1,4 +1,4 @@
-Write-Host "updating windows tools..."
+Write-Host "setting up windows tools..."
 
 # set default ssh shell
 New-ItemProperty `
@@ -7,13 +7,13 @@ New-ItemProperty `
     -Value $(Get-Command powershell.exe).Source `
     -PropertyType String -Force
 
-# update windows tools
+# update wsl and scoop
 wsl --update
-winget upgrade --all --include-unknown
-if (Get-Command scoop -ErrorAction SilentlyContinue) {
+if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+    Invoke-WebRequest -Uri https://get.scoop.sh | Invoke-Expression
+}
+else {
     scoop update
-    scoop update *
-    scoop cleanup *
 }
 
-Write-Host "windows tools updated successfully"
+Write-Host "windows set up successfully"

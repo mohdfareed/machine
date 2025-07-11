@@ -3,10 +3,9 @@
 # Functions and Aliases
 # =============================================================================
 
-alias code::machine='code $(chezmoi source-path)/..'
-
-alias zsh::reload='exec $SHELL'
-alias ssh::gen-key='ssh-keygen -t ed25519 -C'
+if [ "$TERM_PROGRAM" = "vscode" ]; then
+    alias clear='clear && clear'
+fi
 
 alias cat='bat --paging=never'
 alias vim='nvim'
@@ -16,16 +15,8 @@ alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'
 alias llst='lls -T'
 
-if [ "$TERM_PROGRAM" = "vscode" ]; then
-    alias clear='clear && clear'
-fi
-
-# copy ssh key to a new machine for the current user
-ssh::copy() {
-    usage="usage: $0 host [user]"
-    if (($# < 1 || $# > 2)); then echo "$usage" && return 1; fi
-    ssh-copy-id "${2-$USER}@$1"
-}
+alias zsh::reload='exec $SHELL'
+alias ssh::gen-key='ssh-keygen -t ed25519 -C'
 
 # time shell startup
 zsh::time() {
@@ -35,13 +26,13 @@ zsh::time() {
 }
 
 # load dotenv file as exported variables
-env::load() {
-    usage="usage: $0 [dotenv]"
+dotenv::load() {
+    usage="usage: $0 [dotenv_file]"
     if (($# > 1)); then echo "$usage" && return 1; fi
 
     env=${1-.env}
     if [[ ! -f "$env" ]]; then
-        echo "No dotenv file found"
+        echo "no dotenv file found"
         return 1
     fi
 
@@ -56,7 +47,7 @@ venv::activate() {
 
     venv=${1-.venv}
     if [[ ! -d "$venv" ]]; then
-        echo "No virtual environment directory found"
+        echo "no virtual environment directory found"
         return 1
     fi
 

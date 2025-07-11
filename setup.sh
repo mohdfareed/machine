@@ -1,6 +1,17 @@
 #!/usr/bin/env sh
 set -eu
 
+HELP="Usage: setup.sh [options]
+
+Set up a development environment.
+
+Options:
+  -h, --help    Show this help message
+"
+
+# SCRIPT
+# =============================================================================
+
 PY_VERSION="3.8"  # default macos version
 VENV=".venv"  # virtual environment
 

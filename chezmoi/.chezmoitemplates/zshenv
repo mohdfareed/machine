@@ -7,6 +7,8 @@ export MACHINE_PRIVATE="{{ .privatePath }}"
 export MACHINE_SHARED="{{ .configPath }}"
 export MACHINE_CONFIG="{{ .machineConfigPath }}"
 
+# Load private -> shared -> machine config
+
 if [[ -f "$MACHINE_PRIVATE/zshenv" ]]; then
     # shellcheck source=/dev/null
     source "$MACHINE_PRIVATE/zshenv"
