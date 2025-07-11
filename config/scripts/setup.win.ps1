@@ -1,7 +1,7 @@
 Write-Host "setting up windows tools..."
 
 # set default ssh shell
-# FIXME: Requested registry access is not allowed.
+# FIXME: requested registry access is not allowed
 New-ItemProperty `
     -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\OpenSSH" `
     -Name DefaultShell `
@@ -10,7 +10,7 @@ New-ItemProperty `
 
 # wsl
 wsl --update
-wsl --install
+wsl --install # FIXME: freezes then throws error that distro exists
 
 # scoop
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {

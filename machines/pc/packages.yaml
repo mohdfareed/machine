@@ -17,5 +17,6 @@ winget:
 
   # utilities
   - martiCliment.UniGetUI
+  - apple.iCloud # icloud
   - 9pfhdd62mxs1 # apple music
   - 9nblggh30xj3 # xbox accessories
