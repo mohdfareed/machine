@@ -55,7 +55,7 @@ def install_chezmoi(bin: Path) -> str:
         run(CHEZMOI_WIN)
     else:  # windows
         run(f"{CHEZMOI} -b {bin}")
-    return str(bin / "chezmoi.exe" if WINDOWS else "chezmoi")
+    return str(bin / ("chezmoi.exe" if WINDOWS else "chezmoi"))
 
 
 def run(cmd: str) -> subprocess.CompletedProcess[bytes]:
