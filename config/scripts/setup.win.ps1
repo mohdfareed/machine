@@ -1,6 +1,7 @@
 Write-Host "setting up windows tools..."
 
 # set default ssh shell
+# FIXME: Requested registry access is not allowed.
 New-ItemProperty `
     -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\OpenSSH" `
     -Name DefaultShell `
