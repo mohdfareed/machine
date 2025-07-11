@@ -50,24 +50,29 @@ chezmoi status # show status of the config
 code $MACHINE # open repo in vscode
 ```
 
+### Machine Backup
+
+- Review installed apps.
+- Review config.
+- Commit changes to repo.
+
 ## TODO
 
-- Update `README.md`
 - Update copilot instructions
+- Hostname configuration
+- Share passwords/secrets with other machines
 
 - SSH:
-    - Load ssh keys from private dir and set permissions
-    - Add keys to agent
-    - Keychain integration
-    - Key pair generation
+  - Load ssh keys from private dir and set permissions
+  - Add keys to agent
+  - Keychain integration
+  - Key pair generation
 
-- Others:
-    - Hostname configuration
-    - WSL support
+- Windows:
+  - WSL support
+  - Terminal configuration
+  - Test line endings with unix-based repos
 
 - CI/CD:
-    - Restore python formatting checks in ci
-    - Add update script for updating dependencies during cd
-
-- Windows/Unix git config (line endings) issues
-- Windows terminal configuration
+  - Restore python formatting checks in ci
+  - Add update script for updating dependencies during cd
