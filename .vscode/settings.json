@@ -1,12 +1,22 @@
 {
-    // debugging
-    "python.testing.pytestArgs": [
-        "tests"
+    // chezmoi
+    "files.associations": {
+        "*.json": "jsonc",
+        "*.tmpl": "go",
+        "symlink_*": "go",
+        "*.py.tmpl": "python",
+        // specific files
+        ".chezmoiignore": "go",
+    },
+    // shell
+    "shellcheck.customArgs": [
+        "--shell=bash" // REVIEW: Find zsh equivalent tool
     ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
+    "shellcheck.exclude": [
+        "1071" // allow zsh
+    ],
+    // python
     "debugpy.debugJustMyCode": false,
-    // formatting
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true,
@@ -33,7 +43,16 @@
         "config",
     ],
     "cSpell.words": [
-        "PWSH",
-        "Tailscale"
+        "chezmoi",
+        "ghostty",
+        "macbook",
+        "mohdfareed",
+        "onchange",
+        "pwsh",
+        "shellcheck",
+        "tailscale",
+        "unshallow",
+        "venv",
+        "WINGET"
     ],
 }

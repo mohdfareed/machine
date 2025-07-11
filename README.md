@@ -1,47 +1,83 @@
-# Machine Setup
+# Machine Setup & Dotfiles
 
-[![CI](https://github.com/mohdfareed/machine/actions/workflows/ci.yml/badge.svg)](https://github.com/mohdfareed/machine/actions/workflows/ci.yml) [![CD](https://github.com/mohdfareed/machine/actions/workflows/cd.yml/badge.svg)](https://github.com/mohdfareed/machine/actions/workflows/cd.yml) <a><img alt="Coverage" src="https://img.shields.io/badge/Coverage-94%25-brightgreen.svg" /></a>
+## Requirements
 
-Machine setup and configuration CLI app.
+- Python 3.8+
+- Xcode Command Line Tools (macOS)
+- PowerShell 7.0+ (Windows)
 
-**Requirements:**
+Xcode Command Line Tools can be installed with:
 
-- Python 3.9.6+
--
+```sh
+xcode-select --install
+sudo xcodebuild -license accept
+```
+
+Windows can install Python and PowerShell from the Microsoft Store or using:
+
+```powershell
+winget install Python.Python3.12 # 3.8+
+winget install Microsoft.Powershell # 7.0+
+```
 
 ## Installation
 
+Run the following command to install Chezmoi and bootstrap a machine:
+
 ```sh
-# install with poetry (installs at the provided path)
 repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsSL $repo/scripts/deploy.py | python3 - [-h] [-p PATH] [branch]
+curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [args...]
 ```
 
-where `PATH` is the path to download the machine CLI app.
-Defaults to `~/.machine`.
-
-### Development
-
-```sh
-# clone the repository
-git clone https://github.com/mohdfareed/machine.git
-cd machine
-
-# setup environment
-./scripts/dev.py
+```powershell
+$repo = "https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
+curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [args...]
 ```
 
-### Releases
+where,
 
-The package can be installed from the latest release with pipx using:
+- `-h` or `--help` shows the help message.
+- `<path>` is where the machine will be set up (default: `~/.machine`).
+- `args...` are extra arguments passed to Chezmoi.
 
-```sh
-repo="https://raw.githubusercontent.com/mohdfareed/machine/main"
-pipx install $(curl -fsSL $repo/scripts/release.sh | sh -)
-```
 
 ## Usage
 
 ```sh
-machine-setup --help
+chezmoi init --apply # apply machine config
+chezmoi update # update repo and reapply config
+chezmoi status # show status of the config
+code $MACHINE # open repo in vscode
 ```
+
+### Machine Backup
+
+- Review installed apps.
+- Review config.
+- Commit changes to repo.
+
+## TODO
+
+- Update copilot instructions
+- Hostname configuration
+- Share passwords/secrets with other machines
+
+- SSH:
+  - Load ssh keys from private dir and set permissions
+  - Add keys to agent
+  - Keychain integration
+  - Key pair generation
+
+- Windows:
+  - WSL support
+  - Terminal configuration
+  - Test line endings with unix-based repos
+
+- CI/CD:
+  - Restore python formatting checks in ci
+  - Add update script for updating dependencies during cd
+
+- Updating scripts:
+  - Package managers
+  - `zinit`
+  - Theme on linux

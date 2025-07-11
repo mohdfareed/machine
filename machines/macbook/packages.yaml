@@ -1,0 +1,43 @@
+brew:
+  # development
+  - go # go-lang
+  - dotnet-sdk --cask # .net
+  - visual-studio-code --cask # vscode
+  # - godot-mono --cask # game engine
+  # - docker --cask # REVIEW: cask doesn't support arm
+
+  # utilities
+  - mas # app store cli
+  - gnu-time # timing utility
+
+  # apps
+  - tailscale --cask # VPN
+  - ghostty --cask # Terminal
+  - chatgpt --cask # AI assistant
+
+  # utility apps
+  - iina --cask # video player
+  - mos --cask # mouse utility
+  - monitorcontrol --cask # monitor utility
+  # - the_unarchiver --cask # archive utility
+  # - swish --cask # trackpad gestures
+  # - figma --cask # design
+  # - sf-symbols --cask # system symbols
+  # - utm --cask # virtual machines
+
+mas:
+  # apple
+  - 409183694 # Keynote
+  - 409203825 # Numbers
+  - 409201541 # Pages
+  - 497799835 # Xcode
+
+  # productivity
+  - 1487937127 # Craft
+  - 1447330651 # Copilot
+  - 1504965415 # TechniCalc
+
+  # utilities
+  - 1592917505 # Noir
+  - 1440147259 # AdGuard
+  - 1554235898 # Peek

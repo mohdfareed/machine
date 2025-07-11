@@ -25,48 +25,15 @@ jobs:
       - name: Set up environment
         uses: ./.github/setup
 
-      - name: Update dependencies
-        run: ./scripts/update.sh
+      # - name: Update dependencies
+      #   run: ./scripts/update.sh
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: update dependencies'
-          title: 'Update dependencies'
-          branch: 'deps'
+          commit-message: "chore: update dependencies"
+          title: "Update dependencies"
+          branch: "deps"
           sign-commits: true
-          labels: 'CD'
-
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@main
-        with:
-          fetch-depth: 0
-      - name: Set up environment
-        uses: ./.github/setup
-
-      - name: Run tests
-        run: ./scripts/coverage.sh | tee pytest-coverage.txt
-
-      - name: Pytest coverage report
-        id: coverage
-        uses: MishaKav/pytest-coverage-comment@main
-        with:
-          hide-comment: true
-          pytest-coverage-path: pytest-coverage.txt
-
-      - name: Update README coverage badge
-        run: |
-          sed -i -E "s/(<a><img alt=\"Coverage\" src=\"https:\/\/img.shields.io\/badge\/Coverage-)[0-9]+%25-[a-z]+(.svg\" \/>)/\1${{ steps.coverage.outputs.coverage }}25-${{ steps.coverage.outputs.color }}\2/" README.md
-
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@main
-        with:
-          add-paths: README.md
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chores: update docs'
-          title: 'Update documentation'
-          branch: 'docs'
-          labels: 'CD'
+          labels: "CD"

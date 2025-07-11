@@ -1,0 +1,9 @@
+#!/usr/bin/env zsh
+
+# development environment
+export DEV="$HOME/Developer"
+export PATH="$DEV/bin:$PATH" # local binaries
+
+# machine environment variables
+export ICLOUD="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
+export GODOT="/Applications/Godot_mono.app/Contents/MacOS/Godot"

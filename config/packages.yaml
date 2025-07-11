@@ -1,0 +1,55 @@
+# MACOS
+# =============================================================================
+
+brew:
+  - git git-lfs gh # git
+  - zsh bat eza btop oh-my-posh # shell
+  - neovim lazygit ripgrep fd # nvim
+  - python uv # python
+  - powershell --cask # pwsh
+  - chezmoi # chezmoi
+
+  # fonts
+  - font-computer-modern
+  - font-jetbrains-mono-nerd-font
+
+# LINUX
+# =============================================================================
+
+apt:
+  - snapd # snap package manager
+  - git git-lfs # git
+  - zsh bat eza fd-find # shell
+  - script: curl -s https://ohmyposh.dev/install.sh | bash -s
+  - python3 uv # python
+
+  # fonts
+  - fonts-jetbrains-mono # Fonts plugin
+  - fonts-lmodern # Fonts plugin
+
+snap:
+  - gh btop nvim lazygit-gm # git, shell, nvim
+  - ripgrep --classic # nvim
+  - powershell # pwsh
+  - chezmoi --classic # chezmoi
+
+# windows
+# =============================================================================
+
+winget:
+  # git
+  - git.git github.gitLFS github.cli
+  # shell
+  - microsoft.powershell JanDeDobbeleer.OhMyPosh
+  # nvim
+  - neovim.neovim JesseDuffield.lazygit
+  - BurntSushi.ripgrep.MSVC sharkdp.fd llvm.llvm
+  # python
+  - python.python.3.13 astral-sh.uv # REVIEW: win python version
+  # chezmoi
+  - twpayne.chezmoi
+  # fonts
+  - devcom.JetBrainsMonoNerdFont
+
+scoop:
+  - btop-lhm # btop

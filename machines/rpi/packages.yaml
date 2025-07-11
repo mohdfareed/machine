@@ -1,0 +1,9 @@
+apt:
+  - openssh-server # SSH server
+  - go # go-lang
+  - script: curl -s https://dot.net/v1/dotnet-install.sh | bash # dotnet
+  - script: curl -fsSL https://get.docker.com | sh # docker
+  - script: curl -fsSL https://tailscale.com/install.sh | sh # tailscale
+
+snap:
+  - code --classic # vscode

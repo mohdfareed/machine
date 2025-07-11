@@ -1,0 +1,8 @@
+# shellcheck source=/dev/null
+source "$MACHINE_SHARED/shell/zshrc"
+if [[ -f "$MACHINE_CONFIG/zshrc" ]]; then
+    # shellcheck source=/dev/null
+    source "$MACHINE_CONFIG/zshrc"
+fi
+
+echo TEST

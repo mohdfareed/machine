@@ -4,20 +4,6 @@ description: Set up the project's development environment
 runs:
   using: "composite"
   steps:
-    # set up and cache poetry
-    - uses: actions/setup-python@main
-      with:
-        python-version: "3.9"
-        cache: "pip"
-    - run: pip install poetry
-      shell: sh
-
-    # set up dev environment dependencies
-    - run: | # ensure poetry uses cached pip packages
-        poetry config virtualenvs.create false
-        poetry install -E dev
-      shell: sh
-
     # set up author information
     - run: |
         git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"

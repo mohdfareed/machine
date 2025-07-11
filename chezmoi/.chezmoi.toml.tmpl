@@ -1,0 +1,68 @@
+{{- $machine := "" -}}
+{{- $machinePath := "" -}}
+{{- $privatePath := "" -}}
+
+{{- /* Non-interactive for Codespaces */ -}}
+{{- if (env "CODESPACES" | not) }}
+
+{{- /* Interactive machine selection */ -}}
+{{- $machines := list "gleason" "macbook" "rpi" "pc" "codespaces" -}}
+{{- if hasKey . "machine" -}}
+{{- 	$machine = promptChoice "Select machine" $machines .machine -}}
+{{- else -}}
+{{- 	$machine = promptChoice "Select machine" $machines -}}
+{{- end -}}
+
+{{- /* Prompt for machine path */ -}}
+{{- $machinePath = promptString "Enter the machine path"
+	.chezmoi.workingTree
+-}}
+
+{{- /* Prompt for private path */ -}}
+{{- $privatePath = promptString "Enter the private path"
+	(get . "privatePath")
+-}}
+
+{{- else }} {{/* Codespaces */}}
+{{- $machine := env "MACHINE" | default "codespaces" -}}
+{{- $machinePath := env "MACHINE_PATH" | default .chezmoi.workingTree -}}
+{{- $privatePath := env "PRIVATE_PATH" | default "~/.private" -}}
+{{- end }}
+
+{{- /* Machine path variables */ -}}
+{{- $configPath := printf "%s/config" $machinePath -}}
+{{- $machineConfigPath := printf "%s/machines/%s" $machinePath $machine -}}
+{{- $scriptsPath := printf "%s/scripts" $machinePath -}}
+
+{{- /* Detect OS */ -}}
+{{- $os := .chezmoi.os -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   if (.chezmoi.kernel | lower | contains "microsoft") -}}
+{{-     $os = "wsl" -}}
+{{-   end -}}
+{{- end -}}
+
+
+# MARK: Chezmoi
+# =============================================================================
+
+sourceDir = {{ $machinePath | quote }}
+workingTree = {{ $machinePath | quote }}
+progress = true
+
+# MARK: Configuration
+# =============================================================================
+
+[data]
+os = {{ $os | quote }}
+arch = {{ .chezmoi.arch | quote }}
+
+# Deployment Config
+machine = {{ $machine | quote }}
+machinePath = {{ $machinePath | quote }}
+privatePath = {{ $privatePath | quote }}
+
+# Machine Paths
+configPath = {{ $configPath | quote }}
+machineConfigPath = {{ $machineConfigPath | quote }}
+scriptsPath = {{ $scriptsPath | quote }}

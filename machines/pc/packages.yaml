@@ -1,0 +1,8 @@
+winget:
+  - tailscale.tailscale # tailscale
+  - docker.DockerDesktop # docker
+
+  # apps
+  - microsoft.VisualStudioCode # vscode
+  - microsoft.WindowsTerminal # terminal
+  - microsoft.PowerToys # utilities

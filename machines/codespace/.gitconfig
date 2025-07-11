@@ -1,0 +1,3 @@
+; disable commit signing
+[commit]
+    gpgsign = false

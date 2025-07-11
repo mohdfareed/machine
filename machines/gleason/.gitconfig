@@ -1,0 +1,11 @@
+[user]
+    name = Mohammed Fareed
+    email = mfareed@gleason.com
+
+; disable commit signing
+[commit]
+    gpgsign = false
+
+; convert windows line endings to unix
+[core]
+    autocrlf = true

@@ -1,15 +1,2 @@
-*.poetry/
 *.venv/
-.python-version
-
-*.log*
-private/
-
-.coverage
-pytest.xml
-dist/
-
-*.mypy_cache/
-*.ruff_cache/
-*.pytest_cache/
 *__pycache__*

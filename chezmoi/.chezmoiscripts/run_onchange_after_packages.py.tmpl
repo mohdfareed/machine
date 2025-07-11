@@ -1,0 +1,19 @@
+{{- $basePackages := dict -}}
+{{- $machinePackages := dict -}}
+{{- $data := dict -}}
+
+{{- /* Load base packages */ -}}
+{{- $basePath := joinPath .configPath "packages.yaml" -}}
+{{- if stat $basePath -}}
+{{- $basePackages = include $basePath | fromYaml -}}
+{{- end -}}
+
+{{- /* Load machine-specific packages */ -}}
+{{- $machinePath := joinPath .machineConfigPath "packages.yaml" -}}
+{{- if stat $machinePath -}}
+{{- $machinePackages = include $machinePath | fromYaml -}}
+{{- end -}}
+
+{{- /* Combine raw data for script to merge */ -}}
+{{- $data = dict "base" $basePackages "machine" $machinePackages -}}
+{{- template "script_runner.py" (dict "ctx" . "script" "packages.py" "data" $data) -}}

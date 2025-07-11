@@ -1,0 +1,60 @@
+{{/*
+  script_loader template - loads scripts for execution at a deployment phase.
+
+  Usage:
+  {{- template "script_loader" (dict "ctx" . "prefix"  "once" ) -}}
+
+  Args:
+    ctx: the template context (pass .)
+    prefix: the prefix for the scripts to load
+*/}}
+
+{{- $baseScripts := list -}}
+{{- $machineScripts := list -}}
+
+{{- /* Load base scripts */ -}}
+{{- $basePath := joinPath .ctx.configPath "scripts" -}}
+{{- if stat $basePath -}}
+{{- $pattern := .prefix -}}
+{{- if .prefix -}}{{- $pattern = printf "%s_*" .prefix -}}{{- else -}}{{- $pattern = "*" -}}{{- end -}}
+{{- range (glob (joinPath $basePath $pattern)) -}}
+{{- $baseScripts = append $baseScripts . -}}
+{{- end -}}
+{{- end -}}
+
+{{- /* Load machine-specific scripts */ -}}
+{{- $machinePath := joinPath .ctx.machineConfigPath "scripts" -}}
+{{- if stat $machinePath -}}
+{{- $pattern := .prefix -}}
+{{- if .prefix -}}{{- $pattern = printf "%s_*" .prefix -}}{{- else -}}{{- $pattern = "*" -}}{{- end -}}
+{{- range (glob (joinPath $machinePath $pattern)) -}}
+{{- $machineScripts = append $machineScripts . -}}
+{{- end -}}
+{{- end -}}
+
+{{- /* Return raw data for script to merge */ -}}
+{{- $data := dict "base" $baseScripts "machine" $machineScripts -}}
+{{- $script := printf "scripts.py --prefix %s" .prefix -}}
+{{- $args := dict "ctx" .ctx "script" $script "data" $data -}}
+{{- template "script_runner.py" $args }}
+
+{{- /* Include loaded scripts to trigger on-change events */ -}}
+
+# Loaded Scripts
+# =============================================================================
+
+{{- range $baseScripts }}
+
+# source: {{ . }}
+{{- range (splitList "\n" (include .)) }}
+# {{ . }}
+{{- end }}
+{{- end }}
+
+{{- range $machineScripts }}
+
+# source: {{ . }}
+{{- range (splitList "\n" (include .)) }}
+# {{ . }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,21 @@
+#!/usr/bin/env zsh
+
+# Environment
+# =============================================================================
+
+# python
+export PIP_REQUIRE_VIRTUALENV=true # require virtual env for pip
+
+# snap store
+export PATH="$PATH:/snap/bin"
+
+# zinit
+export ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+export COMPLETIONS_PATH="$(dirname $ZINIT_HOME)/completions"
+export FPATH="$COMPLETIONS_PATH:${FPATH}" # completions
+
+# shell history
+export SHELL_SESSIONS_DISABLE=1
+export HISTSIZE=5000
+export SAVEHIST=$HISTSIZE
+export HISTDUP=erase
