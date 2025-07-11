@@ -2,14 +2,21 @@ Write-Host "setting up windows tools..."
 
 # set default ssh shell
 $command = @'
-New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell \
-    -Value "$((Get-Command powershell.exe).Source)" -PropertyType String -Force
+New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" `
+    -Name DefaultShell `
+    -Value (Get-Command powershell.exe).Source `
+    -PropertyType String `
+    -Force
 '@
-$encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
-Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -EncodedCommand $encodedCommand"
+$encodedCommand = [Convert]::ToBase64String(
+    [System.Text.Encoding]::Unicode.GetBytes($command)
+)
+Start-Process powershell.exe -Verb RunAs `
+    -ArgumentList "-NoProfile", "-EncodedCommand", $encodedCommand
 
 # wsl
-$wslFeature = Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+$wslFeature = Get-WindowsOptionalFeature -Online `
+    -FeatureName Microsoft-Windows-Subsystem-Linux
 if ($wslFeature.State -eq "Enabled") {
     wsl --update
 }
