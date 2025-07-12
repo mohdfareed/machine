@@ -43,7 +43,6 @@ winget:
   - microsoft.powershell JanDeDobbeleer.OhMyPosh
   # nvim
   - neovim.neovim JesseDuffield.lazygit
-  - BurntSushi.ripgrep.MSVC sharkdp.fd llvm.llvm
   # python
   - python.python.3.13 astral-sh.uv # REVIEW: win python version
   # chezmoi
@@ -52,4 +51,5 @@ winget:
   - devcom.JetBrainsMonoNerdFont
 
 scoop:
+  - gcc # gcc (nvim)
   - btop-lhm # btop

@@ -3,7 +3,6 @@
 
 $env:PATH += ";$HOME/.local/bin" # user local bin
 $env:PIP_REQUIRE_VIRTUALENV = $true  # python
-$env:PATH += ";C:\Program Files\LLVM\bin" # c compiler (nvim)
 
 # homebrew
 if (Test-Path -Path "/opt/homebrew/bin/brew") {

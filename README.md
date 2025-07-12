@@ -73,6 +73,7 @@ code $MACHINE # open repo in vscode
   - WSL support
   - Terminal configuration
   - Test line endings with unix-based repos
+  - [Steam Rom Manager](https://steamgriddb.github.io/steam-rom-manager/)
 
 - CI/CD:
   - Restore python formatting checks in ci
