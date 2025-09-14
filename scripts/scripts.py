@@ -19,7 +19,7 @@ import json
 import os
 import sys
 
-from utils import execute_script
+import utils
 
 RESERVED_PREFIXES = [
     "after_",
@@ -37,20 +37,34 @@ def main(prefix: str) -> None:
     base = load_scripts("base")
     machine = load_scripts("machine")
 
+    if os.environ.get("DEBUG"):
+        print(f"prefix: {prefix}")
+        print(f"base scripts: {len(base)}")
+        for s in base:
+            print(f"  - {s}")
+        print(f"machine scripts: {len(machine)}")
+        for s in machine:
+            print(f"  - {s}")
+
     for script in base + machine:
         if prefix == "" and is_scheduled_script(script):
             continue
 
         set_permissions(script)
-        execute_script(script)
+        utils.execute_script(script)
 
 
 def load_scripts(source: str) -> list[str]:
     try:
-        data = json.loads(os.environ.get("CHEZMOI_DATA", ""))
-        return data.get(source, {})
+        chezmoi_data = os.environ.get("CHEZMOI_DATA", "")
+        data: dict = json.loads(chezmoi_data)
+        return list(data[source])
     except json.JSONDecodeError as e:
-        raise ValueError(f"invalid CHEZMOI_DATA: {e}") from e
+        raise ValueError(f"invalid CHEZMOI_DATA: {chezmoi_data}") from e
+    except KeyError as e:
+        raise ValueError(f"source '{source}' not found in data: {data}") from e
+    except TypeError as e:
+        raise ValueError(f"invalid source scripts list: {data[source]}") from e
 
 
 def is_scheduled_script(script: str) -> bool:

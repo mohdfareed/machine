@@ -24,8 +24,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 REPOSITORY = "mohdfareed/machine"
-CHEZMOI = 'sh -c "$(curl -fsLS get.chezmoi.io)" --'
-CHEZMOI_WIN = "winget install twpayne.chezmoi"
+INSTALL_CHEZMOI = 'sh -c "$(curl -fsLS get.chezmoi.io)" --'
+INSTALL_CHEZMOI_WIN = "winget install twpayne.chezmoi"
 
 DEFAULT_MACHINE = Path("~/.machine").expanduser().resolve()
 WINDOWS = sys.platform.lower().startswith("win32")
@@ -46,16 +46,20 @@ def main(path: Path, bin: Path, args: list[str]) -> None:
 
 
 def install_chezmoi(bin: Path) -> str:
-    """Install Chezmoi binary."""
+    """Install Chezmoi binary and return executable path."""
     bin = bin.expanduser().resolve()
     bin.mkdir(parents=True, exist_ok=True)
-
     print(f"installing chezmoi...")
-    if WINDOWS:
-        run(CHEZMOI_WIN)
-    else:  # windows
-        run(f"{CHEZMOI} -b {bin}")
-    return str(bin / ("chezmoi.exe" if WINDOWS else "chezmoi"))
+
+    if not WINDOWS:  # unix
+        run(f"{INSTALL_CHEZMOI} -b {bin}")
+        return str(bin / "chezmoi")
+
+    # windows
+    run(INSTALL_CHEZMOI_WIN)
+    if not shutil.which("chezmoi.exe"):
+        raise RuntimeError("re-run script to continue")
+    return "chezmoi.exe"
 
 
 def run(cmd: str) -> subprocess.CompletedProcess[bytes]:

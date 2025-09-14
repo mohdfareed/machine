@@ -3,6 +3,7 @@
 __all__ = ["PackageManager", "execute_script", "run"]
 
 import enum
+import os
 import platform
 import shutil
 import subprocess
@@ -48,8 +49,7 @@ class PackageManager(enum.Enum):
             return PackageManager.WINGET.is_supported()  # winget
 
         else:
-            print(f"{self.value} is not supported")
-            return False
+            raise NotImplementedError(f"{self.value} is not implemented")
 
     def install(self, package: str) -> None:
         if not self.is_available():
@@ -95,10 +95,19 @@ def execute_script(script: str) -> None:
 
     # Universal scripts
     print(f"running script: {script}")
-    script = f"{sys.executable} {script}" if path.suffix == ".py" else script
+    script = script if path.suffix != ".py" else f"{sys.executable} {script}"
     run(script)
 
 
 def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
+    cmd = cmd.strip()
+    debug = os.environ.get("DEBUG")
+    dry_run = os.environ.get("DRY_RUN")
+
+    if debug:
+        print(f"[run] {cmd}")
+    if dry_run:
+        return subprocess.CompletedProcess(cmd, 0)
+
     exe = shutil.which("powershell.exe") if WINDOWS else None
-    return subprocess.run(cmd.strip(), shell=True, check=check, executable=exe)
+    return subprocess.run(cmd, shell=True, check=check, executable=exe)
