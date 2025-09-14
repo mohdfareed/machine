@@ -1,4 +1,5 @@
 {
+  // ===========================================================================
   // MARK: editor
   // #region ===================================================================
   "editor.wordWrap": "on",
@@ -13,7 +14,7 @@
   "files.trimTrailingWhitespace": true,
   "files.trimFinalNewlines": true,
   "files.insertFinalNewline": true,
-  // # endregion
+  // # endregion ===============================================================
   // MARK: visual
   // #region ===================================================================
   "workbench.tree.enableStickyScroll": true,
@@ -27,7 +28,7 @@
   "window.openWithoutArgumentsInNewWindow": "on",
   // minimap -------------------------------------------------------------------
   "editor.minimap.renderCharacters": false,
-  "editor.minimap.autohide": true,
+  "editor.minimap.autohide": "mouseover",
   "editor.minimap.showRegionSectionHeaders": true,
   // theme ---------------------------------------------------------------------
   "workbench.iconTheme": "vscode-icons",
@@ -43,7 +44,7 @@
   "editor.fontFamily": "JetBrainsMono Nerd Font",
   "editor.fontSize": 14,
   "editor.fontLigatures": true,
-  // # endregion
+  // # endregion ===============================================================
   // MARK: suggestions
   // #region ===================================================================
   "editor.suggest.preview": true,
@@ -58,7 +59,7 @@
     "fastmcp",
     "mohdfareed"
   ],
-  // # endregion
+  // # endregion ===============================================================
   // MARK: terminal
   // #region ===================================================================
   "terminal.integrated.macOptionIsMeta": true,
@@ -78,7 +79,7 @@
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.smoothScrolling": true,
   "terminal.integrated.fontLigatures.enabled": true,
-  // # endregion
+  // # endregion ===============================================================
   // MARK: git
   // #region ===================================================================
   "git.allowForcePush": true,
@@ -96,7 +97,7 @@
   "multiDiffEditor.experimental.enabled": true,
   "gitlens.codeLens.authors.enabled": false,
   "gitlens.codeLens.recentChange.enabled": false,
-  // # endregion
+  // # endregion ===============================================================
   // MARK: Copilot
   // #region ===================================================================
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
@@ -108,7 +109,7 @@
   },
   "chat.useFileStorage": true,
   "chat.tools.autoApprove": true,
-  // # endregion
+  // # endregion ===============================================================
   // MARK: comments
   // #region ===================================================================
   "commentAnchors.scrollPosition": "center",
@@ -128,7 +129,7 @@
     }
   },
   "commentAnchors.workspace.excludeFiles": "**/{.git,bin,.venv}/**/*",
-  // # endregion
+  // # endregion ===============================================================
   // MARK: markdown
   // #region ===================================================================
   "markdown.preview.typographer": true,
@@ -144,19 +145,19 @@
       "other": "on"
     }
   },
-  // # endregion
+  // # endregion ===============================================================
   // MARK: json
   // #region ===================================================================
   "[json]": {
     "editor.indentSize": 2
   },
-  // # endregion
+  // # endregion ===============================================================
   // MARK: swift
   // #region ===================================================================
   "[swift]": {
     "editor.inlayHints.enabled": "offUnlessPressed"
   },
-  // # endregion
+  // # endregion ===============================================================
   // MARK: python
   // #region ===================================================================
   "python.analysis.typeCheckingMode": "strict",
@@ -195,7 +196,7 @@
     "--profile",
     "black"
   ],
-  // # endregion
+  // # endregion ===============================================================
   // MARK: c#
   // #region ===================================================================
   "[csharp]": {
@@ -208,7 +209,7 @@
   "dotnet.formatting.organizeImportsOnFormat": true,
   "dotnet.codeLens.enableReferencesCodeLens": false,
   "godotTools.editorPath.godot4": "${GODOT}",
-  // # endregion
+  // # endregion ===============================================================
   // MARK: go
   // #region ===================================================================
   "go.toolsManagement.autoUpdate": true,
