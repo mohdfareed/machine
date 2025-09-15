@@ -3,8 +3,15 @@
 # Environment
 # =============================================================================
 
+# local packages
+export PATH="$HOME/.local/bin:$PATH"
+
 # python
 export PIP_REQUIRE_VIRTUALENV=true # require virtual env for pip
+
+# go
+export GOPATH="${HOME}/.go"
+export PATH="$GOPATH/bin:$PATH"
 
 # snap store
 export PATH="$PATH:/snap/bin"
