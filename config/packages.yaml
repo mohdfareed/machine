@@ -20,9 +20,9 @@ apt:
   - snapd --fix-missing # snap package manager
   - git git-lfs --fix-missing # git
   - zsh bat fd-find # shell
+  - gpg # eza dependency
   - script: curl -s https://ohmyposh.dev/install.sh | bash -s
   - python3 # python
-  # - python3 uv # python # FIXME: Unable to locate package uv
   - unzip # oh-my-posh dependency
   - ripgrep # nvim
 
@@ -34,6 +34,7 @@ snap:
   - gh btop nvim lazygit-gm # git, shell, nvim
   - powershell --classic # pwsh
   - chezmoi --classic # chezmoi
+  - main/uv # python uv
 
 # windows
 # =============================================================================

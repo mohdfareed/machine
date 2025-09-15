@@ -1,9 +1,9 @@
 apt:
   - openssh-server # SSH server
-  # - go # go-lang # FIXME: No apt package "go", but there is a snap with that name. Try "snap install go"
+  - code # vscode
   - script: curl -s https://dot.net/v1/dotnet-install.sh | bash # dotnet
   - script: curl -fsSL https://get.docker.com | sh # docker
   - script: curl -fsSL https://tailscale.com/install.sh | sh # tailscale
 
 snap:
-  # - code --classic # vscode # FIXME: snap "code" is not available on stable for this architecture (arm64) but exists on other architectures (amd64).
+  - go --classic # go-lang
