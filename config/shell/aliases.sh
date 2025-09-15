@@ -3,6 +3,8 @@
 # Functions and Aliases
 # =============================================================================
 
+alias machine-setup='$MACHINE/scripts/cli.py'
+
 if [ "$TERM_PROGRAM" = "vscode" ]; then
     alias clear='clear && clear'
 fi

@@ -36,7 +36,7 @@ RESERVED_PREFIXES = [
 def main(prefix: str) -> None:
     base = load_scripts("base")
     machine = load_scripts("machine")
-    scripts = []
+    scripts: list[str] = []
 
     # filter scripts
     for script in base + machine:
@@ -60,16 +60,16 @@ def main(prefix: str) -> None:
 
 
 def load_scripts(source: str) -> list[str]:
+    chezmoi_data = os.environ.get("CHEZMOI_DATA", "")
     try:
-        chezmoi_data = os.environ.get("CHEZMOI_DATA", "")
-        data: dict = json.loads(chezmoi_data)
+        data: dict[str, list[str]] = json.loads(chezmoi_data)
         return list(data[source])
     except json.JSONDecodeError as e:
         raise ValueError(f"invalid CHEZMOI_DATA: {chezmoi_data}") from e
     except KeyError as e:
-        raise ValueError(f"source '{source}' not found in data: {data}") from e
+        raise ValueError(f"{source} not found in data: {chezmoi_data}") from e
     except TypeError as e:
-        raise ValueError(f"invalid source scripts list: {data[source]}") from e
+        raise ValueError(f"invalid source scripts list: {chezmoi_data}") from e
 
 
 def is_scheduled_script(script: str) -> bool:

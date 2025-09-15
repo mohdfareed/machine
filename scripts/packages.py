@@ -52,7 +52,7 @@ def load_packages(source: str) -> dict[str, list[Any]]:
 def filter_packages(
     packages: dict[str, list[Any]],
 ) -> dict[utils.PackageManager, list[Any]]:
-    filtered = {}
+    filtered: dict[utils.PackageManager, list[Any]] = {}
     for manager, _ in packages.items():
         pkg_manager = utils.PackageManager(manager)
 

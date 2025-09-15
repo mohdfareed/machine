@@ -3,6 +3,8 @@
 # Functions and Aliases
 # =============================================================================
 
+Set-Alias machine-setup "$env:MACHINE/scripts/cli.py"
+
 if ($env:TERM_PROGRAM -eq 'vscode') {
     function Clear {
         Clear-Host; Clear-Host
