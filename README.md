@@ -111,4 +111,4 @@ code $MACHINE          # open repo in vscode
   - Package managers
     - Manual scripts
   - `zinit`
-  - `nvim`
+  - `nvim` (lazy vim)
