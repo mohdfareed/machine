@@ -55,10 +55,11 @@ def filter_packages(
     filtered = {}
     for manager, _ in packages.items():
         pkg_manager = utils.PackageManager(manager)
-        if pkg_manager.is_supported():
+
+        if not pkg_manager.is_supported():
+            print(f"skipping unsupported package manager: {manager}")
             continue
 
-        print(f"skipping unsupported package manager: {manager}")
         filtered[pkg_manager] = packages[manager]
     return filtered
 
