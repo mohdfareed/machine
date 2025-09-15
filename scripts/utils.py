@@ -95,7 +95,10 @@ def execute_script(script: str) -> None:
 
     # Universal scripts
     print(f"running script: {script}")
-    script = script if path.suffix != ".py" else f"{sys.executable} {script}"
+    if path.suffix == ".py":
+        script = f"{sys.executable} {script}"
+    elif path.suffix == ".ps1" and WINDOWS:
+        script = f'powershell -ExecutionPolicy Bypass -File "{script}"'
     run(script)
 
 

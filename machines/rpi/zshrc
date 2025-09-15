@@ -25,7 +25,16 @@ function temp {
   else                            gpu_color='\033[0;31m' # red
   fi
 
-  # print the temperature
-  echo -e "CPU => $cpu_color$((cpu/1000)).$((cpu%1000/100))'C\033[0m"
-  echo -e "GPU => $gpu_color$(echo "$gpu" | grep -E -o '[[:digit:]].*')\033[0m"
+  # convert to display format
+  cpu_temp="$((cpu/1000)).$((cpu%1000/100))'C"
+  gpu_temp="$(echo "$gpu" | grep -E -o '[[:digit:]].*')"
+
+  # set prefix colors
+  cpu_prefix='\033[1;34m' # blue
+  gpu_prefix='\033[1;35m' # purple
+
+  # display
+  clear='\033[0m'
+  echo -e "${cpu_prefix}CPU$clear => $cpu_color$cpu_temp$clear"
+  echo -e "${gpu_prefix}GPU$clear => $gpu_color$gpu_temp$clear"
 }

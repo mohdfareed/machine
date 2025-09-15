@@ -62,6 +62,18 @@ code $MACHINE          # open repo in vscode
 
 Tip: to test scripts manually, run the underlying script files directly from `config/scripts/` or `machines/<id>/scripts/`.
 
+### SSH
+- Scripts:
+  - `config/scripts/ssh.macos.sh` → enables Keychain + AddKeysToAgent in `~/.ssh/config`, starts/uses `ssh-agent`, loads keys from `$MACHINE_PRIVATE`.
+  - `config/scripts/ssh.linux.sh` → starts/uses `ssh-agent`, loads keys from `$MACHINE_PRIVATE`.
+  - `config/scripts/ssh.win.ps1` → starts `ssh-agent` service and loads keys from `%MACHINE_PRIVATE%`.
+- Key loading: any private key with a matching `.pub` in `$MACHINE_PRIVATE` is added. Permissions are corrected on POSIX.
+- When it runs: these `ssh.*` scripts are part of the unscheduled pass, so they run on each `chezmoi apply`. They are idempotent (safe to re-run).
+- Key generation (choose one):
+  - Manual: generate an Ed25519 key into `$MACHINE_PRIVATE` and re-run apply.
+  - Script (recommended): add a `once_ssh-generate.*` script to generate a key on first apply only. Ask for email/comment and store in `$MACHINE_PRIVATE`.
+  - Future CLI: a `machine ssh gen` command could route to the same script.
+
 ## Machine Settings
 - Variables used across the system:
   - `MACHINE`: repo root (e.g., `~/.machine`)
@@ -93,7 +105,6 @@ Tip: to test scripts manually, run the underlying script files directly from `co
   - Load ssh keys from private dir and set permissions
   - Add keys to agent
   - Keychain integration
-  - Key pair generation
   - Add keys to authorized_keys
 
 - Windows:

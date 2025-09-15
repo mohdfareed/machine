@@ -54,3 +54,18 @@ venv::activate() {
     # shellcheck source=/dev/null
     source "$venv/bin/activate"
 }
+
+# register an SSH key to authorized_keys on a host
+ssh::reg-key() {
+    usage="usage: $0 [user@]host [key_name]"
+    if (( $# < 1 || $# > 2 )); then echo "$usage" && return 1; fi
+
+    host=$1
+    key="$HOME/.ssh/${2-personal}.pub"
+    if [[ ! -f "$key" ]]; then
+        echo "no public key file found"
+        return 1
+    fi
+
+    ssh-copy-id -i "$key" "$host"
+}
