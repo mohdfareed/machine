@@ -60,21 +60,8 @@ code $MACHINE          # open repo in vscode
   - `onchange_*` → runs when content changes
 - Package installs: editing `config/packages.yaml` or `machines/<id>/packages.yaml` triggers an `onchange_*` script that installs packages.
 
-Tip: to test scripts manually, run the underlying script files directly from `config/scripts/` or `machines/<id>/scripts/`.
-
-### SSH
-- Scripts:
-  - `config/scripts/ssh.macos.sh` → enables Keychain + AddKeysToAgent in `~/.ssh/config`, starts/uses `ssh-agent`, loads keys from `$MACHINE_PRIVATE`.
-  - `config/scripts/ssh.linux.sh` → starts/uses `ssh-agent`, loads keys from `$MACHINE_PRIVATE`.
-  - `config/scripts/ssh.win.ps1` → starts `ssh-agent` service and loads keys from `%MACHINE_PRIVATE%`.
-- Key loading: any private key with a matching `.pub` in `$MACHINE_PRIVATE` is added. Permissions are corrected on POSIX.
-- When it runs: these `ssh.*` scripts are part of the unscheduled pass, so they run on each `chezmoi apply`. They are idempotent (safe to re-run).
-- Key generation (choose one):
-  - Manual: generate an Ed25519 key into `$MACHINE_PRIVATE` and re-run apply.
-  - Script (recommended): add a `once_ssh-generate.*` script to generate a key on first apply only. Ask for email/comment and store in `$MACHINE_PRIVATE`.
-  - Future CLI: a `machine ssh gen` command could route to the same script.
-
 ## Machine Settings
+
 - Variables used across the system:
   - `MACHINE`: repo root (e.g., `~/.machine`)
   - `MACHINE_ID`: selected machine profile (e.g., `macbook`)
@@ -85,33 +72,36 @@ Tip: to test scripts manually, run the underlying script files directly from `co
   - Chezmoi template `.chezmoi.toml.tmpl` prompts/uses env on first apply.
   - Shell profiles (`.zshenv`, `profile.ps1`) export them for interactive shells.
   - Script runner passes these vars to Python scripts so phase scripts have consistent context.
-- Priority concept:
-  - When running scripts manually, pass explicit args/env if needed.
-  - When running via Chezmoi phases, the template context provides the authoritative values.
 
 ### Machine Backup
 
-- Review installed apps.
-- Review config.
-- Commit changes to repo.
+- Commit and push changes to local repositories.
+- Review installed apps and their configurations.
+- Review machine config files.
 
 ## TODO
 
-- Hostname configuration
-- Share passwords/secrets with other machines
-- Add script as CLI interface to Chezmoi operations
+- Hostname configuration (prompt, default to machine_id.local)
+- Share passwords/secrets with other machines (iCloudDrive?)
 
 - SSH:
   - Load ssh keys from private dir and set permissions
+    - Copy keys from private dir to `~/.ssh`
+    - Set proper permissions on keys (600 for private, 644 for public)
+    - Create `~/.ssh/config` with proper permissions
+    - Create `~/.ssh/authorized_keys` with proper permissions
   - Add keys to agent
-  - Keychain integration
-  - Add keys to authorized_keys
+    - macOS: use `ssh-add --apple-use-keychain`
+    - Linux: use `ssh-add`
+    - Windows: use `ssh-add` (requires OpenSSH client feature)
+  - Keychain integration (macOS)
+  - WSL integration (Windows)
 
 - Windows:
   - WSL support
   - Terminal configuration
+  - fix authorized_keys config and aliases
   - Test line endings with unix-based repos
-  - [Steam Rom Manager](https://steamgriddb.github.io/steam-rom-manager/)
 
 - CI/CD:
   - Restore python formatting checks in ci
@@ -119,5 +109,6 @@ Tip: to test scripts manually, run the underlying script files directly from `co
 
 - Updating scripts:
   - Package managers
+    - Manual scripts
   - `zinit`
-  - Theme on linux
+  - `nvim`
