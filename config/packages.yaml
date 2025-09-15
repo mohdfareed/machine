@@ -19,11 +19,12 @@ brew:
 apt:
   - snapd --fix-missing # snap package manager
   - git git-lfs --fix-missing # git
-  - zsh bat eza fd-find # shell
+  - zsh bat fd-find # shell
   - script: curl -s https://ohmyposh.dev/install.sh | bash -s
   - python3 # python
   # - python3 uv # python # FIXME: Unable to locate package uv
   - unzip # oh-my-posh dependency
+  - ripgrep # nvim
 
   # fonts
   - fonts-jetbrains-mono # Fonts plugin
@@ -31,8 +32,7 @@ apt:
 
 snap:
   - gh btop nvim lazygit-gm # git, shell, nvim
-  - ripgrep --classic # nvim
-  - powershell # pwsh
+  - powershell --classic # pwsh
   - chezmoi --classic # chezmoi
 
 # windows

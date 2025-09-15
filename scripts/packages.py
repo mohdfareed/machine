@@ -92,4 +92,6 @@ if __name__ == "__main__":
         sys.exit(1)
     except Exception as error:
         print(f"packages error: {error}", file=sys.stderr)
+        if os.environ.get("DEBUG"):
+            raise
         sys.exit(1)
