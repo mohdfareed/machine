@@ -41,7 +41,23 @@ where,
 - `args...` are extra arguments passed to Chezmoi.
 
 
-## Usage
+## Quickstart
+
+After the initial bootstrap, use the lightweight CLI:
+
+```sh
+# from the repo root (e.g., ~/.machine)
+bin/machine apply --machine macbook   # apply dotfiles + scripts
+bin/machine update                    # pull + re-apply
+bin/machine status                    # show pending changes
+bin/machine packages --machine macbook# install packages
+bin/machine run setup                 # run setup.* scripts
+bin/machine run tunnel                # run tunnel.* scripts
+```
+
+These wrap `chezmoi` and re-use existing scripts, keeping behavior consistent.
+
+## Usage (Chezmoi)
 
 ```sh
 chezmoi init --apply # apply machine config
@@ -58,7 +74,6 @@ code $MACHINE # open repo in vscode
 
 ## TODO
 
-- Update copilot instructions
 - Hostname configuration
 - Share passwords/secrets with other machines
 
