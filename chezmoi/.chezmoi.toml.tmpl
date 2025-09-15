@@ -47,7 +47,7 @@
 {{- /* Detect OS */ -}}
 {{- $os := .chezmoi.os -}}
 {{- if eq .chezmoi.os "linux" -}}
-{{-   if (.chezmoi.kernel | lower | contains "microsoft") -}}
+{{-   if (.chezmoi.kernel.osrelease | lower | contains "microsoft") -}}
 {{-     $os = "wsl" -}}
 {{-   end -}}
 {{- end -}}
