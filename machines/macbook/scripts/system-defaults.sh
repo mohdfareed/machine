@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # System defaults for macOS
 
 echo "setting system defaults..."

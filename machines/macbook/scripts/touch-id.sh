@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Enable Touch ID for sudo on macOS
 
 echo "enabling Touch ID for sudo..."
