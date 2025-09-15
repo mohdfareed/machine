@@ -5,7 +5,3 @@
 ; disable commit signing
 [commit]
     gpgsign = false
-
-; convert windows line endings to unix
-[core]
-    autocrlf = true

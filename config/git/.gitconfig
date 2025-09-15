@@ -13,7 +13,8 @@
 ; git settings
 [core]
     excludesfile = ~/.gitignore
-    autocrlf = input
+    autocrlf = false ; ensure line endings are LF
+    eol = lf ; ensure line endings are LF
 [init]
     defaultBranch = main ; use main as default branch name
 [fetch]

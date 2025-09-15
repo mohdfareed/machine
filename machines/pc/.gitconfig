@@ -1,3 +1,0 @@
-; convert windows line endings to unix
-[core]
-    autocrlf = true
