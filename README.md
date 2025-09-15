@@ -40,31 +40,42 @@ where,
 - `<path>` is where the machine will be set up (default: `~/.machine`).
 - `args...` are extra arguments passed to Chezmoi.
 
-
-## Quickstart
-
-After the initial bootstrap, use the lightweight CLI:
-
-```sh
-# from the repo root (e.g., ~/.machine)
-bin/machine apply --machine macbook   # apply dotfiles + scripts
-bin/machine update                    # pull + re-apply
-bin/machine status                    # show pending changes
-bin/machine packages --machine macbook# install packages
-bin/machine run setup                 # run setup.* scripts
-bin/machine run tunnel                # run tunnel.* scripts
-```
-
-These wrap `chezmoi` and re-use existing scripts, keeping behavior consistent.
-
 ## Usage (Chezmoi)
 
 ```sh
-chezmoi init --apply # apply machine config
-chezmoi update # update repo and reapply config
-chezmoi status # show status of the config
-code $MACHINE # open repo in vscode
+chezmoi init --apply   # apply machine config
+chezmoi apply          # reapply machine config
+chezmoi update         # update repo and reapply config
+chezmoi status         # show status of the config
+code $MACHINE          # open repo in vscode
 ```
+
+## Scripts & Phases
+- Put shared scripts in `config/scripts/` and machine-specific in `machines/<id>/scripts/`.
+- OS suffixes are respected: `*.macos.sh`, `*.linux.sh`, `*.win.ps1`, `*.unix.sh`.
+- Phases are triggered by filename prefixes via Chezmoi:
+  - `before_*` → runs before apply
+  - `after_*` → runs after apply
+  - `once_*` → runs only once
+  - `onchange_*` → runs when content changes
+- Package installs: editing `config/packages.yaml` or `machines/<id>/packages.yaml` triggers an `onchange_*` script that installs packages.
+
+Tip: to test scripts manually, run the underlying script files directly from `config/scripts/` or `machines/<id>/scripts/`.
+
+## Machine Settings
+- Variables used across the system:
+  - `MACHINE`: repo root (e.g., `~/.machine`)
+  - `MACHINE_ID`: selected machine profile (e.g., `macbook`)
+  - `MACHINE_SHARED`: `config/`
+  - `MACHINE_CONFIG`: `machines/<id>/`
+  - `MACHINE_PRIVATE`: path to private files (default `~/.private`)
+- How they’re set:
+  - Chezmoi template `.chezmoi.toml.tmpl` prompts/uses env on first apply.
+  - Shell profiles (`.zshenv`, `profile.ps1`) export them for interactive shells.
+  - Script runner passes these vars to Python scripts so phase scripts have consistent context.
+- Priority concept:
+  - When running scripts manually, pass explicit args/env if needed.
+  - When running via Chezmoi phases, the template context provides the authoritative values.
 
 ### Machine Backup
 
@@ -76,6 +87,7 @@ code $MACHINE # open repo in vscode
 
 - Hostname configuration
 - Share passwords/secrets with other machines
+- Add script as CLI interface to Chezmoi operations
 
 - SSH:
   - Load ssh keys from private dir and set permissions

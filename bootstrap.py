@@ -17,6 +17,7 @@ https://www.chezmoi.io/install/#one-line-binary-install
 """
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -24,11 +25,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 REPOSITORY = "mohdfareed/machine"
-INSTALL_CHEZMOI = 'sh -c "$(curl -fsLS get.chezmoi.io)" --'
-INSTALL_CHEZMOI_WIN = "winget install twpayne.chezmoi"
+DEFAULT_MACHINE = (
+    os.environ.get("MACHINE") or Path("~/.machine").expanduser().resolve()
+)
 
-DEFAULT_MACHINE = Path("~/.machine").expanduser().resolve()
-WINDOWS = sys.platform.lower().startswith("win32")
+INSTALL_CHEZMOI = 'sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "{}"'
+INSTALL_CHEZMOI_WIN = "&{$(irm 'https://get.chezmoi.io/ps1')} -b '{}'"
+IS_WINDOWS = sys.platform.lower().startswith("win32")
 
 
 def main(path: Path, bin: Path, args: list[str]) -> None:
@@ -51,19 +54,16 @@ def install_chezmoi(bin: Path) -> str:
     bin.mkdir(parents=True, exist_ok=True)
     print(f"installing chezmoi...")
 
-    if not WINDOWS:  # unix
-        run(f"{INSTALL_CHEZMOI} -b {bin}")
+    if IS_WINDOWS:
+        run(f'iex "{INSTALL_CHEZMOI_WIN.format(bin)}"')
+        return str(bin / "chezmoi.exe")
+    else:  # unix
+        run(INSTALL_CHEZMOI.format(bin))
         return str(bin / "chezmoi")
-
-    # windows
-    run(INSTALL_CHEZMOI_WIN)
-    if not shutil.which("chezmoi.exe"):
-        raise RuntimeError("re-run script to continue")
-    return "chezmoi.exe"
 
 
 def run(cmd: str) -> subprocess.CompletedProcess[bytes]:
-    exe = shutil.which("powershell.exe") if WINDOWS else None
+    exe = shutil.which("powershell.exe") if IS_WINDOWS else None
     return subprocess.run(cmd.strip(), shell=True, check=True, executable=exe)
 
 
@@ -75,6 +75,7 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
+    # machine setup path
     parser.add_argument(
         "path",
         type=Path,
@@ -82,15 +83,32 @@ if __name__ == "__main__":
         default=DEFAULT_MACHINE,
         nargs="?",
     )
-    args, extra = parser.parse_known_args()
 
-    try:  # run script
+    # setup options
+    parser.add_argument(
+        "--debug", action="store_true", help="print debug information"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="print bootstrapping settings"
+    )
+
+    # set environment
+    args, extra = parser.parse_known_args()
+    if args.dry_run:
+        os.environ["DRY_RUN"] = "1"
+    if args.debug:
+        os.environ["DEBUG"] = "1"
+
+    try:  # run setup script
         with TemporaryDirectory() as temp:  # temp bin for chezmoi
             main(args.path, Path(temp), extra)
         print("done!")
+        sys.exit(0)
+
     except KeyboardInterrupt:
         print("aborted!")
         sys.exit(1)
+
     except subprocess.CalledProcessError as error:
         print(f"error: {error}", file=sys.stderr)
         sys.exit(1)

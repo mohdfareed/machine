@@ -7,8 +7,8 @@
 
 {{- /* Machine selection: prefer env, then prompt */ -}}
 {{- $machines := list "gleason" "macbook" "rpi" "pc" "codespaces" -}}
-{{- if env "MACHINE" -}}
-{{-   $machine = env "MACHINE" -}}
+{{- if env "MACHINE_ID" -}}
+{{-   $machine = env "MACHINE_ID" -}}
 {{- else if hasKey . "machine" -}}
 {{-   $machine = promptChoice "Select machine" $machines .machine -}}
 {{- else -}}
@@ -16,8 +16,8 @@
 {{- end -}}
 
 {{- /* Machine path: prefer env, then prompt */ -}}
-{{- if env "MACHINE_PATH" -}}
-{{-   $machinePath = env "MACHINE_PATH" -}}
+{{- if env "MACHINE" -}}
+{{-   $machinePath = env "MACHINE" -}}
 {{- else -}}
 {{-   $machinePath = promptString "Enter the machine path"
 		.chezmoi.workingTree
@@ -25,8 +25,8 @@
 {{- end -}}
 
 {{- /* Private path: prefer env, then prompt */ -}}
-{{- if env "PRIVATE_PATH" -}}
-{{-   $privatePath = env "PRIVATE_PATH" -}}
+{{- if env "MACHINE_PRIVATE" -}}
+{{-   $privatePath = env "MACHINE_PRIVATE" -}}
 {{- else -}}
 {{-   $privatePath = promptString "Enter the private path"
 		(get . "privatePath")
@@ -34,9 +34,9 @@
 {{- end -}}
 
 {{- else }} {{/* Codespaces */}}
-{{- $machine = env "MACHINE" | default "codespaces" -}}
-{{- $machinePath = env "MACHINE_PATH" | default .chezmoi.workingTree -}}
-{{- $privatePath = env "PRIVATE_PATH" | default "~/.private" -}}
+{{- $machine = env "MACHINE_ID" | default "codespaces" -}}
+{{- $machinePath = env "MACHINE" | default .chezmoi.workingTree -}}
+{{- $privatePath = env "MACHINE_PRIVATE" | default "~/.private" -}}
 {{- end }}
 
 {{- /* Machine path variables */ -}}

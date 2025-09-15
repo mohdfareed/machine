@@ -16,4 +16,4 @@
 
 {{- /* Combine raw data for script to merge */ -}}
 {{- $data = dict "base" $basePackages "machine" $machinePackages -}}
-{{- template "script_runner.py" (dict "ctx" . "script" "packages.py" "data" $data) -}}
+{{- template "script_runner.py" (dict "ctx" . "script" "packages.py" "argv" list "data" $data) -}}

@@ -1,28 +1,32 @@
 #!/usr/bin/env sh
 set -eu
 
+PY_VERSION="3.8"  # default macos version
+VENV=".venv"  # virtual environment
+
+# ARGUMENT PARSING
+# =============================================================================
+
 HELP="usage: setup.sh [-h]
 
-Set up a development environment. Fetches full git history, updates git tags,
-installs Python and sets up a virtual environment using \`uv\`.
+Set up a development environment.
+
+Fetches full git history, updates git tags, installs Python and
+sets up a virtual environment using \`uv\`.
 
 options:
-  -h  Show this help message and exit."
+  -h|--help  Show this help message and exit."
 
-if [ "$#" -eq 1 ] && [ "$1" = "-h" ]; then
+if [ "$#" -eq 1 ] && { [ "$1" = "-h" ] || [ "$1" = "--help" ]; }; then
   echo "$HELP"
   exit 0
-elif [ "$#" -gt 1 ]; then
+elif [ "$#" -gt 0 ]; then
   echo "$HELP" >&2
   exit 1
 fi
 
-
 # SCRIPT
 # =============================================================================
-
-PY_VERSION="3.8"  # default macos version
-VENV=".venv"  # virtual environment
 
 # fetch full git history
 if [ -f .git/shallow ]; then

@@ -2,7 +2,7 @@
   script_loader template - loads scripts for execution at a deployment phase.
 
   Usage:
-  {{- template "script_loader" (dict "ctx" . "prefix"  "once" ) -}}
+  {{- template "script_loader.tmpl" (dict "ctx" . "prefix"  "once" ) -}}
 
   Args:
     ctx: the template context (pass .)
@@ -34,15 +34,21 @@
 
 {{- /* Return raw data for script to merge */ -}}
 {{- $data := dict "base" $baseScripts "machine" $machineScripts -}}
-{{- $script := printf "scripts.py --prefix %s" .prefix -}}
-{{- $args := dict "ctx" .ctx "script" $script "data" $data -}}
+{{- $script := "scripts.py" -}}
+{{- $argv := list -}}
+{{- if .prefix -}}
+{{-   $argv = append $argv "--prefix" -}}
+{{-   $argv = append $argv .prefix -}}
+{{- end -}}
+{{- $args := dict "ctx" .ctx "script" $script "argv" $argv "data" $data -}}
 {{- template "script_runner.py" $args }}
 
-{{- /* Include loaded scripts to trigger on-change events */ -}}
 
 # Loaded Scripts
 # =============================================================================
 
+
+{{- /* Include loaded base scripts to trigger on-change events */ -}}
 {{- range $baseScripts }}
 
 # source: {{ . }}
@@ -51,6 +57,7 @@
 {{- end }}
 {{- end }}
 
+{{- /* Include loaded machine scripts to trigger on-change events */ -}}
 {{- range $machineScripts }}
 
 # source: {{ . }}

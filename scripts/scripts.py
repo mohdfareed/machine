@@ -48,7 +48,9 @@ def main(prefix: str) -> None:
 
     for script in base + machine:
         if prefix == "" and is_scheduled_script(script):
-            continue
+            continue  # skip scheduled scripts if no prefix
+        if prefix and not script.startswith(prefix):
+            continue  # skip non-matching prefix
 
         set_permissions(script)
         utils.execute_script(script)
@@ -76,7 +78,7 @@ def set_permissions(script: str) -> None:
     if os.name == "posix":
         os.chmod(script, 0o755)  # executable
     elif os.name == "nt":
-        pass
+        ...
 
 
 if __name__ == "__main__":

@@ -3,24 +3,34 @@
 Script runner template - symlinks a config file, allowing machine override.
 
 Usage:
-  template "script_runner.py" (dict "ctx" . "script"  "pkgs.py" "data" .pkgs)
+  template "script_runner.py" (dict "ctx" . "script" "scripts.py" "argv" list "data" dict)
 
 Args:
   ctx: the template context (pass .)
   script: the script to run
+  argv: the arguments to pass to the script
   data: the data to pass to the script
 """
 
+import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
-# scripts
+# scripts and args
 script = Path("{{ .ctx.scriptsPath }}") / "{{ .script }}"
+argv_data = """
+{{- .argv | toJson -}}
+"""
 script_data = """
 {{ .data | toJson }}
 """
+
+try:  # parse argv
+    argv = json.loads(argv_data) if argv_data.strip() else []
+except json.JSONDecodeError as e:
+    raise ValueError(f"invalid argv: {e}") from e
 
 # environment
 env = os.environ.copy()
@@ -35,9 +45,8 @@ env["MACHINE_CONFIG"] = "{{ .ctx.machineConfigPath }}"
 
 try:  # run script
     script = Path(env["MACHINE"]) / script
-    result = subprocess.run(
-        f"{sys.executable} {script}", shell=True, env=env, check=False
-    )
+    cmd = [sys.executable, str(script)] + list(argv)
+    result = subprocess.run(cmd, shell=False, env=env, check=False)
     sys.exit(result.returncode)
 
 except KeyboardInterrupt:

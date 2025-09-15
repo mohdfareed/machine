@@ -4,7 +4,7 @@
         "*.json": "jsonc",
         "*.tmpl": "go",
         "symlink_*": "go",
-        "*.py.tmpl": "python",
+        "*.py.tmpl": "go",
         // specific files
         ".chezmoiignore": "go",
     },
