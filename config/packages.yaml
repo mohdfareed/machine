@@ -21,7 +21,8 @@ apt:
   - git git-lfs # git
   - zsh bat eza fd-find # shell
   - script: curl -s https://ohmyposh.dev/install.sh | bash -s
-  - python3 uv # python
+  - python3 # python
+  # - python3 uv # python # FIXME: Unable to locate package uv
 
   # fonts
   - fonts-jetbrains-mono # Fonts plugin

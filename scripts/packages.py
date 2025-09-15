@@ -30,18 +30,45 @@ def main() -> None:
     base = load_packages("base")
     machine = load_packages("machine")
 
-    for manager, pkgs in base.items():
-        install_packages(manager, pkgs)
-    for manager, pkgs in machine.items():
-        install_packages(manager, pkgs)
+    base = filter_packages(base)
+    machine = filter_packages(machine)
+
+    if os.environ.get("DEBUG"):
+        print(f"base packages: {json.dumps(base, indent=2)}")
+        print(f"machine packages: {json.dumps(machine, indent=2)}")
+
+    process_packages(base)
+    process_packages(machine)
 
 
-def install_packages(manager: str, pkgs: list[Any]) -> None:
-    pkg_manager = utils.PackageManager(manager)
-    if not pkg_manager.is_supported():
-        return
-    for pkg in pkgs:
-        install_package(pkg_manager, pkg)
+def load_packages(source: str) -> dict[str, list[Any]]:
+    try:
+        data = json.loads(os.environ.get("CHEZMOI_DATA", ""))
+        return data.get(source, {})
+    except json.JSONDecodeError as e:
+        raise ValueError(f"invalid CHEZMOI_DATA: {e}") from e
+
+
+def filter_packages(
+    packages: dict[str, list[Any]],
+) -> dict[utils.PackageManager, list[Any]]:
+    filtered = {}
+    for manager, _ in packages.items():
+        pkg_manager = utils.PackageManager(manager)
+        if pkg_manager.is_supported():
+            continue
+
+        print(f"skipping unsupported package manager: {manager}")
+        filtered[pkg_manager] = packages[manager]
+    return filtered
+
+
+def process_packages(
+    packages: dict[utils.PackageManager, list[Any]],
+) -> None:
+    for manager, pkgs in packages.items():
+        for pkg in pkgs:
+            install_package(manager, pkg)
 
 
 def install_package(pkg_manager: utils.PackageManager, pkg: Any) -> None:
@@ -55,14 +82,6 @@ def install_package(pkg_manager: utils.PackageManager, pkg: Any) -> None:
             return
         print(f"{pkg_manager} installing {pkg}...")
         pkg_manager.install(str(pkg))
-
-
-def load_packages(source: str) -> dict[str, list[Any]]:
-    try:
-        data = json.loads(os.environ.get("CHEZMOI_DATA", ""))
-        return data.get(source, {})
-    except json.JSONDecodeError as e:
-        raise ValueError(f"invalid CHEZMOI_DATA: {e}") from e
 
 
 if __name__ == "__main__":

@@ -36,22 +36,25 @@ RESERVED_PREFIXES = [
 def main(prefix: str) -> None:
     base = load_scripts("base")
     machine = load_scripts("machine")
+    scripts = []
 
-    if os.environ.get("DEBUG"):
-        print(f"prefix: {prefix}")
-        print(f"base scripts: {len(base)}")
-        for s in base:
-            print(f"  - {s}")
-        print(f"machine scripts: {len(machine)}")
-        for s in machine:
-            print(f"  - {s}")
-
+    # filter scripts
     for script in base + machine:
         if prefix == "" and is_scheduled_script(script):
             continue  # skip scheduled scripts if no prefix
         if prefix and not script.startswith(prefix):
             continue  # skip non-matching prefix
+        scripts.append(script)
 
+    # debug
+    if os.environ.get("DEBUG"):
+        print(f"prefix: {prefix}")
+        print(f"scripts: {len(scripts)}")
+        for script in scripts:
+            print(f"  - {script}")
+
+    # run scripts
+    for script in scripts:
         set_permissions(script)
         utils.execute_script(script)
 
