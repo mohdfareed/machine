@@ -13,7 +13,8 @@ from pathlib import Path
 WINDOWS = sys.platform.lower().startswith("win")
 LINUX = sys.platform.lower().startswith("linux")
 MACOS = sys.platform.lower().startswith("darwin")
-UNIX = LINUX or MACOS
+WSL = shutil.which("wslinfo") is not None
+UNIX = LINUX or MACOS or WSL
 
 
 class PackageManager(enum.Enum):
@@ -33,6 +34,9 @@ class PackageManager(enum.Enum):
         return shutil.which(self.value) is not None
 
     def is_supported(self) -> bool:
+        if self.is_available():
+            return True
+
         if self == PackageManager.BREW:
             return platform.system().lower().startswith("darwin")  # macOS
         elif self == PackageManager.MAS:
@@ -89,6 +93,8 @@ def execute_script(script: str) -> None:
     if not LINUX and ".linux" in suffixes:
         return
     if not MACOS and ".macos" in suffixes:
+        return
+    if not WSL and ".wsl" in suffixes:
         return
     if not UNIX and ".unix" in suffixes:
         return
