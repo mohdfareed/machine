@@ -40,7 +40,7 @@ where,
 - `<path>` is where the machine will be set up (default: `~/.machine`).
 - `args...` are extra arguments passed to Chezmoi.
 
-## Usage (Chezmoi)
+## Usage
 
 ```sh
 chezmoi init --apply   # apply machine config
@@ -50,7 +50,8 @@ chezmoi status         # show status of the config
 code $MACHINE          # open repo in vscode
 ```
 
-## Scripting
+### Scripting
+
 - Put shared scripts in `config/scripts/` and machine-specific in `machines/<id>/scripts/`.
 - OS suffixes are respected: `*.macos.sh`, `*.linux.sh`, `*.win.ps1`, `*.unix.sh`.
 - Phases are triggered by filename prefixes via Chezmoi:
@@ -60,7 +61,7 @@ code $MACHINE          # open repo in vscode
   - `onchange_*` → runs when content changes
 - Package installs: editing `config/packages.yaml` or `machines/<id>/packages.yaml` triggers an `onchange_*` script that installs packages.
 
-## Machine Settings
+### Machine Settings
 
 - Variables used across the system:
   - `MACHINE`: repo root (e.g., `~/.machine`)
@@ -73,29 +74,23 @@ code $MACHINE          # open repo in vscode
   - Shell profiles (`.zshenv`, `profile.ps1`) export them for interactive shells.
   - Script runner passes these vars to Python scripts so phase scripts have consistent context.
 
+### SSH Setup
+
+- Add keys: place your keys in `$MACHINE_PRIVATE/ssh/`.
+  - Example: `personal` + `personal.pub`.
+- Configure SSH: edit `machines/<id>/ssh.config` for per‑machine settings.
+
 ### Machine Backup
 
 - Commit and push changes to local repositories.
 - Review installed apps and their configurations.
 - Review machine config files.
 
-## SSH Setup
-
-- Add keys: place your keys in `$MACHINE_PRIVATE/ssh/`.
-  - Example: `personal` + `personal.pub`.
-- Configure SSH: edit `machines/<id>/ssh.config` for per‑machine settings.
-
 ## TODO
 
 - Hostname configuration (prompt, default to machine_id.local)
 - Share passwords/secrets with other machines (iCloudDrive?)
 - Package managers priority per os (or machine) to de-duplicate installs
-
-- SSH:
-  - [x] Load ssh keys from private dir and set permissions
-  - [x] Create `~/.ssh/config` and `~/.ssh/authorized_keys` with proper permissions
-  - [x] Add keys to agent (macOS/Linux/Windows)
-  - [ ] Keychain integration enhancements (macOS) — e.g., service tweaks
 
 - Windows:
   - WSL support
@@ -107,7 +102,7 @@ code $MACHINE          # open repo in vscode
   - Restore python formatting checks in ci
   - Add update script for updating dependencies during cd
 
-- Updating scripts:
+- Update script:
   - Package managers
     - Manual scripts
   - `zinit`
