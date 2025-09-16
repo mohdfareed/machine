@@ -46,12 +46,11 @@ def main(prefix: str) -> None:
             continue  # skip non-matching prefix
         scripts.append(script)
 
-    # debug
-    if os.environ.get("DEBUG"):
-        print(f"prefix: {prefix}")
-        print(f"scripts: {len(scripts)}")
-        for script in scripts:
-            print(f"  - {script}")
+    # debug info
+    utils.debug("scripts", f"prefix: {prefix}")
+    utils.debug("scripts", f"scripts: {len(scripts)}")
+    for script in scripts:
+        utils.debug("scripts", f"  - {script}")
 
     # run scripts
     for script in scripts:
@@ -94,5 +93,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as error:
-        print(f"scripts error: {error}", file=sys.stderr)
+        utils.error(f"scripts: {error}")
+        if os.environ.get("DEBUG"):
+            raise
         sys.exit(1)

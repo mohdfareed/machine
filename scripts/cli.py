@@ -10,8 +10,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import utils
 
-def main(debug: bool, dry_run: bool, args: list[str]) -> None:
+
+def main(dry_run: bool, args: list[str]) -> None:
     """CLI entry point."""
     machine = Path(os.environ.get("MACHINE", ""))
     machine_id = os.environ.get("MACHINE_ID", "")
@@ -31,22 +33,20 @@ def main(debug: bool, dry_run: bool, args: list[str]) -> None:
     shared_scripts = machine_shared / "scripts"
     machine_scripts = machine_config / "scripts"
 
-    if debug:
-        print("debug mode")
-    if debug and dry_run:
-        print("dry run mode")
+    utils.debug("cli", "debug mode enabled")
+    if dry_run:
+        utils.debug("cli", "dry run mode enabled")
 
     print(f"machine_id: {machine_id}")
     print(f"machine: {machine}")
 
-    if debug:
-        print(f"scripts: {scripts}")
-        print(f"machine_shared: {machine_shared}")
-        print(f"shared_scripts: {shared_scripts}")
-        print(f"machine_config: {machine_config}")
-        if machine_scripts.exists():
-            print(f"machine_scripts: {machine_scripts}")
-        print(f"args: {json.dumps(args, indent=2)}")
+    utils.debug("cli", f"scripts: {scripts}")
+    utils.debug("cli", f"machine_shared: {machine_shared}")
+    utils.debug("cli", f"shared_scripts: {shared_scripts}")
+    utils.debug("cli", f"machine_config: {machine_config}")
+    if machine_scripts.exists():
+        utils.debug("cli", f"machine_scripts: {machine_scripts}")
+    utils.debug("cli", f"args: {json.dumps(args, indent=2)}")
 
 
 # region: CLI
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         os.environ["DRY_RUN"] = "1"
 
     try:  # run setup script
-        main(args.debug, args.dry_run, extra)
+        main(args.dry_run, extra)
         sys.exit(0)
 
     except KeyboardInterrupt:
@@ -85,7 +85,13 @@ if __name__ == "__main__":
         sys.exit(1)
 
     except subprocess.CalledProcessError as error:
-        print(f"error: {error}", file=sys.stderr)
+        utils.error(f"cli: {error}")
+        sys.exit(1)
+
+    except Exception as error:
+        utils.error(f"cli: {error}")
+        if os.environ.get("DEBUG"):
+            raise
         sys.exit(1)
 
 # endregion

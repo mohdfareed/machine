@@ -30,15 +30,11 @@ def main() -> None:
     base = load_packages("base")
     machine = load_packages("machine")
 
-    base = filter_packages(base)
-    machine = filter_packages(machine)
+    utils.debug("pkgs", f"base packages: {json.dumps(base, indent=2)}")
+    utils.debug("pkgs", f"machine packages: {json.dumps(machine, indent=2)}")
 
-    if os.environ.get("DEBUG"):
-        print(f"base packages: {json.dumps(base, indent=2)}")
-        print(f"machine packages: {json.dumps(machine, indent=2)}")
-
-    process_packages(base)
-    process_packages(machine)
+    process_packages(filter_packages(base))
+    process_packages(filter_packages(machine))
 
 
 def load_packages(source: str) -> dict[str, list[Any]]:
@@ -91,7 +87,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception as error:
-        print(f"packages error: {error}", file=sys.stderr)
+        utils.error(f"pkgs: {error}")
         if os.environ.get("DEBUG"):
             raise
         sys.exit(1)

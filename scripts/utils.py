@@ -80,7 +80,7 @@ class PackageManager(enum.Enum):
         try:
             run(command)
         except:
-            print(f"{self.value} failed to install {package}")
+            error(f"{self.value} failed to install {package}")
 
 
 def execute_script(script: str) -> None:
@@ -110,13 +110,20 @@ def execute_script(script: str) -> None:
 
 def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
     cmd = cmd.strip()
-    debug = os.environ.get("DEBUG")
     dry_run = os.environ.get("DRY_RUN")
 
-    if debug:
-        print(f"[run] {cmd}")
+    debug("cmd", cmd)
     if dry_run:
         return subprocess.CompletedProcess(cmd, 0)
 
     exe = shutil.which("powershell.exe") if WINDOWS else None
     return subprocess.run(cmd, shell=True, check=check, executable=exe)
+
+
+def debug(source: str, msg: str) -> None:
+    if os.environ.get("DEBUG"):
+        print(f"[{source}] {msg}")
+
+
+def error(msg: str) -> None:
+    print(f"[error] {msg}", file=sys.stderr)
