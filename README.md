@@ -1,5 +1,45 @@
 # Machine Setup & Dotfiles
 
+A cross‑platform Chezmoi setup to bootstrap, deploy, and version‑control environments across macOS, Windows, and Linux.
+
+- `chezmoi/` orchestrates the process;
+- `scripts/` act as infrastructure;
+- `config/` provides shared defaults while
+- `machines/<id>/` supplies per‑machine overrides.
+
+```mermaid
+flowchart LR
+    A[bootstrap.py] --> B[chezmoi/] --> C
+    B --> config
+    C --> config
+
+    subgraph C [scripts/]
+      direction LR
+      O[scripts.py]
+      P[packages.py]
+      L[cli.py]
+    end
+
+    subgraph config [configuration]
+      direction TB
+      D --> E
+    end
+
+    subgraph D [config/]
+      direction TB
+      H[scripts/]
+      I[packages.yaml]
+      J[.zshenv]
+    end
+
+    subgraph E [machines/<id>/]
+      direction TB
+      F[scripts/]
+      G[packages.yaml]
+      K[.zshenv]
+    end
+```
+
 ## Requirements
 
 - Python 3.8+
@@ -25,26 +65,23 @@ winget install Microsoft.Powershell # 7.0+
 Run the following command to install Chezmoi and bootstrap a machine:
 
 ```sh
+# shell
 repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [args...]
+curl -fsLS "$repo/bootstrap.py" | python3 -
 ```
 
 ```powershell
+# powershell
 $repo = "https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsLS "$repo/bootstrap.py" | python3 - [-h] <path> [args...]
+curl -fsLS "$repo/bootstrap.py" | python3 -
 ```
-
-where,
-
-- `-h` or `--help` shows the help message.
-- `<path>` is where the machine will be set up (default: `~/.machine`).
-- `args...` are extra arguments passed to Chezmoi.
 
 ## Usage
 
+After bootstrapping, the machine will be set up with Chezmoi installed. The following are commands to manage the configuration:
+
 ```sh
 chezmoi init --apply   # apply machine config
-chezmoi apply          # reapply machine config
 chezmoi update         # update repo and reapply config
 chezmoi status         # show status of the config
 code $MACHINE          # open repo in vscode
@@ -53,7 +90,9 @@ code $MACHINE          # open repo in vscode
 ### Scripting
 
 - Put shared scripts in `config/scripts/` and machine-specific in `machines/<id>/scripts/`.
-- OS suffixes are respected: `*.macos.sh`, `*.linux.sh`, `*.win.ps1`, `*.unix.sh`.
+- OS suffixes are respected.
+  - Examples: `*.macos.sh`, `*.linux.sh`, `*.win.ps1`, `*.unix.sh`.
+  - Combinations are supported, e.g., `*.linux.wsl.sh` runs on both Linux and WSL.
 - Phases are triggered by filename prefixes via Chezmoi:
   - `before_*` → runs before apply
   - `after_*` → runs after apply
@@ -66,18 +105,16 @@ code $MACHINE          # open repo in vscode
 - Variables used across the system:
   - `MACHINE`: repo root (e.g., `~/.machine`)
   - `MACHINE_ID`: selected machine profile (e.g., `macbook`)
-  - `MACHINE_SHARED`: `config/`
-  - `MACHINE_CONFIG`: `machines/<id>/`
   - `MACHINE_PRIVATE`: path to private files (default `~/.private`)
 - How they’re set:
-  - Chezmoi template `.chezmoi.toml.tmpl` prompts/uses env on first apply.
+  - Chezmoi template `.chezmoi.toml.tmpl` prompts on first apply (or uses env if set).
   - Shell profiles (`.zshenv`, `profile.ps1`) export them for interactive shells.
-  - Script runner passes these vars to Python scripts so phase scripts have consistent context.
+  - Script runner passes these vars to Python scripts using environment variables.
 
 ### SSH Setup
 
 - Add keys: place your keys in `$MACHINE_PRIVATE/ssh/`.
-  - Example: `personal` + `personal.pub`.
+  - Example: `personal` + `personal.pub` or `tool.key` + `tool.pub`.
 - Configure SSH: edit `machines/<id>/ssh.config` for per‑machine settings.
 
 ### Machine Backup
@@ -88,23 +125,23 @@ code $MACHINE          # open repo in vscode
 
 ## TODO
 
-- Hostname configuration (prompt, default to machine_id.local)
-- Share passwords/secrets with other machines (iCloudDrive?)
-- Package managers priority per os (or machine) to de-duplicate installs
-- Implement subcommands for CLI script
+- [ ] Hostname configuration (prompt, default to machine_id.local)
+- [ ] Share passwords/secrets with other machines (iCloudDrive?)
+- [ ] Package managers priority per os (or machine) to de-duplicate installs
+- [ ] Implement subcommands for CLI script
 
-- Windows:
-  - WSL support
-  - Terminal configuration
-  - fix authorized_keys config and aliases
-  - Test line endings with unix-based repos
+- [ ] Windows:
+  - [ ] WSL support
+  - [ ] Terminal configuration
+  - [ ] fix authorized_keys config and aliases
+  - [ ] Test line endings with unix-based repos
 
-- CI/CD:
-  - Restore python formatting checks in ci
-  - Add update script for updating dependencies during cd
+- [ ] CI/CD:
+  - [ ] Restore python formatting checks in ci
+  - [ ] Add update script for updating dependencies during cd
 
-- Update script:
-  - Package managers
-    - Manual scripts
-  - `zinit`
-  - `nvim` (lazy vim)
+- [ ] Update script:
+  - [ ] Package managers
+    - [ ] Manual scripts
+  - [ ] `zinit`
+  - [ ] `nvim` (lazy vim)
