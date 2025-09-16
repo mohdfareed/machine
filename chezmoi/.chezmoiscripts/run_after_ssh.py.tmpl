@@ -1,0 +1,3 @@
+{{- /* Run SSH setup after apply */ -}}
+{{- $args := dict "ctx" . "script" "ssh.py" "argv" list "data" dict -}}
+{{- template "script_runner.py" $args -}}

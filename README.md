@@ -50,7 +50,7 @@ chezmoi status         # show status of the config
 code $MACHINE          # open repo in vscode
 ```
 
-## Scripts & Phases
+## Scripting
 - Put shared scripts in `config/scripts/` and machine-specific in `machines/<id>/scripts/`.
 - OS suffixes are respected: `*.macos.sh`, `*.linux.sh`, `*.win.ps1`, `*.unix.sh`.
 - Phases are triggered by filename prefixes via Chezmoi:
@@ -79,6 +79,12 @@ code $MACHINE          # open repo in vscode
 - Review installed apps and their configurations.
 - Review machine config files.
 
+## SSH Setup
+
+- Add keys: place your keys in `$MACHINE_PRIVATE/ssh/`.
+  - Example: `personal` + `personal.pub`.
+- Configure SSH: edit `machines/<id>/ssh.config` for per‑machine settings.
+
 ## TODO
 
 - Hostname configuration (prompt, default to machine_id.local)
@@ -86,17 +92,10 @@ code $MACHINE          # open repo in vscode
 - Package managers priority per os (or machine) to de-duplicate installs
 
 - SSH:
-  - Load ssh keys from private dir and set permissions
-    - Copy keys from private dir to `~/.ssh`
-    - Set proper permissions on keys (600 for private, 644 for public)
-    - Create `~/.ssh/config` with proper permissions
-    - Create `~/.ssh/authorized_keys` with proper permissions
-  - Add keys to agent
-    - macOS: use `ssh-add --apple-use-keychain`
-    - Linux: use `ssh-add`
-    - Windows: use `ssh-add` (requires OpenSSH client feature)
-  - Keychain integration (macOS)
-  - WSL integration (Windows)
+  - [x] Load ssh keys from private dir and set permissions
+  - [x] Create `~/.ssh/config` and `~/.ssh/authorized_keys` with proper permissions
+  - [x] Add keys to agent (macOS/Linux/Windows)
+  - [ ] Keychain integration enhancements (macOS) — e.g., service tweaks
 
 - Windows:
   - WSL support
