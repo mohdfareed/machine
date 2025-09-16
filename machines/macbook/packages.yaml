@@ -3,8 +3,7 @@ brew:
   - go # go-lang
   - dotnet-sdk --cask # .net
   - visual-studio-code --cask # vscode
-  # - godot-mono --cask # game engine
-  # - docker --cask # REVIEW: cask doesn't support arm
+  - docker --cask # containers
 
   # utilities
   - mas # app store cli
@@ -19,23 +18,24 @@ brew:
   - iina --cask # video player
   - mos --cask # mouse utility
   - monitorcontrol --cask # monitor utility
+  - swish --cask # track-pad gestures
+  - figma --cask # design
+  - sf-symbols --cask # system symbols
+
+  # archive
   # - the_unarchiver --cask # archive utility
-  # - swish --cask # trackpad gestures
-  # - figma --cask # design
-  # - sf-symbols --cask # system symbols
   # - utm --cask # virtual machines
 
 mas:
-  # apple
+  # productivity
+  - 497799835 # Xcode
+  - 1487937127 # Craft
+  - 1447330651 # Copilot
+
+  # office
   - 409183694 # Keynote
   - 409203825 # Numbers
   - 409201541 # Pages
-  - 497799835 # Xcode
-
-  # productivity
-  - 1487937127 # Craft
-  - 1447330651 # Copilot
-  - 1504965415 # TechniCalc
 
   # utilities
   - 1592917505 # Noir

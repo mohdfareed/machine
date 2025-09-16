@@ -223,6 +223,6 @@
   "errorLens.enabled": false,
   "github.copilot.nextEditSuggestions.enabled": true,
   "vsicons.dontShowNewVersionMessage": true,
-  "powershell.promptToUpdatePowerShell": false,
+  "powershell.promptToUpdatePowerShell": false
   // REVIEW - new customizations above =========================================
 }

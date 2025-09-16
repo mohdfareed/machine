@@ -2,13 +2,16 @@
 # =============================================================================
 
 brew:
-  - git git-lfs gh # git
-  - zsh bat eza btop oh-my-posh # shell
-  - neovim lazygit ripgrep fd # nvim
-  - python uv # python
-  - powershell --cask # pwsh
-  - chezmoi # chezmoi
-
+  # git
+  - git git-lfs gh
+  # shell
+  - zsh bat eza btop oh-my-posh neovim lazygit ripgrep fd
+  # python
+  - python uv
+  # pwsh
+  - powershell --cask
+  # chezmoi
+  - chezmoi
   # fonts
   - font-computer-modern
   - font-jetbrains-mono-nerd-font
@@ -17,24 +20,32 @@ brew:
 # =============================================================================
 
 apt:
-  - snapd --fix-missing # snap package manager
-  - git git-lfs --fix-missing # git
-  - zsh bat fd-find # shell
+  # snap package manager
+  - snapd --fix-missing
+  # git
+  - git git-lfs --fix-missing
+  # shell
+  - zsh bat fd-find ripgrep
   - gpg # eza dependency
-  - script: curl -s https://ohmyposh.dev/install.sh | bash -s
-  - python3 # python
   - unzip # oh-my-posh dependency
-  - ripgrep # nvim
-
+  - script: curl -s https://ohmyposh.dev/install.sh | bash -s
+  # python
+  - python3
   # fonts
-  - fonts-jetbrains-mono # Fonts plugin
-  - fonts-lmodern # Fonts plugin
+  - fonts-jetbrains-mono
+  - fonts-lmodern
 
 snap:
-  - gh btop nvim lazygit-gm # git, shell, nvim
-  - powershell --classic # pwsh
-  - chezmoi --classic # chezmoi
-  - main/uv # python uv
+  # git
+  - gh
+  # shell
+  - btop lazygit-gm nvim
+  # pwsh
+  - powershell --classic
+  # python
+  - main/uv
+  # chezmoi
+  - chezmoi --classic
 
 # windows
 # =============================================================================
@@ -44,7 +55,6 @@ winget:
   - git.git github.gitLFS github.cli
   # shell
   - microsoft.powershell JanDeDobbeleer.OhMyPosh
-  # nvim
   - neovim.neovim JesseDuffield.lazygit
   # python
   - python.python.3.13 astral-sh.uv # REVIEW: win python version
@@ -54,5 +64,7 @@ winget:
   - devcom.JetBrainsMonoNerdFont
 
 scoop:
-  - gcc # gcc (nvim)
-  - btop-lhm # btop
+  # nvim
+  - gcc # nvim dependency
+  # shell
+  - btop-lhm
