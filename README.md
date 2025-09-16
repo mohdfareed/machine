@@ -91,6 +91,7 @@ code $MACHINE          # open repo in vscode
 - Hostname configuration (prompt, default to machine_id.local)
 - Share passwords/secrets with other machines (iCloudDrive?)
 - Package managers priority per os (or machine) to de-duplicate installs
+- Implement subcommands for CLI script
 
 - Windows:
   - WSL support
