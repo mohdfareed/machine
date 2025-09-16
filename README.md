@@ -32,7 +32,7 @@ flowchart LR
       J[.zshenv]
     end
 
-    subgraph E [machines/<id>/]
+    subgraph E [machines/id/]
       direction TB
       F[scripts/]
       G[packages.yaml]
