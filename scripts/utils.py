@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__all__ = ["PackageManager", "execute_script", "run"]
+__all__ = ["PackageManager", "execute_script", "run", "debug", "error"]
 
 import enum
 import os

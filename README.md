@@ -87,6 +87,17 @@ chezmoi status         # show status of the config
 code $MACHINE          # open repo in vscode
 ```
 
+### Machine Settings
+
+- Variables used across the system:
+  - `MACHINE`: repo root (e.g., `~/.machine`)
+  - `MACHINE_ID`: selected machine profile (e.g., `macbook`)
+  - `MACHINE_PRIVATE`: path to private files (default `~/.private`)
+- How they’re set:
+  - Chezmoi template `.chezmoi.toml.tmpl` prompts on first apply (or uses env if set).
+  - Shell profiles (`.zshenv`, `profile.ps1`) export them for interactive shells.
+  - Script runner passes these vars to Python scripts using environment variables.
+
 ### Scripting
 
 - Put shared scripts in `config/scripts/` and machine-specific in `machines/<id>/scripts/`.
@@ -98,18 +109,15 @@ code $MACHINE          # open repo in vscode
   - `after_*` → runs after apply
   - `once_*` → runs only once
   - `onchange_*` → runs when content changes
+
+### Package Management
+
 - Package installs: editing `config/packages.yaml` or `machines/<id>/packages.yaml` triggers an `onchange_*` script that installs packages.
-
-### Machine Settings
-
-- Variables used across the system:
-  - `MACHINE`: repo root (e.g., `~/.machine`)
-  - `MACHINE_ID`: selected machine profile (e.g., `macbook`)
-  - `MACHINE_PRIVATE`: path to private files (default `~/.private`)
-- How they’re set:
-  - Chezmoi template `.chezmoi.toml.tmpl` prompts on first apply (or uses env if set).
-  - Shell profiles (`.zshenv`, `profile.ps1`) export them for interactive shells.
-  - Script runner passes these vars to Python scripts using environment variables.
+- A script can be defined as another package entry to install a package using a custom method.
+- Supported package managers:
+  - macOS: `brew`, `mas`
+  - Linux: `apt`, `snap`,
+  - Windows: `winget`, `scoop`
 
 ### SSH Setup
 
@@ -125,16 +133,16 @@ code $MACHINE          # open repo in vscode
 
 ## TODO
 
-- [ ] Hostname configuration (prompt, default to machine_id.local)
-- [ ] Share passwords/secrets with other machines (iCloudDrive?)
 - [ ] Package managers priority per os (or machine) to de-duplicate installs
+- [ ] Hostname configuration (prompt, default to machine_id.local)
 - [ ] Implement subcommands for CLI script
+- [ ] Use built-in logging module instead of print statements
 
 - [ ] Windows:
   - [ ] WSL support
   - [ ] Terminal configuration
   - [ ] fix authorized_keys config and aliases
-  - [ ] Test line endings with unix-based repos
+  - [ ] Test line endings with unix-based and win-based repos
 
 - [ ] CI/CD:
   - [ ] Restore python formatting checks in ci
