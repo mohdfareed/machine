@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Machine setup CLI tool.
-"""
+"""Machine setup CLI tool."""
 
 import argparse
 import enum
@@ -14,20 +12,19 @@ import utils
 
 
 class ScriptCommand(enum.StrEnum):
+    CHEZMOI = "chezmoi"
     SCRIPTS = "scripts"
     PACKAGES = "packages"
     SSH = "ssh"
 
 
 def main(command: ScriptCommand | None, args: list[str]) -> None:
-    utils.debug("cli", f"command: {command}")
-    utils.debug("cli", f"args: {args}")
     machine = Path(utils.get_env("MACHINE")).expanduser()
 
     if command is None and not args:
         chezmoi_apply(machine)
         return
-    if command is None:  # args only
+    if command is None or command is ScriptCommand.CHEZMOI:
         chezmoi_command(args)
         return
     run_script(command, args)
@@ -45,14 +42,12 @@ def chezmoi_apply(machine: Path) -> None:
 
 
 def chezmoi_command(args: list[str]) -> None:
-    print(f"running: chezmoi {' '.join(args)}...")
     utils.run(f"chezmoi {' '.join(args)}")
 
 
 def run_script(command: ScriptCommand, args: list[str]) -> None:
     script_path = Path(__file__).parent / f"{command.value}.py"
     argv = " ".join(arg for arg in args)
-    utils.debug("cli", f"running: {script_path} {argv}...")
     subprocess.run(
         f'{sys.executable} "{script_path}" {argv}',
         shell=True,
@@ -66,8 +61,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=(__doc__ or "").strip(),
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        add_help=False,
     )
 
+    parser.add_argument(
+        "--help",
+        "-h",
+        action="store_true",
+        help="show this help message and exit",
+    )
     parser.add_argument(
         "--debug", "-d", action="store_true", help="print debug information"
     )
@@ -80,9 +82,12 @@ if __name__ == "__main__":
         help=f"command to run ({', '.join(c.value for c in ScriptCommand)})",
     )
     parser.add_argument(
-        "args", nargs="*", help="arguments to pass to the command"
+        "args", nargs="*", help=f"arguments for the command (if any)"
     )
-    args = parser.parse_args()
+
+    # parse arguments
+    args, unknown_args = parser.parse_known_args()
+    args.args += unknown_args
 
     try:  # validate command
         args.cmd = ScriptCommand(args.cmd)
@@ -90,10 +95,17 @@ if __name__ == "__main__":
         args.args = [args.cmd] + args.args if args.cmd else args.args
         args.cmd = None  # treat as chezmoi command if invalid
 
-    if args.debug:
-        os.environ["DEBUG"] = "1"
-    if args.dry_run:
-        os.environ["DRY_RUN"] = "1"
+    # print help if no command and no args
+    if args.help and args.cmd is None and not args.args:
+        parser.print_help()
+        sys.exit(0)
+
+    if args.help:  # print help for subcommand
+        args.args = args.args + ["--help"]
+
+    # set environment variables and run
+    os.environ["DEBUG"] = "1" if args.debug else ""
+    os.environ["DRY_RUN"] = "1" if args.dry_run else ""
     utils.script_entrypoint("cli", lambda: main(args.cmd, args.args))
 
 # endregion

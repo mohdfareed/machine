@@ -57,7 +57,7 @@ def ensure_dir(path: Path) -> None:
         raise RuntimeError(f"path is not a directory: {path}")
 
     utils.debug("ssh", f"creating directory: {path}")
-    if not utils.get_env("DRY_RUN", bool):
+    if not utils.get_env("DRY_RUN", default=False):
         path.mkdir(parents=True, exist_ok=True)
 
 
@@ -66,7 +66,7 @@ def set_permissions(path: Path, mode: int) -> None:
         return  # rely on default ACLs on Windows
 
     try:
-        if not utils.get_env("DRY_RUN", bool):
+        if not utils.get_env("DRY_RUN", default=False):
             os.chmod(path, mode)
     except PermissionError:
         utils.debug("ssh", f"chmod skipped (permission denied): {path}")
@@ -110,7 +110,7 @@ def copy_key(key: Path, ssh_dir: Path, mode: int) -> None:
         return
 
     print(f"copying key: {key} -> {dest}")
-    if not utils.get_env("DRY_RUN", bool):
+    if not utils.get_env("DRY_RUN", default=False):
         shutil.copy2(key, dest)
     set_permissions(dest, mode)
 
@@ -119,7 +119,7 @@ def add_keys_to_agent(private_keys: list[Path]) -> None:
     if not private_keys:
         print("no private keys found to add to agent")
         return
-    if not utils.get_env("DRY_RUN", bool):
+    if not utils.get_env("DRY_RUN", default=False):
         return
 
     if utils.MACOS:
