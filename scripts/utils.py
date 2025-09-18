@@ -4,7 +4,6 @@ __all__ = ["PackageManager", "execute_script", "run", "debug", "error"]
 
 import enum
 import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -38,7 +37,7 @@ class PackageManager(enum.Enum):
             return True
 
         if self == PackageManager.BREW:
-            return platform.system().lower().startswith("darwin")  # macOS
+            return UNIX  # unix
         elif self == PackageManager.MAS:
             return PackageManager.BREW.is_supported()  # brew
 
@@ -60,6 +59,7 @@ class PackageManager(enum.Enum):
             raise RuntimeError(f"{self.value} is not available")
 
         if self == PackageManager.BREW:
+            os.environ["HOMEBREW_NO_AUTO_UPDATE"] = "1"
             command = f"brew install {package}"
         elif self == PackageManager.MAS:
             command = f"mas install {package}"
@@ -81,6 +81,9 @@ class PackageManager(enum.Enum):
             run(command)
         except:
             error(f"{self.value} failed to install {package}")
+
+        if self == PackageManager.BREW:
+            os.environ.pop("HOMEBREW_NO_AUTO_UPDATE", None)
 
 
 def execute_script(script: str) -> None:

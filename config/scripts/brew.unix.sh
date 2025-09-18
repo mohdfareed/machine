@@ -3,6 +3,7 @@
 echo "setting up brew..."
 
 if command -v brew &>/dev/null; then
+    brew update
     brew cleanup --prune=all
     brew services cleanup
 else # install brew

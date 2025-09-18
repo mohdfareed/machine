@@ -23,14 +23,10 @@ apt:
   # snap package manager
   - snapd --fix-missing
   # git
-  - git git-lfs --fix-missing
+  - git-lfs --fix-missing
   # shell
-  - zsh bat fd-find ripgrep
-  - gpg # eza dependency
   - unzip # oh-my-posh dependency
   - script: curl -s https://ohmyposh.dev/install.sh | bash -s
-  # python
-  - python3
   # fonts
   - fonts-jetbrains-mono
   - fonts-lmodern
@@ -38,14 +34,8 @@ apt:
 snap:
   # git
   - gh
-  # shell
-  - btop lazygit-gm nvim
   # pwsh
   - powershell --classic
-  # python
-  - main/uv
-  # chezmoi
-  - chezmoi --classic
 
 # windows
 # =============================================================================

@@ -39,36 +39,26 @@ def set_permissions(path: Path, mode: int) -> None:
         return  # rely on default ACLs on Windows
 
     try:
-        os.chmod(path, mode)
+        if not os.environ.get("DRY_RUN"):
+            os.chmod(path, mode)
     except PermissionError:
         utils.debug("ssh", f"chmod skipped (permission denied): {path}")
 
 
 def is_private_key(file: Path) -> bool:
-    try:
-        first_line = file.read_text().strip().splitlines()[0]
+    try:  # read file content
+        private_key = file.read_text().strip().splitlines()
     except Exception:
         return False
 
-    stars = first_line.startswith("-----BEGIN")
-    ends = first_line.endswith("PRIVATE KEY-----")
-    if stars and ends:
-        return True
-    return False
-
-    base = file.name.lower()
-    if base.endswith(".pub"):
-        return False
-    if base in {"config", "known_hosts", "known_hosts.old", "authorized_keys"}:
+    # must have at least two lines
+    if len(private_key) < 2:
         return False
 
-    # common private key patterns
-    return (
-        base.startswith("id_")
-        or base.endswith(".pem")
-        or base.endswith(".key")
-        or base in {"personal", "github"}
-    )
+    # check for private key delimiters
+    starts = private_key[0].startswith("-----BEGIN")
+    ends = private_key[0].endswith("PRIVATE KEY-----")
+    return starts and ends
 
 
 def get_private_keys(private_root: Path) -> list[Path]:
@@ -102,6 +92,8 @@ def add_keys_to_agent(private_keys: list[Path]) -> None:
     if not private_keys:
         print("no private keys found to add to agent")
         return
+    if os.environ.get("DRY_RUN"):
+        return
 
     if utils.MACOS:
         for key in private_keys:
@@ -112,18 +104,10 @@ def add_keys_to_agent(private_keys: list[Path]) -> None:
 
 
 def main(path: str) -> None:
-    machine = Path(os.environ.get("MACHINE", "")).expanduser()
-    machine_id = os.environ.get("MACHINE_ID", "")
-
     private_root = path or os.environ.get("MACHINE_PRIVATE")
     if not private_root:
         raise RuntimeError("MACHINE_PRIVATE environment variable is not set")
     private_root = Path(private_root).expanduser()
-
-    if not machine or not machine_id:
-        raise RuntimeError(
-            "MACHINE and MACHINE_ID environment variables are required"
-        )
 
     ssh_dir = Path.home() / ".ssh"
     ensure_dir(ssh_dir)
@@ -134,8 +118,6 @@ def main(path: str) -> None:
         set_permissions(cfg, 0o600)
 
     print("setting up ssh...")
-    utils.debug("ssh", f"machine: {machine}")
-    utils.debug("ssh", f"machine_id: {machine_id}")
     utils.debug("ssh", f"private_root: {private_root}")
     utils.debug("ssh", f"ssh_dir: {ssh_dir}")
 
