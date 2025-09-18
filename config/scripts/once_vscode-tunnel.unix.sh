@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 
-tunnel=$MACHINE_ID
+if [[ $WSL == "true" ]]; then
+    echo "detected wsl environment, skipping vscode tunnel setup"
+    exit 0
+fi
+if [[ $MACHINE_ID == "codespaces" ]]; then
+    echo "detected codespaces environment, skipping vscode tunnel setup"
+    exit 0
+fi
 
-echo "setting up vscode tunnel: $tunnel"
-code tunnel service install --name "$tunnel" --accept-server-license-terms
+echo "setting up vscode tunnel: $MACHINE_ID"
+code tunnel service install --name "$MACHINE_ID" --accept-server-license-terms
 echo "vscode tunnel setup completed"

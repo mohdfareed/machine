@@ -2,6 +2,7 @@
 $env:MACHINE = "{{ .machinePath }}"
 $env:MACHINE_ID = "{{ .machine }}"
 $env:MACHINE_PRIVATE = "{{ .privatePath }}"
+$env:WSL = "{{ .isWSL }}"
 
 # Convenience
 $env:MACHINE_SHARED = "{{ .configPath }}"

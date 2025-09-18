@@ -66,6 +66,7 @@ progress = true
 [data]
 os = {{ $os | quote }}
 arch = {{ .chezmoi.arch | quote }}
+isWSL = {{ if eq $os "wsl" }}true{{ else }}false{{ end }}
 
 # Deployment Config
 machine = {{ $machine | quote }}

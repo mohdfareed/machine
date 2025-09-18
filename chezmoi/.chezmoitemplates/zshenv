@@ -2,6 +2,7 @@
 export MACHINE="{{ .machinePath }}"
 export MACHINE_ID="{{ .machine }}"
 export MACHINE_PRIVATE="{{ .privatePath }}"
+export WSL="{{ .isWSL }}"
 
 # Convenience
 export MACHINE_SHARED="{{ .configPath }}"
