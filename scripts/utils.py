@@ -115,11 +115,10 @@ def script_entrypoint(src: str, func: Callable[..., None]) -> None:
         sys.exit(ExitCode.ERROR)
 
 
-def execute_script(script: str) -> None:
-    path = Path(script)
-    suffixes = [s.lower() for s in path.suffixes]
+def execute_script(script: Path) -> None:
+    suffixes = [s.lower() for s in script.suffixes]
 
-    # OS-specific scripts
+    # OS-specific filters
     if not WINDOWS and ".win" in suffixes:
         return
     if not LINUX and ".linux" in suffixes:
@@ -131,13 +130,14 @@ def execute_script(script: str) -> None:
     if not UNIX and ".unix" in suffixes:
         return
 
-    # Universal scripts
-    print(f"running script: {script}")
-    if path.suffix == ".py":
-        script = f"{sys.executable} {script}"
-    elif path.suffix == ".ps1" and WINDOWS:
-        script = f'powershell -ExecutionPolicy Bypass -File "{script}"'
-    run(script)
+    cmd = str(script)
+    if script.suffix == ".py":
+        cmd = f"{sys.executable} {script}"
+    elif script.suffix == ".ps1" and WINDOWS:
+        cmd = f'powershell -ExecutionPolicy Bypass -File "{script}"'
+
+    print(f"running script: {cmd}")
+    run(cmd)
 
 
 def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
@@ -145,7 +145,7 @@ def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
     dry_run = os.environ.get("DRY_RUN")
     exe = shutil.which("powershell.exe") if WINDOWS else None
 
-    debug("cmd", f"{exe} {cmd}")
+    debug("cmd", cmd)
     if dry_run:
         return subprocess.CompletedProcess(cmd, 0)
 

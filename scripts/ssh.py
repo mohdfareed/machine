@@ -22,6 +22,36 @@ from pathlib import Path
 import utils
 
 
+def main(path: str) -> None:
+    private_root = path or os.environ.get("MACHINE_PRIVATE")
+    if not private_root:
+        raise RuntimeError("MACHINE_PRIVATE environment variable is not set")
+    private_root = Path(private_root).expanduser()
+
+    ssh_dir = Path.home() / ".ssh"
+    ensure_dir(ssh_dir)
+    set_permissions(ssh_dir, 0o700)
+
+    cfg = ssh_dir / "config"
+    if cfg.exists():
+        set_permissions(cfg, 0o600)
+
+    print("setting up ssh...")
+    utils.debug("ssh", f"private_root: {private_root}")
+    utils.debug("ssh", f"ssh_dir: {ssh_dir}")
+
+    for private_key in get_private_keys(private_root):
+        public_key = private_key.with_suffix(".pub")
+        copy_key(private_key, ssh_dir, 0o600)
+        copy_key(public_key, ssh_dir, 0o644)
+
+    private_keys = [
+        p for p in ssh_dir.iterdir() if p.is_file() and is_private_key(p)
+    ]
+    add_keys_to_agent(private_keys)
+    print("ssh setup complete")
+
+
 def ensure_dir(path: Path) -> None:
     if path.exists():
         return
@@ -102,38 +132,12 @@ def add_keys_to_agent(private_keys: list[Path]) -> None:
             utils.run(f'ssh-add "{str(key)}"')
 
 
-def main(path: str) -> None:
-    private_root = path or os.environ.get("MACHINE_PRIVATE")
-    if not private_root:
-        raise RuntimeError("MACHINE_PRIVATE environment variable is not set")
-    private_root = Path(private_root).expanduser()
-
-    ssh_dir = Path.home() / ".ssh"
-    ensure_dir(ssh_dir)
-    set_permissions(ssh_dir, 0o700)
-
-    cfg = ssh_dir / "config"
-    if cfg.exists():
-        set_permissions(cfg, 0o600)
-
-    print("setting up ssh...")
-    utils.debug("ssh", f"private_root: {private_root}")
-    utils.debug("ssh", f"ssh_dir: {ssh_dir}")
-
-    for private_key in get_private_keys(private_root):
-        public_key = private_key.with_suffix(".pub")
-        copy_key(private_key, ssh_dir, 0o600)
-        copy_key(public_key, ssh_dir, 0o644)
-
-    private_keys = [
-        p for p in ssh_dir.iterdir() if p.is_file() and is_private_key(p)
-    ]
-    add_keys_to_agent(private_keys)
-    print("ssh setup complete")
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("path", nargs="?", type=str)
+    parser = argparse.ArgumentParser(
+        description=(__doc__ or "").strip(),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument("path", nargs="?", type=str, help="private keys path")
     args = parser.parse_args()
     utils.script_entrypoint("ssh.py", lambda: main(args.path or ""))

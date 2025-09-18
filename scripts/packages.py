@@ -20,6 +20,7 @@ Expected JSON structure:
 
 import json
 import os
+from pathlib import Path
 from typing import Any
 
 import utils
@@ -37,11 +38,39 @@ def main() -> None:
 
 
 def load_packages(source: str) -> dict[str, list[Any]]:
+    chezmoi_data = os.environ.get("CHEZMOI_DATA", "")
+    if not chezmoi_data:
+        return find_packages(source)
+
     try:
-        data = json.loads(os.environ.get("CHEZMOI_DATA", ""))
+        data: dict[str, dict[str, list[str]]] = json.loads(chezmoi_data)
         return data.get(source, {})
     except json.JSONDecodeError as e:
         raise ValueError(f"invalid CHEZMOI_DATA: {e}") from e
+
+
+def find_packages(source: str) -> dict[str, list[Any]]:
+    try:
+        import yaml  # type: ignore
+    except ImportError:
+        raise RuntimeError("PyYAML is required to load packages from files")
+
+    machine = os.environ.get("MACHINE", "")
+    machine_id = os.environ.get("MACHINE_ID", "")
+
+    source_path = Path(machine) / "config" / "scripts"  # base
+    if source == "machine":
+        source_path = Path(machine) / "machines" / machine_id / "scripts"
+
+    source_path = source_path / "packages.yaml"
+    print(f"loading packages from: {source_path}")
+    source_data = source_path.read_text()
+
+    try:
+        data: dict[str, dict[str, list[str]]] = yaml.safe_load(source_data)
+        return data.get(source, {})
+    except yaml.YAMLError as e:
+        raise ValueError(f"invalid packages.yaml: {e}") from e
 
 
 def filter_packages(

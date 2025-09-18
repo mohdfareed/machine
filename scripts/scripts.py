@@ -2,6 +2,8 @@
 """
 Cross-platform script runner.
 Reads JSON from CHEZMOI_DATA and runs scripts using the appropriate shell.
+If CHEZMOI_DATA is not set, falls back to finding scripts in
+the MACHINE config and machine-specific scripts directories.
 
 Expected JSON structure:
 {
@@ -17,6 +19,7 @@ Expected JSON structure:
 import argparse
 import json
 import os
+from pathlib import Path
 
 import utils
 
@@ -35,13 +38,13 @@ RESERVED_PREFIXES = [
 def main(prefix: str) -> None:
     base = load_scripts("base")
     machine = load_scripts("machine")
-    scripts: list[str] = []
+    scripts: list[Path] = []
 
     # filter scripts
     for script in base + machine:
         if prefix == "" and is_scheduled_script(script):
             continue  # skip scheduled scripts if no prefix
-        if prefix and not script.startswith(prefix):
+        if prefix and not script.name.startswith(prefix):
             continue  # skip non-matching prefix
         scripts.append(script)
 
@@ -57,11 +60,14 @@ def main(prefix: str) -> None:
         utils.execute_script(script)
 
 
-def load_scripts(source: str) -> list[str]:
+def load_scripts(source: str) -> list[Path]:
     chezmoi_data = os.environ.get("CHEZMOI_DATA", "")
+    if not chezmoi_data:
+        return find_scripts(source)
+
     try:
         data: dict[str, list[str]] = json.loads(chezmoi_data)
-        return list(data[source])
+        return list([Path(s) for s in data[source]])
     except json.JSONDecodeError as e:
         raise ValueError(f"invalid CHEZMOI_DATA: {chezmoi_data}") from e
     except KeyError as e:
@@ -70,12 +76,27 @@ def load_scripts(source: str) -> list[str]:
         raise ValueError(f"invalid source scripts list: {chezmoi_data}") from e
 
 
-def is_scheduled_script(script: str) -> bool:
+def find_scripts(source: str) -> list[Path]:
+    machine = os.environ.get("MACHINE", "")
+    machine_id = os.environ.get("MACHINE_ID", "")
+
+    source_path = Path(machine) / "config" / "scripts"  # base
+    if source == "machine":
+        source_path = Path(machine) / "machines" / machine_id / "scripts"
+    print(f"loading scripts from: {source_path}")
+
+    scripts: list[Path] = []
+    for script in source_path.glob("**/*.py"):
+        scripts.append(script)
+    return scripts
+
+
+def is_scheduled_script(script: Path) -> bool:
     filename = os.path.basename(script)
     return any(filename.startswith(prefix) for prefix in RESERVED_PREFIXES)
 
 
-def set_permissions(script: str) -> None:
+def set_permissions(script: Path) -> None:
     if os.name == "posix":
         os.chmod(script, 0o755)  # executable
     elif os.name == "nt":
@@ -83,7 +104,14 @@ def set_permissions(script: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--prefix", nargs="?", type=str)
+    parser = argparse.ArgumentParser(
+        description=(__doc__ or "").strip(),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        "--prefix", nargs="?", type=str, help="script prefix filter"
+    )
+
     args = parser.parse_args()
     utils.script_entrypoint("scripts", lambda: main(args.prefix or ""))

@@ -134,7 +134,7 @@ code $MACHINE          # open repo in vscode
 ## TODO
 
 - [x] Hostname configuration (prompt, default to machine_id.local)
-- [ ] Implement subcommands for CLI script
+- [x] Implement subcommands for CLI script
 - [ ] Use built-in logging module instead of print statements
 
 - [ ] Windows:
