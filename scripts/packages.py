@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 """
 Cross-platform package installer.
-Reads JSON from CHEZMOI_DATA and installs packages using
-the specified package managers.
+
+Reads JSON from CHEZMOI_DATA and installs packages using the specified
+package managers. If CHEZMOI_DATA is not set, falls back to loading from
+YAML files in the machine config directories.
+Respects DEBUG and DRY_RUN environment variables.
 
 Expected JSON structure:
 {
-    "base": {
-        "manager": [
-            "pkg",
-            {"script": "command to run"},
-        ],
-    },
-    "machine": {
-        "manager": ["pkg"],
-    }
+  "base": {
+    "manager": [
+      "pkg",
+      {"script": "command to run"},
+    ],
+  },
+  "machine": {
+    "manager": ["pkg"],
+  },
 }
 """
 

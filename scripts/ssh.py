@@ -5,7 +5,6 @@ SSH setup and key management.
 - Ensures ~/.ssh directory and permissions
 - Copies keys from MACHINE_PRIVATE (ssh/ or .ssh/) into ~/.ssh
 - Fixes file permissions (600 private, 644 public, 600 config/authorized_keys)
-- Builds/updates authorized_keys from available public keys
 - Adds private keys to SSH agent (macOS: --apple-use-keychain)
 
 Idempotent and safe by default: will not overwrite existing key files.

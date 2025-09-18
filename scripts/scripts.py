@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """
 Cross-platform script runner.
+
 Reads JSON from CHEZMOI_DATA and runs scripts using the appropriate shell.
-If CHEZMOI_DATA is not set, falls back to finding scripts in
-the MACHINE config and machine-specific scripts directories.
+If CHEZMOI_DATA is not set, falls back to finding scripts in the machine
+config directories.
+Respects DEBUG and DRY_RUN environment variables.
 
 Expected JSON structure:
 {
-    "base": [
-        "script.py",
-    ],
-    "machine": [
-        "script.sh",
-    ]
+  "base": [
+    "script.py",
+  ],
+  "machine": [
+    "script.sh",
+  ],
 }
 """
 

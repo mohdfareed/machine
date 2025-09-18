@@ -88,7 +88,6 @@ if __name__ == "__main__":
     # parse arguments
     args, unknown_args = parser.parse_known_args()
     args.args += unknown_args
-
     try:  # validate command
         args.cmd = ScriptCommand(args.cmd)
     except ValueError:
@@ -99,7 +98,6 @@ if __name__ == "__main__":
     if args.help and args.cmd is None and not args.args:
         parser.print_help()
         sys.exit(0)
-
     if args.help:  # print help for subcommand
         args.args = args.args + ["--help"]
 

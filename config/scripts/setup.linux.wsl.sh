@@ -2,10 +2,10 @@
 
 echo "setting up linux/wsl..."
 
-# Set zsh as default shell
+# set zsh as default shell
 sudo chsh -s "$(which zsh)" "$USER"
 
-# Cleanup apt
+# cleanup apt
 sudo apt autoremove -y
 
 echo "linux/wsl set up successfully"
