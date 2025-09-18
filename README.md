@@ -133,8 +133,7 @@ code $MACHINE          # open repo in vscode
 
 ## TODO
 
-- [ ] Package managers priority per os (or machine) to de-duplicate installs
-- [ ] Hostname configuration (prompt, default to machine_id.local)
+- [x] Hostname configuration (prompt, default to machine_id.local)
 - [ ] Implement subcommands for CLI script
 - [ ] Use built-in logging module instead of print statements
 
@@ -153,3 +152,5 @@ code $MACHINE          # open repo in vscode
     - [ ] Manual scripts
   - [ ] `zinit`
   - [ ] `nvim` (lazy vim)
+
+- [ ] Package managers priority per os (or machine) to de-duplicate installs

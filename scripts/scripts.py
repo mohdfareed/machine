@@ -17,7 +17,6 @@ Expected JSON structure:
 import argparse
 import json
 import os
-import sys
 
 import utils
 
@@ -87,13 +86,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--prefix", nargs="?", type=str)
     args = parser.parse_args()
-
-    try:  # run script
-        main(args.prefix or "")
-    except KeyboardInterrupt:
-        sys.exit(1)
-    except Exception as error:
-        utils.error(f"scripts: {error}")
-        if os.environ.get("DEBUG"):
-            raise
-        sys.exit(1)
+    utils.script_entrypoint("scripts", lambda: main(args.prefix or ""))

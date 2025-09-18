@@ -17,7 +17,6 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
-import sys
 from pathlib import Path
 
 import utils
@@ -137,13 +136,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("path", nargs="?", type=str)
     args = parser.parse_args()
-
-    try:  # run script
-        main(args.path or "")
-    except KeyboardInterrupt:
-        sys.exit(1)
-    except Exception as error:
-        utils.error(f"ssh: {error}")
-        if os.environ.get("DEBUG"):
-            raise
-        sys.exit(1)
+    utils.script_entrypoint("ssh.py", lambda: main(args.path or ""))

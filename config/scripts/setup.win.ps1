@@ -1,5 +1,9 @@
 Write-Host "setting up windows tools..."
 
+# set hostname
+Write-Host "setting hostname..."
+Rename-Computer -NewName $env:MACHINE_ID -Force
+
 # install windows features
 Write-Host "enabling windows features..."
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux

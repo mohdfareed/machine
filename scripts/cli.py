@@ -7,7 +7,6 @@ import argparse
 import json
 import os
 import subprocess
-import sys
 from pathlib import Path
 
 import utils
@@ -88,7 +87,6 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    # setup options
     parser.add_argument(
         "--debug", "-d", action="store_true", help="print debug information"
     )
@@ -99,29 +97,11 @@ if __name__ == "__main__":
         help="perform a dry run without making any changes",
     )
 
-    # set environment
     args, extra = parser.parse_known_args()
     if args.debug:
         os.environ["DEBUG"] = "1"
     if args.dry_run:
         os.environ["DRY_RUN"] = "1"
-
-    try:  # run setup script
-        main(args.dry_run, extra)
-        sys.exit(0)
-
-    except KeyboardInterrupt:
-        print("aborted!")
-        sys.exit(1)
-
-    except subprocess.CalledProcessError as error:
-        utils.error(f"cli: {error}")
-        sys.exit(1)
-
-    except Exception as error:
-        utils.error(f"cli: {error}")
-        if os.environ.get("DEBUG"):
-            raise
-        sys.exit(1)
+    utils.script_entrypoint("cli", lambda: main(args.dry_run, extra))
 
 # endregion

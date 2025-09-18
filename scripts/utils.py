@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 WINDOWS = sys.platform.lower().startswith("win")
@@ -14,6 +15,12 @@ LINUX = sys.platform.lower().startswith("linux")
 MACOS = sys.platform.lower().startswith("darwin")
 WSL = shutil.which("wslinfo") is not None
 UNIX = LINUX or MACOS or WSL
+
+
+class ExitCode(enum.IntEnum):
+    SUCCESS = 0
+    ERROR = 1
+    INTERRUPT = 130
 
 
 class PackageManager(enum.Enum):
@@ -86,6 +93,28 @@ class PackageManager(enum.Enum):
             os.environ.pop("HOMEBREW_NO_AUTO_UPDATE", None)
 
 
+def script_entrypoint(src: str, func: Callable[..., None]) -> None:
+    try:
+        func()
+        sys.exit(ExitCode.SUCCESS)
+
+    except KeyboardInterrupt:
+        print("aborted!")
+        sys.exit(ExitCode.INTERRUPT)
+
+    except subprocess.CalledProcessError as e:
+        error(f"{src}: {e}")
+        if os.environ.get("DEBUG"):
+            raise
+        sys.exit(e.returncode)
+
+    except Exception as e:
+        error(f"{src}: {e}")
+        if os.environ.get("DEBUG"):
+            raise
+        sys.exit(ExitCode.ERROR)
+
+
 def execute_script(script: str) -> None:
     path = Path(script)
     suffixes = [s.lower() for s in path.suffixes]
@@ -114,13 +143,22 @@ def execute_script(script: str) -> None:
 def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
     cmd = cmd.strip()
     dry_run = os.environ.get("DRY_RUN")
+    exe = shutil.which("powershell.exe") if WINDOWS else None
 
-    debug("cmd", cmd)
+    debug("cmd", f"{exe} {cmd}")
     if dry_run:
         return subprocess.CompletedProcess(cmd, 0)
 
-    exe = shutil.which("powershell.exe") if WINDOWS else None
-    return subprocess.run(cmd, shell=True, check=check, executable=exe)
+    try:
+        return subprocess.run(cmd, shell=True, check=check, executable=exe)
+    except subprocess.CalledProcessError as e:
+        error(f"command failed (exit code {e.returncode}): {cmd}")
+        if check:
+            raise e
+
+        return subprocess.CompletedProcess(
+            cmd, e.returncode, stdout=e.stdout, stderr=e.stderr
+        )
 
 
 def debug(source: str, msg: str) -> None:

@@ -20,7 +20,6 @@ Expected JSON structure:
 
 import json
 import os
-import sys
 from typing import Any
 
 import utils
@@ -82,12 +81,4 @@ def install_package(pkg_manager: utils.PackageManager, pkg: Any) -> None:
 
 
 if __name__ == "__main__":
-    try:  # run script
-        main()
-    except KeyboardInterrupt:
-        sys.exit(1)
-    except Exception as error:
-        utils.error(f"pkgs: {error}")
-        if os.environ.get("DEBUG"):
-            raise
-        sys.exit(1)
+    utils.script_entrypoint("pkgs", main)
