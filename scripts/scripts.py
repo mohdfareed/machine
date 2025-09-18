@@ -77,16 +77,16 @@ def load_scripts(source: str) -> list[Path]:
 
 
 def find_scripts(source: str) -> list[Path]:
-    machine = os.environ.get("MACHINE", "")
-    machine_id = os.environ.get("MACHINE_ID", "")
+    machine = utils.get_env("MACHINE", Path)
+    machine_id = utils.get_env("MACHINE_ID")
 
-    source_path = Path(machine) / "config" / "scripts"  # base
+    source_path = machine / "config" / "scripts"  # base
     if source == "machine":
-        source_path = Path(machine) / "machines" / machine_id / "scripts"
+        source_path = machine / "machines" / machine_id / "scripts"
     print(f"loading scripts from: {source_path}")
 
     scripts: list[Path] = []
-    for script in source_path.glob("**/*.py"):
+    for script in source_path.iterdir():
         scripts.append(script)
     return scripts
 

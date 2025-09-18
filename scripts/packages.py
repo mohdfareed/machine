@@ -55,12 +55,12 @@ def find_packages(source: str) -> dict[str, list[Any]]:
     except ImportError:
         raise RuntimeError("PyYAML is required to load packages from files")
 
-    machine = os.environ.get("MACHINE", "")
-    machine_id = os.environ.get("MACHINE_ID", "")
+    machine = utils.get_env("MACHINE", Path)
+    machine_id = utils.get_env("MACHINE_ID", str)
 
-    source_path = Path(machine) / "config" / "scripts"  # base
+    source_path = machine / "config" / "scripts"  # base
     if source == "machine":
-        source_path = Path(machine) / "machines" / machine_id / "scripts"
+        source_path = machine / "machines" / machine_id / "scripts"
 
     source_path = source_path / "packages.yaml"
     print(f"loading packages from: {source_path}")

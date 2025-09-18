@@ -24,6 +24,8 @@ class ExitCode(enum.IntEnum):
 
 
 class PackageManager(enum.Enum):
+    """Enum of supported package managers with install commands."""
+
     BREW = "brew"
     MAS = "mas"
 
@@ -94,28 +96,34 @@ class PackageManager(enum.Enum):
 
 
 def script_entrypoint(src: str, func: Callable[..., None]) -> None:
+    """Standard script entrypoint with error handling."""
+    debug("cli", f"debug mode enabled")
+    if get_env("DRY_RUN", default=False):
+        debug("cli", f"dry-run mode enabled")
+
     try:
         func()
         sys.exit(ExitCode.SUCCESS)
 
     except KeyboardInterrupt:
-        print("aborted!")
+        debug("cli", "aborted!")
         sys.exit(ExitCode.INTERRUPT)
 
     except subprocess.CalledProcessError as e:
         error(f"{src}: {e}")
-        if os.environ.get("DEBUG"):
+        if get_env("DEBUG", default=False):
             raise
         sys.exit(e.returncode)
 
     except Exception as e:
         error(f"{src}: {e}")
-        if os.environ.get("DEBUG"):
+        if get_env("DEBUG", default=False):
             raise
         sys.exit(ExitCode.ERROR)
 
 
 def execute_script(script: Path) -> None:
+    """Execute a script file, supports suffixes-based filtering."""
     suffixes = [s.lower() for s in script.suffixes]
 
     # OS-specific filters
@@ -141,12 +149,14 @@ def execute_script(script: Path) -> None:
 
 
 def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
+    """Run a shell command. If command is not executed if DRY_RUN is set."""
+
     cmd = cmd.strip()
-    dry_run = os.environ.get("DRY_RUN")
     exe = shutil.which("powershell.exe") if WINDOWS else None
 
     debug("cmd", cmd)
-    if dry_run:
+    if get_env("DRY_RUN", default=False):
+        debug("cmd", "skipped (dry-run)")
         return subprocess.CompletedProcess(cmd, 0)
 
     try:
@@ -161,10 +171,26 @@ def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
         )
 
 
+def get_env[T](
+    var: str, parser: Callable[[str], T] = str, default: T | None = None
+) -> T:
+    """Get an environment variable or raise if None."""
+    value: str = os.environ.get(var, str(default or ""))
+    if not value and default is None:
+        raise RuntimeError(f"{var} environment variable is not set")
+
+    try:
+        return parser(value)
+    except Exception as e:
+        raise TypeError(f"failed to cast {var}={value!r} to {parser}: {e}")
+
+
 def debug(source: str, msg: str) -> None:
-    if os.environ.get("DEBUG"):
+    """Print a debug message if DEBUG environment variable is set."""
+    if get_env("DEBUG", default=False):
         print(f"[{source}] {msg}")
 
 
 def error(msg: str) -> None:
+    """Print an error message to stderr."""
     print(f"[error] {msg}", file=sys.stderr)

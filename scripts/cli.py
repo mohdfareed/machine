@@ -20,29 +20,17 @@ class ScriptCommand(enum.StrEnum):
 
 
 def main(command: ScriptCommand | None, args: list[str]) -> None:
-    """CLI entry point."""
     utils.debug("cli", f"command: {command}")
     utils.debug("cli", f"args: {args}")
-    validate_environment()
+    machine = Path(utils.get_env("MACHINE")).expanduser()
 
-    machine = Path(os.environ["MACHINE"])
-    if command is None:
+    if command is None and not args:
         chezmoi_apply(machine)
         return
-
-    try:
-        script_cmd = ScriptCommand(command)
-        run_script(script_cmd, args)
-    except ValueError:  # not a script command
+    if command is None:  # args only
         chezmoi_command(args)
-
-
-def validate_environment() -> None:
-    required = ["MACHINE", "MACHINE_ID", "MACHINE_SHARED", "MACHINE_CONFIG"]
-    for var in required:
-        if not os.environ.get(var):
-            raise RuntimeError(f"{var} environment variable is not set")
-        utils.debug("cli", f"{var}={os.environ.get(var)}")
+        return
+    run_script(command, args)
 
 
 def chezmoi_apply(machine: Path) -> None:
@@ -57,14 +45,19 @@ def chezmoi_apply(machine: Path) -> None:
 
 
 def chezmoi_command(args: list[str]) -> None:
-    print(f"running chezmoi {' '.join(args)}...")
+    print(f"running: chezmoi {' '.join(args)}...")
     utils.run(f"chezmoi {' '.join(args)}")
 
 
 def run_script(command: ScriptCommand, args: list[str]) -> None:
     script_path = Path(__file__).parent / f"{command.value}.py"
     argv = " ".join(arg for arg in args)
-    utils.run(f'{sys.executable} "{script_path}" {argv}')
+    utils.debug("cli", f"running: {script_path} {argv}...")
+    subprocess.run(
+        f'{sys.executable} "{script_path}" {argv}',
+        shell=True,
+        check=True,
+    )
 
 
 # region: CLI
