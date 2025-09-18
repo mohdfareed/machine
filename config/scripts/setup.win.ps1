@@ -1,17 +1,22 @@
 Write-Host "setting up windows tools..."
 
+# install windows features
+Write-Host "enabling windows features..."
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-RemoteDesktopConnection
+Enable-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform
+Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
+Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
+
 # wsl
-$wslFeature = Get-WindowsOptionalFeature -Online `
-    -FeatureName Microsoft-Windows-Subsystem-Linux
-if ($wslFeature.State -eq "Enabled") {
-    wsl --update
-}
-else {
-    wsl --install
-}
+Write-Host "installing wsl..."
+wsl --install
+Write-Host "updating wsl..."
+wsl --update
 
 # scoop
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+    Write-Host "installing scoop..."
     Invoke-WebRequest -Uri https://get.scoop.sh | Invoke-Expression
 }
 
