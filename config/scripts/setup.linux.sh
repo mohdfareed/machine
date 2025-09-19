@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-echo "setting up linux..."
-
 # set hostname
 echo "setting hostname..."
 if command -v hostnamectl &> /dev/null; then
@@ -24,6 +22,3 @@ sudo apt install -y openssh-server
 echo "configuring ssh server..."
 sudo systemctl enable ssh
 sudo systemctl start ssh
-echo "ssh server enabled successfully"
-
-echo "linux set up successfully"

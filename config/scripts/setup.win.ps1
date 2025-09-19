@@ -1,5 +1,3 @@
-Write-Host "setting up windows tools..."
-
 # set hostname
 Write-Host "setting hostname..."
 Rename-Computer -NewName $env:MACHINE_ID -Force
@@ -13,16 +11,25 @@ Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
 Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
 
 # wsl
-Write-Host "installing wsl..."
+Write-Host "setting up wsl..."
 wsl --install
-Write-Host "updating wsl..."
-wsl --update
+
+# winget
+Write-Host "setting up winget..."
+winget source update
 
 # scoop
+Write-Host "setting up scoop..."
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Write-Host "installing scoop..."
     Invoke-WebRequest -Uri https://get.scoop.sh | Invoke-Expression
 }
+else {
+    scoop update
+}
+
+# MARK: SSH Configuration
+# =============================================================================
 
 # install ssh services if not present
 if (-not (Get-Service -Name sshd -ErrorAction SilentlyContinue)) {
@@ -50,6 +57,3 @@ if ((Get-Service -Name sshd).Status -ne 'Running') {
     Write-Host "starting ssh server service..."
     Start-Service sshd
 }
-Write-Host "ssh-agent is enabled and running."
-
-Write-Host "windows set up successfully"

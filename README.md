@@ -152,5 +152,6 @@ code $MACHINE          # open repo in vscode
     - [ ] Manual scripts
   - [ ] `zinit`
   - [ ] `nvim` (lazy vim)
+  - [ ] `wsl`
 
 - [ ] Package managers priority per os (or machine) to de-duplicate installs

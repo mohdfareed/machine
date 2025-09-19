@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# System defaults for macOS
 
 echo "setting system defaults..."
 
+# reduce wallpaper tinting in windows
+defaults write .GlobalPreferences AppleReduceDesktopTinting -bool true
 # switch windows in same space
 defaults write NSGlobalDomain AppleSpacesSwitchOnActivate -bool false
 # double click title bar to maximize
@@ -17,7 +18,6 @@ defaults write NSGlobalDomain AppleKeyboardUIMode -int 2
 defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
 # drag with trackpad
 defaults write com.apple.AppleMultitouchTrackpad Dragging -bool true
-
 # auto-hide dock
 defaults write com.apple.dock autohide -bool true
 # hide recent apps
@@ -30,8 +30,3 @@ defaults write com.apple.dock tilesize -int 48
 defaults write com.apple.dock showAppExposeGestureEnabled -bool true
 # rearrange spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
-
-# reduce wallpaper tinting in windows
-defaults write .GlobalPreferences AppleReduceDesktopTinting -bool true
-
-echo "system defaults set successfully"
