@@ -197,3 +197,18 @@ def debug(source: str, msg: str) -> None:
 def error(msg: str) -> None:
     """Print an error message to stderr."""
     print(f"[error] {msg}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    debug("utils", "running utils module")
+    print(f"python: {sys.executable} ({sys.version})")
+    print(f"platform: {sys.platform} (WSL={WSL}, CODESPACES={CODESPACES})")
+
+    print("available package managers:")
+    for pm in PackageManager:
+        supported = "" if pm.is_available() else "not "
+        available = "available" if pm.is_available() else "not available"
+        print(f"  - {pm} -> available: {available}, supported: {supported}")
+
+    error("this module is not meant to be run directly")
+    exit(ExitCode.ERROR)

@@ -135,11 +135,12 @@ code $MACHINE          # open repo in vscode
 
 - [x] Hostname configuration (prompt, default to machine_id.local)
 - [x] Implement subcommands for CLI script
-- [ ] Use built-in logging module instead of print statements
+- [x] ~~Use built-in logging module instead of print statements~~
+- [ ] Add Windows PATH to wsl's PATH
 
 - [ ] Windows:
   - [ ] WSL support
-  - [ ] Terminal configuration
+  - [x] Terminal configuration
   - [ ] fix authorized_keys config and aliases
   - [ ] Test line endings with unix-based and win-based repos
 
@@ -149,7 +150,6 @@ code $MACHINE          # open repo in vscode
 
 - [ ] Update script:
   - [ ] Package managers
-    - [ ] Manual scripts
   - [ ] `zinit`
   - [ ] `nvim` (lazy vim)
   - [ ] `wsl`

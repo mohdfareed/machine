@@ -21,6 +21,7 @@ Expected JSON structure:
 }
 """
 
+import argparse
 import json
 import os
 from pathlib import Path
@@ -113,4 +114,10 @@ def install_package(pkg_manager: utils.PackageManager, pkg: Any) -> None:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description=(__doc__ or "").strip(),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    args = parser.parse_args()
     utils.script_entrypoint("pkgs", main)

@@ -13,6 +13,7 @@ import utils
 
 class ScriptCommand(enum.StrEnum):
     CHEZMOI = "chezmoi"
+    UPDATE = "update"
     SCRIPTS = "scripts"
     PACKAGES = "packages"
     SSH = "ssh"
