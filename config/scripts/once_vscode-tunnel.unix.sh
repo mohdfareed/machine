@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-if [[ $WSL == "true" ]]; then
+if [[ ${WSL:-} == "true" ]]; then
     echo "detected wsl environment, skipping vscode tunnel setup"
     exit 0
 fi
-if [[ $MACHINE_ID == "codespaces" ]]; then
+if [[ ${CODESPACES:-} == "true" ]]; then
     echo "detected codespaces environment, skipping vscode tunnel setup"
+    exit 0
+fi
+if [[ -z ${MACHINE_ID:-} ]]; then
+    echo "MACHINE_ID is not set; skipping vscode tunnel setup" >&2
     exit 0
 fi
 

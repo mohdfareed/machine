@@ -4,8 +4,11 @@
         "*.json": "jsonc",
         "*.tmpl": "go",
         "symlink_*": "go",
-        "*.py.tmpl": "go",
+        "empty_*": "go",
+        "dot_*": "go",
         // specific files
+        "symlink": "go",
+        "dot_zshrc": "shellscript",
         ".chezmoiignore": "go",
     },
     // shell

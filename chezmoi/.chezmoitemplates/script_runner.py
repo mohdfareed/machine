@@ -28,7 +28,7 @@ script_data = """
 """
 
 try:  # parse argv
-    argv = json.loads(argv_data) if argv_data.strip() else []
+    argv: list[str] = json.loads(argv_data) if argv_data.strip() else []
 except json.JSONDecodeError as e:
     raise ValueError(f"invalid argv: {e}") from e
 

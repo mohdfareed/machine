@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 # Enable Touch ID for sudo on macOS
 
 PAM_SUDO_PATH="/etc/pam.d/sudo_local"

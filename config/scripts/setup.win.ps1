@@ -1,3 +1,6 @@
+#!/usr/bin/env pwsh
+$ErrorActionPreference = 'Stop'
+
 # set hostname
 Write-Host "setting hostname..."
 Rename-Computer -NewName $env:MACHINE_ID -Force
@@ -22,7 +25,8 @@ winget source update
 Write-Host "setting up scoop..."
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Write-Host "installing scoop..."
-    Invoke-WebRequest -Uri https://get.scoop.sh | Invoke-Expression
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-WebRequest -UseBasicParsing -Uri https://get.scoop.sh | Invoke-Expression
 }
 else {
     scoop update
@@ -47,8 +51,7 @@ if (-not (Get-Service -Name sshd -ErrorAction SilentlyContinue)) {
 # set default ssh shell
 Write-Host "configuring ssh services..."
 $pwsh = "C:\Program Files\PowerShell\7\pwsh.exe"
-New-ItemProperty -Path 'HKLM:\SOFTWARE\OpenSSH' -Name DefaultShell \
--Value $pwsh -PropertyType String -Force
+New-ItemProperty -Path 'HKLM:\SOFTWARE\OpenSSH' -Name DefaultShell -Value $pwsh -PropertyType String -Force | Out-Null
 Restart-Service sshd -Force
 
 # ensure ssh agent starts automatically and is running

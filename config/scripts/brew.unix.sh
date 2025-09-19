@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
+
+export NONINTERACTIVE=1
 
 echo "setting up brew..."
 if command -v brew &>/dev/null; then

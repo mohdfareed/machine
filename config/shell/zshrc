@@ -70,6 +70,6 @@ setopt hist_find_no_dups
 
 # zinit and aliases
 # shellcheck source=/dev/null
-source "$MACHINE/config/shell/zinit.sh"
+source "$MACHINE/config/zinit.sh"
 # shellcheck source=/dev/null
 source "$MACHINE/config/shell/aliases.sh"

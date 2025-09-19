@@ -1,24 +1,30 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-# set hostname
-echo "setting hostname..."
-if command -v hostnamectl &> /dev/null; then
-    sudo hostnamectl set-hostname "$MACHINE_ID"
+if [[ -z ${MACHINE_ID:-} ]]; then
+    echo "MACHINE_ID is not set; skipping hostname configuration" >&2
 else
-    sudo hostname "$MACHINE_ID"
-    echo "$MACHINE_ID" | sudo tee /etc/hostname > /dev/null
+    # set hostname
+    echo "setting hostname..."
+    if command -v hostnamectl &> /dev/null; then
+        sudo hostnamectl set-hostname "$MACHINE_ID"
+    else
+        sudo hostname "$MACHINE_ID"
+        echo "$MACHINE_ID" | sudo tee /etc/hostname > /dev/null
+    fi
 fi
 
-# check if ssh server is already active
 echo "settings up ssh server..."
-if systemctl is-active --quiet ssh; then
-    echo "ssh server is already enabled"
-    exit 0
+if ! dpkg -s openssh-server >/dev/null 2>&1; then
+    echo "installing ssh server..."
+    sudo apt-get update -y
+    sudo apt-get install -y openssh-server
 fi
-
-# install ssh server
-echo "installing ssh server..."
-sudo apt install -y openssh-server
 echo "configuring ssh server..."
-sudo systemctl enable ssh
-sudo systemctl start ssh
+sudo systemctl enable ssh || true
+sudo systemctl start ssh || true
+if systemctl is-active --quiet ssh; then
+    echo "ssh server is active"
+else
+    echo "warning: ssh server not active" >&2
+fi
