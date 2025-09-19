@@ -12,7 +12,8 @@ Requirements:
 
 Install XCode Command Line Tools on macOS:
 xcode-select --install
-Chezmoi installation:
+
+Chezmoi installation docs:
 https://www.chezmoi.io/install/#one-line-binary-install
 """
 
