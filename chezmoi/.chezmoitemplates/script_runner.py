@@ -40,6 +40,7 @@ env["MACHINE"] = "{{ .ctx.machinePath }}"
 env["MACHINE_ID"] = "{{ .ctx.machine }}"
 env["MACHINE_PRIVATE"] = "{{ .ctx.privatePath }}"
 
+env["WSL"] = "{{ .ctx.isWSL }}"
 env["MACHINE_SHARED"] = "{{ .ctx.configPath }}"
 env["MACHINE_CONFIG"] = "{{ .ctx.machineConfigPath }}"
 

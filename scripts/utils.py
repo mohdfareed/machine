@@ -14,6 +14,7 @@ WINDOWS = sys.platform.lower().startswith("win")
 LINUX = sys.platform.lower().startswith("linux")
 MACOS = sys.platform.lower().startswith("darwin")
 WSL = shutil.which("wslinfo") is not None
+CODESPACES = os.environ.get("CODESPACES", default=False) == True
 UNIX = LINUX or MACOS or WSL
 
 
@@ -134,6 +135,8 @@ def execute_script(script: Path) -> None:
     if not MACOS and ".macos" in suffixes:
         return
     if not WSL and ".wsl" in suffixes:
+        return
+    if not CODESPACES and ".codespaces" in suffixes:
         return
     if not UNIX and ".unix" in suffixes:
         return
