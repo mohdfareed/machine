@@ -71,3 +71,21 @@ ssh::reg-key() {
 
     ssh-copy-id -i "$key" "$host"
 }
+
+# register an SSH key to authorized_keys on a Windows host
+ssh::reg-key-win() {
+    usage="usage: $0 [key_name] [user@]host"
+    if (( $# < 1 || $# > 2 )); then echo "$usage" && return 1; fi
+
+    key="$HOME/.ssh/${1-personal}.pub"
+    if [[ ! -f "$key" ]]; then
+        echo "no public key file found"
+        return 1
+    fi
+    host=$2
+
+    keys_file="\$env:ProgramData\ssh\administrators_authorized_keys"
+    pwsh_cmd="Add-Content -Path $keys_file -Value '$(<"$key")'"
+    # shellcheck disable=2029
+    ssh "$host" "powershell -Command \"$pwsh_cmd\""
+}

@@ -1,0 +1,7 @@
+[core]
+    autocrlf = true
+    eol = crlf
+
+; Note: Windows OpenSSH reads %USERPROFILE%\.ssh\authorized_keys for user accounts.
+; For administrators, you can use %ProgramData%\ssh\administrators_authorized_keys.
+; Ensure proper NTFS ACLs (icacls) to avoid permission issues.

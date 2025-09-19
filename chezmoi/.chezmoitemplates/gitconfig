@@ -1,4 +1,20 @@
 [include]
     path = {{ .configPath }}/git/.gitconfig
+
+{{- /* OS-specific overrides */ -}}
+{{- if eq .chezmoi.os "linux" }}
+[include]
+    path = {{ .configPath }}/git/.gitconfig.linux
+{{- else if eq .chezmoi.os "macos" }}
+[include]
+    path = {{ .configPath }}/git/.gitconfig.macos
+{{- else if eq .chezmoi.os "windows" }}
+[include]
+    path = {{ .configPath }}/git/.gitconfig.windows
+{{- else if eq .chezmoi.os "wsl" }}
+[include]
+    path = {{ .configPath }}/git/.gitconfig.wsl
+{{- end }}
+
 [include]
     path = {{ .machineConfigPath }}/.gitconfig

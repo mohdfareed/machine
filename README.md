@@ -136,25 +136,25 @@ code $MACHINE          # open repo in vscode
 - [x] Hostname configuration (prompt, default to machine_id.local)
 - [x] Implement subcommands for CLI script
 - [x] ~~Use built-in logging module instead of print statements~~
-- [ ] Add Windows PATH to wsl's PATH
+- [x] ~~Add Windows PATH to wsl's PATH~~
+- [x] ~~Package managers priority per os (or machine) to de-duplicate installs~~
 
-- [ ] Windows:
-  - [ ] WSL support
+- [x] Windows:
+  - [x] WSL support
   - [x] Terminal configuration
-  - [ ] fix authorized_keys config and aliases
-  - [ ] Test line endings with unix-based and win-based repos
+  - [x] fix authorized_keys config and aliases
+  - [x] Test line endings with unix-based and win-based repos
 
 - [ ] CI/CD:
   - [ ] Restore python formatting checks in ci
-  - [ ] Add update script for updating dependencies during cd
+  - [ ] Add update script for updating project dependencies during cd
 
-- [ ] Update script:
-  - [ ] Package managers
-  - [ ] `zinit`
-  - [ ] `nvim` (lazy vim)
-  - [ ] `wsl`
+- [x] Update script:
+  - [x] Package managers
+  - [x] `zinit`
+  - [x] `nvim` (lazy vim)
+  - [x] `wsl`
 
-- [ ] Package managers priority per os (or machine) to de-duplicate installs
 
 ## Ideas
 
