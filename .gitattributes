@@ -1,3 +1,3 @@
-# normalize *all* text files to LF *in the repo*,
-# but on checkout use the native EOL for each platform
+# normalize text files to LF in the repo,
+# on checkout use the native EOL for each platform
 * text=auto

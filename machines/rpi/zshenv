@@ -1,5 +1,0 @@
-#!/usr/bin/env zsh
-
-# REVIEW: ghostty terminal bug
-# https://github.com/jesseduffield/lazydocker/issues/610
-export TERM=xterm-256color
