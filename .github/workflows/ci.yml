@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Formatter
-        uses: reviewdog/action-black@main
+        uses: reviewdog/action-black@master
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-check
