@@ -22,8 +22,11 @@ jobs:
         with:
           python-version: "3.8"
       - run: |
-          python -V
-          python -m compileall -q scripts
+          python -m compileall chezmoi
+          python -m compileall config
+          python -m compileall machines
+          python -m compileall scripts
+          python -m compileall bootstrap.py
 
       - name: Formatter
         uses: reviewdog/action-black@master

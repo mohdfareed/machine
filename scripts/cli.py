@@ -20,7 +20,7 @@ class ScriptCommand(enum.StrEnum):
 
 
 def main(command: ScriptCommand | None, args: list[str]) -> None:
-    machine = Path(utils.get_env("MACHINE")).expanduser()
+    machine = Path(utils.get_env("MACHINE", str)).expanduser()
 
     if command is None and not args:
         chezmoi_apply(machine)

@@ -80,7 +80,7 @@ def load_scripts(source: str) -> list[Path]:
 
 def find_scripts(source: str) -> list[Path]:
     machine = utils.get_env("MACHINE", Path)
-    machine_id = utils.get_env("MACHINE_ID")
+    machine_id = utils.get_env("MACHINE_ID", str)
 
     source_path = machine / "config" / "scripts"  # base
     if source == "machine":

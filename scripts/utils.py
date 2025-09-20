@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 __all__ = ["PackageManager", "execute_script", "run", "debug", "error"]
 
@@ -9,6 +10,8 @@ import subprocess
 import sys
 from collections.abc import Callable
 from pathlib import Path
+from typing import Callable as TypingCallable
+from typing import Optional, TypeVar, cast
 
 WINDOWS = sys.platform.lower().startswith("win")
 LINUX = sys.platform.lower().startswith("linux")
@@ -16,6 +19,8 @@ MACOS = sys.platform.lower().startswith("darwin")
 WSL = shutil.which("wslinfo") is not None
 CODESPACES = os.environ.get("CODESPACES", default=False) == True
 UNIX = LINUX or MACOS or WSL
+
+T = TypeVar("T")
 
 
 class ExitCode(enum.IntEnum):
@@ -174,8 +179,10 @@ def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
         )
 
 
-def get_env[T](
-    var: str, parser: Callable[[str], T] = str, default: T | None = None
+def get_env(
+    var: str,
+    parser: TypingCallable[[str], T] = cast(TypingCallable[[str], T], str),
+    default: Optional[T] = None,
 ) -> T:
     """Get an environment variable or raise if None."""
     value: str = os.environ.get(var, str(default or ""))
