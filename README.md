@@ -133,30 +133,5 @@ code $MACHINE          # open repo in vscode
 
 ## TODO
 
-- [x] Hostname configuration (prompt, default to machine_id.local)
-- [x] Implement subcommands for CLI script
-- [x] ~~Use built-in logging module instead of print statements~~
-- [x] ~~Add Windows PATH to wsl's PATH~~
-- [x] ~~Package managers priority per os (or machine) to de-duplicate installs~~
-
-- [x] Windows:
-  - [x] WSL support
-  - [x] Terminal configuration
-  - [x] fix authorized_keys config and aliases
-  - [x] Test line endings with unix-based and win-based repos
-
-- [x] CI/CD:
-  - [x] Restore python formatting checks in ci
-  - [x] Add update script for updating project dependencies during cd
-
-- [x] Update script:
-  - [x] Package managers
-  - [x] `zinit`
-  - [x] `nvim` (lazy vim)
-  - [x] `wsl`
-
-
-## Ideas
-
 - Create `config.yaml` that is parsed by `chezmoi`. The `.toml` template can parse it, read machine config, and prompt only for missing values.
 - The same file can be reused to define scripts to run, packages to install, etc.
