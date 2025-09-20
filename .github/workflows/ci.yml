@@ -10,6 +10,35 @@ permissions:
   checks: write
 
 jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+
+      - name: Formatter
+        uses: reviewdog/action-black@main
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          reviewdog_flags: "-tee"
+          level: warning
+
+      - name: Linter
+        uses: dciborow/action-pylint@main
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          reviewdog_flags: "-tee"
+
+      - name: Type checker
+        uses: jordemort/action-pyright@main
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          reviewdog_flags: "-tee"
+
   shellcheck:
     runs-on: ubuntu-latest
     steps:

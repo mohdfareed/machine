@@ -51,5 +51,10 @@ git fetch --all --tags --prune
 
 # install python and setup venv
 echo "setting up python $PY_VERSION venv..."
-uv python install $PY_VERSION
-uv venv $VENV --python $PY_VERSION
+uv python install "$PY_VERSION"
+uv venv "$VENV" --python "$PY_VERSION" --seed --clear
+
+# install pre-commit hooks
+echo "installing pre-commit hooks..."
+"./$VENV/bin/python" -m pip install pre-commit
+"./$VENV/bin/pre-commit" install --install-hooks

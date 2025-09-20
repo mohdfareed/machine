@@ -1,3 +1,0 @@
-# normalize text files to LF in the repo,
-# on checkout use the native EOL for each platform
-* text=auto

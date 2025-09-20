@@ -25,8 +25,10 @@ jobs:
       - name: Set up environment
         uses: ./.github/setup
 
-      # - name: Update dependencies
-      #   run: ./scripts/update.sh
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Update dependencies
+        run: ./update.sh
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@main

@@ -145,9 +145,9 @@ code $MACHINE          # open repo in vscode
   - [x] fix authorized_keys config and aliases
   - [x] Test line endings with unix-based and win-based repos
 
-- [ ] CI/CD:
-  - [ ] Restore python formatting checks in ci
-  - [ ] Add update script for updating project dependencies during cd
+- [x] CI/CD:
+  - [x] Restore python formatting checks in ci
+  - [x] Add update script for updating project dependencies during cd
 
 - [x] Update script:
   - [x] Package managers
