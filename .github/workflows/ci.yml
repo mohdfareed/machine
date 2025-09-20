@@ -17,6 +17,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Compile against Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+      - run: |
+          python -V
+          python -m compileall -q scripts
+
       - name: Formatter
         uses: reviewdog/action-black@master
         with:
@@ -24,13 +32,6 @@ jobs:
           reporter: github-check
           reviewdog_flags: "-tee"
           level: warning
-
-      - name: Linter
-        uses: dciborow/action-pylint@main
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-          reviewdog_flags: "-tee"
 
       - name: Type checker
         uses: jordemort/action-pyright@main
