@@ -19,6 +19,9 @@ export PIP_REQUIRE_VIRTUALENV=true # require virtual env for pip
 export GOPATH="$HOME/.local/go"
 export PATH="$GOPATH/bin:$PATH"
 
+# docker
+export FPATH="$HOME/.docker/completions:${FPATH}" # completions
+
 # snap store
 export PATH="$PATH:/snap/bin"
 

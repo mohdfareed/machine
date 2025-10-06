@@ -98,7 +98,7 @@
   "gitlens.codeLens.authors.enabled": false,
   "gitlens.codeLens.recentChange.enabled": false,
   // # endregion ===============================================================
-  // MARK: Copilot
+  // MARK: copilot
   // #region ===================================================================
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
   "github.copilot.enable": {
@@ -220,7 +220,10 @@
     "editor.defaultFormatter": "golang.go"
   },
   // # endregion ===============================================================
-  "vsicons.dontShowNewVersionMessage": true,
-  "powershell.promptToUpdatePowerShell": false
+  // MARK: powershell
+  // #region ===================================================================
+  "powershell.promptToUpdatePowerShell": false,
+  // # endregion ===============================================================
+  "vsicons.dontShowNewVersionMessage": true
   // REVIEW - new customizations above =========================================
 }
