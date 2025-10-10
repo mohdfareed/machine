@@ -17,8 +17,6 @@ alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'
 alias llst='lls -T'
 
-alias pythont='$(brew --prefix)/bin/python3.14t' # REVIEW: python version
-
 alias zsh::reload='exec $SHELL'
 alias ssh::gen-key='ssh-keygen -t ed25519 -C'
 
