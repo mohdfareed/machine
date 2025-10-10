@@ -5,6 +5,8 @@
 
 Set-Alias machine-setup "$env:MACHINE/scripts/cli.py"
 
+Set-Alias pythont "$($env:HOMEBREW_PREFIX)\bin\python3.14t" # REVIEW: python version
+
 if ($env:TERM_PROGRAM -eq 'vscode') {
     function Clear {
         Clear-Host; Clear-Host

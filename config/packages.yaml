@@ -7,7 +7,7 @@ brew:
   # shell
   - zsh bat eza btop oh-my-posh neovim lazygit ripgrep fd
   # python
-  - python uv
+  - python python-freethreading uv
   # pwsh
   - powershell --cask
   # chezmoi
@@ -47,7 +47,7 @@ winget:
   - microsoft.powershell JanDeDobbeleer.OhMyPosh
   - neovim.neovim JesseDuffield.lazygit
   # python
-  - python.python.3.13 astral-sh.uv # REVIEW: win python version
+  - python.python.3.14 astral-sh.uv # REVIEW: python version & free-threading
   # chezmoi
   - twpayne.chezmoi
   # fonts

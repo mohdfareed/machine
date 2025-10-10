@@ -163,6 +163,7 @@
   // # endregion ===============================================================
   // MARK: python
   // #region ===================================================================
+  "python.useEnvironmentsExtension": true,
   "python.analysis.typeCheckingMode": "strict",
   "python.analysis.autoSearchPaths": true,
   "python.analysis.diagnosticMode": "workspace",
