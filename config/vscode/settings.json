@@ -18,10 +18,15 @@
   // MARK: visual
   // #region ===================================================================
   "workbench.tree.enableStickyScroll": true,
-  "editor.smoothScrolling": true,
-  "editor.cursorSmoothCaretAnimation": "on",
   "workbench.activityBar.location": "top",
   "workbench.editor.showTabs": "single",
+  "workbench.panel.showLabels": false,
+  "editor.smoothScrolling": true,
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.rulers": [
+    80,
+    120
+  ],
   // startup -------------------------------------------------------------------
   "workbench.editor.empty.hint": "hidden",
   "workbench.startupEditor": "newUntitledFile",
@@ -31,15 +36,12 @@
   "editor.minimap.autohide": "mouseover",
   "editor.minimap.showRegionSectionHeaders": true,
   // theme ---------------------------------------------------------------------
-  "workbench.iconTheme": "vscode-icons",
-  "workbench.colorTheme": "One Dark Pro",
+  "workbench.colorTheme": "One Dark Pro Night Flat",
   "oneDarkPro.bold": true,
   "oneDarkPro.vivid": true,
   "oneDarkPro.markdownStyle": false,
-  "editor.rulers": [
-    80,
-    120
-  ],
+  "workbench.productIconTheme": "fluent-icons",
+  "workbench.iconTheme": "ayu",
   // font ----------------------------------------------------------------------
   "editor.fontFamily": "JetBrainsMono Nerd Font",
   "editor.fontSize": 14,
@@ -108,6 +110,7 @@
     "scminput": false
   },
   "chat.useFileStorage": true,
+  "chat.mcp.gallery.enabled": true,
   // Beast Mode
   // https://gist.github.com/burkeholland/88af0249c4b6aff3820bf37898c8bacf
   "chat.tools.terminal.enableAutoApprove": true,
@@ -223,8 +226,7 @@
   // # endregion ===============================================================
   // MARK: powershell
   // #region ===================================================================
-  "powershell.promptToUpdatePowerShell": false,
+  "powershell.promptToUpdatePowerShell": false
   // # endregion ===============================================================
-  "vsicons.dontShowNewVersionMessage": true
   // REVIEW - new customizations above =========================================
 }
