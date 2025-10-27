@@ -5,7 +5,8 @@ brew:
   # git
   - git git-lfs gh
   # shell
-  - zsh bat eza btop oh-my-posh neovim lazygit ripgrep fd
+  - zsh fzf bat eza btop oh-my-posh
+  - neovim lazygit ripgrep fd
   # python
   - python python-freethreading uv
   # pwsh

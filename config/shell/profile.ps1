@@ -1,3 +1,5 @@
+#!/usr/bin/env pwsh
+
 # Environment
 # =============================================================================
 
@@ -14,6 +16,13 @@ if (Test-Path -Path "/usr/local/bin/brew") {
 if (Test-Path -Path "/home/linuxbrew/.linuxbrew/bin/brew") {
     $(/home/linuxbrew/.linuxbrew/bin/brew shellenv) | Invoke-Expression
 } # linux/wsl
+
+# homebrew completions
+if ((Get-Command brew) -and (Test-Path ($completions = "$(brew --prefix)/share/pwsh/completions"))) {
+    foreach ($f in Get-ChildItem -Path $completions -File) {
+        . $f
+    }
+}
 
 # oh-my-posh
 if ($IsWindows) {
