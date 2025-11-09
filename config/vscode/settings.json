@@ -36,12 +36,12 @@
   "editor.minimap.autohide": "mouseover",
   "editor.minimap.showRegionSectionHeaders": true,
   // theme ---------------------------------------------------------------------
-  "workbench.colorTheme": "One Dark Pro Night Flat",
+  "workbench.productIconTheme": "fluent-icons",
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.colorTheme": "One Dark Pro Darker",
   "oneDarkPro.bold": true,
   "oneDarkPro.vivid": true,
   "oneDarkPro.markdownStyle": false,
-  "workbench.productIconTheme": "fluent-icons",
-  "workbench.iconTheme": "ayu",
   // font ----------------------------------------------------------------------
   "editor.fontFamily": "JetBrainsMono Nerd Font",
   "editor.fontSize": 14,
@@ -55,12 +55,6 @@
   "cSpell.enabledFileTypes": {
     "*": true
   },
-  "cSpell.userWords": [
-    "endregion",
-    "Fareed",
-    "fastmcp",
-    "mohdfareed"
-  ],
   // # endregion ===============================================================
   // MARK: terminal
   // #region ===================================================================
@@ -226,7 +220,13 @@
   // # endregion ===============================================================
   // MARK: powershell
   // #region ===================================================================
-  "powershell.promptToUpdatePowerShell": false
+  "powershell.promptToUpdatePowerShell": false,
   // # endregion ===============================================================
+  "cSpell.userWords": [
+    "endregion",
+    "Fareed",
+    "fastmcp",
+    "mohdfareed"
+  ]
   // REVIEW - new customizations above =========================================
 }
