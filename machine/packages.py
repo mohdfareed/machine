@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Dict, List, Union
 
 import yaml
 
@@ -15,40 +15,47 @@ from machine.core import (
     run,
 )
 
+# Type alias for package data structure
+PackageData = Dict[str, List[Any]]
+Package = Union[str, int, Dict[str, Any]]
 
-def load_packages(machine_id: str) -> dict[str, list[Any]]:
+
+def load_packages(machine_id: str) -> PackageData:
     """Load and merge packages from base config and machine config."""
     root = get_machine_root()
     base_path = root / "config" / "packages.yaml"
     machine_path = root / "machines" / machine_id / "packages.yaml"
 
-    packages: dict[str, list[Any]] = {}
+    packages: PackageData = {}
 
     # Load base packages
     if base_path.exists():
         debug("packages", f"loading base packages: {base_path}")
-        base_data = yaml.safe_load(base_path.read_text()) or {}
+        base_data: PackageData = yaml.safe_load(base_path.read_text()) or {}
         for manager, pkgs in base_data.items():
-            packages[manager] = pkgs or []
+            packages[manager] = list(pkgs) if pkgs else []
 
     # Load and merge machine packages
     if machine_path.exists():
         debug("packages", f"loading machine packages: {machine_path}")
-        machine_data = yaml.safe_load(machine_path.read_text()) or {}
+        machine_data: PackageData = (
+            yaml.safe_load(machine_path.read_text()) or {}
+        )
         for manager, pkgs in machine_data.items():
+            pkg_list = list(pkgs) if pkgs else []
             if manager in packages:
-                packages[manager].extend(pkgs or [])
+                packages[manager].extend(pkg_list)
             else:
-                packages[manager] = pkgs or []
+                packages[manager] = pkg_list
 
     return packages
 
 
 def filter_packages(
-    packages: dict[str, list[Any]],
-) -> dict[PackageManager, list[Any]]:
+    packages: PackageData,
+) -> Dict[PackageManager, List[Any]]:
     """Filter packages to only supported package managers."""
-    filtered: dict[PackageManager, list[Any]] = {}
+    filtered: Dict[PackageManager, List[Any]] = {}
 
     for manager_name, pkgs in packages.items():
         try:
@@ -66,7 +73,7 @@ def filter_packages(
     return filtered
 
 
-def install_package(manager: PackageManager, package: Any) -> None:
+def install_package(manager: PackageManager, package: Package) -> None:
     """Install a single package or run an inline script."""
     # Handle inline script
     if isinstance(package, dict) and "script" in package:

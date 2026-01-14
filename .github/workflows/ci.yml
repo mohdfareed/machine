@@ -22,8 +22,11 @@ jobs:
         with:
           python-version: "3.8"
       - run: |
-          python -m compileall scripts
-          python -m compileall bootstrap.py
+          python -m compileall machine
+          python -m compileall setup.py
+          # Legacy (remove when chezmoi/ is deleted)
+          python -m compileall scripts || true
+          python -m compileall bootstrap.py || true
 
       - name: Lint with Ruff
         uses: astral-sh/ruff-action@v3

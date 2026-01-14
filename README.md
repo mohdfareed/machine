@@ -1,142 +1,137 @@
 # Machine Setup & Dotfiles
 
-A cross‑platform Chezmoi setup to bootstrap, deploy, and version‑control environments across macOS, Windows, and Linux.
+Cross-platform dotfiles and environment manager for macOS, Windows, and Linux.
 
-- `chezmoi/` orchestrates the process;
-- `scripts/` act as infrastructure;
-- `config/` provides shared defaults while
-- `machines/<id>/` supplies per‑machine overrides.
-
-```mermaid
-flowchart LR
-    A[bootstrap.py] --> B[chezmoi/] --> C
-    B --> config
-    C --> config
-
-    subgraph C [scripts/]
-      direction LR
-      O[scripts.py]
-      P[packages.py]
-      L[cli.py]
-    end
-
-    subgraph config [configuration]
-      direction TB
-      D --> E
-    end
-
-    subgraph D [config/]
-      direction TB
-      H[scripts/]
-      I[packages.yaml]
-      J[.zshenv]
-    end
-
-    subgraph E [machines/id/]
-      direction TB
-      F[scripts/]
-      G[packages.yaml]
-      K[.zshenv]
-    end
+```
+config/              # Shared defaults (dotfiles, packages, scripts)
+machines/<id>/       # Per-machine overrides
+machine/             # Python automation module
+setup.py             # Main entry point
 ```
 
 ## Requirements
 
 - Python 3.8+
-- Xcode Command Line Tools (macOS)
-- PowerShell 7.0+ (Windows)
-
-Xcode Command Line Tools can be installed with:
-
-```sh
-xcode-select --install
-sudo xcodebuild -license accept
-```
-
-Windows can install Python and PowerShell from the Microsoft Store or using:
-
-```powershell
-winget install Python.Python3.12 # 3.8+
-winget install Microsoft.Powershell # 7.0+
-```
+- Git
+- Xcode Command Line Tools (macOS): `xcode-select --install`
+- PowerShell 7.0+ (Windows): `winget install Microsoft.Powershell`
 
 ## Installation
 
-Run the following command to install Chezmoi and bootstrap a machine:
+Bootstrap a new machine:
 
 ```sh
-# shell
-repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsLS "$repo/bootstrap.py" | python3 -
+# Unix (macOS/Linux)
+curl -fsSL https://raw.githubusercontent.com/mohdfareed/machine/main/setup.py | python3 - <machine_id>
+
+# Or clone and run
+git clone https://github.com/mohdfareed/machine ~/.machine
+cd ~/.machine && ./setup.py <machine_id>
 ```
 
 ```powershell
-# powershell
-$repo = "https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsLS "$repo/bootstrap.py" | python3 -
+# Windows
+iwr -useb https://raw.githubusercontent.com/mohdfareed/machine/main/setup.py | python -
+
+# Or clone and run
+git clone https://github.com/mohdfareed/machine $HOME/.machine
+cd $HOME/.machine; python setup.py <machine_id>
 ```
 
 ## Usage
 
-After bootstrapping, the machine will be set up with Chezmoi installed. The following are commands to manage the configuration:
-
 ```sh
-chezmoi init --apply   # apply machine config
-chezmoi update         # update repo and reapply config
-chezmoi status         # show status of the config
-code $MACHINE          # open repo in vscode
+./setup.py --list                    # List available machines
+./setup.py macbook                   # Full setup
+./setup.py macbook --dry-run         # Preview changes
+./setup.py macbook --update          # Update packages/plugins
+./setup.py macbook --private ~/keys  # Specify private files path
 ```
 
-### Machine Settings
+### Selective Setup
 
-- Variables used across the system:
-  - `MACHINE`: repo root (e.g., `~/.machine`)
-  - `MACHINE_ID`: selected machine profile (e.g., `macbook`)
-  - `MACHINE_PRIVATE`: path to private files (default `~/.private`)
-- How they’re set:
-  - Chezmoi template `.chezmoi.toml.tmpl` prompts on first apply (or uses env if set).
-  - Shell profiles (`.zshenv`, `profile.ps1`) export them for interactive shells.
-  - Script runner passes these vars to Python scripts using environment variables.
+```sh
+./setup.py macbook --packages-only   # Only install packages
+./setup.py macbook --dotfiles-only   # Only setup dotfiles
+./setup.py macbook --scripts-only    # Only run scripts
+./setup.py macbook --ssh-only        # Only setup SSH keys
+```
 
-### Scripting
+## Configuration
 
-- Put shared scripts in `config/scripts/` and machine-specific in `machines/<id>/scripts/`.
-- OS suffixes are respected.
-  - Examples: `*.macos.sh`, `*.linux.sh`, `*.win.ps1`, `*.unix.sh`.
-  - Combinations are supported, e.g., `*.linux.wsl.sh` runs on both Linux and WSL.
-- Phases are triggered by filename prefixes via Chezmoi:
-  - `before_*` → runs before apply
-  - `after_*` → runs after apply
-  - `once_*` → runs only once
-  - `onchange_*` → runs when content changes
+### Machine Variables
 
-### Package Management
+Set automatically and available in shell:
 
-- Package installs: editing `config/packages.yaml` or `machines/<id>/packages.yaml` triggers an `onchange_*` script that installs packages.
-- A script can be defined as another package entry to install a package using a custom method.
-- Supported package managers:
-  - macOS: `brew`, `mas`
-  - Linux: `apt`, `snap`,
-  - Windows: `winget`, `scoop`
+| Variable | Description |
+|----------|-------------|
+| `MACHINE` | Repository root path |
+| `MACHINE_ID` | Selected machine profile |
+| `MACHINE_PRIVATE` | Path to private files |
+| `MACHINE_SHARED` | Path to `config/` |
+| `MACHINE_CONFIG` | Path to `machines/<id>/` |
 
-### SSH Setup
+### Packages
 
-- Add keys: place your keys in `$MACHINE_PRIVATE/ssh/`.
-  - Example: `personal` + `personal.pub` or `tool.key` + `tool.pub`.
-- Configure SSH: edit `machines/<id>/ssh.config` for per‑machine settings.
+Edit `config/packages.yaml` (shared) or `machines/<id>/packages.yaml` (machine-specific):
 
-### Machine Backup
+```yaml
+brew:
+  - git
+  - neovim
+apt:
+  - build-essential
+  - script: curl -fsSL https://example.com/install.sh | bash
+```
 
-- Commit and push changes to local repositories.
-- Review installed apps and their configurations.
-- Review machine config files.
+Supported managers: `brew`, `mas`, `apt`, `snap`, `winget`, `scoop`
 
-## TODO
+### Scripts
 
-- Create `config.yaml` that is parsed by `chezmoi`. The `.toml` template can parse it, read machine config, and prompt only for missing values.
-- The same file can be reused to define scripts to run, packages to install, etc.
+Place scripts in `config/scripts/` (shared) or `machines/<id>/scripts/` (machine-specific).
 
-## Refactor Issues
+**Platform filtering** via file suffixes:
+- `setup.macos.sh` — runs only on macOS
+- `setup.unix.sh` — runs on macOS, Linux, WSL
+- `setup.win.ps1` — runs only on Windows
 
-- Symlinking ignores dry-run mode. Not sure.
-- Backup of symlinked files does not exist (unless the above is false?).
+**Execution phases** via filename prefixes:
+- `before_*` — runs before main setup
+- `once_*` — runs only once (tracked in `~/.machine-state.json`)
+- `onchange_*` — runs when script content changes
+- `after_*` — runs after main setup
+
+### SSH Keys
+
+1. Place keys in `~/.machine-private/ssh/` (or custom `--private` path)
+2. Run setup — keys are copied to `~/.ssh` with correct permissions
+3. Keys are added to SSH agent (with macOS Keychain support)
+
+### Dotfiles
+
+Most configs are symlinked directly. Shell configs and `.gitconfig` are generated with embedded paths to support the layered loading pattern:
+
+```
+private config → shared config → machine config
+```
+
+## Development
+
+```sh
+./setup.sh           # Set up dev environment (venv, pre-commit)
+./update.sh          # Update pre-commit hooks
+```
+
+## Architecture
+
+```
+setup.py             # CLI entry point
+machine/
+├── core.py          # Platform detection, package managers, utilities
+├── dotfiles.py      # Symlinks and config generation
+├── packages.py      # Package installation
+├── scripts.py       # Script execution with phases
+├── ssh.py           # SSH key management
+├── state.py         # Run-once tracking
+└── update.py        # System updates
+```
