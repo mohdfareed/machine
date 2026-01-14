@@ -48,7 +48,7 @@ class Platform(enum.Enum):
     @classmethod
     def suffixes(cls) -> list[str]:
         """Get file suffixes that match current platform."""
-        suffixes = []
+        suffixes: list[str] = []
         if UNIX:
             suffixes.append(".unix")
         if WINDOWS:

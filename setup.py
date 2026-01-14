@@ -3,9 +3,15 @@
 Machine Setup - Cross-platform dotfiles and environment manager.
 
 Usage:
-    ./setup.py <machine_id>           # Full setup
-    ./setup.py <machine_id> --dry-run # Preview changes
-    ./setup.py --list                 # List available machines
+    ./setup.py <machine_id>              # Full setup
+    ./setup.py <machine_id> --dry-run    # Preview changes
+    ./setup.py <machine_id> --update     # Update packages/plugins
+    ./setup.py --list                    # List available machines
+
+Options:
+    --private PATH    Path to private configs/keys (default: ~/.machine-private)
+    --dry-run, -n     Preview changes without applying
+    --debug, -d       Enable debug output
 
 Bootstrap from scratch:
     curl -fsSL https://raw.githubusercontent.com/mohdfareed/machine/main/setup.py | python3 - macbook
@@ -21,6 +27,7 @@ from pathlib import Path
 
 REPO_URL = "https://github.com/mohdfareed/machine.git"
 DEFAULT_PATH = Path.home() / ".machine"
+DEFAULT_PRIVATE = Path.home() / ".machine-private"
 
 
 def main() -> int:
@@ -38,6 +45,19 @@ def main() -> int:
         "-l",
         action="store_true",
         help="List available machine configurations",
+    )
+    parser.add_argument(
+        "--update",
+        "-u",
+        action="store_true",
+        help="Update packages and plugins instead of install",
+    )
+    parser.add_argument(
+        "--private",
+        "-p",
+        type=Path,
+        default=DEFAULT_PRIVATE,
+        help=f"Path to private configs/SSH keys (default: {DEFAULT_PRIVATE})",
     )
     parser.add_argument(
         "--dry-run",
@@ -59,12 +79,17 @@ def main() -> int:
     parser.add_argument(
         "--dotfiles-only",
         action="store_true",
-        help="Only link dotfiles",
+        help="Only setup dotfiles",
     )
     parser.add_argument(
         "--scripts-only",
         action="store_true",
         help="Only run scripts",
+    )
+    parser.add_argument(
+        "--ssh-only",
+        action="store_true",
+        help="Only setup SSH keys",
     )
 
     args = parser.parse_args()
@@ -81,9 +106,11 @@ def main() -> int:
         set_debug,
         set_dry_run,
     )
-    from machine.dotfiles import link_dotfiles, link_git_config
+    from machine.dotfiles import setup_dotfiles
     from machine.packages import install_packages
     from machine.scripts import run_all_scripts
+    from machine.ssh import setup_ssh
+    from machine.update import update_all
 
     # Configure
     set_debug(args.debug)
@@ -107,25 +134,40 @@ def main() -> int:
         print(f"available: {', '.join(get_machine_ids(machine_root))}")
         return 1
 
+    # Resolve private path
+    private_path = args.private.expanduser() if args.private.exists() else None
+
     # Set environment variables for scripts
     os.environ["MACHINE"] = str(machine_root)
     os.environ["MACHINE_ID"] = machine_id
     os.environ["MACHINE_CONFIG"] = str(machine_dir)
     os.environ["MACHINE_SHARED"] = str(machine_root / "config")
+    os.environ["MACHINE_PRIVATE"] = str(private_path or "")
 
     info(f"setting up machine: {machine_id}")
 
+    # Handle update mode
+    if args.update:
+        update_all()
+        info("update complete!")
+        return 0
+
     # Run selected phases or all
     run_all = not (
-        args.packages_only or args.dotfiles_only or args.scripts_only
+        args.packages_only
+        or args.dotfiles_only
+        or args.scripts_only
+        or args.ssh_only
     )
 
     if run_all or args.packages_only:
         install_packages(machine_id)
 
     if run_all or args.dotfiles_only:
-        link_git_config(machine_id)
-        link_dotfiles(machine_id)
+        setup_dotfiles(machine_id, private_path)
+
+    if run_all or args.ssh_only:
+        setup_ssh(private_path)
 
     if run_all or args.scripts_only:
         run_all_scripts(machine_id)

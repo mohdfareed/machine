@@ -1,7 +1,10 @@
-"""Dotfiles symlink manager.
+"""Dotfiles manager.
 
-Handles symlinking configuration files from config/ to home directory,
-with machine-specific overrides from machines/{id}/.
+Handles:
+- Symlinking config files from config/ to home directory
+- Machine-specific overrides from machines/{id}/
+- Generating templated files (shell configs, gitconfig)
+- Creating hushlogin
 """
 
 from __future__ import annotations
@@ -10,7 +13,9 @@ from pathlib import Path
 from typing import NamedTuple
 
 from machine.core import (
+    LINUX,
     MACOS,
+    UNIX,
     WINDOWS,
     WSL,
     debug,
@@ -33,18 +38,18 @@ def _vscode_path(filename: str) -> str:
 class DotfileLink(NamedTuple):
     """A dotfile symlink to create."""
 
-    source: Path  # Absolute path to source file
-    target: Path  # Absolute path to symlink location
-    is_override: bool  # True if from machine-specific config
+    source: Path
+    target: Path
+    is_override: bool = False
 
 
-def get_dotfile_mappings(machine_id: str) -> list[tuple[str, str]]:
-    """Get dotfile mappings, can be extended per-machine if needed."""
-    # Note: git config handled separately by link_git_config
-    return [
-        # Shell
-        ("shell/zshrc", ".zshrc"),
-        ("shell/zshenv", ".zshenv"),
+def get_symlink_mappings() -> list[tuple[str, str]]:
+    """Get dotfile mappings for direct symlinks.
+
+    These are files that don't need templating.
+    Format: (source_in_config, dest_in_home)
+    """
+    mappings = [
         # Vim/Neovim
         ("vim", ".config/nvim"),
         # VSCode
@@ -52,19 +57,23 @@ def get_dotfile_mappings(machine_id: str) -> list[tuple[str, str]]:
         ("vscode/keybindings.json", _vscode_path("keybindings.json")),
         ("vscode/snippets", _vscode_path("snippets")),
         ("vscode/prompts", _vscode_path("prompts")),
-        # SSH
+        # SSH config (not keys - those are handled by ssh.py)
         ("ssh.config", ".ssh/config"),
-        # Ghostty (Unix only)
-        ("ghostty.config", ".config/ghostty/config"),
     ]
 
+    # Platform-specific
+    if UNIX:
+        mappings.append(("ghostty.config", ".config/ghostty/config"))
 
-def resolve_dotfile(
+    return mappings
+
+
+def resolve_source(
     config_path: str, machine_id: str
 ) -> tuple[Path, bool] | None:
-    """Resolve a config path to its source, checking for machine override.
+    """Resolve a config path, checking machine override first.
 
-    Returns (source_path, is_override) or None if file doesn't exist.
+    Returns (source_path, is_override) or None if not found.
     """
     root = get_machine_root()
     machine_source = root / "machines" / machine_id / config_path
@@ -74,150 +83,321 @@ def resolve_dotfile(
         return (machine_source, True)
     elif base_source.exists():
         return (base_source, False)
-    else:
-        return None
-
-
-def collect_dotfiles(machine_id: str) -> list[DotfileLink]:
-    """Collect all dotfiles that need to be linked."""
-    home = Path.home()
-    links: list[DotfileLink] = []
-
-    for config_path, home_path in get_dotfile_mappings(machine_id):
-        resolved = resolve_dotfile(config_path, machine_id)
-        if resolved is None:
-            debug("dotfiles", f"not found, skipping: {config_path}")
-            continue
-
-        source, is_override = resolved
-        target = home / home_path
-
-        links.append(
-            DotfileLink(source=source, target=target, is_override=is_override)
-        )
-
-    return links
+    return None
 
 
 def create_symlink(link: DotfileLink) -> bool:
     """Create a symlink, handling existing files.
 
-    Returns True if link was created/updated, False if skipped.
+    Returns True if created/updated, False if unchanged.
     """
     source, target, is_override = link
-    override_marker = " (override)" if is_override else ""
+    marker = " (override)" if is_override else ""
 
-    # Ensure parent directory exists
+    # Ensure parent exists
     if not is_dry_run():
         target.parent.mkdir(parents=True, exist_ok=True)
 
-    # Check if target already exists
+    # Handle existing target
     if target.is_symlink():
-        current_target = target.resolve()
-        if current_target == source.resolve():
+        if target.resolve() == source.resolve():
             debug("dotfiles", f"already linked: {target}")
             return False
-        # Remove old symlink
-        info(f"updating link: {target}{override_marker}")
+        info(f"updating link: {target}{marker}")
         if not is_dry_run():
             target.unlink()
     elif target.exists():
-        # Target exists and is not a symlink - back it up
         backup = target.with_suffix(target.suffix + ".backup")
-        info(f"backing up existing file: {target} -> {backup}")
+        info(f"backing up: {target} -> {backup}")
         if not is_dry_run():
             target.rename(backup)
     else:
-        info(f"linking: {target} -> {source}{override_marker}")
+        info(f"linking: {target}{marker}")
 
-    # Create symlink
     if not is_dry_run():
         target.symlink_to(source)
 
     return True
 
 
+def write_file(path: Path, content: str, description: str = "") -> bool:
+    """Write a file, backing up if exists and different.
+
+    Returns True if written, False if unchanged.
+    """
+    if path.exists():
+        existing = path.read_text()
+        if existing == content:
+            debug("dotfiles", f"unchanged: {path}")
+            return False
+        backup = path.with_suffix(path.suffix + ".backup")
+        info(f"backing up: {path} -> {backup}")
+        if not is_dry_run():
+            path.rename(backup)
+
+    desc = f" ({description})" if description else ""
+    info(f"writing: {path}{desc}")
+
+    if not is_dry_run():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+
+    return True
+
+
+# =============================================================================
+# Shell Config Generation
+# =============================================================================
+
+
+def generate_zshenv(machine_id: str, private_path: Path | None) -> str:
+    """Generate .zshenv content with environment variables."""
+    root = get_machine_root()
+    private_str = str(private_path) if private_path else ""
+    is_wsl = "true" if WSL else "false"
+
+    return f'''# Generated by machine setup - do not edit directly
+# Machine: {machine_id}
+
+# Core paths
+export MACHINE="{root}"
+export MACHINE_ID="{machine_id}"
+export MACHINE_PRIVATE="{private_str}"
+
+# Convenience
+export WSL="{is_wsl}"
+export MACHINE_SHARED="{root}/config"
+export MACHINE_CONFIG="{root}/machines/{machine_id}"
+
+# Load: private -> shared -> machine
+if [[ -f "$MACHINE_PRIVATE/zshenv" ]]; then
+    source "$MACHINE_PRIVATE/zshenv"
+fi
+
+source "$MACHINE_SHARED/shell/zshenv"
+
+if [[ -f "$MACHINE_CONFIG/zshenv" ]]; then
+    source "$MACHINE_CONFIG/zshenv"
+fi
+'''
+
+
+def generate_zshrc(machine_id: str) -> str:
+    """Generate .zshrc content."""
+    return f"""# Generated by machine setup - do not edit directly
+# Machine: {machine_id}
+
+# Load: shared -> machine
+source "$MACHINE_SHARED/shell/zshrc"
+
+if [[ -f "$MACHINE_CONFIG/zshrc" ]]; then
+    source "$MACHINE_CONFIG/zshrc"
+fi
+"""
+
+
+def generate_powershell_profile(
+    machine_id: str, private_path: Path | None
+) -> str:
+    """Generate PowerShell profile content."""
+    root = get_machine_root()
+    private_str = str(private_path) if private_path else ""
+    is_wsl = "true" if WSL else "false"
+
+    return f'''# Generated by machine setup - do not edit directly
+# Machine: {machine_id}
+
+# Core paths
+$env:MACHINE = "{root}"
+$env:MACHINE_ID = "{machine_id}"
+$env:MACHINE_PRIVATE = "{private_str}"
+
+# Convenience
+$env:WSL = "{is_wsl}"
+$env:MACHINE_SHARED = "{root}/config"
+$env:MACHINE_CONFIG = "{root}/machines/{machine_id}"
+
+# Load: private -> shared -> machine
+if (Test-Path "$env:MACHINE_PRIVATE/profile.ps1") {{
+    . "$env:MACHINE_PRIVATE/profile.ps1"
+}}
+
+. "$env:MACHINE_SHARED/shell/profile.ps1"
+
+if (Test-Path "$env:MACHINE_CONFIG/profile.ps1") {{
+    . "$env:MACHINE_CONFIG/profile.ps1"
+}}
+'''
+
+
+# =============================================================================
+# Git Config Generation
+# =============================================================================
+
+
+def generate_gitconfig(machine_id: str) -> str:
+    """Generate .gitconfig with include chain."""
+    root = get_machine_root()
+
+    lines = [
+        "# Generated by machine setup - do not edit directly",
+        f"# Machine: {machine_id}",
+        "",
+        "# Base configuration",
+        "[include]",
+        f"    path = {root}/config/git/.gitconfig",
+    ]
+
+    # Platform-specific includes
+    if LINUX and not WSL:
+        platform_file = root / "config" / "git" / ".gitconfig.linux"
+        if platform_file.exists():
+            lines += [
+                "",
+                "# Linux-specific",
+                "[include]",
+                f"    path = {platform_file}",
+            ]
+    elif MACOS:
+        platform_file = root / "config" / "git" / ".gitconfig.macos"
+        if platform_file.exists():
+            lines += [
+                "",
+                "# macOS-specific",
+                "[include]",
+                f"    path = {platform_file}",
+            ]
+    elif WINDOWS and not WSL:
+        platform_file = root / "config" / "git" / ".gitconfig.windows"
+        if platform_file.exists():
+            lines += [
+                "",
+                "# Windows-specific",
+                "[include]",
+                f"    path = {platform_file}",
+            ]
+    elif WSL:
+        platform_file = root / "config" / "git" / ".gitconfig.wsl"
+        if platform_file.exists():
+            lines += [
+                "",
+                "# WSL-specific",
+                "[include]",
+                f"    path = {platform_file}",
+            ]
+
+    # Machine-specific include
+    machine_gitconfig = root / "machines" / machine_id / ".gitconfig"
+    if machine_gitconfig.exists():
+        lines += [
+            "",
+            "# Machine-specific",
+            "[include]",
+            f"    path = {machine_gitconfig}",
+        ]
+
+    return "\n".join(lines) + "\n"
+
+
+# =============================================================================
+# Main Entry Points
+# =============================================================================
+
+
 def link_dotfiles(machine_id: str) -> int:
     """Link all dotfiles for a machine.
 
-    Returns the number of links created/updated.
+    Returns number of links created/updated.
     """
-    info(f"linking dotfiles for machine: {machine_id}")
-    links = collect_dotfiles(machine_id)
+    info(f"linking dotfiles for: {machine_id}")
     created = 0
 
-    for link in links:
-        if create_symlink(link):
+    for config_path, home_path in get_symlink_mappings():
+        resolved = resolve_source(config_path, machine_id)
+        if resolved is None:
+            debug("dotfiles", f"not found: {config_path}")
+            continue
+
+        source, is_override = resolved
+        target = Path.home() / home_path
+
+        if create_symlink(DotfileLink(source, target, is_override)):
             created += 1
 
-    info(
-        f"dotfiles: {created} created/updated, {len(links) - created} unchanged"
-    )
+    # Link global gitignore
+    root = get_machine_root()
+    gitignore = root / "config" / "git" / ".gitignore"
+    if gitignore.exists():
+        if create_symlink(DotfileLink(gitignore, Path.home() / ".gitignore")):
+            created += 1
+
     return created
 
 
-def link_git_config(machine_id: str) -> None:
-    """Link git config with platform-specific includes.
+def generate_shell_configs(machine_id: str, private_path: Path | None) -> int:
+    """Generate shell configuration files.
 
-    Git config uses [include] directives, so we need to:
-    1. Link base .gitconfig
-    2. Link platform-specific override (if exists)
-    3. Link machine-specific override (if exists)
+    Returns number of files written.
     """
-    root = get_machine_root()
+    info("generating shell configs...")
+    written = 0
     home = Path.home()
 
-    # Determine platform suffix
-    if WINDOWS and not WSL:
-        platform_suffix = "windows"
-    elif WSL:
-        platform_suffix = "wsl"
+    # Unix shell configs
+    if UNIX:
+        if write_file(
+            home / ".zshenv", generate_zshenv(machine_id, private_path)
+        ):
+            written += 1
+        if write_file(home / ".zshrc", generate_zshrc(machine_id)):
+            written += 1
+
+        # Create hushlogin
+        hushlogin = home / ".hushlogin"
+        if not hushlogin.exists():
+            info("creating: .hushlogin")
+            if not is_dry_run():
+                hushlogin.touch()
+            written += 1
+
+    # PowerShell profile (all platforms can have pwsh)
+    if WINDOWS:
+        ps_profile = (
+            home
+            / "Documents"
+            / "PowerShell"
+            / "Microsoft.PowerShell_profile.ps1"
+        )
     else:
-        platform_suffix = None  # No platform-specific config for macOS/Linux
+        ps_profile = home / ".config" / "powershell" / "profile.ps1"
 
-    # Link base gitconfig
-    base_gitconfig = root / "config" / "git" / ".gitconfig"
-    if base_gitconfig.exists():
-        create_symlink(
-            DotfileLink(
-                source=base_gitconfig,
-                target=home / ".gitconfig",
-                is_override=False,
-            )
-        )
+    if write_file(
+        ps_profile, generate_powershell_profile(machine_id, private_path)
+    ):
+        written += 1
 
-    # Link platform-specific gitconfig
-    if platform_suffix:
-        platform_gitconfig = (
-            root / "config" / "git" / f".gitconfig.{platform_suffix}"
-        )
-        if platform_gitconfig.exists():
-            create_symlink(
-                DotfileLink(
-                    source=platform_gitconfig,
-                    target=home / f".gitconfig.{platform_suffix}",
-                    is_override=False,
-                )
-            )
+    return written
 
-    # Link machine-specific gitconfig
-    machine_gitconfig = root / "machines" / machine_id / ".gitconfig"
-    if machine_gitconfig.exists():
-        create_symlink(
-            DotfileLink(
-                source=machine_gitconfig,
-                target=home / f".gitconfig.{machine_id}",
-                is_override=True,
-            )
-        )
 
-    # Link global gitignore
-    gitignore = root / "config" / "git" / ".gitignore"
-    if gitignore.exists():
-        create_symlink(
-            DotfileLink(
-                source=gitignore,
-                target=home / ".gitignore",
-                is_override=False,
-            )
-        )
+def generate_git_config(machine_id: str) -> bool:
+    """Generate git configuration file.
+
+    Returns True if written, False if unchanged.
+    """
+    info("generating git config...")
+    return write_file(
+        Path.home() / ".gitconfig",
+        generate_gitconfig(machine_id),
+        "with includes",
+    )
+
+
+def setup_dotfiles(machine_id: str, private_path: Path | None = None) -> None:
+    """Full dotfiles setup: generate configs + create symlinks."""
+    # Generate templated configs
+    generate_git_config(machine_id)
+    generate_shell_configs(machine_id, private_path)
+
+    # Symlink static configs
+    created = link_dotfiles(machine_id)
+    info(f"dotfiles setup complete ({created} links)")

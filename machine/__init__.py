@@ -7,14 +7,17 @@ from machine.core import (
     UNIX,
     WINDOWS,
     WSL,
+    PackageManager,
     Platform,
     debug,
     error,
+    info,
     run,
 )
 
 __all__ = [
     "Platform",
+    "PackageManager",
     "WINDOWS",
     "LINUX",
     "MACOS",
@@ -24,4 +27,5 @@ __all__ = [
     "run",
     "debug",
     "error",
+    "info",
 ]
