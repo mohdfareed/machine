@@ -11,8 +11,6 @@ brew:
   - python python-freethreading uv
   # pwsh
   - powershell --cask
-  # chezmoi
-  - chezmoi
   # fonts
   - font-computer-modern
   - font-jetbrains-mono-nerd-font
