@@ -1,11 +1,10 @@
 {
     "recommendations": [
+        "donjayamanne.python-extension-pack",
+        "charliermarsh.ruff",
+        "ms-python.vscode-python-envs",
         "ms-vscode.powershell",
         "timonwong.shellcheck",
-        "donjayamanne.python-extension-pack",
-        "ms-python.vscode-python-envs",
-        "ms-python.black-formatter",
-        "ms-python.isort",
         "streetsidesoftware.code-spell-checker",
     ]
 }

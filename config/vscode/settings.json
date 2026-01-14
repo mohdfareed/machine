@@ -189,7 +189,7 @@
   "python.testing.pytestArgs": [
     "--color=yes"
   ],
-  "ruff.lineLength": 88,
+  "ruff.lineLength": 79,
   "python.useEnvironmentsExtension": true,
   // # endregion ===============================================================
   // MARK: c#

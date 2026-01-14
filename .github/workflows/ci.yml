@@ -22,26 +22,18 @@ jobs:
         with:
           python-version: "3.8"
       - run: |
-          python -m compileall chezmoi
-          python -m compileall config
-          python -m compileall machines
           python -m compileall scripts
           python -m compileall bootstrap.py
 
-      - name: Formatter
-        uses: reviewdog/action-black@master
+      - name: Lint with Ruff
+        uses: astral-sh/ruff-action@v3
         with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-          reviewdog_flags: "-tee"
-          level: warning
+          args: "check --line-length=79"
 
-      - name: Type checker
-        uses: jordemort/action-pyright@main
+      - name: Format with Ruff
+        uses: astral-sh/ruff-action@v3
         with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-          reviewdog_flags: "-tee"
+          args: "format --check --diff --line-length=79"
 
   shellcheck:
     runs-on: ubuntu-latest
