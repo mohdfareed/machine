@@ -93,6 +93,7 @@
   "multiDiffEditor.experimental.enabled": true,
   "gitlens.codeLens.authors.enabled": false,
   "gitlens.codeLens.recentChange.enabled": false,
+  "scm.repositories.explorer": true,
   // # endregion ===============================================================
   // MARK: copilot
   // #region ===================================================================
@@ -160,7 +161,6 @@
   // # endregion ===============================================================
   // MARK: python
   // #region ===================================================================
-  "python.useEnvironmentsExtension": true,
   "python.analysis.typeCheckingMode": "strict",
   "python.analysis.autoSearchPaths": true,
   "python.analysis.diagnosticMode": "workspace",
@@ -170,33 +170,27 @@
   "python.analysis.autoFormatStrings": true,
   "python.analysis.enablePytestSupport": true,
   "python.analysis.inlayHints.pytestParameters": true,
-  "python.analysis.inlayHints.functionReturnTypes": true,
   "python.REPL.enableREPLSmartSend": true,
   "pythonIndent.trimLinesWithOnlyWhitespace": true,
   "notebook.lineNumbers": "on",
-  "notebook.formatOnCellExecution": true,
   "notebook.formatOnSave.enabled": true,
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnType": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "always"
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
     }
+  },
+  "notebook.codeActionsOnSave": {
+    "notebook.source.organizeImports": "explicit",
+    "notebook.source.fixAll": "explicit"
   },
   "python.testing.pytestArgs": [
     "--color=yes"
   ],
-  "mypy-type-checker.args": [
-    "--check-untyped-defs"
-  ],
-  "black-formatter.args": [
-    "--line-length",
-    "88"
-  ],
-  "isort.args": [
-    "--profile",
-    "black"
-  ],
+  "ruff.lineLength": 88,
+  "python.useEnvironmentsExtension": true,
   // # endregion ===============================================================
   // MARK: c#
   // #region ===================================================================

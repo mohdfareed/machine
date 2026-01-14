@@ -3,6 +3,7 @@ brew:
   - go # go-lang
   - dotnet-sdk --cask # .net
   - visual-studio-code --cask # vscode
+  - shellcheck # vscode shell extension dependency
   - docker --cask # containers
 
   # utilities
