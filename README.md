@@ -135,3 +135,8 @@ code $MACHINE          # open repo in vscode
 
 - Create `config.yaml` that is parsed by `chezmoi`. The `.toml` template can parse it, read machine config, and prompt only for missing values.
 - The same file can be reused to define scripts to run, packages to install, etc.
+
+## Refactor Issues
+
+- Symlinking ignores dry-run mode. Not sure.
+- Backup of symlinked files does not exist (unless the above is false?).
