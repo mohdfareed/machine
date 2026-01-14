@@ -122,7 +122,7 @@ private config → shared config → machine config
 ./update.sh          # Update pre-commit hooks
 ```
 
-## Architecture
+## Project Structure
 
 ```
 setup.py             # CLI entry point
