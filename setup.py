@@ -101,16 +101,16 @@ def main() -> int:
     sys.path.insert(0, str(machine_root))
 
     # Now import our modules (after path is set)
-    from machine.core import (
+    from src.core import (
         info,
         set_debug,
         set_dry_run,
     )
-    from machine.dotfiles import setup_dotfiles
-    from machine.packages import install_packages
-    from machine.scripts import run_all_scripts
-    from machine.ssh import setup_ssh
-    from machine.update import update_all
+    from src.dotfiles import setup_dotfiles
+    from src.packages import install_packages
+    from src.scripts import run_all_scripts
+    from src.ssh import setup_ssh
+    from src.update import update_all
 
     # Configure
     set_debug(args.debug)
@@ -182,12 +182,12 @@ def ensure_repo() -> Path:
     script_path = Path(__file__).resolve()
     if (
         script_path.parent.name == "machine"
-        or (script_path.parent / "machine").is_dir()
+        or (script_path.parent / "src").is_dir()
     ):
         return script_path.parent
 
     # Check default location
-    if DEFAULT_PATH.exists() and (DEFAULT_PATH / "machine").is_dir():
+    if DEFAULT_PATH.exists() and (DEFAULT_PATH / "src").is_dir():
         return DEFAULT_PATH
 
     # Clone the repo

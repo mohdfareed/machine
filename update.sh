@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "compiling scripts..."
-python -m compileall -qf machine
+python -m compileall -qf src
 python -m compileall -qf setup.py
 
 echo "updating pre-commit hooks..."

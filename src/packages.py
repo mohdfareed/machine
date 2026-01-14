@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Union
 
 import yaml
 
-from machine.core import (
+from src.core import (
     PackageManager,
     debug,
     error,

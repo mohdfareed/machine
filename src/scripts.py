@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from machine.core import (
+from src.core import (
     CODESPACES,
     LINUX,
     MACOS,
@@ -18,7 +18,7 @@ from machine.core import (
     is_dry_run,
     run,
 )
-from machine.state import (
+from src.state import (
     MachineState,
     load_state,
     mark_script_run,

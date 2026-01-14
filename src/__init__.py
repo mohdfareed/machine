@@ -1,6 +1,6 @@
 """Machine setup automation - cross-platform dotfiles and package manager."""
 
-from machine.core import (
+from src.core import (
     CODESPACES,
     LINUX,
     MACOS,

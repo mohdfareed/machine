@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.8"
       - run: |
-          python -m compileall machine
+          python -m compileall src
           python -m compileall setup.py
 
       - name: Lint with Ruff

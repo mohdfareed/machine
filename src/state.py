@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import TypedDict
 
-from machine.core import debug, get_machine_root
+from src.core import debug, get_machine_root
 
 STATE_FILE = Path.home() / ".machine-state.json"
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import shutil
 
-from machine.core import WINDOWS, PackageManager, info, run
+from src.core import WINDOWS, PackageManager, info, run
 
 
 def update_all() -> None:

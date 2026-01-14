@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import NamedTuple
 
-from machine.core import (
+from src.core import (
     LINUX,
     MACOS,
     UNIX,

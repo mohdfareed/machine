@@ -13,7 +13,7 @@ import os
 import shutil
 from pathlib import Path
 
-from machine.core import MACOS, WINDOWS, debug, info, is_dry_run, run
+from src.core import MACOS, WINDOWS, debug, info, is_dry_run, run
 
 
 def setup_ssh(private_path: Path | None = None) -> None:
