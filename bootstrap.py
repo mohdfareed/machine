@@ -35,7 +35,7 @@ INSTALL_CHEZMOI_WIN = "&{$(irm 'https://get.chezmoi.io/ps1')} -b '{}'"
 IS_WINDOWS = sys.platform.lower().startswith("win32")
 
 
-def main(path: Path, bin: Path, args: list[str]) -> None:
+def main(path: Path, bin: Path, args: "list[str]") -> None:
     """Install application."""
     path = path.expanduser().resolve()
     options = " ".join(args).strip()
@@ -53,7 +53,7 @@ def install_chezmoi(bin: Path) -> str:
     """Install Chezmoi binary and return executable path."""
     bin = bin.expanduser().resolve()
     bin.mkdir(parents=True, exist_ok=True)
-    print(f"installing chezmoi...")
+    print("installing chezmoi...")
 
     if IS_WINDOWS:
         run(f'iex "{INSTALL_CHEZMOI_WIN.format(bin)}"')

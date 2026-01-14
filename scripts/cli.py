@@ -7,11 +7,12 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Union
 
 import utils
 
 
-class ScriptCommand(enum.StrEnum):
+class ScriptCommand(enum.Enum):
     CHEZMOI = "chezmoi"
     UPDATE = "update"
     SCRIPTS = "scripts"
@@ -19,7 +20,7 @@ class ScriptCommand(enum.StrEnum):
     SSH = "ssh"
 
 
-def main(command: ScriptCommand | None, args: list[str]) -> None:
+def main(command: Union[ScriptCommand, None], args: "list[str]") -> None:
     machine = Path(utils.get_env("MACHINE", str)).expanduser()
 
     if command is None and not args:
@@ -42,11 +43,11 @@ def chezmoi_apply(machine: Path) -> None:
     utils.run(f'chezmoi init --apply --source "{str(machine)}"')
 
 
-def chezmoi_command(args: list[str]) -> None:
+def chezmoi_command(args: "list[str]") -> None:
     utils.run(f"chezmoi {' '.join(args)}")
 
 
-def run_script(command: ScriptCommand, args: list[str]) -> None:
+def run_script(command: ScriptCommand, args: "list[str]") -> None:
     script_path = Path(__file__).parent / f"{command.value}.py"
     argv = " ".join(arg for arg in args)
     subprocess.run(
@@ -83,7 +84,7 @@ if __name__ == "__main__":
         help=f"command to run ({', '.join(c.value for c in ScriptCommand)})",
     )
     parser.add_argument(
-        "args", nargs="*", help=f"arguments for the command (if any)"
+        "args", nargs="*", help="arguments for the command (if any)"
     )
 
     # parse arguments

@@ -58,6 +58,7 @@
         "unshallow",
         "venv",
         "WINGET",
+        "wslinfo",
         "zinit"
     ],
 }

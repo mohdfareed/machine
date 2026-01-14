@@ -41,7 +41,7 @@ def main() -> None:
     process_packages(filter_packages(machine))
 
 
-def load_packages(source: str) -> dict[str, list[Any]]:
+def load_packages(source: str) -> "dict[str, list[Any]]":
     chezmoi_data = os.environ.get("CHEZMOI_DATA", "")
     if not chezmoi_data:
         return find_packages(source)
@@ -53,7 +53,7 @@ def load_packages(source: str) -> dict[str, list[Any]]:
         raise ValueError(f"invalid CHEZMOI_DATA: {e}") from e
 
 
-def find_packages(source: str) -> dict[str, list[Any]]:
+def find_packages(source: str) -> "dict[str, list[Any]]":
     try:
         import yaml  # type: ignore
     except ImportError:
@@ -78,8 +78,8 @@ def find_packages(source: str) -> dict[str, list[Any]]:
 
 
 def filter_packages(
-    packages: dict[str, list[Any]],
-) -> dict[utils.PackageManager, list[Any]]:
+    packages: "dict[str, list[Any]]",
+) -> "dict[utils.PackageManager, list[Any]]":
     filtered: dict[utils.PackageManager, list[Any]] = {}
     for manager, _ in packages.items():
         pkg_manager = utils.PackageManager(manager)
@@ -93,7 +93,7 @@ def filter_packages(
 
 
 def process_packages(
-    packages: dict[utils.PackageManager, list[Any]],
+    packages: "dict[utils.PackageManager, list[Any]]",
 ) -> None:
     for manager, pkgs in packages.items():
         for pkg in pkgs:

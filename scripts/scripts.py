@@ -62,7 +62,7 @@ def main(prefix: str) -> None:
         utils.execute_script(script)
 
 
-def load_scripts(source: str) -> list[Path]:
+def load_scripts(source: str) -> "list[Path]":
     chezmoi_data = os.environ.get("CHEZMOI_DATA", "")
     if not chezmoi_data:
         return find_scripts(source)
@@ -78,7 +78,7 @@ def load_scripts(source: str) -> list[Path]:
         raise ValueError(f"invalid source scripts list: {chezmoi_data}") from e
 
 
-def find_scripts(source: str) -> list[Path]:
+def find_scripts(source: str) -> "list[Path]":
     machine = utils.get_env("MACHINE", Path)
     machine_id = utils.get_env("MACHINE_ID", str)
 

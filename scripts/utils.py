@@ -17,7 +17,7 @@ WINDOWS = sys.platform.lower().startswith("win")
 LINUX = sys.platform.lower().startswith("linux")
 MACOS = sys.platform.lower().startswith("darwin")
 WSL = shutil.which("wslinfo") is not None
-CODESPACES = os.environ.get("CODESPACES", default=False) == True
+CODESPACES = os.environ.get("CODESPACES", default=False) is not False
 UNIX = LINUX or MACOS or WSL
 
 T = TypeVar("T")
@@ -94,8 +94,8 @@ class PackageManager(enum.Enum):
 
         try:
             run(command)
-        except:
-            error(f"{self.value} failed to install {package}")
+        except Exception as ex:
+            error(f"{self.value} failed to install {package}: {ex}")
 
         if self == PackageManager.BREW:
             os.environ.pop("HOMEBREW_NO_AUTO_UPDATE", None)
@@ -103,9 +103,9 @@ class PackageManager(enum.Enum):
 
 def script_entrypoint(src: str, func: Callable[..., None]) -> None:
     """Standard script entrypoint with error handling."""
-    debug("cli", f"debug mode enabled")
+    debug("cli", "debug mode enabled")
     if get_env("DRY_RUN", default=False):
-        debug("cli", f"dry-run mode enabled")
+        debug("cli", "dry-run mode enabled")
 
     try:
         func()
