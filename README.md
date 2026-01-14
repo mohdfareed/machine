@@ -63,13 +63,13 @@ cd $HOME/.machine; python setup.py <machine_id>
 
 Set automatically and available in shell:
 
-| Variable | Description |
-|----------|-------------|
-| `MACHINE` | Repository root path |
-| `MACHINE_ID` | Selected machine profile |
-| `MACHINE_PRIVATE` | Path to private files |
-| `MACHINE_SHARED` | Path to `config/` |
-| `MACHINE_CONFIG` | Path to `machines/<id>/` |
+| Variable          | Description              |
+| ----------------- | ------------------------ |
+| `MACHINE`         | Repository root path     |
+| `MACHINE_ID`      | Selected machine profile |
+| `MACHINE_PRIVATE` | Path to private files    |
+| `MACHINE_SHARED`  | Path to `config/`        |
+| `MACHINE_CONFIG`  | Path to `machines/<id>/` |
 
 ### Packages
 
