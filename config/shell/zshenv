@@ -10,20 +10,21 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$XDG_LOCAL_HOME/state}"
 # tools
 export PIP_REQUIRE_VIRTUALENV=true # require virtual env for pip
 export GOPATH="$XDG_LOCAL_HOME/go" # go workspace
-export FPATH="$XDG_LOCAL_HOME/docker/completions:${FPATH}" # docker completions
 
 # packages
 export PATH="$XDG_LOCAL_HOME/bin:$PATH" # local binaries
 export PATH="$GOPATH/bin:$PATH" # go binaries
 export PATH="$PATH:/snap/bin" # snap store
 
+# zinit
+export ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+
+# completions paths
+export FPATH="$HOME/.zfunc:${FPATH}" # python typer apps
+export FPATH="$XDG_LOCAL_HOME/docker/completions:${FPATH}" # docker
+
 # history
 export SHELL_SESSIONS_DISABLE=1
 export HISTSIZE=5000
 export SAVEHIST=$HISTSIZE
 export HISTDUP=erase
-
-# zinit
-export ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-export COMPLETIONS_PATH="$(dirname $ZINIT_HOME)/completions"
-export FPATH="$COMPLETIONS_PATH:${FPATH}" # completions

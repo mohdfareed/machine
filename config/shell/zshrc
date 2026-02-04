@@ -88,6 +88,9 @@ zstyle ':fzf-tab:*' switch-group '<' '>'
 zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 # source: https://github.com/Aloxaf/fzf-tab?tab=readme-ov-file#configure
 
+# functions and aliases
+source "$MACHINE_SHARED/shell/aliases.sh"
+
 # ZINIT (zsh plugin manager)
 # =============================================================================
 # examples: https://zdharma-continuum.github.io/zinit/wiki/GALLERY

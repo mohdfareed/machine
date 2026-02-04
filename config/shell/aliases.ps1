@@ -11,6 +11,15 @@ if ($env:TERM_PROGRAM -eq 'vscode') {
     }
 }
 
+# Clone a git repo
+function GitClone {
+    param (
+        [Parameter(Mandatory = $true)][string]$RepoName,
+        [string[]]$AdditionalArgs
+    )
+    git clone "git@github.com:mohdfareed/$RepoName.git" $AdditionalArgs
+}
+
 # Generate a new SSH key pair
 function GenKey {
     param (

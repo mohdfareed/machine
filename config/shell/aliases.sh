@@ -20,6 +20,13 @@ alias llst='lls -T'
 alias zsh::reload='exec $SHELL'
 alias ssh::gen-key='ssh-keygen -t ed25519 -C'
 
+# clone a git repo
+git::clone() {
+    usage="usage: $0 name [arguments...]"
+    if (($# < 1)); then echo "$usage" && return 1; fi
+    git clone "git@github.com:mohdfareed/$1.git" "${@:2}"
+}
+
 # time shell startup
 zsh::time() {
     usage="usage: $0 [iterations]"
