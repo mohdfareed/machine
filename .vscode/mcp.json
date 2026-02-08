@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "machine-memories": {
+      "type": "stdio",
+      "command": "kbm",
+      "args": [
+        "start",
+        "machine",
+      ]
+    },
+  },
+  "inputs": []
+}
