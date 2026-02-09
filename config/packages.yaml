@@ -14,6 +14,8 @@ brew:
   # fonts
   - font-computer-modern
   - font-jetbrains-mono-nerd-font
+  # system info
+  - fastfetch
 
 # LINUX
 # =============================================================================
@@ -29,6 +31,8 @@ apt:
   # fonts
   - fonts-jetbrains-mono
   - fonts-lmodern
+  # system info
+  - fastfetch
 
 snap:
   # git
@@ -51,6 +55,8 @@ winget:
   - twpayne.chezmoi
   # fonts
   - devcom.JetBrainsMonoNerdFont
+  # system info
+  - fastfetch-cli.fastfetch
 
 scoop:
   # nvim
