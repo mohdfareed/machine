@@ -16,6 +16,8 @@ brew:
   - font-jetbrains-mono-nerd-font
   # system info
   - fastfetch
+  # gh copilot
+  - copilot-cli
 
 # LINUX
 # =============================================================================
@@ -33,6 +35,8 @@ apt:
   - fonts-lmodern
   # system info
   - fastfetch
+  # gh copilot
+  - script: curl -fsSL https://gh.io/copilot-install | bash
 
 snap:
   # git
@@ -57,6 +61,8 @@ winget:
   - devcom.JetBrainsMonoNerdFont
   # system info
   - fastfetch-cli.fastfetch
+  # gh copilot
+  - github.copilot
 
 scoop:
   # nvim
