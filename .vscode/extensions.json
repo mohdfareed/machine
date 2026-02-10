@@ -2,9 +2,10 @@
     "recommendations": [
         "donjayamanne.python-extension-pack",
         "charliermarsh.ruff",
-        "ms-python.vscode-python-envs",
         "ms-vscode.powershell",
         "timonwong.shellcheck",
+        "yzhang.markdown-all-in-one",
         "streetsidesoftware.code-spell-checker",
+        "github.copilot-chat",
     ]
 }

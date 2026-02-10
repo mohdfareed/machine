@@ -17,13 +17,40 @@ alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'
 alias llst='lls -T'
 
+alias dc='docker compose'
+alias co='copilot::prompt'
+
 alias zsh::reload='exec $SHELL'
 alias ssh::gen-key='ssh-keygen -t ed25519 -C'
 
+# prompt github copilot
+copilot::prompt() {
+    usage="usage: $0 [args...]"
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$usage" && return 0
+    fi
+
+    local tmp
+    tmp=$(mktemp /tmp/copilot-prompt.XXXXXX) || return 1
+    ${EDITOR:-nano} "$tmp"
+
+    if [[ ! -s "$tmp" ]]; then
+        rm -f "$tmp"
+        return 1
+    fi
+
+    copilot -p "$(cat "$tmp")"
+    rm -f "$tmp"
+}
+# compdef copilot::prompt=copilot # wait for copilot shell completions
+
 # clone a git repo
 git::clone() {
-    usage="usage: $0 name [arguments...]"
+    usage="usage: $0 name [args...]"
     if (($# < 1)); then echo "$usage" && return 1; fi
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$usage" && return 0
+    fi
     git clone "git@github.com:mohdfareed/$1.git" "${@:2}"
 }
 
@@ -31,6 +58,9 @@ git::clone() {
 zsh::time() {
     usage="usage: $0 [iterations]"
     if (($# > 1)); then echo "$usage" && return 1; fi
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$usage" && return 0
+    fi
     for _ in $(seq 1 "${1-1}"); do time $SHELL -i -c exit; done
 }
 
@@ -38,6 +68,9 @@ zsh::time() {
 dotenv::load() {
     usage="usage: $0 [dotenv_file]"
     if (($# > 1)); then echo "$usage" && return 1; fi
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$usage" && return 0
+    fi
 
     env=${1-.env}
     if [[ ! -f "$env" ]]; then
@@ -53,6 +86,9 @@ dotenv::load() {
 venv::activate() {
     usage="usage: $0 [venv_dir]"
     if (($# > 1)); then echo "$usage" && return 1; fi
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$usage" && return 0
+    fi
 
     venv=${1-.venv}
     if [[ ! -d "$venv" ]]; then
@@ -68,6 +104,9 @@ venv::activate() {
 ssh::reg-key() {
     usage="usage: $0 [key_name] [user@]host"
     if (( $# < 1 || $# > 2 )); then echo "$usage" && return 1; fi
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$usage" && return 0
+    fi
 
     key="$HOME/.ssh/${1-personal}.pub"
     if [[ ! -f "$key" ]]; then
@@ -83,6 +122,9 @@ ssh::reg-key() {
 ssh::reg-key-win() {
     usage="usage: $0 [key_name] [user@]host"
     if (( $# < 1 || $# > 2 )); then echo "$usage" && return 1; fi
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$usage" && return 0
+    fi
 
     key="$HOME/.ssh/${1-personal}.pub"
     if [[ ! -f "$key" ]]; then

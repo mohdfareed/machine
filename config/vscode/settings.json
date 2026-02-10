@@ -106,7 +106,9 @@
   "chat.mcp.gallery.enabled": true,
   "chat.tools.urls.autoApprove": {
     "https://github.com": true,
-    "https://*.reddit.com": true
+    "https://*.reddit.com": true,
+    "https://*.microsoft.com": true,
+    "https://*.google.com": true
   },
   // Beast Mode
   // https://gist.github.com/burkeholland/88af0249c4b6aff3820bf37898c8bacf

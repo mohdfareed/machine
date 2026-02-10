@@ -1,9 +1,9 @@
 -- bootstrap lazy.nvim plugin manager
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
-	local repo = "https://github.com/folke/lazy.nvim.git"
+	local lazyrepo = "https://github.com/folke/lazy.nvim.git"
 	local out = vim.fn.system({
-		"git", "clone", "--filter=blob:none", "--branch=stable", repo, lazypath
+		"git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath
 	})
 
 	if vim.v.shell_error ~= 0 then
@@ -18,7 +18,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(vim.env.LAZY or lazypath)
 
-local lazy_config = {
+local lazyconfig = {
 	checker = { enabled = true },           -- check for updates on startup
 	install = { colorscheme = { "onedark" } }, -- startup installation theme
 	ui = { border = "rounded" },            -- use rounded borders
@@ -27,10 +27,8 @@ local lazy_config = {
 require("lazy").setup({
 	-- add LazyVim and import its plugins
 	{ "LazyVim/LazyVim",         import = "lazyvim.plugins" },
-
 	-- import custom plugins
 	{ import = "plugins" },
-
 	-- disabled plugins
 	{ "akinsho/bufferline.nvim", enabled = false },
-}, lazy_config)
+}, lazyconfig)

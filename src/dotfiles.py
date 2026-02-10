@@ -55,6 +55,7 @@ def get_symlink_mappings() -> list[tuple[str, str]]:
         # VSCode
         ("vscode/settings.json", _vscode_path("settings.json")),
         ("vscode/keybindings.json", _vscode_path("keybindings.json")),
+        ("vscode/mcp.json", _vscode_path("mcp.json")),
         ("vscode/snippets", _vscode_path("snippets")),
         ("vscode/prompts", _vscode_path("prompts")),
         # SSH config (not keys - those are handled by ssh.py)
