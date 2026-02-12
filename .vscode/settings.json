@@ -1,48 +1,41 @@
 {
-    // python
-    "debugpy.debugJustMyCode": false,
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "python.testing.pytestArgs": [
-        "tests"
-    ],
-    // shell
-    "shellcheck.customArgs": [
-        "--shell=bash" // REVIEW: find zsh equivalent tool
-    ],
-    "shellcheck.exclude": [
-        "1071" // allow zsh
-    ],
-    // lua vim diagnostic
-    "Lua.diagnostics.globals": [
-        "vim"
-    ],
-    // spelling
-    "cSpell.ignorePaths": [
-        ".git",
-        ".github",
-        ".venv",
-        ".vscode",
-        ".gitignore",
-        "config",
-    ],
-    "cSpell.words": [
-        "ghostty",
-        "macbook",
-        "mohdfareed",
-        "pwsh",
-        "shellcheck",
-        "tailscale",
-        "venv",
-        "WINGET",
-        "wslinfo",
-        "zinit"
-    ],
-    "chat.mcp.serverSampling": {
-        "machine/.vscode/mcp.json: machine-memories": {
-            "allowedModels": [
-                "copilot/auto"
-            ]
-        }
-    },
+  // python
+  "debugpy.debugJustMyCode": false,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  // shell
+  "shellcheck.customArgs": [
+    "--shell=bash" // REVIEW: find zsh equivalent tool
+  ],
+  "shellcheck.exclude": [
+    "1071" // allow zsh
+  ],
+  // lua vim diagnostic
+  "Lua.diagnostics.globals": [
+    "vim"
+  ],
+  // spelling
+  "cSpell.ignorePaths": [
+    ".git",
+    ".github",
+    ".venv",
+    ".vscode",
+    ".gitignore",
+  ],
+  "ruff.lineLength": 88,
+  "cSpell.words": [
+    "ghostty",
+    "macbook",
+    "mohdfareed",
+    "pydantic",
+    "pwsh",
+    "pyright",
+    "shellcheck",
+    "tailscale",
+    "typer",
+    "venv",
+    "WINGET",
+    "wslinfo",
+    "zinit"
+  ]
 }
