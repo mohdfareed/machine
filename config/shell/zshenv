@@ -22,6 +22,7 @@ export ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 # completions paths
 export FPATH="$HOME/.zfunc:${FPATH}" # python typer apps
 export FPATH="$XDG_LOCAL_HOME/docker/completions:${FPATH}" # docker
+export FPATH="$HOME/.openclaw/completions:${FPATH}" # openclaw
 
 # history
 export SHELL_SESSIONS_DISABLE=1

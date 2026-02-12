@@ -1,8 +1,0 @@
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.11
-    hooks:
-      - id: ruff-check # linter
-        args: [--fix]
-      - id: ruff-format # auto-formatter
-        args: [--line-length=79]
