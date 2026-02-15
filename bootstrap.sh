@@ -8,9 +8,15 @@ if ! command -v uv >/dev/null 2>&1; then
     curl -LsSf https://astral.sh/uv/install.sh | \
     UV_INSTALL_DIR="$HOME/.local/bin" UV_NO_MODIFY_PATH=1 sh
 
-    # Source .zshenv and check if $HOME/.local/bin is in PATH. If not, add it.
+    # Source .zshenv and export PATH for the current session
     # shellcheck disable=SC1091
-    env_path=$(. "$HOME/.zshenv" 2>/dev/null; echo "$PATH")
+    if [ -f "$HOME/.zshenv" ]; then
+        env_path=$(. "$HOME/.zshenv" && echo "$PATH")
+    else
+        env_path="$PATH"
+    fi
+
+    # Check if $HOME/.local/bin is in PATH. If not, add it.
     if ! echo "$env_path" | tr ':' '\n' | grep -qx "$HOME/.local/bin"; then
         echo '# Machine bootstrapping bin' >> "$HOME/.zshenv"
         # shellcheck disable=SC2016
