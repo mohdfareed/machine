@@ -12,8 +12,7 @@ UV=""
 if command -v uv >/dev/null 2>&1; then
     UV="uv"
 else
-    UV_INSTALL_DIR="$UV_TMP" UV_NO_MODIFY_PATH=1 \
-        curl -LsSf https://astral.sh/uv/install.sh | sh
+    curl -LsSf https://astral.sh/uv/install.sh | env UNMANAGED_INSTALL="$UV_TMP" sh
     UV="$UV_TMP/uv"
 fi
 

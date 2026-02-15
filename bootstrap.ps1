@@ -12,9 +12,10 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
     $Uv = "uv"
 }
 else {
-    $env:UV_INSTALL_DIR = $UvTmp
-    $env:UV_NO_MODIFY_PATH = "1"
-    & ([scriptblock]::Create((Invoke-RestMethod https://astral.sh/uv/install.ps1)))
+    powershell -ExecutionPolicy ByPass -c {
+        $env:UV_UNMANAGED_INSTALL = "$UvTmp"
+        Invoke-RestMethod https://astral.sh/uv/install.ps1 | Invoke-Expression
+    }
     $Uv = "$UvTmp\uv.exe"
 }
 
