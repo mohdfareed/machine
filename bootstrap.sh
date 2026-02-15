@@ -15,6 +15,7 @@ if ! command -v uv >/dev/null 2>&1; then
         echo '# Machine bootstrapping bin' >> "$HOME/.zshenv"
         # shellcheck disable=SC2016
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshenv"
+        echo "Added $HOME/.local/bin to PATH in .zshenv."
     fi
 
     echo "uv installed. Restart shell and re-run this script."
