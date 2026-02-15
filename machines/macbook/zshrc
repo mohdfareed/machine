@@ -1,5 +1,9 @@
 #!/usr/bin/env zsh
 
+# Source shared configuration
+source "${MACHINE_SHARED:-$HOME/.machine/config}/shell/zshrc"
+source "${MACHINE_SHARED:-$HOME/.machine/config}/shell/aliases.sh"
+
 # Configuration: macOS
 # =============================================================================
 

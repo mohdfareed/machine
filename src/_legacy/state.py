@@ -34,7 +34,7 @@ def load_state() -> MachineState:
     try:
         data = json.loads(STATE_FILE.read_text())
         return data
-    except (json.JSONDecodeError, KeyError):
+    except json.JSONDecodeError, KeyError:
         debug("state", f"corrupted state file, resetting: {STATE_FILE}")
         return {"machine_id": "", "scripts": {}}
 

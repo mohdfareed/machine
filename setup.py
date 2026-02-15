@@ -14,7 +14,8 @@ Options:
     --debug, -d       Enable debug output
 
 Bootstrap from scratch:
-    curl -fsSL https://raw.githubusercontent.com/mohdfareed/machine/main/setup.py | python3 - macbook
+    curl -fsSL https://raw.githubusercontent.com/mohdfareed/machine/main/setup.py
+    | python3 - macbook
 """
 
 from __future__ import annotations
@@ -154,10 +155,7 @@ def main() -> int:
 
     # Run selected phases or all
     run_all = not (
-        args.packages_only
-        or args.dotfiles_only
-        or args.scripts_only
-        or args.ssh_only
+        args.packages_only or args.dotfiles_only or args.scripts_only or args.ssh_only
     )
 
     if run_all or args.packages_only:
@@ -180,10 +178,7 @@ def ensure_repo() -> Path:
     """Ensure we have the repo, clone if needed."""
     # Check if we're already in the repo
     script_path = Path(__file__).resolve()
-    if (
-        script_path.parent.name == "machine"
-        or (script_path.parent / "src").is_dir()
-    ):
+    if script_path.parent.name == "machine" or (script_path.parent / "src").is_dir():
         return script_path.parent
 
     # Check default location

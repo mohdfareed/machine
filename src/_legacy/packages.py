@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any, Dict, List, Union
 
 import yaml
-
 from src.core import (
     PackageManager,
     debug,
@@ -38,9 +37,7 @@ def load_packages(machine_id: str) -> PackageData:
     # Load and merge machine packages
     if machine_path.exists():
         debug("packages", f"loading machine packages: {machine_path}")
-        machine_data: PackageData = (
-            yaml.safe_load(machine_path.read_text()) or {}
-        )
+        machine_data: PackageData = yaml.safe_load(machine_path.read_text()) or {}
         for manager, pkgs in machine_data.items():
             pkg_list = list(pkgs) if pkgs else []
             if manager in packages:

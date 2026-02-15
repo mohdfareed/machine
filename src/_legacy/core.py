@@ -112,7 +112,10 @@ class PackageManager(enum.Enum):
         elif self == PackageManager.SNAP:
             return f"sudo snap install {package}"
         elif self == PackageManager.WINGET:
-            return f"winget install --accept-source-agreements --accept-package-agreements {package}"
+            return (
+                f"winget install --accept-source-agreements "
+                f"--accept-package-agreements {package}"
+            )
         elif self == PackageManager.SCOOP:
             return f"scoop install {package}"
 

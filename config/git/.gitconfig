@@ -50,3 +50,9 @@
 	required = true
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
+
+; platform and machine overrides
+[include]
+    path = ~/.gitconfig.platform
+[include]
+    path = ~/.gitconfig.local

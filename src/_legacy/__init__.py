@@ -16,16 +16,16 @@ from src.core import (
 )
 
 __all__ = [
-    "Platform",
-    "PackageManager",
-    "WINDOWS",
+    "CODESPACES",
     "LINUX",
     "MACOS",
-    "WSL",
-    "CODESPACES",
     "UNIX",
-    "run",
+    "WINDOWS",
+    "WSL",
+    "PackageManager",
+    "Platform",
     "debug",
     "error",
     "info",
+    "run",
 ]

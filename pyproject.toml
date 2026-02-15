@@ -37,7 +37,7 @@ module-name = ["machine"]
 [tool.ruff]
 line-length = 88
 src = ["src"]
-exclude = ["src/_legacy"]
+exclude = ["src/_legacy", "machines"]
 
 [tool.ruff.lint]
 select = ["E", "I", "W", "RUF"]
@@ -46,4 +46,4 @@ select = ["E", "I", "W", "RUF"]
 pythonVersion = "3.14"
 typeCheckingMode = "standard"
 useLibraryCodeForTypes = true
-exclude = ["src/_legacy"]
+exclude = ["src/_legacy", "machines"]

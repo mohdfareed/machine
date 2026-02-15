@@ -69,9 +69,7 @@ def get_symlink_mappings() -> list[tuple[str, str]]:
     return mappings
 
 
-def resolve_source(
-    config_path: str, machine_id: str
-) -> tuple[Path, bool] | None:
+def resolve_source(config_path: str, machine_id: str) -> tuple[Path, bool] | None:
     """Resolve a config path, checking machine override first.
 
     Returns (source_path, is_override) or None if not found.
@@ -197,9 +195,7 @@ fi
 """
 
 
-def generate_powershell_profile(
-    machine_id: str, private_path: Path | None
-) -> str:
+def generate_powershell_profile(machine_id: str, private_path: Path | None) -> str:
     """Generate PowerShell profile content."""
     root = get_machine_root()
     private_str = str(private_path) if private_path else ""
@@ -346,9 +342,7 @@ def generate_shell_configs(machine_id: str, private_path: Path | None) -> int:
 
     # Unix shell configs
     if UNIX:
-        if write_file(
-            home / ".zshenv", generate_zshenv(machine_id, private_path)
-        ):
+        if write_file(home / ".zshenv", generate_zshenv(machine_id, private_path)):
             written += 1
         if write_file(home / ".zshrc", generate_zshrc(machine_id)):
             written += 1
@@ -364,17 +358,12 @@ def generate_shell_configs(machine_id: str, private_path: Path | None) -> int:
     # PowerShell profile (all platforms can have pwsh)
     if WINDOWS:
         ps_profile = (
-            home
-            / "Documents"
-            / "PowerShell"
-            / "Microsoft.PowerShell_profile.ps1"
+            home / "Documents" / "PowerShell" / "Microsoft.PowerShell_profile.ps1"
         )
     else:
         ps_profile = home / ".config" / "powershell" / "profile.ps1"
 
-    if write_file(
-        ps_profile, generate_powershell_profile(machine_id, private_path)
-    ):
+    if write_file(ps_profile, generate_powershell_profile(machine_id, private_path)):
         written += 1
 
     return written

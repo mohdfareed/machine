@@ -66,6 +66,9 @@ export PATH="$DOTNET_ROOT:$PATH"
 unset dotnet_root
 # compdef _dotnet_zsh_complete dotnet # (handled by zinit)
 
+# openclaw
+source "$HOME/.openclaw/completions/openclaw.zsh"
+
 # Configuration
 # =============================================================================
 

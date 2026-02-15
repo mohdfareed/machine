@@ -1,7 +1,7 @@
+$ErrorActionPreference = "Stop"
+
 # Bootstrap: irm https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.ps1 | iex
 # Requires: git
-
-$ErrorActionPreference = "Stop"
 
 $Repo = if ($env:MC_ROOT) { $env:MC_ROOT } else { "$HOME\.machine" }
 $UvTmp = "$env:TEMP\uv-bootstrap"

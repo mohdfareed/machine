@@ -46,9 +46,7 @@ def setup_ssh(private_path: Path | None = None) -> None:
         copy_key(public_key, ssh_dir, 0o644)
 
     # Add to agent
-    private_keys = [
-        p for p in ssh_dir.iterdir() if p.is_file() and is_private_key(p)
-    ]
+    private_keys = [p for p in ssh_dir.iterdir() if p.is_file() and is_private_key(p)]
     add_keys_to_agent(private_keys)
 
     info("SSH setup complete")
