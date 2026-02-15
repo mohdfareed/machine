@@ -5,24 +5,19 @@ set -eu
 # Requires: git, curl
 
 REPO="${MC_ROOT:-$HOME/.machine}"
-UV_TMP="${TMPDIR:-/tmp}/uv-bootstrap"
-UV=""
 
 # ensure uv is available
-if command -v uv >/dev/null 2>&1; then
-    UV="uv"
-else
-    curl -LsSf https://astral.sh/uv/install.sh | env UNMANAGED_INSTALL="$UV_TMP" sh
-    UV="$UV_TMP/uv"
+if ! command -v uv >/dev/null 2>&1; then
+    echo "uv is not installed. Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    echo "uv installed. Please run this script again."
+    exit 1
 fi
 
 # clone repo if needed
 [ -d "$REPO/.git" ] || git clone https://github.com/mohdfareed/machine.git "$REPO"
 
 # install the cli tool
-"$UV" tool install "$REPO" --force
-
-# clean up temp uv
-[ "$UV" = "uv" ] || rm -rf "$UV_TMP"
+uv tool install "$REPO" --force
 
 echo "Done. Run 'mc --help' to get started."
