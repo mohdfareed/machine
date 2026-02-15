@@ -35,4 +35,4 @@ fi
 
 # Install the cli tool
 uv tool install "$MC_HOME" --editable --force
-echo "Installed machine cli. Restart shell and run 'mc --help' for more info."
+echo "Installed machine cli. Run 'mc --help' for more info."

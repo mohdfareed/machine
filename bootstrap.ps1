@@ -22,4 +22,4 @@ if (-not (Test-Path "$env:MC_HOME\.git")) {
 
 # Install the cli tool
 uv tool install $env:MC_HOME --editable --force
-Write-Host "Installed machine cli. Restart shell and run 'mc --help' for more info."
+Write-Host "Installed machine cli. Run 'mc --help' for more info."
