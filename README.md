@@ -23,6 +23,10 @@ irm https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.ps1 | ie
 
 > Repository path can be overridden with `$MC_HOME`, defaulting to `~/.machine`.
 
+> On Windows, `uv` is managed via `winget`. On Unix, if `uv` is not found,
+> it will be installed to `~/.local/bin` and added to the PATH in `~/.zshenv`.
+> `~/.zshenv` is sourced and the PATH is checked before modifications.
+
 Re-install the CLI tool on an existing machine:
 
 ```sh

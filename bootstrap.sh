@@ -2,25 +2,21 @@
 set -eu
 
 export MC_HOME="${MC_HOME:-$HOME/.machine}"
-BIN="$HOME/.local/bin"
-
-# Ensure ~/.local/bin is on PATH for next shell
-if ! echo "$PATH" | tr ':' '\n' | grep -qx "$BIN"; then
-    # shellcheck disable=SC1091
-    if [ -f "$HOME/.zshenv" ] && . "$HOME/.zshenv" 2>/dev/null &&
-       echo "$PATH" | tr ':' '\n' | grep -qx "$BIN"; then
-        : # already defined in .zshenv
-    else
-        # shellcheck disable=SC2016
-        echo >> "$HOME/.zshenv"
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshenv"
-        echo >> "$HOME/.zshenv"
-    fi
-fi
 
 # Ensure uv is available
 if ! command -v uv >/dev/null 2>&1; then
-    curl -LsSf https://astral.sh/uv/install.sh | UV_NO_MODIFY_PATH=1 sh
+    curl -LsSf https://astral.sh/uv/install.sh | \
+    UV_INSTALL_DIR="$HOME/.local/bin" UV_NO_MODIFY_PATH=1 sh
+
+    # Source .zshenv and check if $HOME/.local/bin is in PATH. If not, add it.
+    # shellcheck disable=SC1091
+    env_path=$(. "$HOME/.zshenv" 2>/dev/null; echo "$PATH")
+    if ! echo "$env_path" | tr ':' '\n' | grep -qx "$HOME/.local/bin"; then
+        echo '# Machine bootstrapping bin' >> "$HOME/.zshenv"
+        # shellcheck disable=SC2016
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshenv"
+    fi
+
     echo "uv installed. Restart shell and re-run this script."
     exit 0
 fi

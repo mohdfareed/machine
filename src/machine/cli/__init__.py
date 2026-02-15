@@ -129,18 +129,39 @@ def list_machines() -> None:
 
 
 @app.command()
-def update() -> None:
+def update(
+    stash: bool = typer.Option(
+        False, "-s", "--stash", help="Stash and reapply local changes."
+    ),
+) -> None:
     """Update the CLI tool."""
     root = app_settings.home
+    git = ["git", "-C", str(root)]
+
+    # Check if dirty
     result = subprocess.run(
-        ["git", "-C", str(root), "pull", "--ff-only"], capture_output=True, text=True
+        [*git, "status", "--porcelain"], capture_output=True, text=True
     )
+    is_dirty = bool(result.stdout.strip())
+
+    if is_dirty:
+        if not stash:
+            console.print(
+                "[red]Update failed: local changes. Use --stash to auto-stash.[/]"
+            )
+            raise SystemExit(1)
+
+        subprocess.run([*git, "stash", "push", "-m", "mc update"])
+        console.print("[yellow]Stashed local changes.[/]")
+
+    result = subprocess.run([*git, "pull", "--ff-only"], capture_output=True, text=True)
     if result.returncode != 0:
-        console.print(
-            "[red]Update failed: You have local changes. Commit or stash them first.[/]"
-        )
+        console.print("[red]Update failed.[/]")
         raise SystemExit(1)
+
     console.print("[green]Updated.[/]")
+    if is_dirty and stash:
+        subprocess.run([*git, "stash", "pop"])
 
 
 @app.command()
