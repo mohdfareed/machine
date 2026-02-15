@@ -4,7 +4,7 @@ Cross-platform dotfiles and environment manager for macOS, Windows, and Linux.
 
 ## Requirements
 
-- `git`
+- `git` (must be installed manually on Linux)
 - `uv`
 
 ## Installation

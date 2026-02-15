@@ -145,5 +145,5 @@ def update() -> None:
 
 @app.command()
 def home() -> None:
-    """Print application home directory."""
+    """Print machine home directory."""
     console.print(app_settings.home)

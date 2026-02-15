@@ -2,21 +2,27 @@
 set -eu
 
 export MC_HOME="${MC_HOME:-$HOME/.machine}"
-UV="uv"; TMP_DIR="" # temp uv installation
+BIN="$HOME/.local/bin"
+
+# Ensure ~/.local/bin is on PATH for next shell
+if ! echo "$PATH" | tr ':' '\n' | grep -qx "$BIN"; then
+    # shellcheck disable=SC1091
+    if [ -f "$HOME/.zshenv" ] && . "$HOME/.zshenv" 2>/dev/null &&
+       echo "$PATH" | tr ':' '\n' | grep -qx "$BIN"; then
+        : # already defined in .zshenv
+    else
+        # shellcheck disable=SC2016
+        echo >> "$HOME/.zshenv"
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshenv"
+        echo >> "$HOME/.zshenv"
+    fi
+fi
 
 # Ensure uv is available
 if ! command -v uv >/dev/null 2>&1; then
-    TMP_DIR=$(mktemp -d)
-    cleanup() { [ -n "$TMP_DIR" ] && rm -rf "$TMP_DIR"; }
-    trap cleanup EXIT # cleanup temp dir on exit
-
-    export UV_INSTALL_DIR="$TMP_DIR"
-    export UV_NO_MODIFY_PATH=1
-    export UV_DISABLE_UPDATE=1
-
-    # Install uv to temp dir
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    UV="$TMP_DIR/uv"
+    curl -LsSf https://astral.sh/uv/install.sh | UV_NO_MODIFY_PATH=1 sh
+    echo "uv installed. Restart shell and re-run this script."
+    exit 0
 fi
 
 # Clone repo if needed
@@ -25,6 +31,5 @@ if ! [ -d "$MC_HOME/.git" ]; then
 fi
 
 # Install the cli tool
-"$UV" tool install "$MC_HOME" --editable --force
-MC="$(cd "$("$UV" tool dir --bin)" && pwd)/mc"
-echo "Installed machine cli to $MC"
+uv tool install "$MC_HOME" --editable --force
+echo "Installed machine cli. Restart shell and run 'mc --help' for more info."

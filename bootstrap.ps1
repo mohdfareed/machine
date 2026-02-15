@@ -2,19 +2,17 @@
 $ErrorActionPreference = "Stop"
 
 $env:MC_HOME = if ($env:MC_HOME) { $env:MC_HOME } else { "$HOME\.machine" }
-function Update-Path {
-    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
-    [System.Environment]::GetEnvironmentVariable("Path", "User")
-}
 
 # Ensure git and uv are available
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     winget install "git.git"
-    Update-Path
+    Write-Host "git installed. Restart your shell and re-run this script."
+    Exit 0
 }
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     winget install "astral-sh.uv"
-    Update-Path
+    Write-Host "uv installed. Restart your shell and re-run this script."
+    Exit 0
 }
 
 # Clone repo if needed
@@ -24,5 +22,4 @@ if (-not (Test-Path "$env:MC_HOME\.git")) {
 
 # Install the cli tool
 uv tool install $env:MC_HOME --editable --force
-Update-Path
-Write-Host "Installed machine cli. Run 'mc --help' for more info."
+Write-Host "Installed machine cli. Restart shell and run 'mc --help' for more info."
