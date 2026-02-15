@@ -1,15 +1,27 @@
 $ErrorActionPreference = "Stop"
 
-# Bootstrap: irm https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.ps1 | iex
 $Root = if ($env:MC_ROOT) { $env:MC_ROOT } else { "$HOME\.machine" }
+function Update-Path {
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
+    [System.Environment]::GetEnvironmentVariable("Path", "User")
+}
 
-# clone repo if needed
-winget install "git.git"
+# Ensure git and uv are available
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    winget install "git.git"
+    Update-Path
+}
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    winget install "astral-sh.uv"
+    Update-Path
+}
+
+# Clone repo if needed
 if (-not (Test-Path "$Root\.git")) {
     git clone https://github.com/mohdfareed/machine.git "$Root"
 }
 
-# install the cli tool
-winget install "astral-sh.uv"
+# Install the cli tool
 uv tool install $Root --force
-Write-Host "Done. Run 'mc --help' to get started."
+Update-Path
+Write-Host "Installed machine cli. Run 'mc --help' for more info."

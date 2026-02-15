@@ -104,6 +104,7 @@
   },
   "chat.useFileStorage": true,
   "chat.mcp.gallery.enabled": true,
+  "chat.viewSessions.orientation": "stacked",
   "chat.tools.urls.autoApprove": {
     "https://github.com": true,
     "https://*.reddit.com": true,

@@ -5,9 +5,21 @@ Cross-platform dotfiles and environment manager for macOS, Windows, and Linux.
 ## Requirements
 
 - `git`
-- `uv` (optional, installed with `curl` on bootstrap)
-- Xcode Command Line Tools (macOS): `xcode-select --install`
-- PowerShell (Windows): `winget install Microsoft.Powershell`
+- `uv`
+
+**macOS:**
+
+```sh
+xcode-select --install # installs git
+```
+
+**Windows:**
+
+```powershell
+winget install Microsoft.Powershell
+winget install Git.Git
+winget install astral-sh.uv
+```
 
 ## Installation
 
@@ -23,4 +35,4 @@ curl -LsSf https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.s
 irm https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.ps1 | iex
 ```
 
-> Repository path and branch can be overridden with `$MC_ROOT` and `$MC_BRANCH`, respectively.
+> Repository path can be overridden with `$MC_ROOT`.
