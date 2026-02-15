@@ -13,14 +13,14 @@ Cross-platform machine bootstrapper and dotfile manager.
 
 ## Project Layout
 
-- `src/machine/` — Python package (CLI app)
-- `config/` — Shared dotfiles and configs
-- `machines/` — Per-host overrides
-- `bootstrap.sh` / `bootstrap.ps1` — Bare-machine bootstrap
+- `src/machine/` - Python package (CLI app)
+- `config/` - Shared dotfiles and configs
+- `machines/` - Per-host configurations
+- `bootstrap.sh` / `bootstrap.ps1` - Bare-machine bootstrap
 
 ## Commands
 
-- `uv sync --dev` — Set up dev environment
-- `uv run mc --help` — Run CLI in dev
-- `uv run ruff check src/` — Lint
-- `uv run pyright src/` — Type check
+- `uv sync --dev` - Set up dev environment
+- `uv run mc --help` - Run CLI in dev
+- `uv run ruff check src/` - Lint
+- `uv run pyright src/` - Type check

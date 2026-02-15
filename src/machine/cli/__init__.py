@@ -1,5 +1,6 @@
 """Machine CLI application."""
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -125,6 +126,21 @@ def list_machines() -> None:
     for d in sorted(machines_dir.iterdir()):
         if d.is_dir() and (d / "manifest.py").exists():
             console.print(f"  {d.name}")
+
+
+@app.command()
+def update() -> None:
+    """Update the CLI tool."""
+    root = app_settings.home
+    result = subprocess.run(
+        ["git", "-C", str(root), "pull", "--ff-only"], capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        console.print(
+            "[red]Update failed: You have local changes. Commit or stash them first.[/]"
+        )
+        raise SystemExit(1)
+    console.print("[green]Updated.[/]")
 
 
 @app.command()

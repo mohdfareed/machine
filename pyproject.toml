@@ -8,8 +8,8 @@ readme = "README.md"
 
 requires-python = ">=3.14"
 dependencies = [
-    "typer>=0.21",
     "rich>=14.0",
+    "typer>=0.21",
     "pydantic>=2.12",
     "pydantic-settings>=2.12",
 ]
@@ -36,8 +36,7 @@ module-name = ["machine"]
 
 [tool.ruff]
 line-length = 88
-src = ["src"]
-exclude = ["src/_legacy", "machines"]
+src = ["src", "config", "machines"]
 
 [tool.ruff.lint]
 select = ["E", "I", "W", "RUF"]
@@ -46,4 +45,3 @@ select = ["E", "I", "W", "RUF"]
 pythonVersion = "3.14"
 typeCheckingMode = "standard"
 useLibraryCodeForTypes = true
-exclude = ["src/_legacy", "machines"]

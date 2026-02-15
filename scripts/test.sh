@@ -20,7 +20,7 @@ uv run pyright
 
 echo
 echo "==> Checking docs generation..."
-./scripts/docs.sh
+mkdir -p docs && uv run typer machine utils docs > docs/cli.md
 
 echo
 echo "==> All checks passed!"

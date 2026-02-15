@@ -90,9 +90,6 @@
   "diffEditor.renderSideBySide": false,
   "diffEditor.ignoreTrimWhitespace": false,
   "diffEditor.experimental.showMoves": true,
-  "multiDiffEditor.experimental.enabled": true,
-  "gitlens.codeLens.authors.enabled": false,
-  "gitlens.codeLens.recentChange.enabled": false,
   "scm.repositories.explorer": true,
   // # endregion ===============================================================
   // MARK: copilot
@@ -100,17 +97,24 @@
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
   "github.copilot.enable": {
     "*": true,
-    "scminput": false
+    "plaintext": true,
+    "markdown": true,
+    "scminput": true
   },
-  "chat.useFileStorage": true,
   "chat.mcp.gallery.enabled": true,
   "chat.viewSessions.orientation": "stacked",
   "chat.tools.urls.autoApprove": {
     "https://github.com": true,
+    "https://*.github.com": true,
+    "https://reddit.com": true,
     "https://*.reddit.com": true,
+    "https://microsoft.com": true,
     "https://*.microsoft.com": true,
+    "https://google.com": true,
     "https://*.google.com": true,
+    "https://openclaw.ai": true,
     "https://*.openclaw.ai": true,
+    "https://mem0.ai": true,
     "https://*.mem0.ai": true
   },
   // Beast Mode

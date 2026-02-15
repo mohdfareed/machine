@@ -55,4 +55,4 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 
 # functions & aliases
-. "$env:MACHINE_SHARED/shell/aliases.ps1"
+. "$env:MC_HOME/config/shell/aliases.ps1"

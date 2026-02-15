@@ -28,19 +28,16 @@ jobs:
       # Sync, format, lint, and type check
       - run: uv sync --dev --locked
       - name: Check formatting
-        run: uv run ruff format --check src/ tests/
+        run: uv run ruff format --check .
       - name: Run linter
-        run: uv run ruff check src/ tests/
+        run: uv run ruff check .
       - name: Run type checker
-        run: uv run pyright src/ tests/
+        run: uv run pyright .
 
   shellcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
       - uses: ludeeus/action-shellcheck@master
         env:
           SHELLCHECK_OPTS: -e SC1071
@@ -49,9 +46,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
       - uses: reviewdog/action-misspell@master
         with:
           github_token: ${{ secrets.github_token }}

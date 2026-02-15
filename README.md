@@ -7,20 +7,6 @@ Cross-platform dotfiles and environment manager for macOS, Windows, and Linux.
 - `git`
 - `uv`
 
-**macOS:**
-
-```sh
-xcode-select --install # installs git
-```
-
-**Windows:**
-
-```powershell
-winget install Microsoft.Powershell
-winget install Git.Git
-winget install astral-sh.uv
-```
-
 ## Installation
 
 Bootstrap a new machine:
@@ -35,4 +21,25 @@ curl -LsSf https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.s
 irm https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.ps1 | iex
 ```
 
-> Repository path can be overridden with `$MC_ROOT`.
+> Repository path can be overridden with `$MC_HOME`, defaulting to `~/.machine`.
+
+Re-install the CLI tool on an existing machine:
+
+```sh
+# Unix (macOS/Linux)
+. $MC_HOME/bootstrap.sh
+```
+
+```powershell
+# Windows
+. $MC_HOME\bootstrap.ps1
+```
+
+## Development
+
+Set up the development environment and run the CLI tool:
+
+```sh
+cd $MC_HOME
+./scripts/run.sh --help
+```
