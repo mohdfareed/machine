@@ -8,7 +8,6 @@ winget install "git.git" "astral-sh.uv"
 
 # clone repo if needed
 if (-not (Test-Path "$Root\.git")) {
-    Write-Host "Cloning repository..."
     git clone https://github.com/mohdfareed/machine.git "$Root"
 }
 
