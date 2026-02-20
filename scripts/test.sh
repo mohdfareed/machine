@@ -7,20 +7,11 @@ uv lock --upgrade
 uv sync --dev
 
 echo
-echo "==> Formatting..."
+echo "==> Running tests..."
 uv run ruff format
-
-echo
-echo "==> Linting..."
 uv run ruff check --fix
-
-echo
-echo "==> Type checking..."
 uv run pyright
-
-echo
-echo "==> Checking docs generation..."
-mkdir -p docs && uv run typer machine utils docs > docs/cli.md
+uv run pytest -q
 
 echo
 echo "==> All checks passed!"

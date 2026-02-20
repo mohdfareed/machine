@@ -1,31 +1,25 @@
 #!/usr/bin/env sh
 set -eu
 
-export MC_HOME="${MC_HOME:-$HOME/.machine}"
+MC_HOME="$(eval echo "${MC_HOME:-$HOME/.machine}")"
+export MC_HOME
 
 # Ensure uv is available
 if ! command -v uv >/dev/null 2>&1; then
     curl -LsSf https://astral.sh/uv/install.sh | \
     UV_INSTALL_DIR="$HOME/.local/bin" UV_NO_MODIFY_PATH=1 sh
 
-    # Source .zshenv and export PATH for the current session
-    # shellcheck disable=SC1091
-    if [ -f "$HOME/.zshenv" ]; then
-        env_path=$(. "$HOME/.zshenv" && echo "$PATH")
+    # Ensure ~/.local/bin is in .zshenv for future sessions
+    if [ -f "$HOME/.zshenv" ] && grep -q '\.local/bin' "$HOME/.zshenv"; then
+        : # already configured
     else
-        env_path="$PATH"
-    fi
-
-    # Check if $HOME/.local/bin is in PATH. If not, add it.
-    if ! echo "$env_path" | tr ':' '\n' | grep -qx "$HOME/.local/bin"; then
         echo '# Machine bootstrapping bin' >> "$HOME/.zshenv"
         # shellcheck disable=SC2016
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshenv"
-        echo "Added $HOME/.local/bin to PATH in .zshenv."
     fi
 
-    echo "uv installed. Restart shell and re-run this script."
-    exit 0
+    # Make uv available in this session
+    export PATH="$HOME/.local/bin:$PATH"
 fi
 
 # Clone repo if needed

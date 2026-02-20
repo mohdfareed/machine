@@ -1,18 +1,25 @@
 #Requires -Version 5.1
 $ErrorActionPreference = "Stop"
 
-$env:MC_HOME = if ($env:MC_HOME) { $env:MC_HOME } else { "$HOME\.machine" }
+$env:MC_HOME = if ($env:MC_HOME) {
+    [System.IO.Path]::GetFullPath($env:MC_HOME.Replace("~", $HOME))
+} else { "$HOME\.machine" }
+
+# Update the PATH for the current session
+function Update-Path {
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
+                [System.Environment]::GetEnvironmentVariable("Path", "User")
+}
 
 # Ensure git and uv are available
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     winget install "git.git"
-    Write-Host "git installed. Restart your shell and re-run this script."
-    Exit 0
+    Update-Path
 }
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     winget install "astral-sh.uv"
     Write-Host "uv installed. Restart your shell and re-run this script."
-    Exit 0
+    Update-Path
 }
 
 # Clone repo if needed
