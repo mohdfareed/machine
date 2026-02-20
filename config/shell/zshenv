@@ -29,3 +29,6 @@ export SHELL_SESSIONS_DISABLE=1
 export HISTSIZE=5000
 export SAVEHIST=$HISTSIZE
 export HISTDUP=erase
+
+# machine-local overrides
+[[ -f "$HOME/.zshenv.local" ]] && source "$HOME/.zshenv.local"

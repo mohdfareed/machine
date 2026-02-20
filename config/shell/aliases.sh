@@ -3,15 +3,11 @@
 # Functions and Aliases
 # =============================================================================
 
-alias machine-setup='$MC_HOME/scripts/cli.py'
-
 if [ "$TERM_PROGRAM" = "vscode" ]; then
     alias clear='clear && clear'
 fi
 
 alias cat='bat --paging=never'
-alias vim='nvim'
-
 alias ls='eza --icons --group-directories-first --sort=Name'
 alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'
@@ -22,6 +18,19 @@ alias co='copilot::prompt'
 
 alias zsh::reload='exec $SHELL'
 alias ssh::gen-key='ssh-keygen -t ed25519 -C'
+
+# macOS: re-add all ssh keys to keychain
+if [[ "$OSTYPE" == darwin* ]]; then
+    function ssh::fix-keychain {
+        for file in ~/.ssh/*; do
+            [[ ! -f "$file" ]] && continue
+            [[ $file == *.pub ]] && continue
+            [[ $file == */known_hosts* ]] && continue
+            [[ $file == */config ]] && continue
+            ssh-add --apple-use-keychain "$file"
+        done
+    }
+fi
 
 # prompt github copilot
 copilot::prompt() {

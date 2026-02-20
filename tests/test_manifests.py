@@ -96,3 +96,46 @@ def test_manifest_env_satisfies_modules(machine_id: str) -> None:
     ]
     errors = validate(modules, manifest.env, machine_id)
     assert not errors, "\n".join(errors)
+
+
+# MARK: Validation Edge Cases
+
+
+def test_missing_required_env_detected() -> None:
+    """validate() catches modules whose required_env is not satisfied."""
+    mod = Module(name="fake", required_env=["MISSING_VAR"])
+    errors = validate([mod], {}, "test-machine")
+    assert len(errors) == 1
+    assert "MISSING_VAR" in errors[0]
+
+
+def test_ssh_module_loads_key_provisioning() -> None:
+    """The ssh module includes the key-provisioning script."""
+    ssh = load_module("ssh", ROOT)
+    script_names = [Path(s).name for s in ssh.scripts]
+    assert "setup.py" in script_names
+
+
+def test_module_dependencies_auto_included() -> None:
+    """Modules with depends= auto-include their dependencies."""
+    tunnel = load_module("vscode-tunnel", ROOT)
+    assert "vscode" in tunnel.depends
+
+    # Build a manifest with only vscode-tunnel — vscode should be auto-included
+    from machine.manifest import MachineManifest
+
+    manifest = MachineManifest(modules=["vscode-tunnel"])
+    # Simulate load_manifest dependency resolution
+    resolved: list[str] = []
+    seen: set[str] = set()
+    for name in manifest.modules:
+        assert isinstance(name, str)
+        mod = load_module(name, ROOT)
+        for dep in mod.depends:
+            if dep not in seen:
+                seen.add(dep)
+                resolved.append(dep)
+        if name not in seen:
+            seen.add(name)
+            resolved.append(name)
+    assert resolved == ["vscode", "vscode-tunnel"]

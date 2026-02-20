@@ -32,8 +32,12 @@ Cross-platform machine bootstrapper and dotfile manager.
 
 ### Module (`config/<name>/module.py`)
 
-Exports a `Module(files, packages, scripts)`. Files are symlinked,
+Exports a `Module(files, packages, scripts, depends)`. Files are symlinked,
 packages installed via platform manager, scripts run with tracking.
+Scripts under `scripts/` are auto-discovered; explicit `scripts=` list
+is only needed for files outside that directory. `depends=["other"]`
+auto-includes prerequisite modules in manifests (deduped, ordered before
+the dependent).
 
 ### Manifest (`machines/<id>/manifest.py`)
 
@@ -53,8 +57,9 @@ passed to scripts at runtime (not written to files).
 - Before writing new code, check the codebase for existing patterns and follow them
 - No generated env files — shell configs are static, committed files
 - Platform tags on scripts: `name.macos.sh`, `name.unix.sh`, `name.win.ps1`
-- Script prefixes: `once_` = run once, `onchange_` = run on file change
-- SSH: `ssh` module reads `MC_PRIVATE` from env; skips if unset
+- Script prefixes: `once_` = run once, `onchange_` = run on file change, `setup` = run before packages
+- Execution order: files → `setup*` scripts → packages → remaining scripts
+- SSH: `ssh` module provisions keys from `MC_PRIVATE` (skips if unset)
 - Machine extras: `extra.zsh` → `~/.zshrc.local`
 - Repo root derived from `Path(__file__).parents[2]` — no env var needed
 - App data: `typer.get_app_dir("mc")` for logs/state

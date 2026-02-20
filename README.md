@@ -28,6 +28,7 @@ Re-run bootstrap on an existing machine to reinstall the CLI after moving the re
 
 ```
 mc setup <machine>    Deploy configs, install packages, run scripts
+mc check [machine]    Validate manifests (env, files, scripts)
 mc update [--stash]   Pull latest changes (--stash saves/restores local edits)
 mc list               List available machines and modules
 mc show <machine>     Show files, packages, scripts, and env for a machine
@@ -40,7 +41,7 @@ Global flags: `-n` / `--dry-run` (preview only), `-d` / `--debug`, `-v` / `--ver
 
 ```
 ~/.machine/
-├── config/                  ← shared modules (git, shell, nvim, …)
+├── config/                  ← shared modules (git, shell, …)
 │   └── <name>/
 │       ├── module.py        ← Module(files, packages, scripts)
 │       └── …
@@ -58,6 +59,7 @@ Global flags: `-n` / `--dry-run` (preview only), `-d` / `--debug`, `-v` / `--ver
 | `files`    | `FileMapping(source, target)` → symlinked to `~` |
 | `packages` | `Package(name, brew=, apt=, winget=, …)`         |
 | `scripts`  | Platform-tagged scripts to run                   |
+| `overrides`| Local override files: `{filename: target}`       |
 
 **Manifests** (`machines/<id>/manifest.py`) export a `MachineManifest`:
 
@@ -80,12 +82,13 @@ script subprocesses — never written to files.
 **SSH keys:** the `ssh` module reads `MC_PRIVATE` from env, copies keys to `~/.ssh/`,
 sets permissions, and adds them to the agent. Skips silently if `MC_PRIVATE` is unset.
 
-**Local overrides:** shared configs source optional `*.local` files for machine-specific
-customization. Deploy a `<name>.local` file from your machine dir to the matching target:
+**Local overrides:** modules declare which `*.local` override files they accept and
+where they go (via the `overrides` field). Drop matching files in your machine dir
+and they are auto-discovered and symlinked:
 
-- `~/.gitconfig.local` — included by gitconfig
-- `~/.zshenv.local` — sourced by zshenv (env vars for all shells)
-- `~/.zshrc.local` — sourced by zshrc (interactive shell customizations)
+- `~/.gitconfig.local` — declared by `git` module, included by gitconfig
+- `~/.zshenv.local` — declared by `shell` module, sourced by zshenv
+- `~/.zshrc.local` — declared by `shell` module, sourced by zshrc
 
 ## Development
 

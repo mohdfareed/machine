@@ -1,0 +1,55 @@
+[user]
+    name = Mohammed Fareed
+    email = mohdf.fareed@icloud.com
+
+; sign commits
+[user]
+    signingkey = ~/.ssh/personal.pub
+[commit]
+    gpgsign = true
+[gpg]
+    format = ssh ; use ssh key for signing
+
+; git settings
+[core]
+    excludesfile = ~/.gitignore
+    autocrlf = input ; normalize line endings to LF on commit
+[init]
+    defaultBranch = main
+[fetch]
+    prune = true ; remove stale remote-tracking branches
+[pull]
+    rebase = true
+[rerere]
+    enabled = true ; remember conflict resolutions
+
+; vscode editor
+[core]
+    editor = code --wait
+[diff]
+    tool = vscodediff
+[difftool "vscodediff"]
+    cmd = code --wait --diff $LOCAL $REMOTE
+[merge]
+    tool = vscodemerge
+[mergetool "vscodemerge"]
+    cmd = code --wait --merge $LOCAL $REMOTE $BASE $MERGED
+
+; lfs (large file system)
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+
+; other settings
+[status]
+    short = true
+[help]
+    autoCorrect = prompt
+
+; platform and machine overrides
+[include]
+    path = ~/.gitconfig.platform
+[include]
+    path = ~/.gitconfig.local

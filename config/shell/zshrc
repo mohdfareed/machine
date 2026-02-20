@@ -95,7 +95,7 @@ zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 # source: https://github.com/Aloxaf/fzf-tab?tab=readme-ov-file#configure
 
 # functions and aliases
-source "$MC_HOME/config/shell/aliases.sh"
+source "$HOME/.aliases"
 
 # ZINIT (zsh plugin manager)
 # =============================================================================
@@ -127,3 +127,6 @@ unset atInit
 eval "$(fzf --zsh)" # fzf (ctrl-t, ctrl-r)
 zinit ice wait lucid
 zinit light Aloxaf/fzf-tab
+
+# machine-specific extras
+[[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"

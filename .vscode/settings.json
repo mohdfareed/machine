@@ -11,10 +11,6 @@
   "shellcheck.exclude": [
     "1071" // allow zsh
   ],
-  // lua vim diagnostic
-  "Lua.diagnostics.globals": [
-    "vim"
-  ],
   // file associations
   "files.associations": {
     "*.gitconfig.local": "properties",
