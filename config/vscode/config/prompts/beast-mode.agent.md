@@ -1,4 +1,4 @@
-```chatagent
+```agent
 ---
 description: Beast Mode 3.1
 tools: [
