@@ -1,5 +1,5 @@
 """Machine setup CLI app."""
 
-__all__ = ["app"]
+from machine.cli import app, main
 
-from machine.cli import app
+__all__ = ["app", "main"]
