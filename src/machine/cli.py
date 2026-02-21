@@ -57,9 +57,7 @@ def callback(
     dry_run: bool = typer.Option(
         False, "-n", "--dry-run", help="Preview changes without applying."
     ),
-    version: bool = typer.Option(
-        False, "-v", "--version", help="Show version and exit."
-    ),
+    version: bool = typer.Option(False, "-v", "--version", help="Show version and exit."),
 ) -> None:
     settings.debug = debug
     settings.dry_run = dry_run
@@ -156,9 +154,7 @@ def setup(
     module_filter = set(modules)
 
     manifest = load_manifest(machine_id, root)
-    all_modules = [
-        load_module(m, root) if isinstance(m, str) else m for m in manifest.modules
-    ]
+    all_modules = [load_module(m, root) if isinstance(m, str) else m for m in manifest.modules]
 
     errors = validate(all_modules, manifest.env, machine_id)
     if errors:
@@ -178,9 +174,7 @@ def setup(
     else:
         active_modules = all_modules
         all_files = [f for m in active_modules for f in m.files] + manifest.files
-        all_packages = [
-            p for m in active_modules for p in m.packages
-        ] + manifest.packages
+        all_packages = [p for m in active_modules for p in m.packages] + manifest.packages
         raw_scripts = [s for m in active_modules for s in m.scripts] + manifest.scripts
 
     all_scripts = filter_scripts(raw_scripts)
@@ -195,8 +189,7 @@ def setup(
     post_scripts = [
         s
         for s in all_scripts
-        if not Path(s).name.startswith("init_")
-        and not Path(s).name.startswith("upgrade_")
+        if not Path(s).name.startswith("init_") and not Path(s).name.startswith("upgrade_")
     ]
 
     log_file = settings.app_dir / "mc.log"
@@ -207,9 +200,7 @@ def setup(
         install_packages(all_packages)
         run_scripts(post_scripts, env=script_env)
     else:
-        total = (
-            len(all_files) + len(setup_scripts) + len(all_packages) + len(post_scripts)
-        )
+        total = len(all_files) + len(setup_scripts) + len(all_packages) + len(post_scripts)
         progress = Progress(
             TextColumn("[bold]{task.fields[phase]:<10}"),
             BarColumn(),
@@ -294,9 +285,7 @@ def upgrade(
         raise SystemExit(1)
 
     manifest = load_manifest(machine_id, root)
-    all_modules = [
-        load_module(m, root) if isinstance(m, str) else m for m in manifest.modules
-    ]
+    all_modules = [load_module(m, root) if isinstance(m, str) else m for m in manifest.modules]
 
     if modules:
         unknown = set(modules) - {m.name for m in all_modules}
@@ -366,9 +355,7 @@ def update(
     stash: bool = typer.Option(
         False, "-s", "--stash", help="Stash local changes and reapply after pull."
     ),
-    force: bool = typer.Option(
-        False, "-f", "--force", help="Discard local changes before pull."
-    ),
+    force: bool = typer.Option(False, "-f", "--force", help="Discard local changes before pull."),
 ) -> None:
     """Pull the latest repo changes."""
     if stash and force:
@@ -378,9 +365,7 @@ def update(
     root = settings.home
     git = ["git", "-C", str(root)]
 
-    result = subprocess.run(
-        [*git, "status", "--porcelain"], capture_output=True, text=True
-    )
+    result = subprocess.run([*git, "status", "--porcelain"], capture_output=True, text=True)
     is_dirty = bool(result.stdout.strip())
 
     stashed = False
@@ -498,9 +483,7 @@ def show(
 
     root = settings.home
     manifest = load_manifest(machine, root)
-    modules = [
-        load_module(m, root) if isinstance(m, str) else m for m in manifest.modules
-    ]
+    modules = [load_module(m, root) if isinstance(m, str) else m for m in manifest.modules]
 
     console.print(f"[bold]{machine}[/]")
     if modules:

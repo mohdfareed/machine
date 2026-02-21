@@ -18,7 +18,7 @@ Cross-platform machine bootstrapper and dotfile manager.
 - **CLI**: Typer + Rich
 - **Config**: Pydantic models, Python manifests
 - **Packaging**: uv (build, lock, tool install)
-- **Linting**: Ruff (line-length 88, rules: E, I, W, RUF)
+- **Linting**: Ruff (line-length 100, rules: E, I, W, RUF)
 - **Type checking**: Pyright (standard mode)
 
 ## Project Layout

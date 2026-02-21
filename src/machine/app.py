@@ -25,9 +25,7 @@ _INSTALL_CMD = {
     "brew": "brew install {}",
     "apt": "sudo apt install -y {}",
     "snap": "sudo snap install {}",
-    "winget": (
-        "winget install --accept-source-agreements --accept-package-agreements {}"
-    ),
+    "winget": "winget install --accept-source-agreements --accept-package-agreements {}",
     "scoop": "scoop install {}",
     "mas": "mas install {}",
 }
@@ -212,9 +210,7 @@ def filter_scripts(scripts: list[str]) -> list[str]:
     return [
         s
         for s in scripts
-        if (p := Path(s)).suffix.lower() in _SCRIPT_SUFFIXES
-        and matches_platform(p)
-        and p.exists()
+        if (p := Path(s)).suffix.lower() in _SCRIPT_SUFFIXES and matches_platform(p) and p.exists()
     ]
 
 

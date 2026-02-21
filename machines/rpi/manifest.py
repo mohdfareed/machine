@@ -7,14 +7,13 @@ from machine.manifest import (
 )
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vscode-tunnel", "core"],
+    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vsc-tunnel", "core"],
     packages=[
         *snap("go --classic"),
         # Script-installed packages
         Package(
             name="dotnet",
-            script="curl -s https://dot.net/v1/dotnet-install.sh | "
-            "bash -s -- --channel LTS",
+            script="curl -s https://dot.net/v1/dotnet-install.sh | bash -s -- --channel LTS",
         ),
         Package(
             name="docker",

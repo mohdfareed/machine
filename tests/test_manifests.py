@@ -91,9 +91,7 @@ def test_manifest_scripts_exist(machine_id: str) -> None:
 def test_manifest_env_satisfies_modules(machine_id: str) -> None:
     """All required_env vars from included modules are provided."""
     manifest = load_manifest(machine_id, ROOT)
-    modules = [
-        load_module(m, ROOT) if isinstance(m, str) else m for m in manifest.modules
-    ]
+    modules = [load_module(m, ROOT) if isinstance(m, str) else m for m in manifest.modules]
     errors = validate(modules, manifest.env, machine_id)
     assert not errors, "\n".join(errors)
 
@@ -118,13 +116,13 @@ def test_ssh_module_loads_key_provisioning() -> None:
 
 def test_module_dependencies_auto_included() -> None:
     """Modules with depends= auto-include their dependencies."""
-    tunnel = load_module("vscode-tunnel", ROOT)
+    tunnel = load_module("vsc-tunnel", ROOT)
     assert "vscode" in tunnel.depends
 
-    # Build a manifest with only vscode-tunnel — vscode should be auto-included
+    # Build a manifest with only vsc-tunnel — vscode should be auto-included
     from machine.manifest import MachineManifest
 
-    manifest = MachineManifest(modules=["vscode-tunnel"])
+    manifest = MachineManifest(modules=["vsc-tunnel"])
     # Simulate load_manifest dependency resolution
     resolved: list[str] = []
     seen: set[str] = set()
@@ -138,4 +136,4 @@ def test_module_dependencies_auto_included() -> None:
         if name not in seen:
             seen.add(name)
             resolved.append(name)
-    assert resolved == ["vscode", "vscode-tunnel"]
+    assert resolved == ["vscode", "vsc-tunnel"]

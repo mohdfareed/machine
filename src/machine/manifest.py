@@ -264,9 +264,7 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
             if local_file.exists():
                 already = any(f.target == target for f in result.files)
                 if not already:
-                    result.files.append(
-                        FileMapping(source=str(local_file), target=target)
-                    )
+                    result.files.append(FileMapping(source=str(local_file), target=target))
 
     # Auto-discover scripts/ directory
     scripts_dir = machine_dir / "scripts"
@@ -308,8 +306,7 @@ def _resolve_deps(modules: list[str | Module], root: Path) -> list[str | Module]
     # Auto-include 'pkgs' when any module declares packages
     if "pkgs" not in seen:
         has_pkgs = any(
-            (load_module(m, root) if isinstance(m, str) else m).packages
-            for m in resolved
+            (load_module(m, root) if isinstance(m, str) else m).packages for m in resolved
         )
         if has_pkgs:
             resolved.insert(0, "pkgs")

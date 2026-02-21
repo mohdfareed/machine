@@ -1,6 +1,6 @@
 {
   // python
-  "ruff.lineLength": 88,
+  "ruff.lineLength": 100,
   "debugpy.debugJustMyCode": false,
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
@@ -18,10 +18,10 @@
   // file associations
   "files.associations": {
     "**/ghostty/config": "ini",
-    "*gitconfig*": "properties",
-    "*ssh.config*": "ssh_config",
-    "*zshrc*": "shellscript",
-    "*zshenv*": "shellscript"
+    ".gitconfig.*": "ini",
+    ".zshenv.*": "shellscript",
+    ".zshrc.*": "shellscript",
+    "ssh.config": "ssh_config",
   },
   // spelling
   "cSpell.ignorePaths": [
@@ -33,7 +33,7 @@
   ],
   "cSpell.words": [
     "dotenv",
-    "Fareed",
+    "fareed",
     "fpath",
     "GHCS",
     "ghostty",

@@ -35,7 +35,7 @@ module-name = ["machine"]
 # MARK: - Tool Configuration
 
 [tool.ruff]
-line-length = 88
+line-length = 100
 src = ["src", "config", "machines"]
 
 [tool.ruff.lint]
