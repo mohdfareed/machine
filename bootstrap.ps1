@@ -3,12 +3,13 @@ $ErrorActionPreference = "Stop"
 
 $env:MC_HOME = if ($env:MC_HOME) {
     [System.IO.Path]::GetFullPath($env:MC_HOME.Replace("~", $HOME))
-} else { "$HOME\.machine" }
+}
+else { "$HOME\.machine" }
 
 # Update the PATH for the current session
 function Update-Path {
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
-                [System.Environment]::GetEnvironmentVariable("Path", "User")
+    [System.Environment]::GetEnvironmentVariable("Path", "User")
 }
 
 # Ensure git and uv are available
@@ -20,6 +21,12 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     winget install "astral-sh.uv"
     Write-Host "uv installed. Restart your shell and re-run this script."
     Update-Path
+}
+
+# Install system dependencies
+if (-not (uv python list --installed | Select-String "3.14")) {
+    Write-Host "Installing Python 3.14..."
+    uv python install 3.14
 }
 
 # Clone repo if needed
