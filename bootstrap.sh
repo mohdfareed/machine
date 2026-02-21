@@ -22,6 +22,12 @@ if ! command -v uv >/dev/null 2>&1; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
+# Install system dependencies
+if ! uv python list --installed | grep -q "3.14"; then
+    echo "Installing Python 3.14..."
+    uv python install 3.14
+fi
+
 # Clone repo if needed
 if ! [ -d "$MC_HOME/.git" ]; then
     git clone https://github.com/mohdfareed/machine.git "$MC_HOME"
