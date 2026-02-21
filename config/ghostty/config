@@ -1,0 +1,7 @@
+theme = dark:One Double Dark,light:One Double Light
+font-size = 14
+
+window-width = 80
+window-height = 24
+
+quit-after-last-window-closed = true

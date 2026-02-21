@@ -1,137 +1,101 @@
 # Machine Setup & Dotfiles
 
-A cross‑platform Chezmoi setup to bootstrap, deploy, and version‑control environments across macOS, Windows, and Linux.
+Cross-platform dotfiles and machine manager for macOS, Windows, and Linux.
 
-- `chezmoi/` orchestrates the process;
-- `scripts/` act as infrastructure;
-- `config/` provides shared defaults while
-- `machines/<id>/` supplies per‑machine overrides.
+## Setup
 
-```mermaid
-flowchart LR
-    A[bootstrap.py] --> B[chezmoi/] --> C
-    B --> config
-    C --> config
-
-    subgraph C [scripts/]
-      direction LR
-      O[scripts.py]
-      P[packages.py]
-      L[cli.py]
-    end
-
-    subgraph config [configuration]
-      direction TB
-      D --> E
-    end
-
-    subgraph D [config/]
-      direction TB
-      H[scripts/]
-      I[packages.yaml]
-      J[.zshenv]
-    end
-
-    subgraph E [machines/id/]
-      direction TB
-      F[scripts/]
-      G[packages.yaml]
-      K[.zshenv]
-    end
-```
-
-## Requirements
-
-- Python 3.8+
-- Xcode Command Line Tools (macOS)
-- PowerShell 7.0+ (Windows)
-
-Xcode Command Line Tools can be installed with:
+Bootstrap a bare machine (installs `uv` and `git` if needed, clones repo, installs `mc`):
 
 ```sh
-xcode-select --install
-sudo xcodebuild -license accept
-```
-
-Windows can install Python and PowerShell from the Microsoft Store or using:
-
-```powershell
-winget install Python.Python3.12 # 3.8+
-winget install Microsoft.Powershell # 7.0+
-```
-
-## Installation
-
-Run the following command to install Chezmoi and bootstrap a machine:
-
-```sh
-# shell
-repo="https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsLS "$repo/bootstrap.py" | python3 -
+# macOS / Linux
+curl -LsSf https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.sh | sh
 ```
 
 ```powershell
-# powershell
-$repo = "https://raw.githubusercontent.com/mohdfareed/machine/refs/heads/main"
-curl -fsLS "$repo/bootstrap.py" | python3 -
+# Windows
+irm https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.ps1 | iex
+```
+
+The repo is cloned to `~/.machine` by default. Override with `MC_HOME=<path>` before running.
+
+Re-run bootstrap on an existing machine to reinstall the CLI after moving the repo:
+
+```sh
+~/.machine/bootstrap.sh   # or wherever the repo lives
 ```
 
 ## Usage
 
-After bootstrapping, the machine will be set up with Chezmoi installed. The following are commands to manage the configuration:
-
-```sh
-chezmoi init --apply   # apply machine config
-chezmoi update         # update repo and reapply config
-chezmoi status         # show status of the config
-code $MACHINE          # open repo in vscode
+```
+mc setup <machine>    Deploy configs, install packages, run scripts
+mc check [machine]    Validate manifests (env, files, scripts)
+mc update [--stash]   Pull latest changes (--stash saves/restores local edits)
+mc list               List available machines and modules
+mc show <machine>     Show files, packages, scripts, and env for a machine
+mc info               Show app paths and version
 ```
 
-### Machine Settings
+Global flags: `-n` / `--dry-run` (preview only), `-d` / `--debug`, `-v` / `--version`.
 
-- Variables used across the system:
-  - `MACHINE`: repo root (e.g., `~/.machine`)
-  - `MACHINE_ID`: selected machine profile (e.g., `macbook`)
-  - `MACHINE_PRIVATE`: path to private files (default `~/.private`)
-- How they’re set:
-  - Chezmoi template `.chezmoi.toml.tmpl` prompts on first apply (or uses env if set).
-  - Shell profiles (`.zshenv`, `profile.ps1`) export them for interactive shells.
-  - Script runner passes these vars to Python scripts using environment variables.
+## Design
 
-### Scripting
+```
+~/.machine/
+├── config/                  ← shared modules (git, shell, …)
+│   └── <name>/
+│       ├── module.py        ← Module(files, packages, scripts)
+│       └── …
+├── machines/                ← per-host manifests
+│   └── <id>/
+│       ├── manifest.py      ← MachineManifest(modules, files, packages, scripts, env)
+│       └── …
+└── src/machine/             ← CLI (core.py, app.py, cli.py, manifest.py)
+```
 
-- Put shared scripts in `config/scripts/` and machine-specific in `machines/<id>/scripts/`.
-- OS suffixes are respected.
-  - Examples: `*.macos.sh`, `*.linux.sh`, `*.win.ps1`, `*.unix.sh`.
-  - Combinations are supported, e.g., `*.linux.wsl.sh` runs on both Linux and WSL.
-- Phases are triggered by filename prefixes via Chezmoi:
-  - `before_*` → runs before apply
-  - `after_*` → runs after apply
-  - `once_*` → runs only once
-  - `onchange_*` → runs when content changes
+**Modules** (`config/<name>/module.py`) export a `Module`:
 
-### Package Management
+| Field       | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `files`     | `FileMapping(source, target)` → symlinked to `~` |
+| `packages`  | `Package(name, brew=, apt=, winget=, …)`         |
+| `scripts`   | Platform-tagged scripts to run                   |
+| `overrides` | Local override files: `{filename: target}`       |
 
-- Package installs: editing `config/packages.yaml` or `machines/<id>/packages.yaml` triggers an `onchange_*` script that installs packages.
-- A script can be defined as another package entry to install a package using a custom method.
-- Supported package managers:
-  - macOS: `brew`, `mas`
-  - Linux: `apt`, `snap`,
-  - Windows: `winget`, `scoop`
+**Manifests** (`machines/<id>/manifest.py`) export a `MachineManifest`:
 
-### SSH Setup
+| Field      | Description                                    |
+| ---------- | ---------------------------------------------- |
+| `modules`  | Module names to compose                        |
+| `files`    | Machine-specific symlinks                      |
+| `packages` | Machine-specific packages                      |
+| `scripts`  | Machine-specific scripts                       |
+| `env`      | Env vars injected into all script subprocesses |
 
-- Add keys: place your keys in `$MACHINE_PRIVATE/ssh/`.
-  - Example: `personal` + `personal.pub` or `tool.key` + `tool.pub`.
-- Configure SSH: edit `machines/<id>/ssh.config` for per‑machine settings.
+**Platform tags** on script filenames control which scripts run:
+`.macos`, `.linux`, `.unix`, `.win`, `.wsl`, `.ghcs`. No tag = all platforms.
 
-### Machine Backup
+**Script prefixes:** `once_` runs once per machine, `watch_` reruns when content changes, `init_` runs before packages.
 
-- Commit and push changes to local repositories.
-- Review installed apps and their configurations.
-- Review machine config files.
+**Env vars** (`MC_HOME`, `MC_ID`, `MC_NAME`, and manifest `env`) are injected at
+runtime into script subprocesses — never written to files. `MC_NAME` defaults to
+`MC_ID` and can be overridden via the manifest `name` field for a custom hostname
+or tunnel display name.
 
-## TODO
+**SSH keys:** the `ssh` module reads `MC_PRIVATE` from env, copies keys to `~/.ssh/`,
+sets permissions, and adds them to the agent. Skips silently if `MC_PRIVATE` is unset.
 
-- Create `config.yaml` that is parsed by `chezmoi`. The `.toml` template can parse it, read machine config, and prompt only for missing values.
-- The same file can be reused to define scripts to run, packages to install, etc.
+**Local overrides:** modules declare which `*.local` override files they accept and
+where they go (via the `overrides` field). Drop matching files in your machine dir
+and they are auto-discovered and symlinked:
+
+- `~/.gitconfig.local` — declared by `git` module, included by gitconfig
+- `~/.zshenv.local` — declared by `shell` module, sourced by zshenv
+- `~/.zshrc.local` — declared by `shell` module, sourced by zshrc
+
+## Development
+
+```sh
+cd ~/.machine
+uv sync --dev
+uv run mc --help
+```

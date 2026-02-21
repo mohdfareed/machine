@@ -1,64 +1,55 @@
 {
-    // chezmoi
-    "files.associations": {
-        "*.json": "jsonc",
-        "*.tmpl": "go",
-        "symlink_*": "go",
-        "empty_*": "go",
-        "dot_*": "go",
-        // specific files
-        "symlink": "go",
-        "dot_zshrc": "shellscript",
-        ".chezmoiignore": "go",
-    },
-    // shell
-    "shellcheck.customArgs": [
-        "--shell=bash" // REVIEW: find zsh equivalent tool
-    ],
-    "shellcheck.exclude": [
-        "1071" // allow zsh
-    ],
-    // python
-    "debugpy.debugJustMyCode": false,
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": "always"
-        },
-    },
-    "black-formatter.args": [
-        "--line-length",
-        "79"
-    ],
-    "isort.args": [
-        "--profile",
-        "black"
-    ],
-    // spelling
-    "cSpell.ignorePaths": [
-        ".git",
-        ".github",
-        ".venv",
-        ".vscode",
-        ".gitignore",
-        ".pre-commit-config.yaml",
-        "config",
-    ],
-    "cSpell.words": [
-        "chezmoi",
-        "ghostty",
-        "isort",
-        "macbook",
-        "mohdfareed",
-        "onchange",
-        "pwsh",
-        "shellcheck",
-        "tailscale",
-        "unshallow",
-        "venv",
-        "WINGET",
-        "wslinfo",
-        "zinit"
-    ],
+  // python
+  "ruff.lineLength": 88,
+  "debugpy.debugJustMyCode": false,
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  // shell
+  "shellcheck.customArgs": [
+    "--shell=bash" // REVIEW: find zsh equivalent tool
+  ],
+  "shellcheck.exclude": [
+    "1071" // allow zsh
+  ],
+  "[shellscript]": {
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2
+  },
+  // file associations
+  "files.associations": {
+    "**/ghostty/config": "ini",
+    "*gitconfig*": "properties",
+    "*ssh.config*": "ssh_config",
+    "*zshrc*": "shellscript",
+    "*zshenv*": "shellscript"
+  },
+  // spelling
+  "cSpell.ignorePaths": [
+    ".git",
+    ".github",
+    ".venv",
+    ".vscode",
+    ".gitignore",
+  ],
+  "cSpell.words": [
+    "dotenv",
+    "Fareed",
+    "fpath",
+    "ghostty",
+    "linuxbrew",
+    "macbook",
+    "mohdfareed",
+    "openclaw",
+    "pwsh",
+    "pydantic",
+    "pyright",
+    "shellcheck",
+    "tailscale",
+    "typer",
+    "venv",
+    "WINGET",
+    "wslinfo",
+    "zfunc",
+    "zinit"
+  ]
 }

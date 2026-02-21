@@ -13,36 +13,27 @@
 ; git settings
 [core]
     excludesfile = ~/.gitignore
-    autocrlf = input ; ensure line endings are LF
-    eol = lf ; ensure line endings are LF
+    autocrlf = input ; normalize line endings to LF on commit
 [init]
-    defaultBranch = main ; use main as default branch name
+    defaultBranch = main
 [fetch]
-    prune = true ; remove remote-tracking branches for deleted remote branches
+    prune = true ; remove stale remote-tracking branches
 [pull]
-    rebase = true ; rebase local commits on top of the updated upstream branch
+    rebase = true
 [rerere]
     enabled = true ; remember conflict resolutions
 
-; terminal settings
-[status]
-    short = true ; git status uses --short by default
-[color]
-    ui = auto ; colorize git output
-[help]
-    autoCorrect = prompt ; prompt to correct typos in git commands
-
-; vim editor
+; vscode editor
 [core]
-    editor = nvim
+    editor = code --wait
 [diff]
-    tool = nvimdiff
-[difftool "nvimdiff"]
-    cmd = nvim -d $LOCAL $REMOTE
+    tool = vscodediff
+[difftool "vscodediff"]
+    cmd = code --wait --diff $LOCAL $REMOTE
 [merge]
-    tool = nvimdiff
-[mergetool "nvimdiff"]
-    cmd = nvim -d $LOCAL $REMOTE $MERGED
+    tool = vscodemerge
+[mergetool "vscodemerge"]
+    cmd = code --wait --merge $LOCAL $REMOTE $BASE $MERGED
 
 ; lfs (large file system)
 [filter "lfs"]
@@ -50,3 +41,15 @@
 	required = true
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
+
+; other settings
+[status]
+    short = true
+[help]
+    autoCorrect = prompt
+
+; platform and machine overrides
+[include]
+    path = ~/.gitconfig.win
+[include]
+    path = ~/.gitconfig.local

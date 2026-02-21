@@ -3,12 +3,19 @@
 # Functions and Aliases
 # =============================================================================
 
-Set-Alias machine-setup "$env:MACHINE/scripts/cli.py"
-
 if ($env:TERM_PROGRAM -eq 'vscode') {
     function Clear {
         Clear-Host; Clear-Host
     }
+}
+
+# Clone a git repo
+function GitClone {
+    param (
+        [Parameter(Mandatory = $true)][string]$RepoName,
+        [string[]]$AdditionalArgs
+    )
+    git clone "git@github.com:mohdfareed/$RepoName.git" $AdditionalArgs
 }
 
 # Generate a new SSH key pair
@@ -38,24 +45,4 @@ function RegKey {
     $pubKey = Get-Content -Path $pubKeyPath -Raw
     ssh "$User@$HostName" "echo '$pubKey' >> ~/.ssh/authorized_keys"
     Write-Host "Public key $pubKeyPath added to $User@${HostName}:authorized_keys"
-}
-
-# Register an SSH key to authorized_keys on a Windows host
-function RegKeyWin {
-    param (
-        [Parameter(Mandatory = $true)][string]$HostName,
-        [Parameter(Mandatory = $true)][string]$KeyName,
-        [string]$User = $env:USER
-    )
-
-    $pubKeyPath = "$HOME/.ssh/$KeyName.pub"
-    if (-Not (Test-Path $pubKeyPath)) {
-        Write-Error "Public key file not found: $pubKeyPath"
-        return
-    }
-
-    $pubKey = Get-Content -Path $pubKeyPath -Raw
-    $keysFile = '$env:ProgramData\ssh\administrators_authorized_keys'
-    ssh "$User@$HostName" "powershell -Command `"Add-Content -Path $keysFile -Value '$pubKey'`""
-    Write-Host "Public key $pubKeyPath added to $User@${HostName}:administrators_authorized_keys"
 }

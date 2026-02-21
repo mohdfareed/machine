@@ -1,0 +1,50 @@
+[project]
+name = "machine"
+version = "0.4.0"
+description = "Machine setup CLI app."
+readme = "README.md"
+
+# MARK: - Dependencies
+
+requires-python = ">=3.14"
+dependencies = [
+    "rich>=14.0",
+    "typer>=0.21",
+    "pydantic>=2.12",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1",
+    "pytest>=8.0",
+    "ruff>=0.14",
+]
+
+# MARK: - Build System
+
+[project.scripts]
+mc = "machine.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9,<0.11"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = ["machine"]
+
+# MARK: - Tool Configuration
+
+[tool.ruff]
+line-length = 88
+src = ["src", "config", "machines"]
+
+[tool.ruff.lint]
+select = ["E", "I", "W", "RUF"]
+
+[tool.pyright]
+pythonVersion = "3.14"
+typeCheckingMode = "standard"
+useLibraryCodeForTypes = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
