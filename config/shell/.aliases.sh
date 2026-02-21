@@ -10,6 +10,11 @@ fi
 alias dc='docker compose'
 alias cat='bat --paging=never'
 
+# Linux: show disk usage for real filesystems
+if [[ "$OSTYPE" == linux* ]]; then
+    alias disk='df -h -x tmpfs -x devtmpfs -x squashfs -x overlay -x efivarfs'
+fi
+
 alias ls='eza --icons --group-directories-first --sort=Name'
 alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'

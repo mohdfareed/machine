@@ -224,7 +224,10 @@ def update(
 
     result = subprocess.run([*git, "pull", "--ff-only"], capture_output=True, text=True)
     if result.returncode != 0:
-        console.print("[red]Pull failed.[/]")
+        detail = (result.stderr or result.stdout or "").strip()
+        console.print(f"[red]Pull failed.[/]")
+        if detail:
+            err_console.print(f"[dim]{detail}[/]")
         raise SystemExit(1)
     console.print("[green]Repo updated.[/]")
 
