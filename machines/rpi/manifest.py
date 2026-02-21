@@ -1,6 +1,7 @@
 """Raspberry Pi machine manifest."""
 
 from machine.manifest import (
+    FileMapping,
     MachineManifest,
     Package,
     snap,
@@ -8,6 +9,9 @@ from machine.manifest import (
 
 manifest = MachineManifest(
     modules=["git", "shell", "ssh", "ssh-server", "vscode", "vsc-tunnel", "core"],
+    files=[
+        FileMapping(source="docker", target="~/homelab"),
+    ],
     packages=[
         *snap("go --classic"),
         # Script-installed packages

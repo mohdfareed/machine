@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+export TERM=xterm-256color
+
 alias reboot='sudo reboot'
 
 # display the cpu and gpt temperature of raspberry pi

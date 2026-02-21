@@ -1,0 +1,12 @@
+---
+# Homepage settings
+title: Homelab
+favicon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/server.svg
+headerStyle: clean
+layout:
+  Management:
+    style: row
+    columns: 3
+  Infrastructure:
+    style: row
+    columns: 3

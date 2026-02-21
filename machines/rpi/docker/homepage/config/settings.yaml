@@ -1,0 +1,8 @@
+---
+title: RPi
+favicon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/raspberry-pi.svg
+headerStyle: clean
+layout:
+  Infrastructure:
+    style: row
+    columns: 3

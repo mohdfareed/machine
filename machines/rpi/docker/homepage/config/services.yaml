@@ -1,0 +1,6 @@
+---
+- Infrastructure:
+    - Tailscale:
+        icon: tailscale
+        href: https://login.tailscale.com/admin
+        description: VPN mesh network

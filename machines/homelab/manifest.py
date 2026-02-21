@@ -1,6 +1,6 @@
 """HomeLab (macOS) machine manifest."""
 
-from machine.manifest import MachineManifest, brew, cask
+from machine.manifest import FileMapping, MachineManifest, brew, cask
 
 manifest = MachineManifest(
     modules=[
@@ -12,6 +12,9 @@ manifest = MachineManifest(
         "vsc-tunnel",
         "ghostty",
         "core",
+    ],
+    files=[
+        FileMapping(source="docker", target="~/homelab"),
     ],
     packages=[
         *cask("tailscale"),
