@@ -1,4 +1,4 @@
-"""Personal laptop (macOS) machine manifest."""
+"""HomeLab (macOS) machine manifest."""
 
 from machine.manifest import MachineManifest, brew, cask
 
@@ -16,8 +16,8 @@ manifest = MachineManifest(
     packages=[
         *cask("tailscale"),
         # Dev tools
-        *cask("uv", "docker"),
-        *brew("python", "go", "dotnet-sdk", "powershell"),
+        *cask("docker", "dotnet-sdk", "powershell"),
+        *brew("uv", "python", "go"),
         *brew("copilot-cli", "codex"),
         # Utilities
         *brew("mas", "fastfetch"),

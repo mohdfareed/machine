@@ -7,10 +7,9 @@ manifest = MachineManifest(
     modules=["git", "shell", "ssh", "vscode", "ghostty", "system"],
     packages=[
         # Dev languages
-        *brew("python", "python-freethreading", "uv"),
+        *brew("uv", "python", "python-freethreading"),
         *brew("go", "shellcheck"),
-        *cask("powershell"),
-        *cask("dotnet-sdk", "docker"),
+        *cask("powershell", "dotnet-sdk", "docker"),
         # Utilities
         *brew("mas", "gnu-time", "fastfetch"),
         *brew("copilot-cli", "codex"),

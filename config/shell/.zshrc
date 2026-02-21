@@ -27,9 +27,13 @@ if command -v brew &>/dev/null; then
 fi
 
 # oh-my-posh theme
-theme="$(oh-my-posh cache path)/themes/pure.omp.json"
-eval "$(oh-my-posh init zsh --config "$theme")"
-unset theme
+if command -v brew &>/dev/null; then
+  themes="$(brew --prefix oh-my-posh)/themes"
+else
+  themes="$(oh-my-posh cache path)/themes/pure.omp.json"
+fi
+eval "$(oh-my-posh init zsh --config "$themes/pure.omp.json")"
+unset themes
 
 # Completions
 # =============================================================================
@@ -43,8 +47,11 @@ fi
 FPATH="$HOME/.local/docker/completions:${FPATH}" # docker
 # python (typer) apps completions
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
+
 # openclaw completions
-source $HOME/.openclaw/completions/openclaw.zsh
+_openclaw_completions="$HOME/.openclaw/completions/openclaw.zsh"
+[[ -f "$_openclaw_completions" ]] && source "$_openclaw_completions"
+unset _openclaw_completions
 
 # dotnet completions, source:
 # https://learn.microsoft.com/en-us/dotnet/core/tools/enable-tab-autocomplete

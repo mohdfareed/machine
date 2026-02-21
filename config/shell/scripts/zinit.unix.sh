@@ -2,8 +2,9 @@
 set -Eeo pipefail
 
 echo "sourcing zinit..."
+zinit_home="${ZINIT_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/zinit}"
 # shellcheck disable=SC1091
-source "${ZINIT_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/zinit}/zinit.git/zinit.zsh"
+source "$zinit_home/zinit.git/zinit.zsh" || true
 
 echo "updating zinit..."
 zinit self-update
