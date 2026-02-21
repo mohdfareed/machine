@@ -15,3 +15,6 @@ fi
 # set zsh as default shell (linux)
 echo "setting default shell to zsh..."
 sudo chsh -s "$(command -v zsh)" "$USER"
+
+# enable hush login
+[ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"

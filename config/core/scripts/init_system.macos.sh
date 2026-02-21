@@ -4,8 +4,7 @@ set -Eeuo pipefail
 # set hostname
 if [[ -n "${MC_NAME:-}" ]]; then
     echo "setting hostname..."
-    sudo scutil --set HostName "$MC_NAME"
-    sudo scutil --set LocalHostName "$MC_NAME.local"
+    sudo scutil --set LocalHostName "$MC_NAME"
 fi
 
 # enable Touch ID for sudo
@@ -18,9 +17,14 @@ fi
 
 # enable file/screen sharing
 echo "enabling file sharing..."
-sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.smbd.plist
+sudo launchctl enable system/com.apple.smbd
+sudo launchctl kickstart -k system/com.apple.smbd 2>/dev/null || true
 echo "enabling screen sharing..."
-sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.screensharing.plist
+sudo launchctl enable system/com.apple.screensharing
+sudo launchctl kickstart -k system/com.apple.screensharing 2>/dev/null || true
+
+# enable hush login
+[ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
 
 # MARK: System Defaults
 # =============================================================================
