@@ -24,7 +24,7 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 }
 
 # Install system dependencies
-if (-not (uv python list --installed | Select-String "3.14")) {
+if (-not (uv python list | Select-String "3.14")) {
     Write-Host "Installing Python 3.14..."
     uv python install 3.14
 }

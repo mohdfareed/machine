@@ -23,7 +23,7 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 # Install system dependencies
-if ! uv python list --installed | grep -q "3.14"; then
+if ! uv python list | grep -q "3.14"; then
     echo "Installing Python 3.14..."
     uv python install 3.14
 fi
