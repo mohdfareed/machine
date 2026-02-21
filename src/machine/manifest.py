@@ -125,15 +125,21 @@ def mas(**apps: int) -> list[Package]:
 
 
 def list_modules(root: Path) -> list[str]:
-    """List available module names by scanning ``config/``."""
+    """List available module names by scanning ``config/``.
+
+    Discovers both directory modules (``config/<name>/module.py``)
+    and flat modules (``config/<name>.py``).
+    """
     modules_dir = root / "config"
     if not modules_dir.exists():
         return []
-    return sorted(
-        d.name
-        for d in modules_dir.iterdir()
-        if d.is_dir() and (d / "module.py").exists()
-    )
+    names: set[str] = set()
+    for entry in modules_dir.iterdir():
+        if entry.is_dir() and (entry / "module.py").exists():
+            names.add(entry.name)
+        elif entry.is_file() and entry.suffix == ".py":
+            names.add(entry.stem)
+    return sorted(names)
 
 
 def list_machines(root: Path) -> list[str]:
@@ -152,15 +158,22 @@ def list_machines(root: Path) -> list[str]:
 
 
 def load_module(name: str, root: Path) -> Module:
-    """Load a module definition from ``config/<name>/module.py``.
+    """Load a module from ``config/<name>/module.py`` or ``config/<name>.py``.
 
-    Resolves relative file sources to absolute paths within the module
-    directory.
+    Directory modules get file/script path resolution and auto-discovery
+    of a ``scripts/`` subdirectory.  Flat modules (single ``.py`` file)
+    are for packages-only definitions with no associated files.
     """
     module_dir = root / "config" / name
-    path = module_dir / "module.py"
-    if not path.exists():
-        raise FileNotFoundError(f"No module: {path}")
+    dir_path = module_dir / "module.py"
+    flat_path = root / "config" / f"{name}.py"
+
+    if dir_path.exists():
+        path = dir_path
+    elif flat_path.exists():
+        path = flat_path
+    else:
+        raise FileNotFoundError(f"No module: {dir_path} or {flat_path}")
 
     mod = _import_py(path, f"config.{name}.module")
     result = getattr(mod, "module", None)
@@ -169,8 +182,13 @@ def load_module(name: str, root: Path) -> Module:
     if not isinstance(result, Module):
         raise TypeError(f"'module' must be Module, got {type(result)}")
 
-    # Set name and resolve source paths relative to module dir
     result.name = name
+
+    # Flat modules have no directory — skip path resolution
+    if not dir_path.exists():
+        return result
+
+    # Resolve source paths relative to module dir
     for f in result.files:
         f.source = str(module_dir / f.source)
     for i, s in enumerate(result.scripts):

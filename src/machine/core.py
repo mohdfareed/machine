@@ -5,8 +5,6 @@ import os
 import shutil
 import subprocess
 import sys
-from collections.abc import Generator
-from contextlib import contextmanager
 from enum import StrEnum
 from importlib.metadata import metadata
 from logging.handlers import RotatingFileHandler
@@ -16,45 +14,6 @@ from typing import ClassVar
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
-
-# MARK: Platform
-
-
-class Platform(StrEnum):
-    """Supported platforms."""
-
-    MACOS = "macos"
-    LINUX = "linux"
-    WINDOWS = "windows"
-    WSL = "wsl"
-    GHCS = "ghcs"
-
-
-def _detect() -> Platform:
-    if os.environ.get("CODESPACES"):
-        return Platform.GHCS
-    if shutil.which("wslinfo"):
-        return Platform.WSL
-    match sys.platform:
-        case p if p.startswith("darwin"):
-            return Platform.MACOS
-        case p if p.startswith("linux"):
-            return Platform.LINUX
-        case p if p.startswith("win"):
-            return Platform.WINDOWS
-        case _:
-            raise RuntimeError(f"Unsupported platform: {sys.platform}")
-
-
-PLATFORM = _detect()
-"""Current platform, detected at import time."""
-
-is_macos = PLATFORM == Platform.MACOS
-is_linux = PLATFORM in {Platform.LINUX, Platform.WSL, Platform.GHCS}
-is_windows = PLATFORM == Platform.WINDOWS
-is_wsl = PLATFORM == Platform.WSL
-is_unix = not is_windows
-
 
 # MARK: Settings
 
@@ -80,7 +39,48 @@ settings = Settings()
 """Runtime settings singleton."""
 
 
+# MARK: Platform
+
+
+class Platform(StrEnum):
+    """Supported platforms."""
+
+    MACOS = "macos"
+    LINUX = "linux"
+    WINDOWS = "windows"
+    WSL = "wsl"
+    GHCS = "ghcs"
+
+
+def _detect_platform() -> Platform:
+    if os.environ.get("CODESPACES"):
+        return Platform.GHCS
+    if shutil.which("wslinfo"):
+        return Platform.WSL
+
+    match sys.platform:
+        case p if p.startswith("darwin"):
+            return Platform.MACOS
+        case p if p.startswith("linux"):
+            return Platform.LINUX
+        case p if p.startswith("win"):
+            return Platform.WINDOWS
+        case _:
+            raise RuntimeError(f"Unsupported platform: {sys.platform}")
+
+
+PLATFORM = _detect_platform()
+"""Current platform, detected at import time."""
+
+is_macos = PLATFORM == Platform.MACOS
+is_linux = PLATFORM in {Platform.LINUX, Platform.WSL, Platform.GHCS}
+is_windows = PLATFORM == Platform.WINDOWS
+is_wsl = PLATFORM == Platform.WSL
+is_unix = not is_windows
+
+
 # MARK: Console
+
 
 console = Console()
 err_console = Console(stderr=True)
@@ -88,40 +88,33 @@ err_console = Console(stderr=True)
 
 # MARK: Logging
 
+
 _logger = logging.getLogger(__name__)
 _console_handler: logging.Handler | None = None
 
 
 def setup_console_logging() -> None:
-    """Configure rich console logging."""
+    """Configure rich console logging.
+
+    Normal mode shows WARNING+ only (errors/warnings); user-facing
+    progress goes through ``console.print``.  Debug mode shows
+    everything.
+    """
     global _console_handler
-    level = logging.DEBUG if settings.debug else logging.INFO
+    level = logging.DEBUG if settings.debug else logging.WARNING
     handler = RichHandler(
         level=level,
         console=err_console,
         show_time=settings.debug,
         show_path=settings.debug,
-        rich_tracebacks=True,
+        rich_tracebacks=settings.debug,
         markup=True,
         keywords=[],
     )
-    handler.setFormatter(logging.Formatter("[dim]%(name)s:[/] %(message)s"))
-    logging.root.setLevel(level)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logging.root.setLevel(logging.DEBUG)  # file handler always gets DEBUG
     logging.root.addHandler(handler)
     _console_handler = handler
-
-
-@contextmanager
-def mute_console_logging() -> Generator[None]:
-    """Temporarily suppress console log output (file log unaffected)."""
-    if _console_handler:
-        _console_handler.setLevel(logging.CRITICAL + 1)
-    try:
-        yield
-    finally:
-        if _console_handler:
-            level = logging.DEBUG if settings.debug else logging.INFO
-            _console_handler.setLevel(level)
 
 
 def setup_file_logging() -> None:
