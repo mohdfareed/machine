@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-# Install and enable the SSH server on Linux.
 
 echo "installing ssh server..."
 sudo apt-get update -y

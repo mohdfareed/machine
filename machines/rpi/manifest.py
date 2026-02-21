@@ -7,13 +7,14 @@ from machine.manifest import (
 )
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "vscode", "vscode-tunnel", "system"],
+    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vscode-tunnel", "system"],
     packages=[
         *snap("go --classic"),
         # Script-installed packages
         Package(
             name="dotnet",
-            script="curl -s https://dot.net/v1/dotnet-install.sh | bash",
+            script="curl -s https://dot.net/v1/dotnet-install.sh | "
+            "bash -s -- --channel LTS",
         ),
         Package(
             name="docker",
@@ -24,5 +25,5 @@ manifest = MachineManifest(
             script="curl -fsSL https://tailscale.com/install.sh | sh",
         ),
     ],
-    env={"MC_PRIVATE": "~/.private"},
+    env={"MC_PRIVATE": "~/.ssh"},
 )

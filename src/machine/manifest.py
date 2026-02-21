@@ -55,8 +55,8 @@ class Module(BaseModel):
 
     Scripts under a ``scripts/`` subdirectory are auto-discovered by
     the loader.  Explicit entries in ``scripts`` are still supported
-    for files outside that directory (e.g. ``setup.py`` in the module
-    root).
+    for files outside that directory (e.g. ``init_keys.py`` in the
+    module root).
     """
 
     name: str = ""
@@ -75,6 +75,7 @@ class MachineManifest(BaseModel):
     Defined in ``machines/<id>/manifest.py``.
     """
 
+    name: str | None = None  # public display name; defaults to machine ID
     modules: list[str | Module] = []
     files: list[FileMapping] = []  # machine-specific file mappings
     packages: list[Package] = []  # machine-specific packages

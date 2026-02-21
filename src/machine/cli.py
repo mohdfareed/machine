@@ -1,16 +1,20 @@
 """Machine CLI application."""
 
+import contextlib
 import logging
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import typer
+from rich.progress import BarColumn, MofNCompleteColumn, Progress, TaskID, TextColumn
 from rich.table import Table
 
 from machine.core import (
     console,
     err_console,
+    mute_console_logging,
     settings,
     setup_console_logging,
     setup_file_logging,
@@ -65,11 +69,14 @@ def callback(
     settings.debug = debug
     settings.dry_run = dry_run
     setup_console_logging()
-    setup_file_logging()
 
     if version:
         console.print(f"{settings.name} {settings.version}")
         sys.exit(0)
+
+    # Only log to file for real command runs, not help/version
+    if not {"-h", "--help"} & set(sys.argv):
+        setup_file_logging()
 
 
 # MARK: Lifecycle Commands
@@ -83,7 +90,13 @@ def setup(
     ),
 ) -> None:
     """Deploy configs, install packages, and run scripts."""
-    from machine.app import deploy_files, install_packages, run_scripts, validate
+    from machine.app import (
+        deploy_files,
+        filter_scripts,
+        install_packages,
+        run_scripts,
+        validate,
+    )
     from machine.manifest import load_manifest, load_module
 
     root = settings.home
@@ -106,22 +119,76 @@ def setup(
 
     all_files = [f for m in modules for f in m.files] + manifest.files
     all_packages = [p for m in modules for p in m.packages] + manifest.packages
-    all_scripts = [s for m in modules for s in m.scripts] + manifest.scripts
+    all_scripts = filter_scripts(
+        [s for m in modules for s in m.scripts] + manifest.scripts
+    )
 
-    # Env injected into every script subprocess — never written to disk
-    script_env = {"MC_HOME": str(root), "MC_ID": machine_id, **manifest.env}
+    # Env injected into every script subprocess — never written to disk.
+    # Resolve inter-references: values like $ICLOUD in MC_PRIVATE expand
+    # against os.environ + the rest of the env dict (order-independent).
+    raw_env = {
+        "MC_HOME": str(root),
+        "MC_ID": machine_id,
+        "MC_NAME": manifest.name or machine_id,
+        **manifest.env,
+    }
+    script_env = {k: os.path.expandvars(v) for k, v in raw_env.items()}
+    for _ in range(len(script_env)):  # converge chained references
+        changed = False
+        for key, value in script_env.items():
+            new = value
+            for k, v in script_env.items():
+                new = new.replace(f"${k}", v)
+            if new != value:
+                script_env[key] = new
+                changed = True
+        if not changed:
+            break
 
-    count = deploy_files(all_files)
-    console.print(f"  Files: {count} created/updated")
-
-    # Two-phase script execution: setup scripts prepare the environment
+    # Two-phase script execution: init scripts prepare the environment
     # (package managers, OS features) before packages are installed.
-    setup = [s for s in all_scripts if Path(s).name.startswith("setup")]
-    post = [s for s in all_scripts if not Path(s).name.startswith("setup")]
+    setup_scripts = [s for s in all_scripts if Path(s).name.startswith("init_")]
+    post_scripts = [s for s in all_scripts if not Path(s).name.startswith("init_")]
 
-    run_scripts(setup, env=script_env)
-    install_packages(all_packages)
-    run_scripts(post, env=script_env)
+    progress = Progress(
+        TextColumn("{task.description:<10}", style="bold"),
+        BarColumn(),
+        MofNCompleteColumn(),
+        TextColumn("[dim]{task.fields[current]}"),
+        console=err_console,
+    )
+    t_files = t_bootstrap = t_packages = t_scripts = TaskID(0)
+
+    with contextlib.ExitStack() as stack:
+        if not settings.debug:
+            stack.enter_context(mute_console_logging())
+        stack.enter_context(progress)
+        t_files = progress.add_task("Files", total=len(all_files), current="")
+        t_bootstrap = progress.add_task("Init", total=len(setup_scripts), current="")
+        t_packages = progress.add_task("Packages", total=len(all_packages), current="")
+        t_scripts = progress.add_task("Scripts", total=len(post_scripts), current="")
+
+        def _advance(task: TaskID, name: str) -> None:
+            progress.update(task, advance=1, current=name)
+
+        deploy_files(
+            all_files,
+            on_advance=lambda name: _advance(t_files, name),
+        )
+        run_scripts(
+            setup_scripts,
+            env=script_env,
+            on_advance=lambda name: _advance(t_bootstrap, name),
+        )
+        install_packages(
+            all_packages,
+            on_advance=lambda name: _advance(t_packages, name),
+        )
+        run_scripts(
+            post_scripts,
+            env=script_env,
+            on_advance=lambda name: _advance(t_scripts, name),
+        )
 
     console.print("[bold green]Done![/]")
 
@@ -131,8 +198,13 @@ def update(
     stash: bool = typer.Option(
         False, "-s", "--stash", help="Stash and reapply local changes."
     ),
+    repo_only: bool = typer.Option(
+        False, "-r", "--repo", help="Pull repo only; skip package upgrades."
+    ),
 ) -> None:
-    """Update the CLI tool."""
+    """Pull repo updates and upgrade installed packages."""
+    from machine.app import upgrade_packages
+
     root = settings.home
     git = ["git", "-C", str(root)]
 
@@ -152,12 +224,23 @@ def update(
 
     result = subprocess.run([*git, "pull", "--ff-only"], capture_output=True, text=True)
     if result.returncode != 0:
-        console.print("[red]Update failed.[/]")
+        console.print("[red]Pull failed.[/]")
         raise SystemExit(1)
+    console.print("[green]Repo updated.[/]")
 
-    console.print("[green]Updated.[/]")
     if is_dirty and stash:
         subprocess.run([*git, "stash", "pop"])
+
+    if repo_only:
+        return
+
+    console.print("Upgrading packages...")
+    upgraded: list[str] = []
+    upgrade_packages(on_advance=lambda mgr: upgraded.append(mgr))
+    if upgraded:
+        console.print(f"[green]Upgraded:[/] {', '.join(upgraded)}")
+    else:
+        console.print("[dim]No package managers found.[/]")
 
 
 # MARK: Info Commands
@@ -248,7 +331,10 @@ def show(
         console.print()
         console.print(table)
 
+    from machine.app import _matches_platform
+
     all_scripts = [s for m in modules for s in m.scripts] + manifest.scripts
+    all_scripts = [s for s in all_scripts if _matches_platform(Path(s))]
     if all_scripts:
         console.print("\n[bold]Scripts:[/]")
         for s in all_scripts:

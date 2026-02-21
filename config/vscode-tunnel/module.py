@@ -1,8 +1,4 @@
-"""VS Code tunnel setup module.
-
-Scripts are auto-discovered from ``scripts/`` and filtered by platform
-suffix at runtime.
-"""
+"""VS Code tunnel setup module."""
 
 from machine.manifest import Module
 

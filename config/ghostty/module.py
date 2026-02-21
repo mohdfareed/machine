@@ -10,6 +10,6 @@ module = Module(
         else [FileMapping(source="config", target="~/.config/ghostty/config")]
     ),
     packages=[
-        Package(name="ghostty", brew="ghostty --cask"),
+        Package(name="ghostty", brew="ghostty --cask", snap="ghostty --classic"),
     ],
 )

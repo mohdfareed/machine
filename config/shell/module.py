@@ -8,18 +8,23 @@ from machine.manifest import FileMapping, Module, apt, brew
 
 module = Module(
     files=[
-        FileMapping(source="zshenv", target="~/.zshenv"),
-        FileMapping(source="zshrc", target="~/.zshrc"),
-        FileMapping(source="aliases.sh", target="~/.aliases"),
+        # zsh
+        FileMapping(source=".zshenv", target="~/.zshenv"),
+        FileMapping(source=".zshrc", target="~/.zshrc"),
+        FileMapping(source=".aliases.sh", target="~/.aliases"),
+        # powershell
         FileMapping(source="profile.ps1", target="~/.config/powershell/profile.ps1"),
-        FileMapping(source="aliases.ps1", target="~/.aliases.ps1"),
+        FileMapping(source="aliases.ps1", target="~/.config/powershell/aliases.ps1"),
     ],
     packages=[
         *brew("zsh", "fzf", "bat", "eza", "btop", "oh-my-posh"),
         *apt("unzip"),  # oh-my-posh dependency
     ],
     overrides={
-        ".zshrc.local": "~/.zshrc.local",
-        ".zshenv.local": "~/.zshenv.local",
+        # zsh
+        ".zshrc": "~/.zshrc.local",
+        ".zshenv": "~/.zshenv.local",
+        # powershell
+        "profile.ps1": "~/.config/powershell/profile.local.ps1",
     },
 )

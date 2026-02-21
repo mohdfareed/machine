@@ -11,11 +11,17 @@
   "shellcheck.exclude": [
     "1071" // allow zsh
   ],
+  "[shellscript]": {
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2
+  },
   // file associations
   "files.associations": {
-    "*.gitconfig.local": "properties",
-    "*.zshrc.local": "shellscript",
-    "*.zshenv.local": "shellscript"
+    "**/ghostty/config": "ini",
+    "*gitconfig*": "properties",
+    "*ssh.config*": "ssh_config",
+    "*zshrc*": "shellscript",
+    "*zshenv*": "shellscript"
   },
   // spelling
   "cSpell.ignorePaths": [
@@ -26,10 +32,14 @@
     ".gitignore",
   ],
   "cSpell.words": [
+    "dotenv",
     "Fareed",
+    "fpath",
     "ghostty",
+    "linuxbrew",
     "macbook",
     "mohdfareed",
+    "openclaw",
     "pwsh",
     "pydantic",
     "pyright",
@@ -39,6 +49,7 @@
     "venv",
     "WINGET",
     "wslinfo",
+    "zfunc",
     "zinit"
   ]
 }

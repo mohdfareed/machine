@@ -14,7 +14,7 @@ Get-Service -Name ssh-agent | Set-Service -StartupType Automatic
 # Comment out those lines so ~/.ssh/authorized_keys is used for all users.
 $sshdConfig = "$env:ProgramData\ssh\sshd_config"
 (Get-Content $sshdConfig) -replace '^(Match Group administrators)', '#$1' `
-                          -replace '^(\s*AuthorizedKeysFile __PROGRAMDATA__)', '#$1' |
-    Set-Content $sshdConfig
+    -replace '^(\s*AuthorizedKeysFile __PROGRAMDATA__)', '#$1' |
+Set-Content $sshdConfig
 
 Restart-Service sshd

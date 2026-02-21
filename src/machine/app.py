@@ -5,7 +5,10 @@ import json
 import logging
 import os
 import shutil
+import subprocess
 import sys
+import threading
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -29,7 +32,7 @@ def validate(
     errors: list[str] = []
 
     # Runtime env keys that mc setup always provides
-    runtime_keys = {"MC_HOME", "MC_ID"}
+    runtime_keys = {"MC_HOME", "MC_ID", "MC_NAME"}
     provided = runtime_keys | manifest_env.keys()
 
     for mod in modules:
@@ -55,7 +58,10 @@ def validate(
 # MARK: Files
 
 
-def deploy_files(files: list[FileMapping]) -> int:
+def deploy_files(
+    files: list[FileMapping],
+    on_advance: Callable[[str], None] | None = None,
+) -> int:
     """Symlink all file mappings. Returns count created/updated."""
     created = 0
     for fm in files:
@@ -63,9 +69,10 @@ def deploy_files(files: list[FileMapping]) -> int:
         tgt = Path(os.path.expandvars(fm.target)).expanduser()
         if not src.exists():
             logger.warning("Source not found: %s", src)
-            continue
-        if _symlink(src, tgt):
+        elif _symlink(src, tgt):
             created += 1
+        if on_advance:
+            on_advance(tgt.name)
     return created
 
 
@@ -99,7 +106,10 @@ def _symlink(source: Path, target: Path) -> bool:
 # MARK: Packages
 
 
-def install_packages(packages: list[Package]) -> None:
+def install_packages(
+    packages: list[Package],
+    on_advance: Callable[[str], None] | None = None,
+) -> None:
     """Install packages using available managers."""
     if not packages:
         return
@@ -113,16 +123,66 @@ def install_packages(packages: list[Package]) -> None:
 
     for pkg in packages:
         _install(pkg, managers)
+        if on_advance:
+            on_advance(pkg.name)
+
+
+def upgrade_packages(
+    on_advance: Callable[[str], None] | None = None,
+) -> None:
+    """Upgrade all packages using available managers."""
+    _upgrade_cmds: dict[str, str] = {
+        "brew": "brew upgrade",
+        "apt": "sudo apt upgrade -y",
+        "snap": "sudo snap refresh",
+        "winget": (
+            "winget upgrade --all"
+            " --accept-source-agreements --accept-package-agreements"
+        ),
+        "scoop": "scoop update *",
+        "mas": "mas upgrade",
+    }
+    managers = [
+        name
+        for name in ("brew", "apt", "snap", "winget", "scoop", "mas")
+        if shutil.which(name)
+    ]
+    logger.info("Upgrading via: %s", ", ".join(managers) or "none")
+    for mgr in managers:
+        cmd = _upgrade_cmds[mgr]
+        logger.info("Upgrade: %s", mgr)
+        result = run(cmd, check=False, capture=True)
+        if result.stdout:
+            for line in result.stdout.strip().splitlines():
+                logger.debug("%s: %s", mgr, line)
+        if result.returncode != 0:
+            logger.error("Upgrade failed: %s (exit %d)", mgr, result.returncode)
+        if on_advance:
+            on_advance(mgr)
 
 
 def _install(pkg: Package, managers: set[str]) -> None:
     for mgr, val in _sources(pkg, managers):
         if mgr == "script":
             logger.info("%s: script", pkg.name)
-            run(val, check=False)
-            return
-        logger.info("%s: %s", pkg.name, mgr)
-        run(_cmd(mgr, val), check=False)
+            result = run(val, check=False, capture=True)
+        else:
+            logger.info("%s: %s", pkg.name, mgr)
+            result = run(_cmd(mgr, val), check=False, capture=True)
+        if result.stdout:
+            for line in result.stdout.strip().splitlines():
+                logger.debug("%s: %s", pkg.name, line)
+        if result.stderr:
+            for line in result.stderr.strip().splitlines():
+                logger.debug("%s: %s", pkg.name, line)
+        if result.returncode != 0:
+            log_file = settings.app_dir / "mc.log"
+            logger.error(
+                "Failed to install %s (exit %d) — see %s",
+                pkg.name,
+                result.returncode,
+                log_file,
+            )
         return
     logger.warning("No manager for: %s", pkg.name)
 
@@ -170,7 +230,11 @@ def _cmd(manager: str, value: str) -> str:
 # MARK: Scripts
 
 
-def run_scripts(scripts: list[str], env: dict[str, str] | None = None) -> None:
+def run_scripts(
+    scripts: list[str],
+    env: dict[str, str] | None = None,
+    on_advance: Callable[[str], None] | None = None,
+) -> None:
     """Run scripts (absolute paths), respecting platform tags and tracking.
 
     ``env`` is injected into every script subprocess on top of the
@@ -188,16 +252,27 @@ def run_scripts(scripts: list[str], env: dict[str, str] | None = None) -> None:
     for script in resolved:
         if _is_tracked(script) and not _should_run(script, state):
             logger.debug("Skip: %s", script.name)
-            continue
-        _execute(script, env)
-        if _is_tracked(script):
-            _mark_run(script, state)
+        else:
+            _execute(script, env)
+            if _is_tracked(script):
+                _mark_run(script, state)
+        if on_advance:
+            on_advance(script.stem)
 
     _save_state(state)
 
 
 def _runnable(path: Path) -> bool:
     return path.suffix.lower() in {".sh", ".py", ".ps1"}
+
+
+def filter_scripts(scripts: list[str]) -> list[str]:
+    """Return scripts that match the current platform and are runnable."""
+    return [
+        s
+        for s in scripts
+        if _matches_platform(Path(s)) and Path(s).exists() and _runnable(Path(s))
+    ]
 
 
 def _matches_platform(script: Path) -> bool:
@@ -222,36 +297,82 @@ def _matches_platform(script: Path) -> bool:
     return False
 
 
-def _execute(script: Path, env: dict[str, str] | None = None) -> None:
+def _execute(script: Path, env: dict[str, str] | None = None) -> bool:
+    """Run a script, streaming output to terminal and file log."""
     if is_unix and not os.access(script, os.X_OK):
         os.chmod(script, 0o755)
 
     logger.info("Run: %s", script.name)
+
+    if settings.dry_run:
+        logger.info("[dry-run] %s", script.name)
+        return True
+
     match script.suffix.lower():
         case ".py":
-            run(f"{sys.executable} {script}", check=False, env=env)
+            cmd = f"{sys.executable} {script}"
         case ".ps1":
             if PLATFORM == Platform.WINDOWS:
-                run(
-                    f'powershell -ExecutionPolicy Bypass -File "{script}"',
-                    check=False,
-                    env=env,
-                )
+                cmd = f'powershell -ExecutionPolicy Bypass -File "{script}"'
             else:
-                run(f'pwsh -File "{script}"', check=False, env=env)
+                cmd = f'pwsh -File "{script}"'
         case _:
-            run(str(script), check=False, env=env)
+            cmd = str(script)
+
+    merged_env = {**os.environ, **(env or {})}
+    exe = shutil.which("powershell.exe") if PLATFORM == Platform.WINDOWS else None
+
+    if settings.debug:
+        # Pass through directly — no capture, no logger formatting.
+        proc = subprocess.run(cmd, shell=True, executable=exe, env=merged_env)
+        if proc.returncode != 0:
+            logger.error("Script failed (exit %d): %s", proc.returncode, script.name)
+            return False
+        return True
+
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        executable=exe,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=merged_env,
+    )
+
+    def _stream(pipe, level):  # type: ignore[no-untyped-def]
+        for line in pipe:
+            logger.log(level, "%s: %s", script.name, line.rstrip())
+
+    t_out = threading.Thread(target=_stream, args=(proc.stdout, logging.DEBUG))
+    t_err = threading.Thread(target=_stream, args=(proc.stderr, logging.WARNING))
+    t_out.start()
+    t_err.start()
+    t_out.join()
+    t_err.join()
+    proc.wait()
+
+    if proc.returncode != 0:
+        log_file = settings.app_dir / "mc.log"
+        logger.error(
+            "Script failed (exit %d): %s — see %s",
+            proc.returncode,
+            script.name,
+            log_file,
+        )
+        return False
+    return True
 
 
 def _is_tracked(script: Path) -> bool:
-    return script.name.startswith(("once_", "onchange_"))
+    return script.name.startswith(("once_", "watch_"))
 
 
 def _should_run(script: Path, state: dict) -> bool:
     key = script.name
     if key not in state:
         return True
-    if script.name.startswith("onchange_"):
+    if script.name.startswith("watch_"):
         return state[key].get("hash") != _hash(script)
     return False  # once_ already ran
 

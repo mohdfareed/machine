@@ -5,6 +5,8 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Generator
+from contextlib import contextmanager
 from enum import StrEnum
 from importlib.metadata import metadata
 from logging.handlers import RotatingFileHandler
@@ -87,10 +89,12 @@ err_console = Console(stderr=True)
 # MARK: Logging
 
 _logger = logging.getLogger(__name__)
+_console_handler: logging.Handler | None = None
 
 
 def setup_console_logging() -> None:
     """Configure rich console logging."""
+    global _console_handler
     level = logging.DEBUG if settings.debug else logging.INFO
     handler = RichHandler(
         level=level,
@@ -104,6 +108,20 @@ def setup_console_logging() -> None:
     handler.setFormatter(logging.Formatter("[dim]%(name)s:[/] %(message)s"))
     logging.root.setLevel(level)
     logging.root.addHandler(handler)
+    _console_handler = handler
+
+
+@contextmanager
+def mute_console_logging() -> Generator[None]:
+    """Temporarily suppress console log output (file log unaffected)."""
+    if _console_handler:
+        _console_handler.setLevel(logging.CRITICAL + 1)
+    try:
+        yield
+    finally:
+        if _console_handler:
+            level = logging.DEBUG if settings.debug else logging.INFO
+            _console_handler.setLevel(level)
 
 
 def setup_file_logging() -> None:
@@ -119,6 +137,12 @@ def setup_file_logging() -> None:
     )
     handler.setLevel(logging.DEBUG)
     logging.root.addHandler(handler)
+
+    # Separator for new invocations
+    args = " ".join(sys.argv[1:]) or "(no args)"
+    _logger.info("=" * 60)
+    _logger.info("mc %s", args)
+    _logger.info("=" * 60)
 
 
 # MARK: Shell

@@ -9,3 +9,6 @@ $RECYCLE.BIN/
 
 # linux
 *~
+
+# development
+.env

@@ -1,6 +1,9 @@
 {
   "$help": "https://aka.ms/terminal-documentation",
   "$schema": "https://aka.ms/terminal-profiles-schema",
+  "import": [
+    "settings.local.json"
+  ],
   "schemes": [],
   "actions": [],
   "copyFormatting": "none",
@@ -50,10 +53,6 @@
     {
       "id": "Terminal.PasteFromClipboard",
       "keys": "ctrl+v"
-    },
-    {
-      "id": "Terminal.DuplicatePaneAuto",
-      "keys": "alt+shift+d"
     }
   ]
 }

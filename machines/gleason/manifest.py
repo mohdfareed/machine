@@ -3,15 +3,16 @@
 from machine.manifest import MachineManifest, winget
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "vscode", "vscode-tunnel", "terminal", "system"],
+    modules=["git", "shell", "ssh", "vscode", "terminal", "system"],
     packages=[
         # Dev tools
         *winget("golang.Go"),
         *winget("microsoft.DotNet.SDK"),
         *winget("docker.DockerDesktop"),
+        # Utilities
         *winget("microsoft.PowerToys"),
-        # Admin tools
         *winget("microsoft.sysinternals"),
+        *winget("martiCliment.UniGetUI"),
     ],
-    env={},
+    env={"MC_PRIVATE": "%USERPROFILE%\\.ssh"},
 )

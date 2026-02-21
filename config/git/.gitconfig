@@ -50,6 +50,6 @@
 
 ; platform and machine overrides
 [include]
-    path = ~/.gitconfig.platform
+    path = ~/.gitconfig.win
 [include]
     path = ~/.gitconfig.local

@@ -7,14 +7,13 @@ if [ "$TERM_PROGRAM" = "vscode" ]; then
     alias clear='clear && clear'
 fi
 
+alias dc='docker compose'
 alias cat='bat --paging=never'
+
 alias ls='eza --icons --group-directories-first --sort=Name'
 alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'
 alias llst='lls -T'
-
-alias dc='docker compose'
-alias co='copilot::prompt'
 
 alias zsh::reload='exec $SHELL'
 alias ssh::gen-key='ssh-keygen -t ed25519 -C'
@@ -31,27 +30,6 @@ if [[ "$OSTYPE" == darwin* ]]; then
         done
     }
 fi
-
-# prompt github copilot
-copilot::prompt() {
-    usage="usage: $0 [args...]"
-    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        echo "$usage" && return 0
-    fi
-
-    local tmp
-    tmp=$(mktemp /tmp/copilot-prompt.XXXXXX) || return 1
-    ${EDITOR:-nano} "$tmp"
-
-    if [[ ! -s "$tmp" ]]; then
-        rm -f "$tmp"
-        return 1
-    fi
-
-    copilot -p "$(cat "$tmp")"
-    rm -f "$tmp"
-}
-# compdef copilot::prompt=copilot # wait for copilot shell completions
 
 # clone a git repo
 git::clone() {
@@ -125,25 +103,4 @@ ssh::reg-key() {
     host=$2
 
     ssh-copy-id -i "$key" "$host"
-}
-
-# register an SSH key to authorized_keys on a Windows host
-ssh::reg-key-win() {
-    usage="usage: $0 [key_name] [user@]host"
-    if (( $# < 1 || $# > 2 )); then echo "$usage" && return 1; fi
-    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        echo "$usage" && return 0
-    fi
-
-    key="$HOME/.ssh/${1-personal}.pub"
-    if [[ ! -f "$key" ]]; then
-        echo "no public key file found"
-        return 1
-    fi
-    host=$2
-
-    keys_file="\$env:ProgramData\ssh\administrators_authorized_keys"
-    pwsh_cmd="Add-Content -Path $keys_file -Value '$(<"$key")'"
-    # shellcheck disable=2029
-    ssh "$host" "powershell -Command \"$pwsh_cmd\""
 }

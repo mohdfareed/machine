@@ -2,7 +2,6 @@
 set -Eeuo pipefail
 
 echo "setting system defaults..."
-
 # reduce wallpaper tinting in windows
 defaults write .GlobalPreferences AppleReduceDesktopTinting -bool true
 # switch windows in same space

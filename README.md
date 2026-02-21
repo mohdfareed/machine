@@ -54,30 +54,32 @@ Global flags: `-n` / `--dry-run` (preview only), `-d` / `--debug`, `-v` / `--ver
 
 **Modules** (`config/<name>/module.py`) export a `Module`:
 
-| Field      | Description                                      |
-|------------|--------------------------------------------------|
-| `files`    | `FileMapping(source, target)` → symlinked to `~` |
-| `packages` | `Package(name, brew=, apt=, winget=, …)`         |
-| `scripts`  | Platform-tagged scripts to run                   |
-| `overrides`| Local override files: `{filename: target}`       |
+| Field       | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `files`     | `FileMapping(source, target)` → symlinked to `~` |
+| `packages`  | `Package(name, brew=, apt=, winget=, …)`         |
+| `scripts`   | Platform-tagged scripts to run                   |
+| `overrides` | Local override files: `{filename: target}`       |
 
 **Manifests** (`machines/<id>/manifest.py`) export a `MachineManifest`:
 
-| Field      | Description                                      |
-|------------|--------------------------------------------------|
-| `modules`  | Module names to compose                          |
-| `files`    | Machine-specific symlinks                        |
-| `packages` | Machine-specific packages                        |
-| `scripts`  | Machine-specific scripts                         |
-| `env`      | Env vars injected into all script subprocesses   |
+| Field      | Description                                    |
+| ---------- | ---------------------------------------------- |
+| `modules`  | Module names to compose                        |
+| `files`    | Machine-specific symlinks                      |
+| `packages` | Machine-specific packages                      |
+| `scripts`  | Machine-specific scripts                       |
+| `env`      | Env vars injected into all script subprocesses |
 
 **Platform tags** on script filenames control which scripts run:
 `.macos`, `.linux`, `.unix`, `.win`, `.wsl`, `.ghcs`. No tag = all platforms.
 
-**Script prefixes:** `once_` runs once per machine, `onchange_` reruns when content changes.
+**Script prefixes:** `once_` runs once per machine, `watch_` reruns when content changes, `init_` runs before packages.
 
-**Env vars** (`MC_HOME`, `MC_ID`, and manifest `env`) are injected at runtime into
-script subprocesses — never written to files.
+**Env vars** (`MC_HOME`, `MC_ID`, `MC_NAME`, and manifest `env`) are injected at
+runtime into script subprocesses — never written to files. `MC_NAME` defaults to
+`MC_ID` and can be overridden via the manifest `name` field for a custom hostname
+or tunnel display name.
 
 **SSH keys:** the `ssh` module reads `MC_PRIVATE` from env, copies keys to `~/.ssh/`,
 sets permissions, and adds them to the agent. Skips silently if `MC_PRIVATE` is unset.

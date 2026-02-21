@@ -113,7 +113,7 @@ def test_ssh_module_loads_key_provisioning() -> None:
     """The ssh module includes the key-provisioning script."""
     ssh = load_module("ssh", ROOT)
     script_names = [Path(s).name for s in ssh.scripts]
-    assert "setup.py" in script_names
+    assert "init_keys.py" in script_names
 
 
 def test_module_dependencies_auto_included() -> None:
