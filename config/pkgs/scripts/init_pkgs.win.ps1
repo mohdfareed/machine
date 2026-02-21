@@ -9,7 +9,6 @@ winget source update
 Write-Host "setting up scoop..."
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Write-Host "installing scoop..."
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Invoke-WebRequest -UseBasicParsing -Uri https://get.scoop.sh | Invoke-Expression
 }
 else {

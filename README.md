@@ -98,15 +98,13 @@ Run `mc -h` or `mc <command> -h` for full options.
 - `MC_HOME`: The root directory of the machine config (e.g., `~/.machine`)
 - `MC_ID`: The machine ID (e.g., `my-laptop`)
 - `MC_NAME`: The machine name (defaults to `MC_ID`), can be overridden in manifest
-- `MC_USER`: The current user name
 
-**SSH keys:** the `ssh` module reads `MC_PRIVATE` from env, copies keys to `~/.ssh/`, sets permissions, and adds them to the agent. Skips silently if `MC_PRIVATE` is unset.
+**SSH keys:** the `ssh` module reads `MC_PRIVATE` from env, copies keys to `~/.ssh/`, sets permissions, and adds them to the agent. Skips gracefully if `MC_PRIVATE` is unset.
 
 **Local overrides:** modules declare which `*.local` files they accept via the `overrides` field. Drop matching files in your machine dir and they are auto-discovered and symlinked:
 
 - `~/.gitconfig.local` — declared by `git` module, included by gitconfig
 - `~/.zshenv.local` — declared by `shell` module, sourced by zshenv
-- `~/.zshrc.local` — declared by `shell` module, sourced by zshrc
 - `~/.zshrc.local` — declared by `shell` module, sourced by zshrc
 - `~/term.settings.json` — declared by `win-term` module, used by Windows Terminal
 

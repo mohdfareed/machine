@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from machine.core import PLATFORM, Platform, err_console, is_unix, settings, tee_run
-from machine.manifest import FileMapping, MachineManifest, Module, Package
+from machine.manifest import SCRIPT_SUFFIXES, FileMapping, MachineManifest, Module, Package
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,6 @@ Failure = tuple[str, str, str]  # (module, item, detail)
 
 _STATE_FILE = settings.app_dir / "state.json"
 _MACHINE_FILE = settings.app_dir / "machine.txt"
-_SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 _MANAGERS = ("brew", "apt", "snap", "winget", "scoop", "mas")
 
 _INSTALL_CMD = {
@@ -230,7 +229,7 @@ def matches_platform(script: Path) -> bool:
             return bool(suffixes & {".win"})
         case Platform.GHCS:
             return bool(suffixes & {".ghcs", ".linux", ".unix"})
-    return False
+    raise AssertionError(f"Unhandled platform: {PLATFORM}")
 
 
 def filter_scripts(scripts: list[str]) -> list[str]:
@@ -238,7 +237,7 @@ def filter_scripts(scripts: list[str]) -> list[str]:
     return [
         s
         for s in scripts
-        if (p := Path(s)).suffix.lower() in _SCRIPT_SUFFIXES and matches_platform(p) and p.exists()
+        if (p := Path(s)).suffix.lower() in SCRIPT_SUFFIXES and matches_platform(p)
     ]
 
 

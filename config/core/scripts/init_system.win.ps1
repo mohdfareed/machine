@@ -12,11 +12,10 @@ else {
 
 # install windows features
 Write-Host "enabling windows features..."
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-RemoteDesktopConnection
-Enable-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform
-Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
-Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-RemoteDesktopConnection -NoRestart
+Enable-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform -NoRestart
+Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
 
 # wsl
 Write-Host "setting up wsl..."

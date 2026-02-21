@@ -2,8 +2,8 @@
 set -Eeuo pipefail
 
 echo "installing ssh server..."
-sudo apt-get update -y
-sudo apt-get install -y openssh-server
+sudo apt update -y
+sudo apt install -y openssh-server
 
 echo "configuring ssh server..."
 sudo systemctl enable ssh

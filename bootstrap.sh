@@ -32,6 +32,10 @@ fi
 
 # Clone repo if needed
 if ! [ -d "$MC_HOME/.git" ]; then
+    if ! command -v git >/dev/null 2>&1; then
+        echo "Error: git is not installed. Install git and re-run."
+        exit 1
+    fi
     git clone https://github.com/mohdfareed/machine.git "$MC_HOME"
 fi
 

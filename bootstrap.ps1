@@ -23,7 +23,7 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     Update-Path
 }
 else {
-    uv self update 2>$null || $true > $null
+    try { uv self update 2>$null } catch { }
 }
 
 # Install system dependencies

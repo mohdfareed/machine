@@ -8,7 +8,6 @@ exist.
 """
 
 import os
-import sys
 from pathlib import Path
 
 HOME = Path.home()
@@ -21,7 +20,7 @@ TARGETS = {
 def main() -> None:
     private_path = os.environ.get("MC_PRIVATE", "").strip()
     if not private_path:
-        print("env: MC_PRIVATE is not set, skipping", file=sys.stderr)
+        print("env: MC_PRIVATE is not set, skipping")
         return
 
     private_root = Path(os.path.expandvars(private_path)).expanduser()
@@ -34,7 +33,7 @@ def main() -> None:
             target.unlink()
         target.symlink_to(source)
 
-        target.chmod(0o600)
+        source.chmod(0o600)
         print(f"env: {source} -> {target}")
 
 

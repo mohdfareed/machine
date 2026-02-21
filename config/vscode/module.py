@@ -23,7 +23,6 @@ module = Module(
             "keybindings.json",
             "mcp.json",
             "snippets",
-            "prompts",
         )
     ],
     packages=[

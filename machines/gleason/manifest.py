@@ -14,5 +14,4 @@ manifest = MachineManifest(
         *winget("microsoft.sysinternals"),
         *winget("martiCliment.UniGetUI"),
     ],
-    env={"MC_PRIVATE": "%USERPROFILE%\\.ssh"},
 )

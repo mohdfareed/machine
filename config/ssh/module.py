@@ -1,8 +1,8 @@
-"""SSH module.
+"""SSH client module.
 
 Provisions SSH keys from a private store (``MC_PRIVATE``) and deploys a
-shared SSH config. Also installs and enables the SSH server on each
-platform. All scripts are auto-discovered from ``scripts/``.
+shared SSH client config. Skips key provisioning if ``MC_PRIVATE`` is unset.
+All scripts are auto-discovered from ``scripts/``.
 """
 
 from machine.manifest import FileMapping, Module

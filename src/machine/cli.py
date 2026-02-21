@@ -3,12 +3,13 @@
 import logging
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import click
 import typer
-from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn
+from rich.progress import BarColumn, MofNCompleteColumn, Progress, TaskID, TextColumn
 from rich.prompt import Prompt
 from rich.table import Table
 
@@ -20,6 +21,9 @@ from machine.core import (
     setup_console_logging,
     setup_file_logging,
 )
+
+if TYPE_CHECKING:
+    from machine.manifest import Package
 
 app = typer.Typer(
     help=settings.description,
@@ -115,6 +119,28 @@ def _print_summary(failures: list[tuple[str, str, str]], log_file: Path) -> None
     err_console.print(f"[dim]See {log_file}[/]")
 
 
+def _make_script_cbs(
+    progress: Progress, task: TaskID
+) -> tuple[Callable[[str], None], Callable[[str], None]]:
+    """Create on_before/on_after callbacks that pause/resume the progress bar."""
+    paused = False
+
+    def _pause(_name: str = "") -> None:
+        nonlocal paused
+        progress.stop()
+        paused = True
+
+    def _resume(name: str) -> None:
+        nonlocal paused
+        if paused:
+            progress.start()
+            paused = False
+        progress.advance(task)
+        progress.update(task, current=name)
+
+    return _pause, _resume
+
+
 # MARK: Lifecycle Commands
 
 
@@ -156,7 +182,7 @@ def setup(
         save_current_machine,
         validate,
     )
-    from machine.manifest import load_manifest, load_module
+    from machine.manifest import load_manifest, load_module, resolve_modules
 
     root = settings.home
     machine_id = machine
@@ -167,7 +193,7 @@ def setup(
     module_filter = set(modules)
 
     manifest = load_manifest(machine_id, root)
-    all_modules = [load_module(m, root) if isinstance(m, str) else m for m in manifest.modules]
+    all_modules = resolve_modules(manifest.modules, root)
 
     errors = validate(all_modules, manifest.env, machine_id)
     if errors:
@@ -247,24 +273,12 @@ def setup(
 
         with progress:
             task = progress.add_task("setup", total=total, phase="Files", current="")
-            paused = False
 
             def _advance(name: str) -> None:
                 progress.advance(task)
                 progress.update(task, current=name)
 
-            def _pause(_name: str = "") -> None:
-                nonlocal paused
-                progress.stop()
-                paused = True
-
-            def _resume(name: str) -> None:
-                nonlocal paused
-                if paused:
-                    progress.start()
-                    paused = False
-                progress.advance(task)
-                progress.update(task, current=name)
+            _pause, _resume = _make_script_cbs(progress, task)
 
             _, file_failures = deploy_files(all_files, on_advance=_advance, owners=file_owners)
             failures.extend(file_failures)
@@ -322,7 +336,7 @@ def upgrade(
         get_current_machine,
         run_scripts,
     )
-    from machine.manifest import load_manifest, load_module
+    from machine.manifest import load_manifest, load_module, resolve_modules
 
     root = settings.home
     machine_id = get_current_machine()
@@ -331,7 +345,7 @@ def upgrade(
         raise SystemExit(1)
 
     manifest = load_manifest(machine_id, root)
-    all_modules = [load_module(m, root) if isinstance(m, str) else m for m in manifest.modules]
+    all_modules = resolve_modules(manifest.modules, root)
 
     if modules:
         unknown = set(modules) - {m.name for m in all_modules}
@@ -379,20 +393,7 @@ def upgrade(
             task = progress.add_task(
                 "upgrade", total=len(upgrade_scripts), phase="Upgrade", current=""
             )
-            paused = False
-
-            def _pause(_name: str = "") -> None:
-                nonlocal paused
-                progress.stop()
-                paused = True
-
-            def _resume(name: str) -> None:
-                nonlocal paused
-                if paused:
-                    progress.start()
-                    paused = False
-                progress.advance(task)
-                progress.update(task, current=name)
+            _pause, _resume = _make_script_cbs(progress, task)
 
             failures.extend(
                 run_scripts(
@@ -418,6 +419,10 @@ def update(
     if stash and force:
         err_console.print("[red]--stash and --force are mutually exclusive.[/]")
         raise SystemExit(1)
+
+    if settings.dry_run:
+        console.print("[dim](dry-run)[/] Would pull latest repo changes")
+        return
 
     root = settings.home
     git = ["git", "-C", str(root)]
@@ -536,11 +541,11 @@ def show(
     ] = get_current_machine() or "",
 ) -> None:
     """Show resolved configuration for a machine."""
-    from machine.manifest import load_manifest, load_module
+    from machine.manifest import load_manifest, load_module, resolve_modules
 
     root = settings.home
     manifest = load_manifest(machine, root)
-    modules = [load_module(m, root) if isinstance(m, str) else m for m in manifest.modules]
+    modules = resolve_modules(manifest.modules, root)
 
     console.print(f"[bold]{machine}[/]")
     if modules:
@@ -630,7 +635,7 @@ def show(
             console.print(table)
 
 
-def _pkg_sources(p: "Package") -> str:  # type: ignore[name-defined]
+def _pkg_sources(p: "Package") -> str:
     """Format package install sources as a short string."""
     sources: list[str] = []
     if p.brew:

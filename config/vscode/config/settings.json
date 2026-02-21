@@ -80,7 +80,6 @@
   // #region ===================================================================
   "git.allowForcePush": true,
   "git.autofetch": "all",
-  "git.ignoreLegacyWarning": true,
   "git.ignoreRebaseWarning": true,
   "git.confirmSync": false,
   "git.rebaseWhenSync": true,
@@ -103,6 +102,7 @@
   },
   "chat.mcp.gallery.enabled": true,
   "chat.viewSessions.orientation": "stacked",
+  "chat.tools.terminal.enableAutoApprove": true,
   "chat.tools.urls.autoApprove": {
     "https://github.com": true,
     "https://*.github.com": true,
@@ -117,10 +117,12 @@
     "https://mem0.ai": true,
     "https://*.mem0.ai": true
   },
-  // Beast Mode
-  // https://gist.github.com/burkeholland/88af0249c4b6aff3820bf37898c8bacf
-  "chat.tools.terminal.enableAutoApprove": true,
-  "chat.agent.maxRequests": 100,
+  "files.associations": {
+    "AGENTS.md": "instructions"
+  },
+  "material-icon-theme.files.associations": {
+    "AGENTS.md": "copilot"
+  },
   // # endregion ===============================================================
   // MARK: comments
   // #region ===================================================================
@@ -200,7 +202,6 @@
   "python.testing.pytestArgs": [
     "--color=yes"
   ],
-  "ruff.lineLength": 79,
   "python.useEnvironmentsExtension": true,
   // # endregion ===============================================================
   // MARK: c#
@@ -232,7 +233,6 @@
     "Fareed",
     "fastmcp",
     "mohdfareed"
-  ],
-  "python.defaultInterpreterPath": "/opt/homebrew/bin/python3"
+  ]
   // REVIEW - new customizations above =========================================
 }

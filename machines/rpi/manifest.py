@@ -24,5 +24,4 @@ manifest = MachineManifest(
             script="curl -fsSL https://tailscale.com/install.sh | sh",
         ),
     ],
-    env={"MC_PRIVATE": "~/.ssh"},
 )

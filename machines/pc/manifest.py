@@ -25,5 +25,4 @@ manifest = MachineManifest(
         *winget("9pfhdd62mxs1"),  # Apple Music
         *winget("9nblggh30xj3"),  # Xbox Accessories
     ],
-    env={"MC_PRIVATE": "~/.ssh"},
 )

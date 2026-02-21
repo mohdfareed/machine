@@ -6,6 +6,8 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
+SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
+
 # MARK: Models
 
 
@@ -162,6 +164,8 @@ def list_machines(root: Path) -> list[str]:
 
 # MARK: Loaders
 
+_module_cache: dict[str, Module] = {}
+
 
 def load_module(name: str, root: Path) -> Module:
     """Load a module from ``config/<name>/module.py`` or ``config/<name>.py``.
@@ -192,6 +196,7 @@ def load_module(name: str, root: Path) -> Module:
 
     # Flat modules have no directory — skip path resolution
     if not dir_path.exists():
+        _module_cache[name] = result
         return result
 
     # Resolve source paths relative to module dir
@@ -205,11 +210,12 @@ def load_module(name: str, root: Path) -> Module:
     if scripts_dir.is_dir():
         existing = set(result.scripts)
         for script in sorted(scripts_dir.iterdir()):
-            if script.is_file() and script.suffix in {".sh", ".py", ".ps1"}:
+            if script.is_file() and script.suffix in SCRIPT_SUFFIXES:
                 spath = str(script)
                 if spath not in existing:
                     result.scripts.append(spath)
 
+    _module_cache[name] = result
     return result
 
 
@@ -271,7 +277,7 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
     if scripts_dir.is_dir():
         existing = set(result.scripts)
         for script in sorted(scripts_dir.iterdir()):
-            if script.is_file() and script.suffix in {".sh", ".py", ".ps1"}:
+            if script.is_file() and script.suffix in SCRIPT_SUFFIXES:
                 path = str(script)
                 if path not in existing:
                     result.scripts.append(path)
@@ -283,25 +289,28 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
 
 
 def _resolve_deps(modules: list[str | Module], root: Path) -> list[str | Module]:
-    """Resolve module dependencies and auto-include ``pkgs``.
+    """Resolve module dependencies recursively and auto-include ``pkgs``.
 
-    Walks each module's ``depends`` list and inserts missing deps
-    before the dependent.  If any resolved module declares packages,
-    the ``pkgs`` module is auto-included at the front (if it
-    exists and wasn't already listed).
+    Walks each module's ``depends`` list (and their deps, transitively)
+    and inserts missing deps before the dependent.  If any resolved
+    module declares packages, the ``pkgs`` module is auto-included at
+    the front (if it exists and wasn't already listed).
     """
     resolved: list[str | Module] = []
     seen: set[str] = set()
-    for mod_ref in modules:
+
+    def _add(mod_ref: str | Module) -> None:
         name = mod_ref if isinstance(mod_ref, str) else mod_ref.name
+        if name in seen:
+            return
         mod_obj = load_module(name, root)
         for dep in mod_obj.depends:
-            if dep not in seen:
-                seen.add(dep)
-                resolved.append(dep)
-        if name not in seen:
-            seen.add(name)
-            resolved.append(mod_ref)
+            _add(dep)  # recurse into transitive deps
+        seen.add(name)
+        resolved.append(mod_ref)
+
+    for mod_ref in modules:
+        _add(mod_ref)
 
     # Auto-include 'pkgs' when any module declares packages
     if "pkgs" not in seen:
@@ -322,3 +331,8 @@ def _import_py(path: Path, module_name: str) -> object:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def resolve_modules(modules: list[str | Module], root: Path) -> list[Module]:
+    """Resolve module string references to loaded Module objects."""
+    return [load_module(m, root) if isinstance(m, str) else m for m in modules]

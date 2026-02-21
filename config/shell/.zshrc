@@ -16,31 +16,29 @@ fi # linux/wsl (arm64 or x86_64)
 
 # python
 if command -v brew &>/dev/null; then
-  python=$(brew --prefix python)/libexec/bin
-  export PATH="$python:$PATH"
-  unset python
-
-  # python free-threading (thread-safe)
-  pythont="$(brew --prefix python-freethreading)/bin"
-  export PATH="$pythont:$PATH"
-  unset pythont
+  export PATH="$HOMEBREW_PREFIX/opt/python/libexec/bin:$PATH"
+  # python free-threading (thread-safe) — only if installed
+  [[ -d "$HOMEBREW_PREFIX/opt/python-freethreading/bin" ]] \
+    && export PATH="$HOMEBREW_PREFIX/opt/python-freethreading/bin:$PATH"
 fi
 
 # oh-my-posh theme
-if command -v brew &>/dev/null; then
-  themes="$(brew --prefix oh-my-posh)/themes"
-else
-  themes="$(oh-my-posh cache path)/themes/pure.omp.json"
-fi
-eval "$(oh-my-posh init zsh --config "$themes/pure.omp.json")"
-unset themes
+() {
+  local themes
+  if [[ -n "$HOMEBREW_PREFIX" ]]; then
+    themes="$HOMEBREW_PREFIX/opt/oh-my-posh/themes"
+  else
+    themes="$(oh-my-posh cache path)/themes"
+  fi
+  eval "$(oh-my-posh init zsh --config "$themes/pure.omp.json")"
+}
 
 # Completions
 # =============================================================================
 
 # homebrew completions
-if command -v brew &>/dev/null; then
-  FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+if [[ -n "$HOMEBREW_PREFIX" ]]; then
+  FPATH="$HOMEBREW_PREFIX/share/zsh/site-functions:${FPATH}"
 fi
 
 # docker completions
@@ -48,31 +46,14 @@ FPATH="$HOME/.local/docker/completions:${FPATH}" # docker
 # python (typer) apps completions
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
+# dotnet completions
+eval "$(dotnet completions script zsh)"
+
 # openclaw completions
-_openclaw_completions="$HOME/.openclaw/completions/openclaw.zsh"
-[[ -f "$_openclaw_completions" ]] && source "$_openclaw_completions"
-unset _openclaw_completions
-
-# dotnet completions, source:
-# https://learn.microsoft.com/en-us/dotnet/core/tools/enable-tab-autocomplete
-_dotnet_zsh_complete() {
-  if [[ ! $(command -v dotnet) ]]; then
-      return
-  fi
-
-  # shellcheck disable=SC2154
-  local completions=("$(dotnet complete "$words")")
-  # shellcheck disable=SC2128
-  if [ -z "$completions" ]; then
-      _arguments '*::arguments: _normal'
-      return
-  fi
-
-  # this is not variable assignment, do not modify!
-  # shellcheck disable=SC2283,SC2296
-  _values = "${(ps:\n:)completions}"
+() {
+  local openclaw_completions="$HOME/.openclaw/completions/openclaw.zsh"
+  [[ -f "$openclaw_completions" ]] && source "$openclaw_completions"
 }
-compdef _dotnet_zsh_complete dotnet
 
 # Configuration
 # =============================================================================

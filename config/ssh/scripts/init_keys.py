@@ -2,8 +2,8 @@
 """SSH key provisioning.
 
 Copies private keys from MC_PRIVATE to ~/.ssh/ and registers
-them with the SSH agent. Requires MC_PRIVATE to be set. Never
-overwrites keys that are already in place.
+them with the SSH agent. Skips gracefully when MC_PRIVATE is
+unset. Never overwrites keys that are already in place.
 
 MC_PRIVATE should point to a directory containing keys directly,
 or a subdirectory named ssh/ or .ssh/. Each key is a file without the
@@ -22,12 +22,13 @@ SSH_DIR = Path.home() / ".ssh"
 def main() -> None:
     private_path = os.environ.get("MC_PRIVATE", "").strip()
     if not private_path:
-        print("ssh: MC_PRIVATE is not set", file=sys.stderr)
-        sys.exit(1)
+        print("ssh: MC_PRIVATE is not set, skipping key provisioning")
+        return
 
     private_root = Path(os.path.expandvars(private_path)).expanduser()
-    if not private_root.exists():
-        private_root.mkdir(parents=True)
+    if not private_root.is_dir():
+        print(f"ssh: {private_root} does not exist, skipping key provisioning")
+        return
 
     # Locate the keys directory: prefer ssh/ or .ssh/ subdirectory
     keys_dir = private_root  # default to root

@@ -21,7 +21,10 @@ if (Test-Path -Path "/home/linuxbrew/.linuxbrew/bin/brew") {
 } # linux/wsl
 
 # oh-my-posh
-if ($IsWindows) {
+if ($env:HOMEBREW_PREFIX) {
+    $theme = "$env:HOMEBREW_PREFIX/opt/oh-my-posh/themes/pure.omp.json"
+}
+elseif ($IsWindows) {
     $theme = "$env:LOCALAPPDATA/Programs/oh-my-posh/themes/pure.omp.json"
 }
 else {
@@ -37,17 +40,10 @@ Remove-Variable -Name "theme"
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 
 # homebrew completions
-if ((Get-Command brew) -and (Test-Path ($completions = "$(brew --prefix)/share/pwsh/completions"))) {
-    foreach ($f in Get-ChildItem -Path $completions -File) {
+if ((Get-Command brew -ErrorAction SilentlyContinue) -and
+    (Test-Path ($comp = "$env:HOMEBREW_PREFIX/share/pwsh/completions"))) {
+    foreach ($f in Get-ChildItem -Path $comp -File) {
         . $f
-    }
-}
-
-# dotnet completions
-Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    dotnet complete --position $cursorPosition "$commandAst" | ForEach-Object {
-        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
 
@@ -56,6 +52,9 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
     (& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
     (& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
 }
+
+# dotnet completions
+dotnet completions script pwsh | Out-String | Invoke-Expression
 
 # Infrastructure
 # =============================================================================
