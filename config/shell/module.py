@@ -4,6 +4,7 @@ Deploys zsh and PowerShell configs to well-known paths. Installs
 shell tools via brew/apt.
 """
 
+from machine.core import PLATFORM, Platform
 from machine.manifest import FileMapping, Module, apt, brew
 
 module = Module(
@@ -18,7 +19,7 @@ module = Module(
     ],
     packages=[
         *brew("zsh", "fzf", "bat", "eza", "btop", "oh-my-posh"),
-        *apt("unzip"),  # oh-my-posh dependency
+        *(apt("unzip") if PLATFORM == Platform.LINUX else []),
     ],
     overrides={
         # zsh

@@ -163,7 +163,6 @@ def load_module(name: str, root: Path) -> Module:
         raise FileNotFoundError(f"No module: {path}")
 
     mod = _import_py(path, f"config.{name}.module")
-
     result = getattr(mod, "module", None)
     if result is None:
         raise AttributeError(f"Missing 'module' in {path}")
@@ -201,7 +200,6 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
         raise FileNotFoundError(f"No manifest: {path}")
 
     mod = _import_py(path, f"machines.{machine_id}.manifest")
-
     result = getattr(mod, "manifest", None)
     if result is None:
         raise AttributeError(f"Missing 'manifest' in {path}")

@@ -31,6 +31,7 @@ module = Module(
             name="visual-studio-code",
             brew="visual-studio-code --cask",
             winget="microsoft.VisualStudioCode",
+            snap="code --classic",
         ),
     ],
 )
