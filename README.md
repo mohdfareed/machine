@@ -6,13 +6,15 @@ Cross-platform dotfiles and machine manager for macOS, Windows, and Linux.
 
 Bootstrap a bare machine (installs `uv` and `git` if needed, clones repo, installs `mc`):
 
+**Unix (macOS/Linux/WSL):**
+
 ```sh
-# macOS / Linux
 curl -LsSf https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.sh | sh
 ```
 
+**Windows (PowerShell):**
+
 ```powershell
-# Windows
 irm https://raw.githubusercontent.com/mohdfareed/machine/main/bootstrap.ps1 | iex
 ```
 
@@ -21,7 +23,7 @@ The repo is cloned to `~/.machine` by default. Override with `MC_HOME=<path>` be
 Re-run bootstrap on an existing machine to reinstall the CLI after moving the repo:
 
 ```sh
-~/.machine/bootstrap.sh   # or wherever the repo lives
+~/.machine/bootstrap.sh
 ```
 
 ## Usage
