@@ -20,10 +20,12 @@ if ! command -v uv >/dev/null 2>&1; then
 
     # Make uv available in this session
     export PATH="$HOME/.local/bin:$PATH"
+else
+    uv self update 2>/dev/null || true
 fi
 
 # Install system dependencies
-if ! uv python list | grep -q "3.14"; then
+if ! uv python list --only-installed | grep -q "3.14"; then
     echo "Installing Python 3.14..."
     uv python install 3.14
 fi

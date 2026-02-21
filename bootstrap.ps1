@@ -22,9 +22,12 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     Write-Host "uv installed. Restart your shell and re-run this script."
     Update-Path
 }
+else {
+    uv self update 2>$null || $true > $null
+}
 
 # Install system dependencies
-if (-not (uv python list | Select-String "3.14")) {
+if (-not (uv python list --only-installed | Select-String "3.14")) {
     Write-Host "Installing Python 3.14..."
     uv python install 3.14
 }

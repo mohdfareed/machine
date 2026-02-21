@@ -139,10 +139,9 @@ def setup_file_logging() -> None:
     logging.root.addHandler(handler)
 
     # Separator for new invocations
-    args = " ".join(sys.argv[1:]) or "(no args)"
-    _logger.info("=" * 60)
-    _logger.info("mc %s", args)
-    _logger.info("=" * 60)
+    _logger.debug("=" * 60)
+    _logger.debug("mc %s", " ".join(sys.argv[1:]) or "(no args)")
+    _logger.debug("=" * 60)
 
 
 # MARK: Shell
