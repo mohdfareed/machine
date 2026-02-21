@@ -5,16 +5,18 @@ import json
 import logging
 import os
 import shutil
-import subprocess
 import sys
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
-from machine.core import PLATFORM, Platform, is_unix, run, settings
+from machine.core import PLATFORM, Platform, err_console, is_unix, settings, tee_run
 from machine.manifest import FileMapping, MachineManifest, Module, Package
 
 logger = logging.getLogger(__name__)
+
+# Structured failure record for end-of-run summaries
+Failure = tuple[str, str, str]  # (module, item, detail)
 
 _STATE_FILE = settings.app_dir / "state.json"
 _MACHINE_FILE = settings.app_dir / "machine.txt"
@@ -66,19 +68,23 @@ def validate(
 def deploy_files(
     files: list[FileMapping],
     on_advance: Callable[[str], None] | None = None,
-) -> int:
-    """Symlink all file mappings. Returns count created/updated."""
+    owners: dict[str, str] | None = None,
+) -> tuple[int, list[Failure]]:
+    """Symlink all file mappings. Returns (count created, failures)."""
     created = 0
+    failures: list[Failure] = []
     for fm in files:
         src = Path(fm.source)
         tgt = Path(os.path.expandvars(fm.target)).expanduser()
+        module = (owners or {}).get(fm.source, "?")
         if not src.exists():
-            logger.warning("Source not found: %s", src)
+            logger.warning("[%s] source not found: %s", module, src)
+            failures.append((module, str(src), "source not found"))
         elif _symlink(src, tgt):
             created += 1
         if on_advance:
             on_advance(tgt.name)
-    return created
+    return created, failures
 
 
 def _symlink(source: Path, target: Path) -> bool:
@@ -115,42 +121,64 @@ def install_packages(
     packages: list[Package],
     on_before: Callable[[str], None] | None = None,
     on_after: Callable[[str], None] | None = None,
-) -> None:
-    """Install packages using available managers."""
+    owners: dict[str, str] | None = None,
+) -> list[Failure]:
+    """Install packages using available managers. Returns list of failures."""
     if not packages:
-        return
+        return []
 
     managers = {m for m in _MANAGERS if shutil.which(m)}
     logger.info("Managers: %s", ", ".join(sorted(managers)) or "none")
 
+    failures: list[Failure] = []
     for pkg in packages:
         if on_before:
             on_before(pkg.name)
-        _install(pkg, managers)
+        module = (owners or {}).get(pkg.name, "?")
+        fail = _install(pkg, managers, module)
+        if fail:
+            failures.append(fail)
         if on_after:
             on_after(pkg.name)
+    return failures
 
 
-def _install(pkg: Package, managers: set[str]) -> None:
-    """Try to install a package via the first available manager."""
+def _install(
+    pkg: Package,
+    managers: set[str],
+    module: str = "?",
+) -> Failure | None:
+    """Try to install a package. Returns a Failure on error, else None."""
     for mgr in _MANAGERS:
         val = getattr(pkg, mgr, None)
         if val is None or mgr not in managers:
             continue
-        logger.info("%s: %s", pkg.name, mgr)
-        result = run(_INSTALL_CMD[mgr].format(val), check=False)
-        if result.returncode != 0:
-            logger.error("Failed to install %s (exit %d)", pkg.name, result.returncode)
-        return
+        cmd = _INSTALL_CMD[mgr].format(val)
+        logger.info("[%s] %s: %s", module, pkg.name, mgr)
+        rc = tee_run(cmd, label=module)
+        if rc != 0:
+            logger.error(
+                "[%s] failed to install %s via %s (exit %d): %s", module, pkg.name, mgr, rc, cmd
+            )
+            return (module, pkg.name, f"{mgr} exit {rc}")
+        return None
 
     if pkg.script:
-        logger.info("%s: script", pkg.name)
-        result = run(pkg.script, check=False)
-        if result.returncode != 0:
-            logger.error("Failed to install %s (exit %d)", pkg.name, result.returncode)
-        return
+        logger.info("[%s] %s: script", module, pkg.name)
+        rc = tee_run(pkg.script, label=module)
+        if rc != 0:
+            logger.error(
+                "[%s] failed to install %s via script (exit %d): %s",
+                module,
+                pkg.name,
+                rc,
+                pkg.script,
+            )
+            return (module, pkg.name, f"script exit {rc}")
+        return None
 
-    logger.warning("No manager for: %s", pkg.name)
+    logger.warning("[%s] no manager for: %s", module, pkg.name)
+    return None
 
 
 # MARK: Scripts
@@ -219,19 +247,23 @@ def run_scripts(
     env: dict[str, str] | None = None,
     on_before: Callable[[str], None] | None = None,
     on_after: Callable[[str], None] | None = None,
-) -> None:
+    owners: dict[str, str] | None = None,
+) -> list[Failure]:
     """Run pre-filtered scripts, respecting ``once_``/``watch_`` tracking.
 
     Expects scripts already filtered by :func:`filter_scripts`.
+    Returns a list of failures.
     """
     if not scripts:
-        return
+        return []
 
     state = _load_state()
     logger.info("Scripts: %d to run", len(scripts))
+    failures: list[Failure] = []
 
     for script in (Path(s) for s in scripts):
         tracked = script.name.startswith(("once_", "watch_"))
+        module = (owners or {}).get(str(script), "?")
 
         # Check tracking: once_ run once, watch_ re-run on file change
         if tracked and script.name in state:
@@ -249,7 +281,9 @@ def run_scripts(
 
         if on_before:
             on_before(script.stem)
-        _execute(script, env)
+        fail = _execute(script, env, module)
+        if fail:
+            failures.append(fail)
 
         if tracked:
             state[script.name] = {
@@ -260,18 +294,25 @@ def run_scripts(
             on_after(script.stem)
 
     _save_state(state)
+    return failures
 
 
-def _execute(script: Path, env: dict[str, str] | None = None) -> bool:
-    """Run a script with inherited stdio. Returns True on success."""
+def _execute(
+    script: Path,
+    env: dict[str, str] | None = None,
+    module: str = "?",
+) -> Failure | None:
+    """Run a script, teeing output to terminal and log. Returns Failure on error."""
     if is_unix and not os.access(script, os.X_OK):
         os.chmod(script, 0o755)
 
-    logger.info("Run: %s", script.name)
+    logger.info("[%s] run: %s", module, script.name)
+    if not settings.debug:
+        err_console.print(rf"  [dim]\[{module}][/] {script.stem}")
 
     if settings.dry_run:
-        logger.info("[dry-run] %s", script.name)
-        return True
+        logger.info("[dry-run] [%s] %s", module, script.name)
+        return None
 
     match script.suffix.lower():
         case ".py":
@@ -284,14 +325,16 @@ def _execute(script: Path, env: dict[str, str] | None = None) -> bool:
         case _:
             cmd = str(script)
 
-    merged_env = {**os.environ, **(env or {})}
-    exe = shutil.which("powershell.exe") if PLATFORM == Platform.WINDOWS else None
-
-    proc = subprocess.run(cmd, shell=True, executable=exe, env=merged_env)
-    if proc.returncode != 0:
-        logger.error("Script failed (exit %d): %s", proc.returncode, script.name)
-        return False
-    return True
+    rc = tee_run(cmd, env=env, label=module)
+    if rc != 0:
+        # Show path relative to repo root for readability
+        try:
+            rel = script.relative_to(settings.home)
+        except ValueError:
+            rel = script
+        logger.error("[%s] script failed (exit %d): %s", module, rc, rel)
+        return (module, str(rel), f"exit {rc}")
+    return None
 
 
 # MARK: Machine

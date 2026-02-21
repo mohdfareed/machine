@@ -20,7 +20,7 @@ module = Module(
     ],
     overrides=(
         {
-            "terminal.settings.json": "%LOCALAPPDATA%"
+            "term.settings.json": "%LOCALAPPDATA%"
             "/Microsoft/Windows Terminal/Fragments/settings.local.json"
         }
         if PLATFORM == Platform.WINDOWS

@@ -103,6 +103,18 @@ machines = click.Choice(get_machines(), case_sensitive=False)
 modules = click.Choice(get_modules(), case_sensitive=False)
 
 
+def _print_summary(failures: list[tuple[str, str, str]], log_file: Path) -> None:
+    """Print a final status line. If there were failures, list each one."""
+    if not failures:
+        console.print(f"\n[bold green]Done![/] [dim](log: {log_file})[/]")
+        return
+
+    err_console.print(f"\n[bold yellow]Completed with {len(failures)} failure(s):[/]")
+    for module, item, detail in failures:
+        err_console.print(f"  [red]\\[{module}][/] {item} [dim]({detail})[/]")
+    err_console.print(f"[dim]See {log_file}[/]")
+
+
 # MARK: Lifecycle Commands
 
 
@@ -135,6 +147,7 @@ def setup(
     run only those modules.
     """
     from machine.app import (
+        Failure,
         build_script_env,
         deploy_files,
         filter_scripts,
@@ -159,6 +172,7 @@ def setup(
     errors = validate(all_modules, manifest.env, machine_id)
     if errors:
         for e in errors:
+            _logger.error("Validation: %s", e)
             err_console.print(f"[red]  {e}[/]")
         raise SystemExit(1)
 
@@ -180,6 +194,25 @@ def setup(
     all_scripts = filter_scripts(raw_scripts)
     script_env = build_script_env(manifest, machine_id, root)
 
+    # Build ownership maps for module context in log messages
+    script_owners: dict[str, str] = {}
+    file_owners: dict[str, str] = {}
+    pkg_owners: dict[str, str] = {}
+    for m in active_modules:
+        for s in m.scripts:
+            script_owners[s] = m.name
+        for f in m.files:
+            file_owners[f.source] = m.name
+        for p in m.packages:
+            pkg_owners[p.name] = m.name
+    # Tag manifest-level items with the machine ID
+    for f in manifest.files:
+        file_owners.setdefault(f.source, machine_id)
+    for p in manifest.packages:
+        pkg_owners.setdefault(p.name, machine_id)
+    for s in manifest.scripts:
+        script_owners.setdefault(s, machine_id)
+
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
     console.print(f"{mode}Setting up [bold]{machine_id}[/]")
     console.print(f"  Modules: {', '.join(m.name for m in active_modules)}")
@@ -193,12 +226,14 @@ def setup(
     ]
 
     log_file = settings.app_dir / "mc.log"
+    failures: list[Failure] = []
     if settings.debug:
         # Debug mode — no progress bar, full logging to console
-        deploy_files(all_files)
-        run_scripts(setup_scripts, env=script_env)
-        install_packages(all_packages)
-        run_scripts(post_scripts, env=script_env)
+        _, file_failures = deploy_files(all_files, owners=file_owners)
+        failures.extend(file_failures)
+        failures.extend(run_scripts(setup_scripts, env=script_env, owners=script_owners))
+        failures.extend(install_packages(all_packages, owners=pkg_owners))
+        failures.extend(run_scripts(post_scripts, env=script_env, owners=script_owners))
     else:
         total = len(all_files) + len(setup_scripts) + len(all_packages) + len(post_scripts)
         progress = Progress(
@@ -231,32 +266,42 @@ def setup(
                 progress.advance(task)
                 progress.update(task, current=name)
 
-            deploy_files(all_files, on_advance=_advance)
+            _, file_failures = deploy_files(all_files, on_advance=_advance, owners=file_owners)
+            failures.extend(file_failures)
             progress.update(task, phase="Init")
 
-            run_scripts(
-                setup_scripts,
-                env=script_env,
-                on_before=_pause,
-                on_after=_resume,
+            failures.extend(
+                run_scripts(
+                    setup_scripts,
+                    env=script_env,
+                    on_before=_pause,
+                    on_after=_resume,
+                    owners=script_owners,
+                )
             )
             progress.update(task, phase="Packages")
 
-            install_packages(
-                all_packages,
-                on_before=_pause,
-                on_after=_resume,
+            failures.extend(
+                install_packages(
+                    all_packages,
+                    on_before=_pause,
+                    on_after=_resume,
+                    owners=pkg_owners,
+                )
             )
             progress.update(task, phase="Scripts")
 
-            run_scripts(
-                post_scripts,
-                env=script_env,
-                on_before=_pause,
-                on_after=_resume,
+            failures.extend(
+                run_scripts(
+                    post_scripts,
+                    env=script_env,
+                    on_before=_pause,
+                    on_after=_resume,
+                    owners=script_owners,
+                )
             )
 
-    console.print(f"\n[bold green]Done![/] [dim](log: {log_file})[/]")
+    _print_summary(failures, log_file)
 
 
 @app.command(rich_help_panel="Lifecycle")
@@ -271,6 +316,7 @@ def upgrade(
 ) -> None:
     """Run upgrade_* scripts for the current machine."""
     from machine.app import (
+        Failure,
         build_script_env,
         filter_scripts,
         get_current_machine,
@@ -305,13 +351,21 @@ def upgrade(
         console.print("[dim]No upgrade scripts found.[/]")
         return
 
+    script_owners: dict[str, str] = {}
+    for m in all_modules:
+        for s in m.scripts:
+            script_owners[s] = m.name
+    for s in manifest.scripts:
+        script_owners.setdefault(s, machine_id)
+
     script_env = build_script_env(manifest, machine_id, root)
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
     console.print(f"{mode}Upgrading [bold]{machine_id}[/]")
     log_file = settings.app_dir / "mc.log"
 
+    failures: list[Failure] = []
     if settings.debug:
-        run_scripts(upgrade_scripts, env=script_env)
+        failures = run_scripts(upgrade_scripts, env=script_env, owners=script_owners)
     else:
         progress = Progress(
             TextColumn("[bold]{task.fields[phase]:<10}"),
@@ -340,14 +394,17 @@ def upgrade(
                 progress.advance(task)
                 progress.update(task, current=name)
 
-            run_scripts(
-                upgrade_scripts,
-                env=script_env,
-                on_before=_pause,
-                on_after=_resume,
+            failures.extend(
+                run_scripts(
+                    upgrade_scripts,
+                    env=script_env,
+                    on_before=_pause,
+                    on_after=_resume,
+                    owners=script_owners,
+                )
             )
 
-    console.print(f"\n[bold green]Done![/] [dim](log: {log_file})[/]")
+    _print_summary(failures, log_file)
 
 
 @app.command(rich_help_panel="Lifecycle")

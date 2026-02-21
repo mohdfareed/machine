@@ -9,8 +9,11 @@ Cross-platform machine bootstrapper and dotfile manager.
 > note, update or remove it. Do this proactively — don't wait to be asked.
 >
 > For cross-session memory (context from previous conversations), use the
-> `machine-memor` MCP tool. This file is for durable coding standards, not
+> `machine-memories` MCP tool. This file is for durable coding standards, not
 > session notes.
+>
+> ALWAYS ensure the README.md, AGENTS.md, and the memories MCP tool are
+> consistent and up-to-date with the latest project conventions and rules.
 
 ## Tech Stack
 
@@ -57,7 +60,7 @@ passed to scripts at runtime (not written to files).
 - Before writing new code, check the codebase for existing patterns and follow them
 - No generated env files — shell configs are static, committed files
 - Platform tags on scripts: `name.macos.sh`, `name.unix.sh`, `name.win.ps1`
-- Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages
+- Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages, `upgrade_` = run only during `mc upgrade`
 - Execution order: files → `init_*` scripts → packages → remaining scripts
 - SSH: `ssh` module provisions keys from `MC_PRIVATE` (skips if unset)
 - Machine extras: `extra.zsh` → `~/.zshrc.local`

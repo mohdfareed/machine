@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -20,6 +21,9 @@ from rich.logging import RichHandler
 _meta = metadata("machine")
 # __file__ = src/machine/core.py → parents[2] = repo root
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# Strip ANSI/DEC escape sequences for log-file output
+_ANSI_RE = re.compile(r"\x1b(?:\[[0-9;?]*[A-Za-z]|\][^\x07]*\x07|\([A-Z])")
 
 
 class Settings:
@@ -92,6 +96,10 @@ err_console = Console(stderr=True)
 _logger = logging.getLogger(__name__)
 _console_handler: logging.Handler | None = None
 
+# Output logger for tee'd subprocess lines — file only, never to console
+_output_logger = logging.getLogger(__name__ + ".output")
+_output_logger.propagate = False
+
 
 def setup_console_logging() -> None:
     """Configure rich console logging.
@@ -108,7 +116,7 @@ def setup_console_logging() -> None:
         show_time=settings.debug,
         show_path=settings.debug,
         rich_tracebacks=settings.debug,
-        markup=True,
+        markup=False,
         keywords=[],
     )
     handler.setFormatter(logging.Formatter("%(message)s"))
@@ -130,6 +138,7 @@ def setup_file_logging() -> None:
     )
     handler.setLevel(logging.DEBUG)
     logging.root.addHandler(handler)
+    _output_logger.addHandler(handler)  # tee output goes to file only
 
     # Separator for new invocations
     _logger.debug("=" * 60)
@@ -138,6 +147,11 @@ def setup_file_logging() -> None:
 
 
 # MARK: Shell
+
+
+def _short(cmd: str) -> str:
+    """Replace absolute repo paths with relative ones for cleaner logs."""
+    return cmd.replace(str(_REPO_ROOT) + os.sep, "").replace(str(_REPO_ROOT), ".")
 
 
 def run(
@@ -152,10 +166,10 @@ def run(
     ``env`` is merged on top of the current process environment, so
     scripts inherit PATH and other system vars plus any injected keys.
     """
-    _logger.debug("$ %s", cmd)
+    _logger.debug("$ %s", _short(cmd))
 
     if settings.dry_run:
-        _logger.info("[dry-run] %s", cmd)
+        _logger.info("[dry-run] %s", _short(cmd))
         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
 
     merged_env = {**os.environ, **(env or {})}
@@ -169,3 +183,115 @@ def run(
         capture_output=capture,
         env=merged_env,
     )
+
+
+def tee_run(
+    cmd: str,
+    *,
+    env: dict[str, str] | None = None,
+    label: str = "",
+) -> int:
+    """Run a shell command, streaming output to terminal and logging each line.
+
+    Unlike :func:`run`, output is captured and written to both the
+    terminal and the file logger so nothing is lost after scrolling.
+    On Unix a pseudo-terminal is used so child processes keep their
+    color output.  Returns the process exit code.
+    """
+    _logger.debug("$ %s", _short(cmd))
+
+    if settings.dry_run:
+        _logger.info("[dry-run] %s", _short(cmd))
+        return 0
+
+    merged_env = {**os.environ, **(env or {})}
+
+    if is_unix:
+        rc, collected = _tee_pty(cmd, merged_env)
+    else:
+        rc, collected = _tee_pipe(cmd, merged_env)
+
+    # Log captured output line by line (strip ANSI escapes for the log file)
+    prefix = f"[{label}] " if label else ""
+    for line in collected.decode(errors="replace").splitlines():
+        stripped = _ANSI_RE.sub("", line).rstrip()
+        if stripped:
+            _output_logger.debug("%s| %s", prefix, stripped)
+
+    return rc
+
+
+def _tee_pty(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
+    """Run *cmd* inside a pty, teeing output to stdout. Unix only."""
+    import pty
+    import select
+
+    primary, replica = pty.openpty()
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        env=env,
+        stdin=sys.stdin,
+        stdout=replica,
+        stderr=replica,
+    )
+    os.close(replica)  # parent doesn't write to the replica side
+
+    collected = bytearray()
+    try:
+        while True:
+            ready, _, _ = select.select([primary], [], [], 0.1)
+            if ready:
+                try:
+                    chunk = os.read(primary, 4096)
+                except OSError:
+                    break
+                if not chunk:
+                    break
+                sys.stdout.buffer.write(chunk)
+                sys.stdout.buffer.flush()
+                collected.extend(chunk)
+            elif proc.poll() is not None:
+                # Process exited; drain remaining output
+                while True:
+                    try:
+                        chunk = os.read(primary, 4096)
+                    except OSError:
+                        break
+                    if not chunk:
+                        break
+                    sys.stdout.buffer.write(chunk)
+                    sys.stdout.buffer.flush()
+                    collected.extend(chunk)
+                break
+    finally:
+        os.close(primary)
+
+    proc.wait()
+    return proc.returncode, collected
+
+
+def _tee_pipe(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
+    """Fallback tee using pipes (no color preservation). Windows."""
+    exe = shutil.which("powershell.exe") if is_windows else None
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        executable=exe,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    assert proc.stdout is not None
+
+    collected = bytearray()
+    while True:
+        chunk = os.read(proc.stdout.fileno(), 4096)
+        if not chunk:
+            break
+        sys.stdout.buffer.write(chunk)
+        sys.stdout.buffer.flush()
+        collected.extend(chunk)
+
+    proc.wait()
+    return proc.returncode, collected
