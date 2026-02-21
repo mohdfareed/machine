@@ -2,4 +2,4 @@
 set -Eeuo pipefail
 
 echo "enabling ssh server..."
-sudo systemsetup -setremotelogin on >/dev/null
+sudo systemsetup -setremotelogin on

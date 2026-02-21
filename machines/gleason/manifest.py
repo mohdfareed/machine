@@ -3,7 +3,7 @@
 from machine.manifest import MachineManifest, winget
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "vscode", "terminal", "system"],
+    modules=["git", "shell", "ssh", "vscode", "win-term", "core"],
     packages=[
         # Dev tools
         *winget("golang.Go"),

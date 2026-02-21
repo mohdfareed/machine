@@ -143,15 +143,21 @@ def list_modules(root: Path) -> list[str]:
 
 
 def list_machines(root: Path) -> list[str]:
-    """List available machine IDs by scanning ``machines/``."""
+    """List available machine IDs by scanning ``machines/``.
+
+    Discovers both directory manifests (``machines/<id>/manifest.py``)
+    and flat manifests (``machines/<id>.py``).
+    """
     machines_dir = root / "machines"
     if not machines_dir.exists():
         return []
-    return sorted(
-        d.name
-        for d in machines_dir.iterdir()
-        if d.is_dir() and (d / "manifest.py").exists()
-    )
+    names: set[str] = set()
+    for entry in machines_dir.iterdir():
+        if entry.is_dir() and (entry / "manifest.py").exists():
+            names.add(entry.name)
+        elif entry.is_file() and entry.suffix == ".py":
+            names.add(entry.stem)
+    return sorted(names)
 
 
 # MARK: Loaders
@@ -208,14 +214,25 @@ def load_module(name: str, root: Path) -> Module:
 
 
 def load_manifest(machine_id: str, root: Path) -> MachineManifest:
-    """Load a machine manifest from ``machines/<id>/manifest.py``.
+    """Load a machine manifest from ``machines/<id>/manifest.py`` or
+    ``machines/<id>.py``.
 
-    Resolves module references and machine-specific file paths.
+    Directory manifests get file/script path resolution and
+    auto-discovery.  Flat manifests (single ``.py`` file) are for
+    lightweight definitions with no machine-specific files.
     """
     machine_dir = root / "machines" / machine_id
-    path = machine_dir / "manifest.py"
-    if not path.exists():
-        raise FileNotFoundError(f"No manifest: {path}")
+    dir_path = machine_dir / "manifest.py"
+    flat_path = root / "machines" / f"{machine_id}.py"
+
+    if dir_path.exists():
+        path = dir_path
+        is_dir_manifest = True
+    elif flat_path.exists():
+        path = flat_path
+        is_dir_manifest = False
+    else:
+        raise FileNotFoundError(f"No manifest: {dir_path} or {flat_path}")
 
     mod = _import_py(path, f"machines.{machine_id}.manifest")
     result = getattr(mod, "manifest", None)
@@ -224,6 +241,11 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
     if not isinstance(result, MachineManifest):
         raise TypeError(f"'manifest' must be MachineManifest, got {type(result)}")
 
+    # Flat manifests have no directory — skip path/script resolution
+    if not is_dir_manifest:
+        result.modules = _resolve_deps(result.modules, root)
+        return result
+
     # Resolve machine-specific file sources relative to machine dir
     for f in result.files:
         f.source = str(machine_dir / f.source)
@@ -231,19 +253,7 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
         result.scripts[i] = str(machine_dir / s)
 
     # Resolve module dependencies (auto-include missing, ordered before dependents)
-    resolved: list[str | Module] = []
-    seen: set[str] = set()
-    for mod_ref in result.modules:
-        name = mod_ref if isinstance(mod_ref, str) else mod_ref.name
-        mod_obj = load_module(name, root)
-        for dep in mod_obj.depends:
-            if dep not in seen:
-                seen.add(dep)
-                resolved.append(dep)
-        if name not in seen:
-            seen.add(name)
-            resolved.append(mod_ref)
-    result.modules = resolved
+    result.modules = _resolve_deps(result.modules, root)
 
     # Auto-discover local overrides declared by modules
     for mod_ref in result.modules:
@@ -272,6 +282,39 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
 
 
 # MARK: Helpers
+
+
+def _resolve_deps(modules: list[str | Module], root: Path) -> list[str | Module]:
+    """Resolve module dependencies and auto-include ``pkgs``.
+
+    Walks each module's ``depends`` list and inserts missing deps
+    before the dependent.  If any resolved module declares packages,
+    the ``pkgs`` module is auto-included at the front (if it
+    exists and wasn't already listed).
+    """
+    resolved: list[str | Module] = []
+    seen: set[str] = set()
+    for mod_ref in modules:
+        name = mod_ref if isinstance(mod_ref, str) else mod_ref.name
+        mod_obj = load_module(name, root)
+        for dep in mod_obj.depends:
+            if dep not in seen:
+                seen.add(dep)
+                resolved.append(dep)
+        if name not in seen:
+            seen.add(name)
+            resolved.append(mod_ref)
+
+    # Auto-include 'pkgs' when any module declares packages
+    if "pkgs" not in seen:
+        has_pkgs = any(
+            (load_module(m, root) if isinstance(m, str) else m).packages
+            for m in resolved
+        )
+        if has_pkgs:
+            resolved.insert(0, "pkgs")
+
+    return resolved
 
 
 def _import_py(path: Path, module_name: str) -> object:

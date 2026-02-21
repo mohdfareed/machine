@@ -4,7 +4,7 @@ from machine.manifest import MachineManifest, brew, cask, mas
 
 manifest = MachineManifest(
     name="mohds-macbook",
-    modules=["git", "shell", "ssh", "vscode", "ghostty", "system"],
+    modules=["git", "shell", "ssh", "vscode", "ghostty", "core"],
     packages=[
         # Dev languages
         *brew("uv", "python", "python-freethreading"),

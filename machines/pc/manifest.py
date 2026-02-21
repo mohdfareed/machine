@@ -10,8 +10,8 @@ manifest = MachineManifest(
         "ssh-server",
         "vscode",
         "vscode-tunnel",
-        "terminal",
-        "system",
+        "win-term",
+        "core",
     ],
     packages=[
         # Dev tools

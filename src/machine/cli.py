@@ -370,7 +370,7 @@ def update(
         False, "-f", "--force", help="Discard local changes before pull."
     ),
 ) -> None:
-    """Pull repo updates and upgrade installed packages."""
+    """Pull the latest repo changes."""
     if stash and force:
         err_console.print("[red]--stash and --force are mutually exclusive.[/]")
         raise SystemExit(1)
@@ -383,14 +383,16 @@ def update(
     )
     is_dirty = bool(result.stdout.strip())
 
+    stashed = False
     if is_dirty:
-        if _prompt_force():
+        if _prompt_force(stash=stash, force=force):
             subprocess.run([*git, "fetch", "--all"], capture_output=True)
             subprocess.run([*git, "reset", "--hard", "origin/HEAD"])
             console.print("[yellow]Local changes discarded.[/]")
         else:
             subprocess.run([*git, "stash", "push", "-m", "mc update"])
             console.print("[yellow]Local changes stashed.[/]")
+            stashed = True
 
     result = subprocess.run([*git, "pull", "--ff-only"], capture_output=True, text=True)
     if result.returncode != 0:
@@ -401,28 +403,29 @@ def update(
         raise SystemExit(1)
     console.print("[green]Repo updated.[/]")
 
-    if is_dirty and stash:
+    if stashed:
         subprocess.run([*git, "stash", "pop"])
 
 
-def _prompt_force() -> bool:
-    force = False
-    aborted = False
-    choice = Prompt.ask(
-        "[yellow]Local changes detected.[/]",
-        choices=["stash", "discard", "abort"],
-        default="abort",
-    )
+def _prompt_force(stash: bool, force: bool) -> bool:
+    if force:
+        choice = "discard"
+    elif stash:
+        choice = "stash"
+    else:
+        choice = Prompt.ask(
+            "[yellow]Local changes detected.[/]",
+            choices=["stash", "discard", "abort"],
+            default="abort",
+        )
 
+    aborted = False
     if choice == "stash":
         force = False
         aborted = False
     elif choice == "discard":
         force = True
-        aborted = not typer.confirm(
-            "[red]Are you sure you want to discard local changes? "
-            "This cannot be undone.[/]",
-        )
+        aborted = not typer.confirm("[red]This cannot be undone.[/]")
     else:  # abort
         force = False
         aborted = True

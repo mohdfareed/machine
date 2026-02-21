@@ -1,6 +1,30 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# set hostname
+if [[ -n "${MC_NAME:-}" ]]; then
+    echo "setting hostname..."
+    sudo scutil --set HostName "$MC_NAME"
+    sudo scutil --set LocalHostName "$MC_NAME.local"
+fi
+
+# enable Touch ID for sudo
+PAM_SUDO_PATH="/etc/pam.d/sudo_local"
+if ! grep -q "pam_tid.so" "$PAM_SUDO_PATH" 2>/dev/null; then
+    echo "enabling touch ID for sudo..."
+    sudo mkdir -p "$(dirname "$PAM_SUDO_PATH")"
+    echo "auth       sufficient     pam_tid.so" | sudo tee "$PAM_SUDO_PATH" >/dev/null
+fi
+
+# enable file/screen sharing
+echo "enabling file sharing..."
+sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.smbd.plist
+echo "enabling screen sharing..."
+sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.screensharing.plist
+
+# MARK: System Defaults
+# =============================================================================
+
 echo "setting system defaults..."
 # reduce wallpaper tinting in windows
 defaults write .GlobalPreferences AppleReduceDesktopTinting -bool true

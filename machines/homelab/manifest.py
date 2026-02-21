@@ -11,7 +11,7 @@ manifest = MachineManifest(
         "vscode",
         "vscode-tunnel",
         "ghostty",
-        "system",
+        "core",
     ],
     packages=[
         *cask("tailscale"),

@@ -7,7 +7,7 @@ from machine.manifest import (
 )
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vscode-tunnel", "system"],
+    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vscode-tunnel", "core"],
     packages=[
         *snap("go --classic"),
         # Script-installed packages
