@@ -2,18 +2,18 @@
 # Service widgets shown on the dashboard.
 
 - Management:
-    - Portainer:
-        icon: portainer
-        href: https://{{HOMEPAGE_VAR_HOMELAB_IP}}:9443
-        description: Container management
-        widget:
-          type: portainer
-          url: https://{{HOMEPAGE_VAR_HOMELAB_IP}}:9443
-          env: 2
-          key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
+      - Portainer:
+            icon: portainer
+            href: https://localhost:9443
+            description: Container management
+            widget:
+                type: portainer
+                url: https://host.docker.internal:9443
+                env: 2
+                key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
 
 - Infrastructure:
-    - Tailscale:
-        icon: tailscale
-        href: https://login.tailscale.com/admin
-        description: VPN mesh network
+      - Tailscale:
+            icon: tailscale
+            href: https://login.tailscale.com/admin
+            description: VPN mesh network

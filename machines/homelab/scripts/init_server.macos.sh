@@ -55,10 +55,12 @@ echo "setting server-oriented defaults..."
 # Disable App Nap so background apps keep running at full speed.
 defaults write NSGlobalDomain NSAppSleepDisabled -bool true
 
-# Disable automatic macOS updates (manage manually on a server).
-defaults write com.apple.SoftwareUpdate AutomaticDownload -bool false
-defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool false
-defaults write com.apple.commerce AutoUpdate -bool false
+# Enable automatic macOS security updates.
+echo "enabling automatic updates..."
+defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
+defaults write com.apple.SoftwareUpdate AutomaticDownload -bool true
+defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -bool true
+defaults write com.apple.commerce AutoUpdate -bool true
 
 # Disable screen saver (headless, no screen).
 defaults -currentHost write com.apple.screensaver idleTime -int 0
@@ -66,6 +68,16 @@ defaults -currentHost write com.apple.screensaver idleTime -int 0
 # Disable Bluetooth (headless server, no peripherals needed).
 echo "disabling bluetooth..."
 sudo defaults write /Library/Preferences/com.apple.Bluetooth ControllerPowerState -int 0
+
+# MARK: Docker
+# =============================================================================
+
+# Start Docker Desktop at login.
+DOCKER_APP="/Applications/Docker.app"
+if [[ -d "$DOCKER_APP" ]]; then
+    echo "enabling Docker auto-start..."
+    osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"$DOCKER_APP\", hidden:true}" 2>/dev/null || true
+fi
 
 # MARK: Scheduled Backups
 # =============================================================================

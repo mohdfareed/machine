@@ -21,6 +21,15 @@ sudo pmset -a tcpkeepalive 1
 # MARK: System Maintenance
 # =============================================================================
 
+# Install pending macOS updates (security patches, minor releases).
+echo "checking for macOS updates..."
+if softwareupdate -l 2>&1 | grep -q "Software Update found"; then
+    echo "installing macOS updates (may require restart)..."
+    sudo softwareupdate --install --all --agree-to-license 2>&1 || true
+else
+    echo "macOS is up to date."
+fi
+
 # Run macOS periodic maintenance scripts (daily, weekly, monthly).
 echo "running periodic maintenance..."
 sudo periodic daily weekly monthly
