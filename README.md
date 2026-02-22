@@ -114,7 +114,9 @@ set in the manifest's `env` dict (e.g. `$ICLOUD/.machine` on macOS,
 
 ```
 MC_PRIVATE/
-├── env.sh           ← shared secrets (OPENAI_API_KEY, etc.) → symlinked to ~/.env
+├── .env             ← shared secrets (OPENAI_API_KEY, etc.)
+├── macbook.env      ← macbook-only overrides (optional)
+├── homelab.env      ← homelab-only overrides (optional)
 ├── ssh/
 │   └── <MC_ID>      ← private key named after machine ID
 │   └── <MC_ID>.pub  ← optional matching public key
@@ -125,7 +127,10 @@ MC_PRIVATE/
 
 ### How secrets flow
 
-1. **Shell env** — `init_env.py` (shell module) symlinks `MC_PRIVATE/env.sh` → `~/.env`. Shell configs source these at login.
+1. **Shell env** — `init_env.py` (shell module) concatenates
+   `MC_PRIVATE/.env` (shared) + `MC_PRIVATE/<MC_ID>.env` (machine-specific)
+   into `~/.env`. Uses plain dotenv format (no `export`). Machine-specific
+   keys layer on top of (or override) shared keys.
 
 2. **SSH keys** — `init_keys.py` (ssh module) copies a single key named `<MC_ID>` from
    `MC_PRIVATE/ssh/` into `~/.ssh/` and registers it with `ssh-add`. Skips gracefully
