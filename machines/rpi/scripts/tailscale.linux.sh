@@ -14,6 +14,5 @@ if ! tailscale status &>/dev/null; then
     sudo tailscale up
 fi
 
-tailscale status
 echo "status:"
 tailscale status

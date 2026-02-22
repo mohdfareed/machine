@@ -1,6 +1,10 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 set -e
 cd "$(dirname "$0")/.."
+
+echo "==> Fixing permissions..."
+chmod +x ./**/scripts/*.sh
+chmod +x ./**/scripts/*.py
 
 echo "==> Updating dependencies..."
 uv lock --upgrade
