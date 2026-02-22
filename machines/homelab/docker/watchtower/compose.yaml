@@ -6,9 +6,13 @@ services:
     image: containrrr/watchtower:latest
     container_name: watchtower
     restart: unless-stopped
+    ports:
+      - "8080:8080"
     environment:
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_POLL_INTERVAL: "3600"
       WATCHTOWER_ROLLING_RESTART: "true"
+      WATCHTOWER_HTTP_API_METRICS: "true"
+      WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_API_TOKEN}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

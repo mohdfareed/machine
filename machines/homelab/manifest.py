@@ -11,6 +11,7 @@ manifest = MachineManifest(
         "vscode",
         "vsc-tunnel",
         "ghostty",
+        "homelab",
         "core",
     ],
     files=[

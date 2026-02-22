@@ -1,0 +1,3 @@
+; sign commits
+[user]
+    signingkey = ~/.ssh/homelab.pub

@@ -8,6 +8,7 @@ if command -v brew &>/dev/null; then
     brew upgrade --cask --greedy-latest
     brew autoremove
     brew cleanup --prune=all
+    brew services cleanup
 fi
 
 if command -v mas &>/dev/null; then

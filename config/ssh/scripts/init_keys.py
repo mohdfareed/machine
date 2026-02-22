@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """SSH key provisioning.
 
-Copies private keys from MC_PRIVATE to ~/.ssh/ and registers
-them with the SSH agent. Skips gracefully when MC_PRIVATE is
-unset. Never overwrites keys that are already in place.
-
-MC_PRIVATE should point to a directory containing keys directly,
-or a subdirectory named ssh/ or .ssh/. Each key is a file without the
-.pub extension; the matching .pub file is optional.
+Copies a single private key named after MC_ID from MC_PRIVATE (or its
+ssh/ subdirectory) into ~/.ssh/ and registers it with the SSH agent.
+Skips gracefully when MC_PRIVATE is unset. Exits with an error if
+MC_PRIVATE exists but the key does not.
 """
 
 import os
@@ -31,50 +28,51 @@ def main() -> None:
         return
 
     # Locate the keys directory: prefer ssh/ or .ssh/ subdirectory
-    keys_dir = private_root  # default to root
+    keys_dir = private_root
     for subdir in ("ssh", ".ssh"):
         candidate = private_root / subdir
-
         if candidate.is_dir():
             keys_dir = candidate
             break
 
-    # Collect private key files (no .pub extension, not a directory)
-    private_keys = [f for f in keys_dir.iterdir() if f.is_file() and f.suffix != ".pub"]
-    if not private_keys:
+    # Look for a key named after the machine ID
+    machine_id = os.environ.get("MC_ID", "").strip()
+    if not machine_id:
+        print("ssh: MC_ID is not set, skipping key provisioning", file=sys.stderr)
+        sys.exit(1)
+
+    key_file = keys_dir / machine_id
+    if not key_file.is_file():
         print(
-            f"ssh: no keys found in {keys_dir}\n"
-            f"  Copy your keys before running setup again.\n"
-            f"  Example: scp -r <source>/.ssh/* <host>:{keys_dir}/",
+            f"ssh: key '{machine_id}' not found in {keys_dir}\n"
+            f"  Create {key_file} before running setup again.",
             file=sys.stderr,
         )
-        return
+        sys.exit(1)
 
     # Ensure ~/.ssh exists with correct permissions
     SSH_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
-    for key in private_keys:
-        dest = SSH_DIR / key.name
+    dest = SSH_DIR / key_file.name
 
-        if not dest.exists():
-            shutil.copy2(key, dest)
-            dest.chmod(0o600)
-            print(f"ssh: installed {key.name}")
+    if not dest.exists():
+        shutil.copy2(key_file, dest)
+        dest.chmod(0o600)
+        print(f"ssh: installed {key_file.name}")
 
-            # Copy matching public key if present
-            pub = key.with_suffix(".pub")
-            if pub.exists():
-                dest_pub = SSH_DIR / pub.name
-                if not dest_pub.exists():
-                    shutil.copy2(pub, dest_pub)
-                    dest_pub.chmod(0o644)
+        # Copy matching public key if present
+        pub = key_file.with_suffix(".pub")
+        if pub.exists():
+            dest_pub = SSH_DIR / pub.name
+            if not dest_pub.exists():
+                shutil.copy2(pub, dest_pub)
+                dest_pub.chmod(0o644)
 
-        # Always register with agent
-        is_macos = sys.platform.startswith("darwin")
-        add_cmd = ["ssh-add"]
-        if is_macos:
-            add_cmd += ["--apple-use-keychain"]
-        add_cmd.append(str(dest))
-        subprocess.run(add_cmd, check=False)
+    # Always register with agent
+    add_cmd = ["ssh-add"]
+    if sys.platform.startswith("darwin"):
+        add_cmd += ["--apple-use-keychain"]
+    add_cmd.append(str(dest))
+    subprocess.run(add_cmd, check=False)
 
 
 if __name__ == "__main__":

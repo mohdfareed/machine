@@ -59,9 +59,15 @@ dotnet completions script pwsh | Out-String | Invoke-Expression
 # Infrastructure
 # =============================================================================
 
-# private env
-if (Test-Path "~/.env.ps1") {
-    . "~/.env.ps1"
+# private env (dotenv format: KEY="VALUE")
+$envFile = "$HOME/.env"
+if (Test-Path $envFile) {
+    Get-Content $envFile | ForEach-Object {
+        if ($_ -match '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
+            $val = $Matches[2] -replace '^["'']|["'']$', ''
+            [System.Environment]::SetEnvironmentVariable($Matches[1], $val)
+        }
+    }
 }
 
 # functions & aliases

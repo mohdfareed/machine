@@ -62,10 +62,10 @@ passed to scripts at runtime (not written to files).
 - Platform tags on scripts: `name.macos.sh`, `name.unix.sh`, `name.win.ps1`
 - Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages, `upgrade_` = run only during `mc upgrade`
 - Execution order: files → `init_*` scripts → packages → remaining scripts
-- SSH: `ssh` module provisions keys from `MC_PRIVATE` (skips if unset)
 - Machine extras: `extra.zsh` → `~/.zshrc.local`
 - Repo root derived from `Path(__file__).parents[2]` — no env var needed
 - App data: `typer.get_app_dir("mc")` for logs/state
+- State file: `~/.local/share/mc/state.json` tracks installed packages and script runs
 
 ## Commands
 

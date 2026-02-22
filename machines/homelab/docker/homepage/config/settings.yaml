@@ -3,6 +3,7 @@
 title: Homelab
 favicon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/server.svg
 headerStyle: clean
+statusStyle: dot
 layout:
   Management:
     style: row

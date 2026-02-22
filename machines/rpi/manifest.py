@@ -8,7 +8,7 @@ from machine.manifest import (
 )
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vsc-tunnel", "core"],
+    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vsc-tunnel", "homelab", "core"],
     files=[],
     packages=[
         *snap("go --classic"),

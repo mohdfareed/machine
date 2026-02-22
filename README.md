@@ -99,14 +99,69 @@ Run `mc -h` or `mc <command> -h` for full options.
 - `MC_ID`: The machine ID (e.g., `my-laptop`)
 - `MC_NAME`: The machine name (defaults to `MC_ID`), can be overridden in manifest
 
-**SSH keys:** the `ssh` module reads `MC_PRIVATE` from env, copies keys to `~/.ssh/`, sets permissions, and adds them to the agent. Skips gracefully if `MC_PRIVATE` is unset.
-
 **Local overrides:** modules declare which `*.local` files they accept via the `overrides` field. Drop matching files in your machine dir and they are auto-discovered and symlinked:
 
 - `~/.gitconfig.local` — declared by `git` module, included by gitconfig
 - `~/.zshenv.local` — declared by `shell` module, sourced by zshenv
 - `~/.zshrc.local` — declared by `shell` module, sourced by zshrc
 - `~/term.settings.json` — declared by `win-term` module, used by Windows Terminal
+
+## Secrets (`MC_PRIVATE`)
+
+Secrets are stored outside the repo in `MC_PRIVATE` — a machine-specific path
+set in the manifest's `env` dict (e.g. `$ICLOUD/.machine` on macOS,
+`$HOME/.machine` on Linux). The directory is never checked into git.
+
+```
+MC_PRIVATE/
+├── env.sh           ← shared secrets (OPENAI_API_KEY, etc.) → symlinked to ~/.env
+├── ssh/
+│   └── <MC_ID>      ← private key named after machine ID
+│   └── <MC_ID>.pub  ← optional matching public key
+└── docker/
+    ├── homepage.env  ← service-specific secrets (HOMEPAGE_VAR=…)
+    └── watchtower.env
+```
+
+### How secrets flow
+
+1. **Shell env** — `init_env.py` (shell module) symlinks `MC_PRIVATE/env.sh` → `~/.env`. Shell configs source these at login.
+
+2. **SSH keys** — `init_keys.py` (ssh module) copies a single key named `<MC_ID>` from
+   `MC_PRIVATE/ssh/` into `~/.ssh/` and registers it with `ssh-add`. Skips gracefully
+   when `MC_PRIVATE` is unset; errors if MC_PRIVATE exists but the key doesn't.
+
+3. **Docker .env** — the `homelab` module's deploy script (`docker.unix.sh`) builds each
+   service's `.env` by concatenating:
+   - `~/.env` — shared keys (so you only define `OPENAI_API_KEY` once)
+   - `MC_PRIVATE/docker/<service>.env` — service-specific overrides (optional)
+
+   The generated `.env` is written to `~/homelab/<service>/.env` (mode 600) and is
+   gitignored. It's a regenerated artifact — `MC_PRIVATE` is the source of truth.
+
+### Backups
+
+The homelab Mac's backup script (`backup.macos.sh`) syncs `~/homelab/*/data/` and
+`*/.env` from remote servers (and itself) into `MC_PRIVATE/backups/` via rsync over
+Tailscale SSH. A launchd job runs daily. Since `MC_PRIVATE` lives on iCloud, backups
+are automatically cloud-synced.
+
+To restore after a fresh `mc setup`: push backed-up `data/` and `.env` to the target,
+then re-run `mc setup` to redeploy containers. See [homelab/README.md](machines/homelab/README.md).
+
+## Docker Services
+
+The `homelab` module (`config/homelab/`) provides the shared Docker deploy
+script. Machines with Docker services (homelab, rpi) include this module and
+store compose files under `machines/<id>/docker/<service>/`. The deploy script:
+
+1. Creates real directories at `~/homelab/<service>/`
+2. Symlinks `compose.yaml` and config subdirs from the repo
+3. Concatenates shared + per-service secrets into `.env` (see above)
+4. Runs `docker compose pull && up -d --remove-orphans`
+
+Runtime data (`./data/`, logs) stays in the real directory — never in git.
+To add a service, drop a `compose.yaml` under `machines/<id>/docker/<name>/`.
 
 ## Development
 

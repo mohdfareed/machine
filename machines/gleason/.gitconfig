@@ -1,6 +1,7 @@
 [user]
     name = Mohammed Fareed
     email = mfareed@gleason.com
+    signingkey = ~/.ssh/wks.pub
 
 ; disable commit signing
 [commit]

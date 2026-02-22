@@ -122,23 +122,46 @@ def install_packages(
     on_after: Callable[[str], None] | None = None,
     owners: dict[str, str] | None = None,
 ) -> list[Failure]:
-    """Install packages using available managers. Returns list of failures."""
+    """Install packages using available managers. Returns list of failures.
+
+    Skips packages already recorded in the state file from a previous
+    successful install.  To force reinstall, clear state with
+    ``rm $(mc info | grep State)`` or delete the specific entry.
+    """
     if not packages:
         return []
 
     managers = {m for m in _MANAGERS if shutil.which(m)}
     logger.info("Managers: %s", ", ".join(sorted(managers)) or "none")
 
+    state = _load_state()
+    installed: set[str] = set(state.get("packages", []))
+
     failures: list[Failure] = []
+    skipped = 0
     for pkg in packages:
+        if pkg.name in installed:
+            logger.debug("Skip (installed): %s", pkg.name)
+            skipped += 1
+            if on_after:
+                on_after(pkg.name)
+            continue
         if on_before:
             on_before(pkg.name)
         module = (owners or {}).get(pkg.name, "?")
         fail = _install(pkg, managers, module)
         if fail:
             failures.append(fail)
+        else:
+            installed.add(pkg.name)
         if on_after:
             on_after(pkg.name)
+
+    state["packages"] = sorted(installed)
+    _save_state(state)
+
+    if skipped:
+        logger.info("Skipped %d already-installed package(s)", skipped)
     return failures
 
 
