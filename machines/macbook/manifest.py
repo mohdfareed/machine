@@ -9,7 +9,9 @@ manifest = MachineManifest(
         # Dev languages
         *brew("uv", "python", "python-freethreading"),
         *brew("go", "shellcheck"),
-        *cask("powershell", "dotnet-sdk", "docker"),
+        *cask("powershell", "dotnet-sdk"),
+        # REVIEW: verify Docker Desktop cask supports Apple Silicon (M1+)
+        # *cask("docker"),
         # Utilities
         *brew("mas", "gnu-time", "fastfetch"),
         *brew("copilot-cli", "codex"),

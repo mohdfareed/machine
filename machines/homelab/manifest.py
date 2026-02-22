@@ -23,7 +23,9 @@ manifest = MachineManifest(
     packages=[
         *cask("tailscale"),
         # Dev tools
-        *cask("docker", "dotnet-sdk", "powershell"),
+        # REVIEW: verify Docker Desktop cask supports Apple Silicon (M1+)
+        # *cask("docker"),
+        *cask("dotnet-sdk", "powershell"),
         *brew("uv", "python", "go"),
         *brew("copilot-cli", "codex"),
         # Utilities

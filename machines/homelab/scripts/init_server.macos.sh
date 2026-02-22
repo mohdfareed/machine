@@ -5,7 +5,7 @@ set -Eeuo pipefail
 # Works on MacBook (clamshell), Mac Mini, Mac Studio, etc.
 # Tested on macOS 26 Tahoe (Apple Silicon).
 
-AUTO_WAKE_TIME="04:00" # daily wake time for maintenance
+AUTO_WAKE_TIME="04:00:00" # daily wake time for maintenance (HH:MM:SS)
 
 # MARK: Power & Sleep
 # =============================================================================
