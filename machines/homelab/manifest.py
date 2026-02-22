@@ -14,7 +14,6 @@ manifest = MachineManifest(
         "core",
     ],
     files=[
-        FileMapping(source="docker", target="~/homelab"),
         FileMapping(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",

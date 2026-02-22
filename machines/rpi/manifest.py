@@ -9,9 +9,7 @@ from machine.manifest import (
 
 manifest = MachineManifest(
     modules=["git", "shell", "ssh", "ssh-server", "vscode", "vsc-tunnel", "core"],
-    files=[
-        FileMapping(source="docker", target="~/homelab"),
-    ],
+    files=[],
     packages=[
         *snap("go --classic"),
         # Script-installed packages

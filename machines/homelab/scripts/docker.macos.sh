@@ -2,8 +2,12 @@
 set -Eeuo pipefail
 
 # Deploy all homelab Docker services.
-# Each subdirectory of ~/homelab with a compose.yaml is a service.
+#
+# Creates real directories at ~/homelab/<service>/ and symlinks compose.yaml
+# (and config dirs) from the repo. Runtime data (./data/, logs) is written
+# into the real directory — never into the git repo.
 
+DOCKER_SRC="$MC_HOME/machines/$MC_ID/docker"
 HOMELAB_DIR="$HOME/homelab"
 
 if ! command -v docker &>/dev/null; then
@@ -21,6 +25,28 @@ if ! docker info &>/dev/null; then
     echo "docker daemon not available, skipping deploy"
     exit 0
 fi
+
+# Sync repo compose files into ~/homelab as real directories.
+for svc_dir in "$DOCKER_SRC"/*/; do
+    [[ -d "$svc_dir" ]] || continue
+    svc="$(basename "$svc_dir")"
+    target="$HOMELAB_DIR/$svc"
+    mkdir -p "$target"
+
+    # Symlink compose.yaml.
+    if [[ -f "$svc_dir/compose.yaml" ]]; then
+        ln -sf "$svc_dir/compose.yaml" "$target/compose.yaml"
+    fi
+
+    # Symlink version-controlled subdirs (e.g. homepage/config).
+    # Skip data/ — that's runtime state, kept in the real directory.
+    for sub in "$svc_dir"/*/; do
+        [[ -d "$sub" ]] || continue
+        name="$(basename "$sub")"
+        [[ "$name" == "data" ]] && continue
+        ln -sfn "$sub" "$target/$name"
+    done
+done
 
 # Deploy each service that has a compose.yaml.
 for svc_dir in "$HOMELAB_DIR"/*/; do

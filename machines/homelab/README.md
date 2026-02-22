@@ -4,8 +4,12 @@ Always-on Mac as a headless server. Works on MacBook (clamshell), Mac Mini, etc.
 
 ## Docker Services
 
-Each subdirectory under `docker/` is symlinked to `~/homelab/<service>/` and
-auto-deployed. To add a service, drop a directory with a `compose.yaml`.
+The deploy script creates **real directories** at `~/homelab/<service>/` and
+symlinks only `compose.yaml` (and config dirs like `homepage/config/`) from
+the repo. Runtime data (`./data/`, logs, `.env`) is written to the real
+directory — never into the git repo.
+
+To add a service, drop a directory with a `compose.yaml` under `docker/`.
 
 **Convention:** persistent data goes in `./data/` relative to the compose file.
 Secrets go in `.env` (gitignored — manually provisioned or restored from backup).

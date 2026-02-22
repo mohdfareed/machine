@@ -49,7 +49,28 @@ backup_server() {
     echo "  $host backup complete."
 }
 
-# ─── Servers ──────────────────────────────────────────────────────────────────
+# ─── Local (this machine) ─────────────────────────────────────────────────────
+echo "backing up local services..."
+LOCAL_DEST="$BACKUP_ROOT/$(hostname -s)"
+for svc_dir in "$HOME/homelab"/*/; do
+    [[ -d "$svc_dir" ]] || continue
+    svc="$(basename "$svc_dir")"
+    if [[ -d "$svc_dir/data" ]]; then
+        echo "  syncing $svc/data..."
+        mkdir -p "$LOCAL_DEST/$svc/data"
+        rsync -a --delete \
+            --exclude='*.log' \
+            --exclude='__pycache__/' \
+            "$svc_dir/data/" "$LOCAL_DEST/$svc/data/"
+    fi
+    if [[ -f "$svc_dir/.env" ]]; then
+        echo "  syncing $svc/.env..."
+        mkdir -p "$LOCAL_DEST/$svc"
+        cp "$svc_dir/.env" "$LOCAL_DEST/$svc/.env"
+    fi
+done
+
+# ─── Remote Servers ───────────────────────────────────────────────────────────
 backup_server rpi
 # backup_server <next-server>
 # ──────────────────────────────────────────────────────────────────────────────

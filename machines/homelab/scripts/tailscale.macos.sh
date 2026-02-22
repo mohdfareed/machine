@@ -15,13 +15,6 @@ if ! tailscale status &>/dev/null; then
     sudo tailscale up
 fi
 
-echo "configuring tailscale..."
-
-# Enable Tailscale SSH (access via `ssh homelab` over tailnet).
-# --accept-routes defaults to true on macOS, so not needed here.
-sudo tailscale set --ssh
-
-echo "tailscale configured."
 tailscale status
 echo "status:"
 tailscale status
