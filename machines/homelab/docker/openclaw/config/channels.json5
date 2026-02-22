@@ -6,7 +6,7 @@
     botToken: "${TELEGRAM_BOT_TOKEN}",
     dmPolicy: "pairing",
     groups: { "*": { requireMention: true } },
-    streaming: "progress",
+    streamMode: "partial",
     actions: {
       reactions: true,
       sendMessage: true,

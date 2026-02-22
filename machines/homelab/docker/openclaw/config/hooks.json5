@@ -2,8 +2,6 @@
 {
   internal: {
     "enabled": true,
-    token: "${OPENCLAW_GATEWAY_TOKEN}",
-    path: "/openclaw/hooks",
     "entries": {
       "boot-md": {
         "enabled": true
@@ -16,7 +14,6 @@
       },
       "bootstrap-extra-files": {
         "enabled": true,
-        "paths": ["packages/*/AGENTS.md", "packages/*/TOOLS.md"]
       },
     }
   }

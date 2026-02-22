@@ -6,7 +6,6 @@
     "telegram": { enabled: true },
     "copilot-proxy": { enabled: true },
     "device-pair": { enabled: true },
-    "diagnostics-otel": { enabled: true },
     "llm-task": { enabled: true },
     "lobster": { enabled: true },
     "memory-core": { enabled: true },

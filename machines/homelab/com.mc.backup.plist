@@ -12,14 +12,9 @@
         <string>source "$HOME/.zshenv" 2>/dev/null; exec "$HOME/.machine/machines/homelab/scripts/backup.macos.sh"</string>
     </array>
 
-    <!-- Run daily at 04:30 (after the 04:00 wake schedule) -->
-    <key>StartCalendarInterval</key>
-    <dict>
-        <key>Hour</key>
-        <integer>4</integer>
-        <key>Minute</key>
-        <integer>30</integer>
-    </dict>
+    <!-- Run every hour -->
+    <key>StartInterval</key>
+    <integer>3600</integer>
 
     <key>StandardOutPath</key>
     <string>/tmp/mc-backup.log</string>

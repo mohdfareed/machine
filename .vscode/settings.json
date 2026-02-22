@@ -17,6 +17,7 @@
   },
   // file associations
   "files.associations": {
+    "openclaw.json": "json5",
     "**/ghostty/config": "ini",
     ".gitconfig.*": "ini",
     ".zshenv.*": "shellscript",
