@@ -9,6 +9,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      DOCKER_API_VERSION: "1.44"
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_POLL_INTERVAL: "3600"
       WATCHTOWER_ROLLING_RESTART: "true"

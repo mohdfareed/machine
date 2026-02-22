@@ -67,7 +67,7 @@ passed to scripts at runtime (not written to files).
 - App data: `typer.get_app_dir("mc")` for logs/state
 - State file: `~/.local/share/mc/state.json` tracks installed packages and script runs
 - Secrets use plain dotenv format (no `export`), single `~/.env` for all platforms
-- Secrets concatenation pattern: `env.sh` (shared) + `<MC_ID>.env` (per-machine) → `~/.env`;
+- Secrets concatenation pattern: `machine.env` (shared) + `<MC_ID>.env` (per-machine) → `~/.env`;
   same for Docker: `~/.env` (shared) + `MC_PRIVATE/docker/<svc>.env` → service `.env`
 
 ## Commands

@@ -3,7 +3,7 @@
 
 Builds ``~/.env`` by concatenating:
 
-1. ``MC_PRIVATE/.env``           — shared secrets (OPENAI_API_KEY, etc.)
+1. ``MC_PRIVATE/machine.env``    — shared secrets (OPENAI_API_KEY, etc.)
 2. ``MC_PRIVATE/<MC_ID>.env``    — machine-specific overrides (optional)
 
 This mirrors the Docker ``.env`` concatenation pattern: shared keys
@@ -16,7 +16,7 @@ import os
 import stat
 from pathlib import Path
 
-SHARED_NAME = ".env"
+SHARED_NAME = "machine.env"
 TARGET = Path.home() / ".env"
 
 
