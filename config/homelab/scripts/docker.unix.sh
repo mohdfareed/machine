@@ -3,12 +3,12 @@ set -Eeuo pipefail
 
 # Deploy all homelab Docker services.
 #
-# Creates real directories at ~/.homelab/<service>/ and symlinks compose.yaml
+# Creates real directories at ~/homelab/<service>/ and symlinks compose.yaml
 # (and config dirs) from the repo. Runtime data (./data/, logs) is written
 # into the real directory — never into the git repo.
 
 DOCKER_SRC="$MC_HOME/machines/$MC_ID/docker"
-HOMELAB_DIR="$HOME/.homelab"
+HOMELAB_DIR="$HOME/homelab"
 
 if ! command -v docker &>/dev/null; then
     echo "docker not found, skipping deploy"
@@ -26,7 +26,7 @@ if ! docker info &>/dev/null; then
     exit 0
 fi
 
-# Sync repo compose files into ~/.homelab as real directories.
+# Sync repo compose files into ~/homelab as real directories.
 for svc_dir in "$DOCKER_SRC"/*/; do
     [[ -d "$svc_dir" ]] || continue
     svc="$(basename "$svc_dir")"
@@ -38,12 +38,18 @@ for svc_dir in "$DOCKER_SRC"/*/; do
         ln -sf "$svc_dir/compose.yaml" "$target/compose.yaml"
     fi
 
-    # Symlink version-controlled sub-dirs.
+    # Symlink version-controlled files and sub-dirs.
     # Note: can't symlink the whole service dir because of runtime state (data/, logs/).
-    for sub in "$svc_dir"/*/; do
-        [[ -d "$sub" ]] || continue
-        name="$(basename "$sub")"
-        ln -sfn "$sub" "$target/$name"
+    for entry in "$svc_dir"*/; do
+        [[ -e "$entry" ]] || continue
+        name="$(basename "$entry")"
+        ln -sfn "$entry" "$target/$name"
+    done
+    for entry in "$svc_dir"*; do
+        [[ -f "$entry" ]] || continue
+        name="$(basename "$entry")"
+        [[ "$name" == "compose.yaml" ]] && continue
+        ln -sf "$entry" "$target/$name"
     done
 done
 
