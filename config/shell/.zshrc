@@ -47,13 +47,15 @@ FPATH="$HOME/.docker/completions:${FPATH}"
 
 # python (typer) apps completions (must remain commented)
 # fpath+=~/.zfunc; autoload -Uz compinit; compinit
-fpath+=~/.zfunc
 
-# dotnet completions
-eval "$(dotnet completions script zsh)"
+_post_compinit() {
+  # typer app completions
+  for f in "$HOME"/.zfunc/*(N); do source "$f"; done
 
-# openclaw completions
-() {
+  # dotnet completions
+  eval "$(dotnet completions script zsh)"
+
+  # openclaw completions
   local openclaw_completions="$HOME/.openclaw/completions/openclaw.zsh"
   [[ -f "$openclaw_completions" ]] && source "$openclaw_completions"
 }
@@ -97,12 +99,12 @@ source "${ZINIT_HOME}/zinit.zsh"
 eval "$(fzf --zsh)"
 
 # plugins (turbo — deferred to first idle prompt)
-# source: https://github.com/zdharma-continuum/fast-syntax-highlighting
 zinit wait lucid for \
-  atinit"zicompinit; zicdreplay" zdharma-continuum/fast-syntax-highlighting \
+  atinit"zicompinit; _post_compinit; zicdreplay" zdharma-continuum/fast-syntax-highlighting \
   blockf zsh-users/zsh-completions \
   atload"!_zsh_autosuggest_start" zsh-users/zsh-autosuggestions \
   Aloxaf/fzf-tab
+# source: https://github.com/zdharma-continuum/fast-syntax-highlighting
 
 # Infrastructure
 # =============================================================================
