@@ -11,7 +11,7 @@
         widget:
           type: portainer
           url: https://host.docker.internal:9443
-          env: 2
+          env: 3
           key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
           fields: ["running", "stopped", "total"]
     - Watchtower:

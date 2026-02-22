@@ -1,6 +1,6 @@
+*.log
+
 custom.css
 custom.js
 kubernetes.yaml
 proxmox.yaml
-
-*.log
