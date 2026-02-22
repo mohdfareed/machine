@@ -11,6 +11,9 @@ export HISTSIZE=5000
 export SAVEHIST=$HISTSIZE
 export HISTDUP=erase
 
+# fix tmux + ssh issues
+export TERM=xterm-256color
+
 # private env vars
 [[ -f "$HOME/.env" ]] && { set -a; source "$HOME/.env"; set +a; }
 # machine-local overrides
