@@ -1,0 +1,6 @@
+// Skills — AgentSkills and ClawHub configuration
+{
+  install: {
+    nodeManager: "npm"
+  },
+}

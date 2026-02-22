@@ -1,0 +1,23 @@
+// Hooks — agent event hooks
+{
+  internal: {
+    "enabled": true,
+    token: "${OPENCLAW_GATEWAY_TOKEN}",
+    path: "/openclaw/hooks",
+    "entries": {
+      "boot-md": {
+        "enabled": true
+      },
+      "command-logger": {
+        "enabled": true
+      },
+      "session-memory": {
+        "enabled": true
+      },
+      "bootstrap-extra-files": {
+        "enabled": true,
+        "paths": ["packages/*/AGENTS.md", "packages/*/TOOLS.md"]
+      },
+    }
+  }
+}

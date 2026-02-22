@@ -1,0 +1,23 @@
+// Channel — agent messaging
+{
+  // Telegram channel — webhook mode via Tailscale Funnel
+  telegram: {
+    enabled: true,
+    botToken: "${TELEGRAM_BOT_TOKEN}",
+    dmPolicy: "pairing",
+    groups: { "*": { requireMention: true } },
+    streaming: "progress",
+    actions: {
+      reactions: true,
+      sendMessage: true,
+      deleteMessage: true,
+      sticker: true,
+    },
+
+    // Webhook mode — Tailscale Funnel exposes only this path publicly.
+    // Set OPENCLAW_WEBHOOK_URL to https://<hostname>.<tailnet>.ts.net/openclaw/telegram
+    webhookUrl: "${OPENCLAW_WEBHOOK_URL}",
+    webhookSecret: "${TELEGRAM_WEBHOOK_SECRET}",
+    webhookPath: "/openclaw/telegram",
+  },
+}

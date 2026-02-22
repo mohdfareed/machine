@@ -1,0 +1,48 @@
+// OpenClaw Gateway — Homelab Server
+// Secrets use ${VAR} env substitution from .env file.
+// Config split via $include: channels, skills, plugins.
+{
+  "env": {
+    "vars": {
+      // Model secrets
+      "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+      // Channel secrets
+      "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
+      "TELEGRAM_WEBHOOK_SECRET": "${TELEGRAM_WEBHOOK_SECRET}",
+      "OPENCLAW_WEBHOOK_URL": "${OPENCLAW_WEBHOOK_URL}",
+      // Gateway secrets
+      "OPENCLAW_GATEWAY_TOKEN": "${OPENCLAW_GATEWAY_TOKEN}",
+    }
+  },
+  "gateway": {
+    // Use docker instead of tailscale
+    // bind: "loopback",
+    // tailscale: { mode: "serve" },
+
+    mode: "local",
+    bind: "lan", // required for container port mapping
+    auth: {
+      mode: "token",
+      token: "${OPENCLAW_GATEWAY_TOKEN}",
+      "allowTailscale": true
+    },
+  },
+  "agents": {
+    "$include": "./config/agents.json5"
+  },
+  "channels": {
+    "$include": "./config/channels.json5"
+  },
+  "hooks": {
+    "$include": "./config/hooks.json5"
+  },
+  "plugins": {
+    "$include": "./config/plugins.json5"
+  },
+  "skills": {
+    "$include": "./config/skills.json5"
+  },
+  "tools": {
+    "$include": "./config/tools.json5"
+  },
+}

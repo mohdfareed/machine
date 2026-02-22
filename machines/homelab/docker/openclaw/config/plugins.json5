@@ -1,0 +1,33 @@
+// Plugins — extensions and memory
+{
+  enabled: true,
+  slots: { memory: "memory-lancedb" },
+  entries: {
+    "telegram": { enabled: true },
+    "copilot-proxy": { enabled: true },
+    "device-pair": { enabled: true },
+    "diagnostics-otel": { enabled: true },
+    "llm-task": { enabled: true },
+    "lobster": { enabled: true },
+    "memory-core": { enabled: true },
+    "msteams": { enabled: true },
+    "open-prose": { enabled: true },
+    "memory-lancedb": {
+      enabled: true,
+      config: {
+        autoRecall: true,
+        autoCapture: true,
+        embedding: { apiKey: "${OPENAI_API_KEY}" },
+      },
+    },
+    "talk-voice": { enabled: true },
+    "voice-call": {
+      enabled: true,
+      config: {
+        enabled: true,
+        streaming: { enabled: true },
+        tts: { enabled: true, mode: "all" },
+      },
+    },
+  },
+}

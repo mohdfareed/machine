@@ -1,23 +1,18 @@
 # OpenClaw — Personal AI Assistant Gateway
-# Access WebChat at https://homelab:18789 (via Tailscale Funnel)
+# Access Control UI at http://homelab:18789 (via Tailnet MagicDNS)
 #
-# Config split:
-#   ./data/     → /home/node/.openclaw           (runtime: openclaw.json, credentials, sessions)
-#   ./config/   → /home/node/.openclaw/workspace  (version-controlled: AGENTS.md, SOUL.md, etc.)
+# Layout:
+#   ./data/           → /home/node/.openclaw                (runtime state, gitignored)
+#   ./config/         → /home/node/.openclaw/config.        (config files)
+#   ./workspace/      → /home/node/.openclaw/workspace      (persona files)
+#   ./openclaw.json   → /home/node/.openclaw/openclaw.json  (main config, $includes below)
 #
 # Secrets (.env):
-#   OPENAI_API_KEY              — model provider key
-#   ANTHROPIC_API_KEY           — model provider key (if using Anthropic)
-#   TELEGRAM_BOT_TOKEN          — Telegram channel (from @BotFather)
-#   OPENCLAW_GATEWAY_TOKEN      — gateway auth token (long random string)
-#   NOTION_API_KEY              — Notion integration (optional)
-#   GEMINI_API_KEY              — LanceDB embedding (optional)
-#
-# After first deploy, run onboarding:
-#   docker compose run --rm openclaw-cli onboard
-#
-# To split openclaw.json, use $include:
-#   { channels: { $include: "./channels.json5" } }
+#   OPENAI_API_KEY           — model provider / LanceDB embedding
+#   TELEGRAM_BOT_TOKEN       — Telegram channel (from @BotFather)
+#   TELEGRAM_WEBHOOK_SECRET  — webhook signature secret
+#   OPENCLAW_WEBHOOK_URL     — https://<host>.<tailnet>.ts.net/openclaw/telegram
+#   OPENCLAW_GATEWAY_TOKEN   — gateway auth token (long random string)
 
 services:
   openclaw:
@@ -28,7 +23,9 @@ services:
       - "18789:18789"
     volumes:
       - ./data:/home/node/.openclaw
-      - ./config:/home/node/.openclaw/workspace
+      - ./config:/home/node/.openclaw/config:ro
+      - ./workspace:/home/node/.openclaw/workspace
+      - ./openclaw.json:/home/node/.openclaw/openclaw.json:ro
     env_file: .env
     environment:
       NODE_ENV: production
