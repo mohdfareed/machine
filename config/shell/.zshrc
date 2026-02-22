@@ -42,9 +42,12 @@ if [[ -n "$HOMEBREW_PREFIX" ]]; then
 fi
 
 # docker completions
-FPATH="$HOME/.local/docker/completions:${FPATH}" # docker
-# python (typer) apps completions
-fpath+=~/.zfunc; autoload -Uz compinit; compinit
+FPATH="$HOME/.local/docker/completions:${FPATH}"
+FPATH="$HOME/.docker/completions:${FPATH}"
+
+# python (typer) apps completions (must remain commented)
+# fpath+=~/.zfunc; autoload -Uz compinit; compinit
+fpath+=~/.zfunc
 
 # dotnet completions
 eval "$(dotnet completions script zsh)"
