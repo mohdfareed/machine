@@ -30,6 +30,11 @@ module = Module(
             name="visual-studio-code",
             brew="visual-studio-code --cask",
             winget="microsoft.VisualStudioCode",
+        )
+        if PLATFORM == Platform.MACOS
+        else Package(
+            name="visual-studio-code",
+            winget="microsoft.VisualStudioCode",
             snap="code --classic",
         ),
     ],

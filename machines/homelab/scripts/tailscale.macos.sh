@@ -2,7 +2,6 @@
 set -Eeuo pipefail
 
 # Configure Tailscale for homelab server use.
-# Uses `tailscale set` (imperative) instead of the frozen `tailscale up`.
 
 if ! command -v tailscale &>/dev/null; then
     echo "tailscale not found, skipping"
@@ -25,4 +24,3 @@ tailscale status
 echo "configuring tailscale funnel for webhooks..."
 sudo tailscale serve --bg --set-path /openclaw/telegram http://127.0.0.1:18789
 sudo tailscale serve --bg --set-path /openclaw/hooks http://127.0.0.1:18789
-sudo tailscale funnel 443 on

@@ -16,11 +16,11 @@
 
 services:
   openclaw:
-    image: openclaw/openclaw:latest
+    image: ghcr.io/openclaw/openclaw:latest
     container_name: openclaw
     restart: unless-stopped
     ports:
-      - "18789:18789"
+      - 18789:18789
     volumes:
       - ./data:/home/node/.openclaw
       - ./config:/home/node/.openclaw/config:ro

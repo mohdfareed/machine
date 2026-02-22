@@ -25,7 +25,7 @@ backup_server() {
     fi
 
     # Sync each service's data/ directory and .env file.
-    services="$(ssh "$host" "ls -d ~/.homelab/*/" 2>/dev/null)"
+    services="$(ssh "$host" "ls -d ~/.homelab/*/" 2>/dev/null || true)"
     for svc in $(echo "$services" | xargs -n1 basename); do
 
         # Sync data/ if it exists.
