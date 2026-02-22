@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Make a macOS MacBook behave like an always-on headless server.
+# Make a Mac behave like an always-on headless server.
+# Works on MacBook (clamshell), Mac Mini, Mac Studio, etc.
 # Tested on macOS 26 Tahoe (Apple Silicon).
 
 AUTO_WAKE_TIME="04:00" # daily wake time for maintenance
@@ -9,13 +10,12 @@ AUTO_WAKE_TIME="04:00" # daily wake time for maintenance
 # MARK: Power & Sleep
 # =============================================================================
 
-# Prevent sleep when the lid is closed (clamshell mode).
-# Requires power adapter; machine stays awake with display closed.
+# Prevent sleep entirely (safe on desktops; enables clamshell mode on laptops).
 echo "configuring power management..."
 sudo pmset -a sleep 0           # never system-sleep
 sudo pmset -a disablesleep 1    # disable sleep entirely
 sudo pmset -a displaysleep 15   # display off after 15 min (saves energy)
-sudo pmset -a hibernatemode 0   # no hibernation
+sudo pmset -a hibernatemode 0   # no hibernation (no-op on desktops)
 sudo pmset -a standby 0         # no standby
 sudo pmset -a autopoweroff 0    # no auto power-off
 
@@ -66,5 +66,16 @@ defaults -currentHost write com.apple.screensaver idleTime -int 0
 # Disable Bluetooth (headless server, no peripherals needed).
 echo "disabling bluetooth..."
 sudo defaults write /Library/Preferences/com.apple.Bluetooth ControllerPowerState -int 0
+
+# MARK: Scheduled Backups
+# =============================================================================
+
+# Load the daily backup job (runs at 04:30).
+PLIST="$HOME/Library/LaunchAgents/com.mc.backup.plist"
+if [[ -f "$PLIST" ]]; then
+    echo "loading backup schedule..."
+    launchctl bootout "gui/$(id -u)/com.mc.backup" 2>/dev/null || true
+    launchctl bootstrap "gui/$(id -u)" "$PLIST"
+fi
 
 echo "server setup complete — reboot recommended for all changes to take effect."

@@ -1,0 +1,13 @@
+# Discord-Telegram Bot
+#
+# Requires .env file with:
+#   DISCORD_BOT_TOKEN=...
+#   TELEGRAM_BOT_TOKEN=...
+
+services:
+  bot:
+    build: https://github.com/mohdfareed/discord-telegram-bot.git
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/data

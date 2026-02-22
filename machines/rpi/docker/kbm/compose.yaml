@@ -1,0 +1,33 @@
+# KBM — Knowledge Base Memory
+# Instances: personal (8001), work (8002), private (8003)
+#
+# All persistent data lives under ./data/<hostname>/.
+# KBM stores everything under KBM_HOME=/data inside the container.
+
+services:
+  kbm-personal:
+    image: ghcr.io/mohdfareed/kbm:latest
+    restart: unless-stopped
+    hostname: personal
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./data/personal:/data
+
+  kbm-work:
+    image: ghcr.io/mohdfareed/kbm:latest
+    restart: unless-stopped
+    hostname: work
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./data/work:/data
+
+  kbm-private:
+    image: ghcr.io/mohdfareed/kbm:latest
+    restart: unless-stopped
+    hostname: private
+    ports:
+      - "8003:8000"
+    volumes:
+      - ./data/private:/data

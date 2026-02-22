@@ -3,6 +3,9 @@ title: RPi
 favicon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/raspberry-pi.svg
 headerStyle: clean
 layout:
+  Services:
+    style: row
+    columns: 4
   Infrastructure:
     style: row
     columns: 3

@@ -1,4 +1,21 @@
 ---
+- Services:
+    - KBM Personal:
+        icon: mdi-brain
+        href: http://{{HOMEPAGE_VAR_HOST}}:8001
+        description: Personal knowledge base
+    - KBM Work:
+        icon: mdi-brain
+        href: http://{{HOMEPAGE_VAR_HOST}}:8002
+        description: Work knowledge base
+    - KBM Private:
+        icon: mdi-brain
+        href: http://{{HOMEPAGE_VAR_HOST}}:8003
+        description: Private knowledge base
+    - Discord-Telegram Bot:
+        icon: mdi-robot
+        description: Message bridge bot
+
 - Infrastructure:
     - Tailscale:
         icon: tailscale
