@@ -1,0 +1,34 @@
+# OpenClaw — Personal AI Assistant Gateway
+# Access WebChat at https://homelab:18789 (via Tailscale Funnel)
+#
+# Config split:
+#   ./data/     → /home/node/.openclaw           (runtime: openclaw.json, credentials, sessions)
+#   ./config/   → /home/node/.openclaw/workspace  (version-controlled: AGENTS.md, SOUL.md, etc.)
+#
+# Secrets (.env):
+#   OPENAI_API_KEY              — model provider key
+#   ANTHROPIC_API_KEY           — model provider key (if using Anthropic)
+#   TELEGRAM_BOT_TOKEN          — Telegram channel (from @BotFather)
+#   OPENCLAW_GATEWAY_TOKEN      — gateway auth token (long random string)
+#   NOTION_API_KEY              — Notion integration (optional)
+#   GEMINI_API_KEY              — LanceDB embedding (optional)
+#
+# After first deploy, run onboarding:
+#   docker compose run --rm openclaw-cli onboard
+#
+# To split openclaw.json, use $include:
+#   { channels: { $include: "./channels.json5" } }
+
+services:
+  openclaw:
+    image: openclaw/openclaw:latest
+    container_name: openclaw
+    restart: unless-stopped
+    ports:
+      - "18789:18789"
+    volumes:
+      - ./data:/home/node/.openclaw
+      - ./config:/home/node/.openclaw/workspace
+    env_file: .env
+    environment:
+      NODE_ENV: production

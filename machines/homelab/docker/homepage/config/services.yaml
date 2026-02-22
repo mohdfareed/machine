@@ -4,7 +4,7 @@
 - Management:
     - Portainer:
         icon: portainer
-        href: https://localhost:9443
+        href: https://homelab:9443
         description: Container management
         server: docker
         container: portainer
@@ -14,6 +14,7 @@
           env: 3
           key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
           fields: ["running", "stopped", "total"]
+
     - Watchtower:
         icon: watchtower
         description: Automatic container updates
@@ -25,6 +26,14 @@
           key: "{{HOMEPAGE_VAR_WATCHTOWER_KEY}}"
           fields:
             ["containers_scanned", "containers_updated", "containers_failed"]
+
+- AI:
+    - OpenClaw:
+        icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/openclaw.png
+        href: http://homelab:18789
+        description: Personal AI assistant
+        server: docker
+        container: openclaw
 
 - Infrastructure:
     - Tailscale:
