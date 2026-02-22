@@ -438,17 +438,14 @@ def update(
             console.print("[yellow]Local changes discarded.[/]")
         else:
             subprocess.run([*git, "stash", "push", "-m", "mc update"])
-            console.print("[yellow]Local changes stashed.[/]")
+            console.print("[yellow]Local changes stashed with message 'mc update'.[/]")
             stashed = True
 
-    result = subprocess.run([*git, "pull", "--ff-only"], capture_output=True, text=True)
+    result = subprocess.run([*git, "pull", "--ff-only"], text=True)
     if result.returncode != 0:
-        detail = (result.stderr or result.stdout or "").strip()
         err_console.print("[red]Pull failed.[/]")
-        if detail:
-            err_console.print(f"[dim]{detail}[/]")
         raise SystemExit(1)
-    console.print("[green]Repo updated.[/]")
+    console.print("[green]Repo updated successfully.[/]")
 
     if stashed:
         subprocess.run([*git, "stash", "pop"])
