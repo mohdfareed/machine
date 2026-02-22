@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 # Back up remote server data to iCloud via rsync.
-# Runs on the homelab Mac. Pulls ~/homelab/*/data/ and */.env from each server.
+# Runs on the homelab Mac. Pulls ~/.homelab/*/data/ and */.env from each server.
 #
 # Convention: every service stores persistent data under ./data/ relative to
 # its compose file. This script syncs all of them automatically.
@@ -25,24 +25,24 @@ backup_server() {
     fi
 
     # Sync each service's data/ directory and .env file.
-    services="$(ssh "$host" "ls -d ~/homelab/*/" 2>/dev/null)"
+    services="$(ssh "$host" "ls -d ~/.homelab/*/" 2>/dev/null)"
     for svc in $(echo "$services" | xargs -n1 basename); do
 
         # Sync data/ if it exists.
-        if ssh "$host" "test -d ~/homelab/$svc/data" 2>/dev/null; then
+        if ssh "$host" "test -d ~/.homelab/$svc/data" 2>/dev/null; then
             echo "  syncing $svc/data..."
             mkdir -p "$dest/$svc/data"
             rsync -az --delete \
                 --exclude='*.log' \
                 --exclude='__pycache__/' \
-                "$host:~/homelab/$svc/data/" "$dest/$svc/data/"
+                "$host:~/.homelab/$svc/data/" "$dest/$svc/data/"
         fi
 
         # Sync .env if it exists.
-        if ssh "$host" "test -f ~/homelab/$svc/.env" 2>/dev/null; then
+        if ssh "$host" "test -f ~/.homelab/$svc/.env" 2>/dev/null; then
             echo "  syncing $svc/.env..."
             mkdir -p "$dest/$svc"
-            rsync -az "$host:~/homelab/$svc/.env" "$dest/$svc/.env"
+            rsync -az "$host:~/.homelab/$svc/.env" "$dest/$svc/.env"
         fi
     done
 
@@ -52,7 +52,7 @@ backup_server() {
 # ─── Local (this machine) ─────────────────────────────────────────────────────
 echo "backing up local services..."
 LOCAL_DEST="$BACKUP_ROOT/$(hostname -s)"
-for svc_dir in "$HOME/homelab"/*/; do
+for svc_dir in "$HOME/.homelab"/*/; do
     [[ -d "$svc_dir" ]] || continue
     svc="$(basename "$svc_dir")"
     if [[ -d "$svc_dir/data" ]]; then

@@ -4,7 +4,7 @@ Always-on Mac as a headless server. Works on MacBook (clamshell), Mac Mini, etc.
 
 ## Docker Services
 
-The deploy script creates **real directories** at `~/homelab/<service>/` and
+The deploy script creates **real directories** at `~/.homelab/<service>/` and
 symlinks only `compose.yaml` (and config dirs like `homepage/config/`) from
 the repo. Runtime data (`./data/`, logs, `.env`) is written to the real
 directory — never into the git repo.
@@ -24,7 +24,7 @@ Secrets go in `.env` (gitignored — manually provisioned or restored from backu
 
 ## Backups
 
-The homelab Mac pulls `~/homelab/*/data/` and `*/.env` from remote servers via
+The homelab Mac pulls `~/.homelab/*/data/` and `*/.env` from remote servers via
 rsync over Tailscale SSH. A launchd job (`com.mc.backup.plist`) runs daily at
 04:30 after the 04:00 scheduled wake.
 
@@ -37,7 +37,7 @@ $MC_PRIVATE/backups/<hostname>/<service>/
 ```
 
 Trigger manually: `launchctl kickstart gui/$(id -u)/com.mc.backup` or just
-run `~/homelab/../scripts/backup.macos.sh` directly.
+run the backup script directly.
 
 Time Machine complements this by covering the homelab Mac's *own* data
 automatically (local Docker volumes, configs, etc.).
@@ -51,8 +51,8 @@ After `mc setup <machine>` deploys compose files (but no data):
 BACKUP="$MC_PRIVATE/backups/<hostname>"
 for svc in "$BACKUP"/*/; do
     name="$(basename "$svc")"
-    scp -r "$svc/data" <host>:~/homelab/"$name"/data 2>/dev/null || true
-    scp "$svc/.env" <host>:~/homelab/"$name"/.env 2>/dev/null || true
+    scp -r "$svc/data" <host>:~/.homelab/"$name"/data 2>/dev/null || true
+    scp "$svc/.env" <host>:~/.homelab/"$name"/.env 2>/dev/null || true
 done
 # Then on the target: mc setup <machine>  (redeploys everything)
 ```

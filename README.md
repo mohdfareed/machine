@@ -140,12 +140,12 @@ MC_PRIVATE/
    - `~/.env` — shared keys (so you only define `OPENAI_API_KEY` once)
    - `MC_PRIVATE/docker/<service>.env` — service-specific overrides (optional)
 
-   The generated `.env` is written to `~/homelab/<service>/.env` (mode 600) and is
+   The generated `.env` is written to `~/.homelab/<service>/.env` (mode 600) and is
    gitignored. It's a regenerated artifact — `MC_PRIVATE` is the source of truth.
 
 ### Backups
 
-The homelab Mac's backup script (`backup.macos.sh`) syncs `~/homelab/*/data/` and
+The homelab Mac's backup script (`backup.macos.sh`) syncs `~/.homelab/*/data/` and
 `*/.env` from remote servers (and itself) into `MC_PRIVATE/backups/` via rsync over
 Tailscale SSH. A launchd job runs daily. Since `MC_PRIVATE` lives on iCloud, backups
 are automatically cloud-synced.
@@ -159,7 +159,7 @@ The `homelab` module (`config/homelab/`) provides the shared Docker deploy
 script. Machines with Docker services (homelab, rpi) include this module and
 store compose files under `machines/<id>/docker/<service>/`. The deploy script:
 
-1. Creates real directories at `~/homelab/<service>/`
+1. Creates real directories at `~/.homelab/<service>/`
 2. Symlinks `compose.yaml` and config subdirs from the repo
 3. Concatenates shared + per-service secrets into `.env` (see above)
 4. Runs `docker compose pull && up -d --remove-orphans`
