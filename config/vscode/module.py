@@ -34,8 +34,9 @@ module = Module(
         if PLATFORM == Platform.MACOS
         else Package(
             name="visual-studio-code",
+            apt="code",  # in Raspberry Pi OS repo
             winget="microsoft.VisualStudioCode",
-            snap="code --classic",
+            snap="code --classic",  # fallback: amd64-only,
         ),
     ],
 )
