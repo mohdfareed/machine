@@ -7,6 +7,6 @@ set -Eeuo pipefail
 
 OPENCLAW_DIR="$MC_HOME/machines/homelab/docker/openclaw"
 
-chmod 700 "$OPENCLAW_DIR"
+chmod 700 "$OPENCLAW_DIR/data"
 chmod 600 "$OPENCLAW_DIR/openclaw.json"
 find "$OPENCLAW_DIR/config" -type f -exec chmod 600 {} +
