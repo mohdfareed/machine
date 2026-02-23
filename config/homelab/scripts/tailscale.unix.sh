@@ -19,9 +19,6 @@ if ! tailscale status &>/dev/null; then
     sudo tailscale up
 fi
 
-echo "status:"
-tailscale status
-
 # ─── Tailscale Serve ─────────────────────────────────────────────────────────
 
 echo "resetting stale tailscale serve config..."
@@ -32,7 +29,7 @@ sudo tailscale serve --bg http://127.0.0.1:7880
 
 if [[ "$enable" == true ]]; then
   echo "configuring tailscale funnel (public internet, port 8443)..."
-  sudo tailscale funnel --bg http://127.0.0.1:7881
+  sudo tailscale funnel --bg --https=8443 http://127.0.0.1:7881
 fi
 
 tailscale funnel status
