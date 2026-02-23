@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     command:
       - --base-url=/portainer
-      - --trusted-origins=https://${MC_ID}.${TAILNET_NAME}.ts.net
+      - --trusted-origins=homelab.${TAILNET_NAME}.ts.net
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/data
