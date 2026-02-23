@@ -27,6 +27,7 @@ services:
         exec node dist/index.js gateway
         --bind "$${OPENCLAW_GATEWAY_BIND:-lan}"
         --port 18789
+        --allow-unconfigured
     volumes:
       - ./data:/home/node/.openclaw
       - ./config:/home/node/.openclaw/config:ro

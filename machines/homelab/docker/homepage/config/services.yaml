@@ -51,7 +51,7 @@
         container: portainer
         widget:
           type: portainer
-          url: http://host.docker.internal:9000
+          url: http://portainer:9000
           env: 3
           key: "{{HOMEPAGE_VAR_PORTAINER_KEY}}"
           fields: ["running", "stopped", "total"]
@@ -62,7 +62,7 @@
         container: watchtower
         widget:
           type: watchtower
-          url: http://host.docker.internal:8080
+          url: http://watchtower:8080
           key: "{{HOMEPAGE_VAR_WATCHTOWER_KEY}}"
           fields:
             ["containers_scanned", "containers_updated", "containers_failed"]
