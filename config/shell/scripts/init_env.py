@@ -26,7 +26,7 @@ def main() -> None:
         print("env: MC_PRIVATE is not set, skipping")
         return
 
-    private_root = Path(os.path.expandvars(private_path)).expanduser()
+    private_root = Path(os.path.expandvars(private_path)).expanduser() / "env"
     if not private_root.is_dir():
         print(f"env: {private_root} does not exist, skipping")
         return
