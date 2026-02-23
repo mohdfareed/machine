@@ -3,6 +3,7 @@
 // Config split via $include: channels, skills, plugins.
 {
   "gateway": {
+    "mode": "local",
     "bind": "lan", // container port mapping
     "auth": { "allowTailscale": true }
   },

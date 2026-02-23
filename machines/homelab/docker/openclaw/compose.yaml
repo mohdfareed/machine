@@ -1,18 +1,5 @@
 # OpenClaw — Personal AI Assistant Gateway
 # Access: https://<machine>.<tailnet>.ts.net/openclaw
-#
-# Layout:
-#   ./data/           → /home/node/.openclaw                (runtime state, gitignored)
-#   ./config/         → /home/node/.openclaw/config.        (config files)
-#   ./workspace/      → /home/node/.openclaw/workspace      (persona files)
-#   ./openclaw.json   → /home/node/.openclaw/openclaw.json  (main config, $includes below)
-#
-# Env vars (resolved from ~/.env via deploy script):
-#   OPENAI_API_KEY           — model provider / LanceDB embedding
-#   TELEGRAM_BOT_TOKEN       — Telegram channel (from @BotFather)
-#   TELEGRAM_WEBHOOK_SECRET  — webhook signature secret
-#   OPENCLAW_WEBHOOK_URL     — https://<host>.<tailnet>.ts.net:8443/openclaw/telegram
-#   OPENCLAW_GATEWAY_TOKEN   — gateway auth token (long random string)
 
 services:
   openclaw:
@@ -25,25 +12,13 @@ services:
       - ./workspace:/home/node/.openclaw/workspace
       - ./openclaw.json:/home/node/.openclaw/openclaw.json:ro
     environment:
-      NODE_ENV: production
+      TERM: xterm-256color
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       TELEGRAM_BOT_TOKEN: ${OPENCLAW_TELEGRAM_BOT_TOKEN}
       TELEGRAM_WEBHOOK_SECRET: ${OPENCLAW_TELEGRAM_WEBHOOK_SECRET}
       TELEGRAM_WEBHOOK_URL: ${OPENCLAW_TELEGRAM_WEBHOOK_URL}
-      HOME: /home/node
-      TERM: xterm-256color
-    init: true
-    command:
-      [
-        "node",
-        "dist/index.js",
-        "gateway",
-        "--bind",
-        "${OPENCLAW_GATEWAY_BIND:-lan}",
-        "--port",
-        "18789",
-      ]
+
     labels:
       traefik.enable: "true"
       # Private (tailnet) — Traefik strips /openclaw before forwarding
