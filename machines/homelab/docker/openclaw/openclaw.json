@@ -4,26 +4,19 @@
 {
   "env": {
     "vars": {
-      // Model secrets
+      // Agents
       "OPENAI_API_KEY": "${OPENAI_API_KEY}",
-      // Channel secrets
+      // Channels
       "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
       "TELEGRAM_WEBHOOK_SECRET": "${TELEGRAM_WEBHOOK_SECRET}",
       "OPENCLAW_WEBHOOK_URL": "${OPENCLAW_WEBHOOK_URL}",
-      // Gateway secrets
+      // Gateway
       "OPENCLAW_GATEWAY_TOKEN": "${OPENCLAW_GATEWAY_TOKEN}",
     }
   },
   "gateway": {
-    mode: "local",
-    bind: "lan", // required for container port mapping
-    controlUi: { enabled: true, basePath: "/" },
-    tailscale: { mode: "serve" },
-    auth: {
-      mode: "token",
-      token: "${OPENCLAW_GATEWAY_TOKEN}",
-      "allowTailscale": true
-    },
+    "bind": "lan", // container port mapping
+    "auth": { "allowTailscale": true }
   },
   "agents": {
     "$include": "./config/agents.json5"
@@ -42,5 +35,5 @@
   },
   "tools": {
     "$include": "./config/tools.json5"
-  },
+  }
 }

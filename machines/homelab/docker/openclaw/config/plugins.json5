@@ -11,6 +11,8 @@
     "memory-core": { enabled: true },
     "msteams": { enabled: true },
     "open-prose": { enabled: true },
+    // NOTE: requires 'openai' module in the Docker image.
+    // Handled with a special entrypoint in compose.yaml.
     "memory-lancedb": {
       enabled: true,
       config: {
