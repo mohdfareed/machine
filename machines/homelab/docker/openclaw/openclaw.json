@@ -15,12 +15,12 @@
     }
   },
   "gateway": {
-    // Use docker instead of tailscale
-    // bind: "loopback",
-    // tailscale: { mode: "serve" },
-
     mode: "local",
     bind: "lan", // required for container port mapping
+    controlUi: {
+      enabled: true,
+      basePath: "/openclaw",
+    },
     auth: {
       mode: "token",
       token: "${OPENCLAW_GATEWAY_TOKEN}",

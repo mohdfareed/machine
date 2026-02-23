@@ -79,6 +79,20 @@ if [[ -d "$DOCKER_APP" ]]; then
     osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"$DOCKER_APP\", hidden:true}" 2>/dev/null || true
 fi
 
+# Remove osxkeychain credential store so SSH deployments can pull images.
+# The keychain requires an interactive GUI session — SSH sessions can't unlock it.
+DOCKER_CONFIG="$HOME/.docker/config.json"
+if [[ -f "$DOCKER_CONFIG" ]] && grep -q "osxkeychain" "$DOCKER_CONFIG"; then
+    echo "removing osxkeychain from docker config..."
+    python3 -c "
+import json, pathlib
+p = pathlib.Path('$DOCKER_CONFIG')
+c = json.loads(p.read_text())
+c.pop('credsStore', None)
+p.write_text(json.dumps(c, indent=2))
+"
+fi
+
 # MARK: Scheduled Backups
 # =============================================================================
 
