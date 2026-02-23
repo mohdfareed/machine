@@ -5,7 +5,7 @@
 #   TELEGRAM_BOT_TOKEN=...
 
 services:
-  bot:
+  discord-telegram-bot:
     build: https://github.com/mohdfareed/discord-telegram-bot.git
     restart: unless-stopped
     env_file: .env

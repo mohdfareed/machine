@@ -5,7 +5,11 @@ set -Eeuo pipefail
 # Works on MacBook (clamshell), Mac Mini, Mac Studio, etc.
 # Tested on macOS 26 Tahoe (Apple Silicon).
 
-AUTO_WAKE_TIME="04:00:00" # daily wake time for maintenance (HH:MM:SS)
+# daily wake time for maintenance (HH:MM:SS)
+AUTO_WAKE_TIME="04:00:00"
+
+# unlock keychain for headless access
+security -v unlock-keychain ~/Library/Keychains/login.keychain-db
 
 # MARK: Power & Sleep
 # =============================================================================
@@ -77,27 +81,6 @@ DOCKER_APP="/Applications/Docker.app"
 if [[ -d "$DOCKER_APP" ]]; then
     echo "enabling Docker auto-start..."
     osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"$DOCKER_APP\", hidden:true}" 2>/dev/null || true
-fi
-
-# Disable credential helpers so SSH deployments can pull images.
-# Docker Desktop sets credsStore to "desktop", which delegates to the macOS
-# keychain — inaccessible from SSH sessions. Removing it falls back to
-# base64-encoded creds in config.json (acceptable for a headless server).
-DOCKER_CONFIG="$HOME/.docker/config.json"
-if [[ -f "$DOCKER_CONFIG" ]] && python3 -c "
-import json, pathlib, sys
-c = json.loads(pathlib.Path('$DOCKER_CONFIG').read_text())
-sys.exit(0 if c.get('credsStore') else 1)
-"; then
-    echo "removing docker credential store (incompatible with SSH)..."
-    python3 -c "
-import json, pathlib
-p = pathlib.Path('$DOCKER_CONFIG')
-c = json.loads(p.read_text())
-c.pop('credsStore', None)
-c.pop('credStore', None)
-p.write_text(json.dumps(c, indent=2))
-"
 fi
 
 # MARK: Scheduled Backups

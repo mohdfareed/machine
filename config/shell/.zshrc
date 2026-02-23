@@ -53,11 +53,15 @@ _post_compinit() {
   for f in "$HOME"/.zfunc/*(N); do source "$f"; done
 
   # dotnet completions
-  eval "$(dotnet completions script zsh)"
+  if command -v dotnet &>/dev/null; then
+    eval "$(dotnet completions script zsh)"
+  fi
 
   # openclaw completions
-  local openclaw_completions="$HOME/.openclaw/completions/openclaw.zsh"
-  [[ -f "$openclaw_completions" ]] && source "$openclaw_completions"
+  if command -v openclaw &>/dev/null; then
+    local openclaw_completions="$HOME/.openclaw/completions/openclaw.zsh"
+    [[ -f "$openclaw_completions" ]] && source "$openclaw_completions"
+  fi
 }
 
 # Configuration

@@ -464,10 +464,10 @@ def _prompt_force(stash: bool, force: bool) -> bool:
         )
 
     aborted = False
-    if choice == "stash" or choice == "s":
+    if choice == "stash":
         force = False
         aborted = False
-    elif choice == "discard" or choice == "d":
+    elif choice == "discard":
         force = True
         aborted = not typer.confirm("This cannot be undone. Are you sure?")
     else:  # abort
