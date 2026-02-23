@@ -21,5 +21,5 @@ tailscale status
 # serve: HTTPS reverse proxy (tailnet-only) — fixes browser secure context requirement.
 # funnel: makes only the Telegram webhook path public (Telegram needs to reach it).
 echo "configuring tailscale serve/funnel for openclaw..."
-sudo tailscale serve --bg http://127.0.0.1:18789
+sudo tailscale serve --bg --set-path /openclaw http://127.0.0.1:18789
 sudo tailscale funnel --bg --set-path /openclaw/telegram http://127.0.0.1:18789

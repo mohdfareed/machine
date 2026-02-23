@@ -30,7 +30,7 @@
 - AI:
     - OpenClaw:
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/openclaw.png
-        href: http://homelab:18789
+        href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/openclaw
         description: Personal AI assistant
         server: docker
         container: openclaw
