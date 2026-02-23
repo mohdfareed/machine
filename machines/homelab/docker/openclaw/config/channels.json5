@@ -16,8 +16,9 @@
 
     // Webhook mode — Tailscale Funnel exposes only this path publicly.
     // Set OPENCLAW_WEBHOOK_URL to https://<hostname>.<tailnet>.ts.net/openclaw/telegram
+    // Note: Tailscale Serve strips the /openclaw prefix before forwarding.
     webhookUrl: "${OPENCLAW_WEBHOOK_URL}",
     webhookSecret: "${TELEGRAM_WEBHOOK_SECRET}",
-    webhookPath: "/openclaw/telegram",
+    webhookPath: "/telegram",
   },
 }

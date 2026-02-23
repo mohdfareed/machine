@@ -5,12 +5,8 @@ favicon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/server.svg
 headerStyle: clean
 statusStyle: dot
 layout:
-  AI:
-    style: row
-    columns: 3
-  Management:
-    style: row
-    columns: 3
+  Services:
+    style: column
   Infrastructure:
     style: row
     columns: 3

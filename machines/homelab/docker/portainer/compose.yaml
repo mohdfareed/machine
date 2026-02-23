@@ -1,5 +1,5 @@
 # Portainer — Container Management UI
-# Access via Tailscale Serve at https://<machine>.<tailnet>.ts.net/portainer
+# Access via Tailscale Serve at https://<machine>.<tailnet>.ts.net/portainer/
 
 services:
   portainer:

@@ -45,7 +45,7 @@
                 fields: ["address", "last_seen", "expires"]
       - Portainer:
             icon: portainer
-            href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/portainer
+            href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/portainer/
             description: Container management
             server: docker
             container: portainer
