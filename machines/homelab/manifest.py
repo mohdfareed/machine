@@ -35,5 +35,6 @@ manifest = MachineManifest(
     env={
         "ICLOUD": "$HOME/Library/Mobile Documents/com~apple~CloudDocs",
         "MC_PRIVATE": "$ICLOUD/.machine",
+        "MC_HOMELAB_TUNNEL": "true",
     },
 )
