@@ -7,14 +7,6 @@ if [ "$TERM_PROGRAM" = "vscode" ]; then
     alias clear='clear && clear'
 fi
 
-alias dc='docker compose'
-alias cat='bat --paging=never'
-
-# Linux: show disk usage for real filesystems
-if [[ "$OSTYPE" == linux* ]]; then
-    alias disk='df -h -x tmpfs -x devtmpfs -x squashfs -x overlay -x efivarfs'
-fi
-
 alias ls='eza --icons --group-directories-first --sort=Name'
 alias lst='ls -T'
 alias lls='ls -lhmU --git --no-user'
@@ -22,6 +14,15 @@ alias llst='lls -T'
 
 alias zsh::reload='exec $SHELL'
 alias ssh::gen-key='ssh-keygen -t ed25519 -C'
+
+alias dc='docker compose'
+alias cat='bat --paging=never'
+alias gen-pass='openssl rand -base64 32'
+
+# Linux: show disk usage for real filesystems
+if [[ "$OSTYPE" == linux* ]]; then
+    alias disk='df -h -x tmpfs -x devtmpfs -x squashfs -x overlay -x efivarfs'
+fi
 
 # macOS: re-add all ssh keys to keychain
 if [[ "$OSTYPE" == darwin* ]]; then

@@ -1,12 +1,12 @@
 # Watchtower — Automatic Container Updates
+# Checks for new images every hour and restarts with the latest.
+# No Traefik route — reachable by container name on the traefik network.
 
 services:
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
     restart: unless-stopped
-    ports:
-      - 127.0.0.1:8080:8080 # loopback only — API metrics endpoint
     environment:
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_POLL_INTERVAL: "3600"
@@ -17,3 +17,9 @@ services:
       DOCKER_API_VERSION: "1.44"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true

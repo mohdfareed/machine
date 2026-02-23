@@ -1,27 +1,30 @@
 ---
 # Homepage widgets (top bar)
 - search:
-      provider: google
-      target: _blank
-      showSearchSuggestions: true
+    provider: google
+    target: _blank
+    showSearchSuggestions: true
 - openmeteo:
-      label: Weather
-      units: imperial
-      cache: 5
+    label: Weather
+    units: metric
+    cache: 5
 - resources:
-      label: System
-      cpu: true
-      cputemp: true
-      memory: true
-      uptime: true
-      refresh: 3000
+    label: System
+    cpu: true
+    cputemp: true
+    memory: true
+    uptime: true
 - resources:
-      label: Storage
-      expanded: true
-      disk: /
+    label: Storage
+    expanded: true
+    disk: /
+- resources:
+    label: Network
+    expanded: true
+    network: true
 - datetime:
-      text_size: xl
-      format:
-          dateStyle: short
-          timeStyle: short
-          hour12: true
+    text_size: xl
+    format:
+      dateStyle: short
+      timeStyle: short
+      hour12: true

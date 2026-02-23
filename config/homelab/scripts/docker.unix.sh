@@ -2,17 +2,14 @@
 set -Eeuo pipefail
 
 # Deploy all homelab Docker services.
-#
-# Creates real directories at ~/.homelab/<service>/ and symlinks compose.yaml
-# (and config dirs) from the repo. Runtime data (./data/, logs) is written
-# into the real directory — never into the git repo.
 
-DOCKER_SRC="$MC_HOME/machines/$MC_ID/docker"
 HOMELAB_DIR="$HOME/.homelab"
+MODULE_DOCKER="$MC_HOME/config/homelab/docker"
+MACHINE_DOCKER="$MC_HOME/machines/$MC_ID/docker"
 
 if ! command -v docker &>/dev/null; then
-    echo "docker not found, skipping deploy"
-    exit 0
+    echo "docker not found"
+    exit 1
 fi
 
 # Wait for Docker daemon to be ready (Docker Desktop can be slow to start).
@@ -22,13 +19,26 @@ until docker info &>/dev/null || (( --retries == 0 )); do
     sleep 2
 done
 if ! docker info &>/dev/null; then
-    echo "docker daemon not available, skipping deploy"
-    exit 0
+    echo "docker daemon not available"
+    exit 1
 fi
 
+# Export secrets so Docker Compose can resolve ${VAR} references.
+set -a
+# shellcheck disable=SC1091
+[[ -f "$HOME/.env" ]] && source "$HOME/.env"
+set +a
+
+# Ensure the shared Traefik network exists (all services join this).
+docker network create traefik 2>/dev/null || true
+
+# ─── Symlink service directories ─────────────────────────────────────────────
 # Sync repo compose files into ~/.homelab as real directories.
-for svc_dir in "$DOCKER_SRC"/*/; do
-    [[ -d "$svc_dir" ]] || continue
+# Module services are deployed first, then machine-specific ones.
+
+sync_service() {
+    local svc_dir svc target
+    svc_dir="$1"
     svc="$(basename "$svc_dir")"
     target="$HOMELAB_DIR/$svc"
     mkdir -p "$target"
@@ -51,25 +61,19 @@ for svc_dir in "$DOCKER_SRC"/*/; do
         [[ "$name" == "compose.yaml" ]] && continue
         ln -sf "$entry" "$target/$name"
     done
-done
+}
 
-# Build each service's .env by concatenating:
-#   1. ~/.env                        — shared secrets (OPENAI_API_KEY, etc.)
-#   2. MC_PRIVATE/docker/<svc>.env   — service-specific overrides (optional)
-# This avoids duplicating common keys across services.
-for svc_dir in "$HOMELAB_DIR"/*/; do
+for svc_dir in "$MODULE_DOCKER"/*/; do
     [[ -d "$svc_dir" ]] || continue
-    svc="$(basename "$svc_dir")"
-    env_out="$svc_dir/.env"
-    {
-        [[ -f "$HOME/.env" ]] && cat "$HOME/.env"
-        [[ -n "${MC_PRIVATE:-}" && -f "$MC_PRIVATE/docker/$svc.env" ]] && \
-            echo && cat "$MC_PRIVATE/docker/$svc.env"
-    } > "$env_out"
-    chmod 600 "$env_out"
+    sync_service "$svc_dir"
+done
+for svc_dir in "$MACHINE_DOCKER"/*/; do
+    [[ -d "$svc_dir" ]] || continue
+    sync_service "$svc_dir"
 done
 
-# Deploy each service that has a compose.yaml.
+# ─── Deploy ──────────────────────────────────────────────────────────────────
+
 for svc_dir in "$HOMELAB_DIR"/*/; do
     compose="$svc_dir/compose.yaml"
     [[ -f "$compose" ]] || continue

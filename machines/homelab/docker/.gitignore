@@ -1,4 +1,0 @@
-# Runtime data — written by Docker containers, never committed.
-*/data/
-*/logs/
-*/.env

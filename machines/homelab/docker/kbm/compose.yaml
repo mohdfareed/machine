@@ -1,5 +1,5 @@
 # KBM — Knowledge Base Memory
-# Instances: personal (8001), work (8002), private (8003)
+# Access: https://<machine>.<tailnet>.ts.net/kbm/{personal,work,private}
 #
 # All persistent data lives under ./data/<hostname>/.
 # KBM stores everything under KBM_HOME=/data inside the container.
@@ -10,27 +10,52 @@ services:
     container_name: kbm-personal
     restart: unless-stopped
     hostname: personal
-    ports:
-      - 127.0.0.1:8001:8000 # loopback only — access via tailscale serve
     volumes:
       - ./data/personal:/data
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.kbm-personal.entrypoints: web
+      traefik.http.routers.kbm-personal.rule: PathPrefix(`/kbm/personal`)
+      traefik.http.routers.kbm-personal.middlewares: strip-kbm-personal
+      traefik.http.middlewares.strip-kbm-personal.stripprefix.prefixes: /kbm/personal
+      traefik.http.services.kbm-personal.loadbalancer.server.port: "8000"
+    networks:
+      - traefik
 
   kbm-work:
     image: ghcr.io/mohdfareed/kbm:latest
     container_name: kbm-work
     restart: unless-stopped
     hostname: work
-    ports:
-      - 127.0.0.1:8002:8000 # loopback only — access via tailscale serve
     volumes:
       - ./data/work:/data
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.kbm-work.entrypoints: web
+      traefik.http.routers.kbm-work.rule: PathPrefix(`/kbm/work`)
+      traefik.http.routers.kbm-work.middlewares: strip-kbm-work
+      traefik.http.middlewares.strip-kbm-work.stripprefix.prefixes: /kbm/work
+      traefik.http.services.kbm-work.loadbalancer.server.port: "8000"
+    networks:
+      - traefik
 
   kbm-private:
     image: ghcr.io/mohdfareed/kbm:latest
     container_name: kbm-private
     restart: unless-stopped
     hostname: private
-    ports:
-      - 127.0.0.1:8003:8000 # loopback only — access via tailscale serve
     volumes:
       - ./data/private:/data
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.kbm-private.entrypoints: web
+      traefik.http.routers.kbm-private.rule: PathPrefix(`/kbm/private`)
+      traefik.http.routers.kbm-private.middlewares: strip-kbm-private
+      traefik.http.middlewares.strip-kbm-private.stripprefix.prefixes: /kbm/private
+      traefik.http.services.kbm-private.loadbalancer.server.port: "8000"
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true

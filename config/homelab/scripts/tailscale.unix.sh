@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Configure Tailscale for RPi server use.
+# Configure Tailscale for homelab use.
+
+case "${MC_HOMELAB_TUNNEL:-}" in
+  true|1|yes|y) enable=true ;;
+  *) enable=false ;;
+esac
 
 if ! command -v tailscale &>/dev/null; then
     echo "tailscale not found, skipping"
@@ -18,11 +23,14 @@ echo "status:"
 tailscale status
 
 # ─── Tailscale Serve ─────────────────────────────────────────────────────────
-# HTTPS reverse proxy (tailnet-only, valid Let's Encrypt cert).
-# All services bind loopback-only; Tailscale Serve is the sole gateway.
 
 echo "resetting stale tailscale serve config..."
 sudo tailscale serve reset
 
 echo "configuring tailscale serve (HTTPS, tailnet-only)..."
-sudo tailscale serve --bg --set-path / http://127.0.0.1:3000  # homepage (dashboard)
+sudo tailscale serve --bg http://127.0.0.1:8080
+
+if [[ "$enable" == true ]]; then
+  echo "configuring tailscale funnel (public internet, port 8443)..."
+  sudo tailscale funnel --bg http://127.0.0.1:8081
+fi

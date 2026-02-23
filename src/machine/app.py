@@ -256,11 +256,17 @@ def matches_platform(script: Path) -> bool:
 
 
 def filter_scripts(scripts: list[str]) -> list[str]:
-    """Return scripts that match the current platform and are runnable."""
+    """Return scripts that match the current platform and are runnable.
+
+    Scripts whose stem starts with ``_`` are helpers intended to be
+    sourced by other scripts — they are never executed directly.
+    """
     return [
         s
         for s in scripts
-        if (p := Path(s)).suffix.lower() in SCRIPT_SUFFIXES and matches_platform(p)
+        if (p := Path(s)).suffix.lower() in SCRIPT_SUFFIXES
+        and matches_platform(p)
+        and not p.stem.startswith("_")
     ]
 
 

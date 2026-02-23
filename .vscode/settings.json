@@ -47,6 +47,7 @@
     "pydantic",
     "pyright",
     "shellcheck",
+    "tailnet",
     "tailscale",
     "typer",
     "venv",
