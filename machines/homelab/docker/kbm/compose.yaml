@@ -7,6 +7,7 @@
 services:
   kbm-personal:
     image: ghcr.io/mohdfareed/kbm:latest
+    container_name: kbm-personal
     restart: unless-stopped
     hostname: personal
     ports:
@@ -16,6 +17,7 @@ services:
 
   kbm-work:
     image: ghcr.io/mohdfareed/kbm:latest
+    container_name: kbm-work
     restart: unless-stopped
     hostname: work
     ports:
@@ -25,6 +27,7 @@ services:
 
   kbm-private:
     image: ghcr.io/mohdfareed/kbm:latest
+    container_name: kbm-private
     restart: unless-stopped
     hostname: private
     ports:

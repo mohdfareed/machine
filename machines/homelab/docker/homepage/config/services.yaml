@@ -10,27 +10,28 @@
             container: openclaw
       - KBM Personal:
             icon: mdi-brain
-            href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/kbm/personal
+            href: https://github.com/mohdfareed/kbm
             description: Personal knowledge base
             server: docker
             container: kbm-personal
       - KBM Work:
             icon: mdi-brain
-            href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/kbm/work
+            href: https://github.com/mohdfareed/kbm
             description: Work knowledge base
             server: docker
             container: kbm-work
       - KBM Private:
             icon: mdi-brain
-            href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/kbm/private
+            href: https://github.com/mohdfareed/kbm
             description: Private knowledge base
             server: docker
             container: kbm-private
       - Discord-Telegram Bot:
             icon: mdi-robot
-            description: Message bridge bot
+            href: https://github.com/mohdfareed/discord-telegram-bot
+            description: Discord Telegram Bot
             server: docker
-            container: discord-telegram-bot-bot-1
+            container: discord-telegram-bot
 
 - Infrastructure:
       - Tailscale:
