@@ -1,5 +1,5 @@
 # Homepage — Homelab Dashboard
-# Access at http://<rpi-ip>:3000
+# Access via Tailscale Serve at https://<machine>.<tailnet>.ts.net/
 #
 # Config files are mounted from ./config/.
 # Docker integration auto-discovers running containers.
@@ -10,7 +10,7 @@ services:
     container_name: homepage
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - 127.0.0.1:3000:3000 # loopback only — access via tailscale serve
     volumes:
       - ./config:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro

@@ -1,13 +1,14 @@
 # Portainer — Container Management UI
-# Access at https://<homelab-ip>:9443
+# Access via Tailscale Serve at https://<machine>.<tailnet>.ts.net/portainer
 
 services:
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
     restart: unless-stopped
+    command: --base-url /portainer
     ports:
-      - "9443:9443"
+      - 127.0.0.1:9000:9000 # loopback only — access via tailscale serve
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/data

@@ -1,5 +1,5 @@
 # OpenClaw — Personal AI Assistant Gateway
-# Access Control UI at https://homelab.<tailnet>.ts.net (Tailscale HTTPS, tailnet-only)
+# Access via Tailscale Serve at https://<machine>.<tailnet>.ts.net/openclaw
 #
 # Layout:
 #   ./data/           → /home/node/.openclaw                (runtime state, gitignored)

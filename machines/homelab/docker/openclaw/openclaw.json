@@ -17,6 +17,7 @@
   "gateway": {
     mode: "local",
     bind: "lan", // required for container port mapping
+    trustedProxies: ["172.16.0.0/12", "127.0.0.1"], // Docker bridge + loopback (tailscale serve)
     controlUi: {
       enabled: true,
       basePath: "/openclaw",

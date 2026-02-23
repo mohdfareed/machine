@@ -16,3 +16,13 @@ fi
 
 echo "status:"
 tailscale status
+
+# ─── Tailscale Serve ─────────────────────────────────────────────────────────
+# HTTPS reverse proxy (tailnet-only, valid Let's Encrypt cert).
+# All services bind loopback-only; Tailscale Serve is the sole gateway.
+
+echo "resetting stale tailscale serve config..."
+sudo tailscale serve reset
+
+echo "configuring tailscale serve (HTTPS, tailnet-only)..."
+sudo tailscale serve --bg --set-path / http://127.0.0.1:3000  # homepage (dashboard)

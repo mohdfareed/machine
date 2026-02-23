@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
     hostname: personal
     ports:
-      - "8001:8000"
+      - 127.0.0.1:8001:8000 # loopback only — access via tailscale serve
     volumes:
       - ./data/personal:/data
 
@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
     hostname: work
     ports:
-      - "8002:8000"
+      - 127.0.0.1:8002:8000 # loopback only — access via tailscale serve
     volumes:
       - ./data/work:/data
 
@@ -28,6 +28,6 @@ services:
     restart: unless-stopped
     hostname: private
     ports:
-      - "8003:8000"
+      - 127.0.0.1:8003:8000 # loopback only — access via tailscale serve
     volumes:
       - ./data/private:/data
