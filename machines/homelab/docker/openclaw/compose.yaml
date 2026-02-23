@@ -28,10 +28,22 @@ services:
       NODE_ENV: production
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
-      OPENCLAW_GATEWAY_BIND: "0.0.0.0"
       TELEGRAM_BOT_TOKEN: ${OPENCLAW_TELEGRAM_BOT_TOKEN}
       TELEGRAM_WEBHOOK_SECRET: ${OPENCLAW_TELEGRAM_WEBHOOK_SECRET}
       TELEGRAM_WEBHOOK_URL: ${OPENCLAW_TELEGRAM_WEBHOOK_URL}
+      HOME: /home/node
+      TERM: xterm-256color
+    init: true
+    command:
+      [
+        "node",
+        "dist/index.js",
+        "gateway",
+        "--bind",
+        "${OPENCLAW_GATEWAY_BIND:-lan}",
+        "--port",
+        "18789",
+      ]
     labels:
       traefik.enable: "true"
       # Private (tailnet) — Traefik strips /openclaw before forwarding
