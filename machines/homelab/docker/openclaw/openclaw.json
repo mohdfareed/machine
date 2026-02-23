@@ -17,6 +17,8 @@
   "gateway": {
     mode: "local",
     bind: "lan", // required for container port mapping
+    controlUi: { enabled: true, basePath: "/" },
+    tailscale: { mode: "serve" },
     auth: {
       mode: "token",
       token: "${OPENCLAW_GATEWAY_TOKEN}",
