@@ -28,9 +28,9 @@ echo "resetting stale tailscale serve config..."
 sudo tailscale serve reset
 
 echo "configuring tailscale serve (HTTPS, tailnet-only)..."
-sudo tailscale serve --bg http://127.0.0.1:8080
+sudo tailscale serve --bg http://127.0.0.1:7880
 
 if [[ "$enable" == true ]]; then
   echo "configuring tailscale funnel (public internet, port 8443)..."
-  sudo tailscale funnel --bg http://127.0.0.1:8081
+  sudo tailscale funnel --bg http://127.0.0.1:7881
 fi

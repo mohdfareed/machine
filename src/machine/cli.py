@@ -175,6 +175,7 @@ def setup(
     from machine.app import (
         Failure,
         build_script_env,
+        cache_sudo,
         deploy_files,
         filter_scripts,
         install_packages,
@@ -242,6 +243,8 @@ def setup(
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
     console.print(f"{mode}Setting up [bold]{machine_id}[/]")
     console.print(f"  Modules: {', '.join(m.name for m in active_modules)}")
+
+    cache_sudo()
 
     # init_* prepares env/tools before packages; upgrade_* is for mc upgrade only
     setup_scripts = [s for s in all_scripts if Path(s).name.startswith("init_")]
@@ -332,6 +335,7 @@ def upgrade(
     from machine.app import (
         Failure,
         build_script_env,
+        cache_sudo,
         filter_scripts,
         get_current_machine,
         run_scripts,
@@ -375,6 +379,9 @@ def upgrade(
     script_env = build_script_env(manifest, machine_id, root)
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
     console.print(f"{mode}Upgrading [bold]{machine_id}[/]")
+
+    cache_sudo()
+
     log_file = settings.app_dir / "mc.log"
 
     failures: list[Failure] = []
@@ -414,8 +421,9 @@ def update(
         False, "-s", "--stash", help="Stash local changes and reapply after pull."
     ),
     force: bool = typer.Option(False, "-f", "--force", help="Discard local changes before pull."),
+    no_setup: bool = typer.Option(False, "--no-setup", help="Skip running setup after pull."),
 ) -> None:
-    """Pull the latest repo changes."""
+    """Pull the latest repo changes and re-run setup."""
     if stash and force:
         err_console.print("[red]--stash and --force are mutually exclusive.[/]")
         raise SystemExit(1)
@@ -449,6 +457,16 @@ def update(
 
     if stashed:
         subprocess.run([*git, "stash", "pop"])
+
+    if not no_setup:
+        from machine.app import get_current_machine
+
+        machine_id = get_current_machine()
+        if machine_id:
+            console.print()
+            setup(machine=machine_id)
+        else:
+            console.print("[dim]No machine set — skipping setup.[/]")
 
 
 def _prompt_force(stash: bool, force: bool) -> bool:

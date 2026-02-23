@@ -2,8 +2,8 @@
 # Routes requests to Docker services by path prefix and strips the prefix.
 #
 # Entrypoints:
-#   web    (:8080) → tailscale serve on :443  (private, tailnet-only)
-#   public (:8081) → tailscale funnel on :8443 (internet-facing webhooks)
+#   web    (:7880) → tailscale serve on :443  (private, tailnet-only)
+#   public (:7881) → tailscale funnel on :8443 (internet-facing webhooks)
 #
 # Services opt in via Docker labels (exposedByDefault=false).
 # All routable services must join the external `traefik` network.
@@ -17,12 +17,12 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
       - --providers.docker.network=traefik
-      - --entrypoints.web.address=:8080
-      - --entrypoints.public.address=:8081
+      - --entrypoints.web.address=:7880
+      - --entrypoints.public.address=:7881
       - --log.level=WARN
     ports:
-      - 127.0.0.1:8080:8080 # private — tailscale serve
-      - 127.0.0.1:8081:8081 # public  — tailscale funnel
+      - 127.0.0.1:7880:7880 # private — tailscale serve
+      - 127.0.0.1:7881:7881 # public  — tailscale funnel
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:

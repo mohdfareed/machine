@@ -5,7 +5,9 @@ import json
 import logging
 import os
 import shutil
+import subprocess
 import sys
+import threading
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,6 +32,40 @@ _INSTALL_CMD = {
     "scoop": "scoop install {}",
     "mas": "mas install {}",
 }
+
+
+# MARK: Sudo
+
+_sudo_keepalive: threading.Event | None = None
+
+
+def cache_sudo() -> None:
+    """Prompt for sudo once and keep credentials alive in the background.
+
+    A daemon thread runs ``sudo -v`` every 60 s so the credential cache
+    never expires during a long ``mc setup`` or ``mc upgrade`` run.
+    Harmless on Windows (no-op) and when the user has passwordless sudo.
+    """
+    global _sudo_keepalive
+
+    if not is_unix or settings.dry_run or _sudo_keepalive is not None:
+        return
+
+    # Initial prompt — the only interactive one.
+    rc = subprocess.call(["sudo", "-v"], stdin=sys.stdin)
+    if rc != 0:
+        logger.warning("sudo -v failed (exit %d); scripts may re-prompt", rc)
+        return
+
+    stop = threading.Event()
+    _sudo_keepalive = stop
+
+    def _keepalive() -> None:
+        while not stop.wait(60):
+            subprocess.call(["sudo", "-v"], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+
+    t = threading.Thread(target=_keepalive, daemon=True)
+    t.start()
 
 
 # MARK: Validation

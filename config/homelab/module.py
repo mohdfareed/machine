@@ -18,7 +18,7 @@ Machine-specific scripts can add funnel routes on top.
 Set MC_HOMELAB_TUNNEL to also configure the Tailscale Funnel (public HTTPS).
 
 Traefik handles all path routing internally.
-  serve (:443) → Traefik :8080 (private, tailnet-only)
+  serve (:443) → Traefik :7880 (private, tailnet-only)
 """
 
 from machine.manifest import Module
