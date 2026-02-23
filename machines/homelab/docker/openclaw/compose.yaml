@@ -1,5 +1,5 @@
 # OpenClaw — Personal AI Assistant Gateway
-# Access Control UI at http://homelab:18789 (via Tailnet MagicDNS)
+# Access Control UI at https://homelab.<tailnet>.ts.net (Tailscale HTTPS, tailnet-only)
 #
 # Layout:
 #   ./data/           → /home/node/.openclaw                (runtime state, gitignored)
@@ -20,7 +20,7 @@ services:
     container_name: openclaw
     restart: unless-stopped
     ports:
-      - 18789:18789
+      - 127.0.0.1:18789:18789 # loopback only — access via tailscale serve
     volumes:
       - ./data:/home/node/.openclaw
       - ./config:/home/node/.openclaw/config:ro
