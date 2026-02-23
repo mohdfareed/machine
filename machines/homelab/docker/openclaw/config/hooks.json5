@@ -1,6 +1,7 @@
 // Hooks — agent event hooks
 {
   "enabled": true,
+  "token": "${OPENCLAW_GATEWAY_TOKEN}",
   "internal": {
     "enabled": true,
     "entries": {
