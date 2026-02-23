@@ -6,6 +6,9 @@ services:
     image: portainer/portainer-ce:latest
     container_name: portainer
     restart: unless-stopped
+    command:
+      - --base-url=/portainer
+      - --csrf-origin=https://${MC_ID}.${TAILNET_NAME}.ts.net
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/data
