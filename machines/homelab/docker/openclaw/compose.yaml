@@ -30,8 +30,10 @@ services:
       # Public webhook (internet via tailscale funnel on :8443)
       traefik.http.routers.openclaw-webhook.entrypoints: public
       traefik.http.routers.openclaw-webhook.rule: PathPrefix(`/openclaw`)
-      traefik.http.routers.openclaw-webhook.middlewares: strip-openclaw
+      traefik.http.routers.openclaw-webhook.middlewares: strip-openclaw,openclaw-ratelimit
       traefik.http.routers.openclaw-webhook.service: openclaw
+      traefik.http.middlewares.openclaw-ratelimit.ratelimit.average: "30"
+      traefik.http.middlewares.openclaw-ratelimit.ratelimit.burst: "10"
     networks:
       - traefik
 

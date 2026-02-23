@@ -5,7 +5,10 @@
   "gateway": {
     "mode": "local",
     "bind": "lan", // container port mapping
-    "auth": { "allowTailscale": true }
+    "auth": {
+      "allowTailscale": true,
+      "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }
+    }
   },
   "agents": {
     "$include": "./config/agents.json5"

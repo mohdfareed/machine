@@ -1,6 +1,7 @@
 // Hooks — agent event hooks
 {
-  internal: {
+  "enabled": true,
+  "internal": {
     "enabled": true,
     "entries": {
       "boot-md": {

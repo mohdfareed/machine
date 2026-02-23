@@ -19,6 +19,5 @@
     // Set TELEGRAM_WEBHOOK_URL to https://<hostname>.<tailnet>.ts.net:8443/openclaw/telegram
     // webhookUrl: "${TELEGRAM_WEBHOOK_URL}",
     // webhookSecret: "${TELEGRAM_WEBHOOK_SECRET}",
-    // webhookPath: "/telegram",
   },
 }
