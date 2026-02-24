@@ -12,14 +12,9 @@
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_DEVICE_ID}}"
           key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
           fields: ["address", "last_seen", "expires"]
-    - Watchtower:
-        icon: watchtower
-        description: Automatic container updates
+    - Dockge:
+        icon: dockge
+        href: https://dockge.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
+        description: Docker Compose manager
         server: docker
-        container: watchtower
-        widget:
-          type: watchtower
-          url: http://host.docker.internal:8080
-          key: "{{HOMEPAGE_VAR_WATCHTOWER_KEY}}"
-          fields:
-            ["containers_scanned", "containers_updated", "containers_failed"]
+        container: dockge

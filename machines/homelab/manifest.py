@@ -21,10 +21,7 @@ manifest = MachineManifest(
         ),
     ],
     packages=[
-        *cask("tailscale"),
         # Dev tools
-        # REVIEW: verify Docker Desktop cask supports Apple Silicon (M1+)
-        # *cask("docker"),
         *cask("dotnet-sdk", "powershell"),
         *brew("uv", "python", "go"),
         *brew("copilot-cli", "codex"),
@@ -35,6 +32,5 @@ manifest = MachineManifest(
     env={
         "ICLOUD": "$HOME/Library/Mobile Documents/com~apple~CloudDocs",
         "MC_PRIVATE": "$ICLOUD/.machine",
-        "MC_HOMELAB_TUNNEL": "true",
     },
 )

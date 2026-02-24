@@ -29,10 +29,7 @@ set -a
 [[ -f "$HOME/.env" ]] && source "$HOME/.env"
 set +a
 
-# Ensure the shared Traefik network exists (all services join this).
-docker network create traefik 2>/dev/null || true
-
-# ─── Symlink service directories ─────────────────────────────────────────────
+# ─── Sync service directories ────────────────────────────────────────────────
 # Sync repo compose files into ~/.homelab as real directories.
 # Module services are deployed first, then machine-specific ones.
 
@@ -79,7 +76,7 @@ for svc_dir in "$HOMELAB_DIR"/*/; do
     [[ -f "$compose" ]] || continue
     svc="$(basename "$svc_dir")"
     echo "deploying $svc..."
-    docker compose -f "$compose" pull
+    docker compose -f "$compose" pull --ignore-pull-failures
     docker compose -f "$compose" up -d --remove-orphans
 done
 

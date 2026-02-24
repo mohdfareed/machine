@@ -4,29 +4,14 @@ Always-on Mac as a headless server. Works on MacBook (clamshell), Mac Mini, etc.
 
 ## Docker Services
 
-The deploy script creates **real directories** at `~/.homelab/<service>/` and
-symlinks only `compose.yaml` (and config dirs like `homepage/config/`) from
-the repo. Runtime data (`./data/`, logs, `.env`) is written to the real
-directory — never into the git repo.
-
-To add a service, drop a directory with a `compose.yaml` under `docker/`.
-
-**Convention:** persistent data goes in `./data/` relative to the compose file.
-Secrets go in `.env` (gitignored — manually provisioned or restored from backup).
-
-## Script Prefixes
-
-| Prefix     | When it runs             | Example               |
-| ---------- | ------------------------ | --------------------- |
-| `init_`    | Before packages          | `init_server`         |
-| *(none)*   | After packages           | `docker`, `tailscale` |
-| `upgrade_` | Only during `mc upgrade` | `upgrade_server`      |
+See [config/homelab/README.md](../../config/homelab/README.md) for the
+module documentation and how to add or expose services.
 
 ## Backups
 
-The homelab Mac pulls `~/.homelab/*/data/` and `*/.env` from remote servers via
-rsync over Tailscale SSH. A launchd job (`com.mc.backup.plist`) runs daily at
-04:30 after the 04:00 scheduled wake.
+A launchd job (`com.mc.backup.plist`) runs daily at 04:30 after a 04:00
+scheduled wake. It pulls `~/.homelab/*/data/` and `*/.env` from remote
+servers (and itself) via rsync over Tailscale SSH.
 
 Backups land in iCloud:
 
@@ -36,25 +21,27 @@ $MC_PRIVATE/backups/<hostname>/<service>/
 └── .env
 ```
 
-Trigger manually: `launchctl kickstart gui/$(id -u)/com.mc.backup` or just
-run the backup script directly.
+Trigger manually:
 
-Time Machine complements this by covering the homelab Mac's *own* data
-automatically (local Docker volumes, configs, etc.).
+```sh
+launchctl kickstart gui/$(id -u)/com.mc.backup
+```
+
+Time Machine covers the homelab Mac's own data (local Docker volumes,
+configs, etc.).
 
 ### Restoring a remote server
 
 After `mc setup <machine>` deploys compose files (but no data):
 
 ```sh
-# From any machine with iCloud access, push data to the target
 BACKUP="$MC_PRIVATE/backups/<hostname>"
 for svc in "$BACKUP"/*/; do
     name="$(basename "$svc")"
     scp -r "$svc/data" <host>:~/.homelab/"$name"/data 2>/dev/null || true
     scp "$svc/.env" <host>:~/.homelab/"$name"/.env 2>/dev/null || true
 done
-# Then on the target: mc setup <machine>  (redeploys everything)
+# Then on the target: mc setup <machine>
 ```
 
 ### Moving a service between machines

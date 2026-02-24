@@ -120,8 +120,7 @@ MC_PRIVATE/
 │   └── <MC_ID>      ← private key named after machine ID
 │   └── <MC_ID>.pub  ← optional matching public key
 └── docker/
-    ├── homepage.env  ← service-specific secrets (HOMEPAGE_VAR=…)
-    └── watchtower.env
+    └── homepage.env  ← service-specific secrets (HOMEPAGE_VAR=…)
 ```
 
 ### How secrets flow
@@ -145,27 +144,17 @@ MC_PRIVATE/
 
 ### Backups
 
-The homelab Mac's backup script (`backup.macos.sh`) syncs `~/.homelab/*/data/` and
-`*/.env` from remote servers (and itself) into `MC_PRIVATE/backups/` via rsync over
-Tailscale SSH. A launchd job runs daily. Since `MC_PRIVATE` lives on iCloud, backups
-are automatically cloud-synced.
-
-To restore after a fresh `mc setup`: push backed-up `data/` and `.env` to the target,
-then re-run `mc setup` to redeploy containers. See [homelab/README.md](machines/homelab/README.md).
+The homelab Mac's backup script syncs `~/.homelab/*/data/` and `*/.env` from
+remote servers into `MC_PRIVATE/backups/` via rsync over Tailscale SSH. A
+launchd job runs daily. Since `MC_PRIVATE` lives on iCloud, backups are
+automatically cloud-synced. See [machines/homelab/README.md](machines/homelab/README.md)
+for restore steps.
 
 ## Docker Services
 
-The `homelab` module (`config/homelab/`) provides the shared Docker deploy
-script. Machines with Docker services (homelab, rpi) include this module and
-store compose files under `machines/<id>/docker/<service>/`. The deploy script:
-
-1. Creates real directories at `~/.homelab/<service>/`
-2. Symlinks `compose.yaml` and config subdirs from the repo
-3. Concatenates shared + per-service secrets into `.env` (see above)
-4. Runs `docker compose pull && up -d --remove-orphans`
-
-Runtime data (`./data/`, logs) stays in the real directory — never in git.
-To add a service, drop a `compose.yaml` under `machines/<id>/docker/<name>/`.
+The `homelab` module (`config/homelab/`) deploys Docker Compose services
+via Tailscale. See [config/homelab/README.md](config/homelab/README.md)
+for architecture, env vars, and setup instructions.
 
 ## Development
 

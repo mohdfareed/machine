@@ -1,16 +1,47 @@
 # OpenClaw — Personal AI Assistant Gateway
-# Access: https://<machine>.<tailnet>.ts.net/openclaw
+# Access: https://openclaw.<tailnet>.ts.net (tailnet + public funnel)
+#
+# Onboarding (run while gateway is running):
+#   docker compose -f ~/.homelab/openclaw/compose.yaml run --rm openclaw onboard
+#
+# Other CLI commands:
+#   docker compose -f ~/.homelab/openclaw/compose.yaml run --rm openclaw <command>
 
 services:
+  ts-openclaw:
+    image: tailscale/tailscale:latest
+    container_name: ts-openclaw
+    hostname: openclaw
+    environment:
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+    volumes:
+      - ts-openclaw-state:/var/lib/tailscale
+      - ./ts-config:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
   openclaw:
     image: ghcr.io/openclaw/openclaw:latest
     container_name: openclaw
-    restart: unless-stopped
+    # networking
+    network_mode: service:ts-openclaw
+    depends_on:
+      - ts-openclaw
+    # mounting
     volumes:
       - ./data:/home/node/.openclaw
       - ./config:/home/node/.openclaw/config:ro
       - ./workspace:/home/node/.openclaw/workspace
       - ./openclaw.json:/home/node/.openclaw/openclaw.json:ro
+      - ./openclaw.sh:/usr/local/bin/openclaw:ro
+    # env vars
     environment:
       TERM: xterm-256color
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -19,25 +50,11 @@ services:
       TELEGRAM_BOT_TOKEN: ${OPENCLAW_TELEGRAM_BOT_TOKEN}
       TELEGRAM_WEBHOOK_SECRET: ${OPENCLAW_TELEGRAM_WEBHOOK_SECRET}
       TELEGRAM_WEBHOOK_URL: ${OPENCLAW_TELEGRAM_WEBHOOK_URL}
+    # entrypoint
+    init: true
+    restart: unless-stopped
+    entrypoint: ["node", "dist/index.js"]
+    command: ["gateway"]
 
-    labels:
-      traefik.enable: "true"
-      # Private (tailnet) — Traefik strips /openclaw before forwarding
-      traefik.http.routers.openclaw.entrypoints: web
-      traefik.http.routers.openclaw.rule: PathPrefix(`/openclaw`)
-      traefik.http.routers.openclaw.middlewares: strip-openclaw
-      traefik.http.middlewares.strip-openclaw.stripprefix.prefixes: /openclaw
-      traefik.http.services.openclaw.loadbalancer.server.port: "18789"
-      # Public webhook (internet via tailscale funnel on :8443)
-      traefik.http.routers.openclaw-webhook.entrypoints: public
-      traefik.http.routers.openclaw-webhook.rule: PathPrefix(`/openclaw`)
-      traefik.http.routers.openclaw-webhook.middlewares: strip-openclaw,openclaw-ratelimit
-      traefik.http.routers.openclaw-webhook.service: openclaw
-      traefik.http.middlewares.openclaw-ratelimit.ratelimit.average: "30"
-      traefik.http.middlewares.openclaw-ratelimit.ratelimit.burst: "10"
-    networks:
-      - traefik
-
-networks:
-  traefik:
-    external: true
+volumes:
+  ts-openclaw-state:

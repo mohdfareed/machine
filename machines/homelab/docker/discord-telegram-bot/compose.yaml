@@ -14,9 +14,3 @@ services:
       TELEGRAM_BOT_TOKEN: ${DTB_TELEGRAM_BOT_TOKEN}
     volumes:
       - ./data:/app/data
-    networks:
-      - traefik
-
-networks:
-  traefik:
-    external: true

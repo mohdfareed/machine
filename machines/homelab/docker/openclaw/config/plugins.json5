@@ -1,27 +1,22 @@
 // Plugins — extensions and memory
 {
   enabled: true,
-  slots: { memory: "memory-lancedb" },
+  slots: { memory: "memory-core" },
   entries: {
     "telegram": { enabled: true },
-    "copilot-proxy": { enabled: true },
     "device-pair": { enabled: true },
     "llm-task": { enabled: true },
     "lobster": { enabled: true },
     "memory-core": { enabled: true },
-    "msteams": { enabled: true },
-    "open-prose": { enabled: true },
-    // NOTE: requires 'openai' module in the Docker image.
-    // Handled with a special entrypoint in compose.yaml.
+    // REVIEW: Docker image missing required 'openai' module.
     "memory-lancedb": {
-      enabled: true,
+      enabled: false,
       config: {
         autoRecall: true,
         autoCapture: true,
         embedding: { apiKey: "${OPENAI_API_KEY}" },
       },
     },
-    "talk-voice": { enabled: true },
     "voice-call": {
       enabled: true,
       config: {

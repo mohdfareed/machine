@@ -1,26 +1,33 @@
 """Homelab Docker service deployment module.
 
-Sources:
-  1. config/homelab/docker/  — shared services (traefik, watchtower)
-  2. machines/<id>/docker/   — machine-specific services (portainer, openclaw, etc.)
+Deploys Docker Compose services from:
+  config/homelab/docker/   — shared services (dockge)
+  machines/<id>/docker/    — machine-specific services
 
-Creates real directories at ~/.homelab/<service>/ and symlinks compose.yaml
-(and config dirs) from the repo. Runtime data (./data/, logs) is written
-into the real directory — never into the git repo.
-
-Env vars: Each compose file declares its env vars via `environment:` with
-${VAR} references. Docker Compose resolves them from the shell environment
-(sourced from ~/.env below). No per-service .env files needed.
-
-Configures Tailscale for homelab use.
-Sets up serve → Traefik (tailnet-only HTTPS).
-Machine-specific scripts can add funnel routes on top.
-Set MC_HOMELAB_TUNNEL to also configure the Tailscale Funnel (public HTTPS).
-
-Traefik handles all path routing internally.
-  serve (:443) → Traefik :7880 (private, tailnet-only)
+Syncs into ~/.homelab/<service>/. Runtime data stays outside the repo.
+See config/homelab/README.md for full documentation.
 """
 
-from machine.manifest import Module
+from machine.core import is_macos
+from machine.manifest import Module, Package, cask
 
-module = Module()
+module = Module(
+    packages=[
+        # Tailscale — VPN mesh for service networking
+        *(
+            cask("tailscale")
+            if is_macos
+            else [
+                Package(name="tailscale", script="curl -fsSL https://tailscale.com/install.sh | sh")
+            ]
+        ),
+        # Docker — container runtime for services
+        *(
+            # REVIEW: verify Docker Desktop cask supports Apple Silicon (M1+)
+            # cask("docker")
+            []
+            if is_macos
+            else [Package(name="docker", script="curl -fsSL https://get.docker.com | sh")]
+        ),
+    ],
+)

@@ -1,7 +1,9 @@
-// OpenClaw Gateway — Homelab Server
-// Secrets use ${VAR} env substitution from process environment.
-// Config split via $include: channels, skills, plugins.
 {
+  // Load missing expected env vars from login shell
+  "env": {
+    "shellEnv": { "enabled": true, },
+  },
+  // Networking configuration
   "gateway": {
     "mode": "local",
     "bind": "lan", // container port mapping
@@ -10,6 +12,16 @@
       "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }
     }
   },
+  // Scheduled tasks
+  "cron": {
+    "webhookToken": "${OPENCLAW_CRON_TOKEN}",
+  },
+  // Messages configuration
+  messages: {
+    ackReactionScope: "all",
+    removeAckAfterReply: true,
+  },
+  // Included Configurations ==================================================
   "agents": {
     "$include": "./config/agents.json5"
   },

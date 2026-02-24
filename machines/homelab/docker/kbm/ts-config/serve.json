@@ -1,0 +1,25 @@
+{
+    "TCP": {
+        "443": {
+            "HTTPS": true
+        }
+    },
+    "Web": {
+        "${TS_CERT_DOMAIN}:443": {
+            "Handlers": {
+                "/personal": {
+                    "Proxy": "http://127.0.0.1:3001"
+                },
+                "/work": {
+                    "Proxy": "http://127.0.0.1:3002"
+                },
+                "/private": {
+                    "Proxy": "http://127.0.0.1:3003"
+                }
+            }
+        }
+    },
+    "AllowFunnel": {
+        "${TS_CERT_DOMAIN}:443": true
+    }
+}

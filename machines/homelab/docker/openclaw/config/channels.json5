@@ -8,9 +8,10 @@
     groups: { "*": { requireMention: true } },
     streamMode: "partial",
     actions: {
-      reactions: true,
       sendMessage: true,
+      editMessage: true,
       deleteMessage: true,
+      reactions: true,
       sticker: true,
     },
 
