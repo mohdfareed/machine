@@ -1,7 +1,7 @@
 // Plugins — extensions and memory
 {
   enabled: true,
-  slots: { memory: "memory-core" },
+  slots: { memory: "memory-lancedb" },
   entries: {
     "telegram": { enabled: true },
     "device-pair": { enabled: true },
@@ -10,7 +10,7 @@
     "memory-core": { enabled: true },
     // REVIEW: Docker image missing required 'openai' module.
     "memory-lancedb": {
-      enabled: false,
+      enabled: true,
       config: {
         autoRecall: true,
         autoCapture: true,

@@ -3,4 +3,9 @@
   install: {
     nodeManager: "npm"
   },
+  "entries": {
+    "sag": {
+      "apiKey": "${ELEVENLABS_API_KEY}",
+    }
+  }
 }

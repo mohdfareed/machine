@@ -19,8 +19,13 @@ manifest = MachineManifest(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
         ),
+        FileMapping(
+            source="openclaw.json",
+            target="~/.openclaw/openclaw.json",
+        ),
     ],
     packages=[
+        *cask("openclaw"),
         # Dev tools
         *cask("dotnet-sdk", "powershell"),
         *brew("uv", "python", "go"),

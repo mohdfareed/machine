@@ -12,6 +12,15 @@
       "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }
     }
   },
+  // Authentication
+  "auth": {
+    "profiles": {
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      }
+    }
+  },
   // Scheduled tasks
   "cron": {
     "webhookToken": "${OPENCLAW_CRON_TOKEN}",

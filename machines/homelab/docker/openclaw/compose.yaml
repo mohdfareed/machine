@@ -37,14 +37,17 @@ services:
     # mounting
     volumes:
       - ./data:/home/node/.openclaw
-      - ./config:/home/node/.openclaw/config:ro
+      - ./config:/home/node/.openclaw/config
       - ./workspace:/home/node/.openclaw/workspace
-      - ./openclaw.json:/home/node/.openclaw/openclaw.json:ro
-      - ./openclaw.sh:/usr/local/bin/openclaw:ro
+      - ./openclaw.json:/home/node/.openclaw/openclaw.json
+      - ./openclaw.sh:/usr/local/bin/openclaw:ro # alias for CLI access
     # env vars
     environment:
       TERM: xterm-256color
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}         # llm
+      BRAVE_API_KEY: ${BRAVE_API_KEY}           # web search
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY} # text-to-speech
+      GEMINI_API_KEY: ${GEMINI_API_KEY}         # image generation
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       OPENCLAW_HOOKS_TOKEN: ${OPENCLAW_HOOKS_TOKEN}
       OPENCLAW_CRON_TOKEN: ${OPENCLAW_CRON_TOKEN}
