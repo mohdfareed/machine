@@ -14,27 +14,7 @@ security -v unlock-keychain ~/Library/Keychains/login.keychain-db
 # MARK: Power & Sleep
 # =============================================================================
 
-# Prevent sleep entirely (safe on desktops; enables clamshell mode on laptops).
-echo "configuring power management..."
-sudo pmset -a sleep 0           # never system-sleep
-sudo pmset -a disablesleep 1    # disable sleep entirely
-sudo pmset -a displaysleep 15   # display off after 15 min (saves energy)
-sudo pmset -a hibernatemode 0   # no hibernation (no-op on desktops)
-sudo pmset -a standby 0         # no standby
-sudo pmset -a autopoweroff 0    # no auto power-off
-
-# Auto-restart after a power failure or kernel panic.
-echo "enabling auto-restart on power failure..."
-sudo pmset -a autorestart 1
-
-# Wake-on-LAN (allows remote wake via magic packet).
-echo "enabling wake on LAN..."
-sudo pmset -a womp 1
-
-# Prevent idle-sleep when there are active network sessions (SSH, SMB, etc.).
-echo "enabling wake on network access..."
-sudo pmset -a networkoversleep 1
-sudo pmset -a tcpkeepalive 1
+source "$(dirname "$0")/_power.macos.sh"
 
 # MARK: Scheduled Tasks
 # =============================================================================

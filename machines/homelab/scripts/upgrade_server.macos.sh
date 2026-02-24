@@ -8,15 +8,7 @@ set -Eeuo pipefail
 
 echo "verifying power management settings..."
 # Re-apply critical server power settings in case they were reset by an update.
-sudo pmset -a sleep 0
-sudo pmset -a disablesleep 1
-sudo pmset -a hibernatemode 0
-sudo pmset -a standby 0
-sudo pmset -a autopoweroff 0
-sudo pmset -a autorestart 1
-sudo pmset -a womp 1
-sudo pmset -a networkoversleep 1
-sudo pmset -a tcpkeepalive 1
+source "$(dirname "$0")/_power.macos.sh"
 
 # MARK: System Maintenance
 # =============================================================================

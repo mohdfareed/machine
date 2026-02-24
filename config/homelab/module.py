@@ -23,7 +23,9 @@ module = Module(
         ),
         # Docker — container runtime for services
         *(
-            # REVIEW: verify Docker Desktop cask supports Apple Silicon (M1+)
+            # NOTE: Docker Desktop cask ("docker") only delivers an Intel binary via
+            # Homebrew as of 2026-02. Install Docker Desktop manually on Apple Silicon
+            # until the cask ships a universal/ARM build.
             # cask("docker")
             []
             if is_macos

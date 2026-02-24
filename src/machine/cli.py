@@ -502,6 +502,32 @@ def _prompt_force(stash: bool, force: bool) -> bool:
 
 
 @app.command(rich_help_panel="Info")
+def home() -> None:
+    """Print the repo root path (MC_HOME)."""
+    print(settings.home)
+
+
+@app.command(rich_help_panel="Info")
+def private() -> None:
+    """Print the resolved MC_PRIVATE path for the current machine."""
+    from machine.app import build_script_env, get_current_machine
+    from machine.manifest import load_manifest
+
+    machine_id = get_current_machine()
+    if not machine_id:
+        err_console.print("[red]No machine set. Run: mc setup <machine>[/]")
+        raise SystemExit(1)
+
+    manifest = load_manifest(machine_id, settings.home)
+    env = build_script_env(manifest, machine_id, settings.home)
+    path = env.get("MC_PRIVATE", "")
+    if not path:
+        err_console.print("[red]MC_PRIVATE is not set for this machine.[/]")
+        raise SystemExit(1)
+    print(path)
+
+
+@app.command(rich_help_panel="Info")
 def info() -> None:
     """Show machine home, app directory, and version."""
     from machine.app import get_current_machine
@@ -629,10 +655,10 @@ def show(
 
     for m in modules:
         for s in m.scripts:
-            if matches_platform(Path(s)):
+            if matches_platform(Path(s)) and not Path(s).stem.startswith("_"):
                 _bucket(Path(s).name).append((_short(s), m.name))
     for s in manifest.scripts:
-        if matches_platform(Path(s)):
+        if matches_platform(Path(s)) and not Path(s).stem.startswith("_"):
             _bucket(Path(s).name).append((_short(s), machine))
 
     for title, group in [

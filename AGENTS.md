@@ -60,15 +60,14 @@ passed to scripts at runtime (not written to files).
 - Before writing new code, check the codebase for existing patterns and follow them
 - No generated env files — shell configs are static, committed files
 - Platform tags on scripts: `name.macos.sh`, `name.unix.sh`, `name.win.ps1`
-- Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages, `upgrade_` = run only during `mc upgrade`
+- Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages, `upgrade_` = run only during `mc upgrade`, `_` = helper (never auto-executed, sourced by other scripts)
 - Execution order: files → `init_*` scripts → packages → remaining scripts
 - Machine extras: `extra.zsh` → `~/.zshrc.local`
 - Repo root derived from `Path(__file__).parents[2]` — no env var needed
 - App data: `typer.get_app_dir("mc")` for logs/state
 - State file: `~/.local/share/mc/state.json` tracks installed packages and script runs
-- Secrets use plain dotenv format (no `export`), single `~/.env` for all platforms
-- Secrets concatenation pattern: `machine.env` (shared) + `<MC_ID>.env` (per-machine) → `~/.env`;
-  same for Docker: `~/.env` (shared) + `MC_PRIVATE/docker/<svc>.env` → service `.env`
+- Secrets: `MC_PRIVATE/env/<MC_ID>.env` symlinked → `~/.env`; plain dotenv format (no `export`)
+- CLI path helpers: `mc home` prints MC_HOME, `mc private` prints MC_PRIVATE (pipe to `code`)
 
 ## Commands
 

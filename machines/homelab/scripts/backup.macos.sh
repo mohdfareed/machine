@@ -8,6 +8,7 @@ set -Eeuo pipefail
 # Add remote servers to the SERVERS array below.
 
 BACKUP_ROOT="${MC_PRIVATE:-$ICLOUD/.machine}/backups"
+# NOTE: Update this list when adding new remote homelab machines.
 SERVERS=(rpi)
 SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=10"
 RSYNC_EXCLUDE=(--exclude='*.log' --exclude='__pycache__/')
