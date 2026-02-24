@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck shell=bash
 
 # Functions and Aliases
 # =============================================================================
@@ -18,6 +19,7 @@ alias ssh::gen-key='ssh-keygen -t ed25519 -C'
 alias dc='docker compose'
 alias cat='bat --paging=never'
 alias gen-pass='openssl rand -base64 32'
+alias gen-token='openssl rand -hex 32'
 
 # Linux: show disk usage for real filesystems
 if [[ "$OSTYPE" == linux* ]]; then

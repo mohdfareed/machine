@@ -2,13 +2,13 @@
 set -Eeuo pipefail
 
 # set hostname
-if [[ -n "${MC_NAME:-}" ]]; then
+if [[ -n "${MC_HOSTNAME:-}" ]]; then
     echo "setting hostname..."
     if command -v hostnamectl &>/dev/null; then
-        sudo hostnamectl set-hostname "$MC_NAME"
+        sudo hostnamectl set-hostname "$MC_HOSTNAME"
     else
-        sudo hostname "$MC_NAME"
-        echo "$MC_NAME" | sudo tee /etc/hostname >/dev/null
+        sudo hostname "$MC_HOSTNAME"
+        echo "$MC_HOSTNAME" | sudo tee /etc/hostname >/dev/null
     fi
 fi
 

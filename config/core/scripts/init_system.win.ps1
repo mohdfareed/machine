@@ -2,12 +2,12 @@
 $ErrorActionPreference = 'Stop'
 
 # set hostname
-if ($env:MC_NAME) {
+if ($env:MC_HOSTNAME) {
     Write-Host "setting hostname..."
-    Rename-Computer -NewName $env:MC_NAME -Force
+    Rename-Computer -NewName $env:MC_HOSTNAME -Force
 }
 else {
-    Write-Host "MC_NAME is not set; skipping hostname configuration"
+    Write-Host "MC_HOSTNAME is not set; skipping hostname configuration"
 }
 
 # install windows features

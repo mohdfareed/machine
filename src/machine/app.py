@@ -78,7 +78,7 @@ def validate(
 ) -> list[str]:
     """Validate resolved modules against the manifest. Returns a list of errors."""
     errors: list[str] = []
-    provided = {"MC_HOME", "MC_ID", "MC_NAME"} | manifest_env.keys()
+    provided = {"MC_HOME", "MC_ID"} | manifest_env.keys()
 
     for mod in modules:
         for var in mod.required_env:
@@ -251,7 +251,6 @@ def build_script_env(
     raw = {
         "MC_HOME": str(root),
         "MC_ID": machine_id,
-        "MC_NAME": manifest.name or machine_id,
         **manifest.env,
     }
     env = {k: os.path.expandvars(v) for k, v in raw.items()}

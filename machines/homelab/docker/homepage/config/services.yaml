@@ -11,19 +11,19 @@
     - KBM Personal:
         icon: mdi-brain
         href: https://kbm.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/personal
-        description: Personal knowledge base
+        description: kbm.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/personal
         server: docker
         container: kbm-personal
     - KBM Work:
         icon: mdi-brain
         href: https://kbm.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/work
-        description: Work knowledge base
+        description: kbm.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/work
         server: docker
         container: kbm-work
     - KBM Private:
         icon: mdi-brain
         href: https://kbm.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/private
-        description: Private knowledge base
+        description: kbm.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/private
         server: docker
         container: kbm-private
     - Discord-Telegram Bot:

@@ -27,12 +27,12 @@ done
 # ─── Remote ───────────────────────────────────────────────────────────────────
 for host in "${SERVERS[@]}"; do
     echo "backing up $host..."
-    if ! ssh $SSH_OPTS "$host" true 2>/dev/null; then
+    if ! ssh "$SSH_OPTS" "$host" true 2>/dev/null; then
         echo "  unreachable, skipping"
         continue
     fi
     dest="$BACKUP_ROOT/$host"
-    for svc in $(ssh $SSH_OPTS "$host" \
+    for svc in $(ssh "$SSH_OPTS" "$host" \
         "for d in ~/.homelab/*/data; do [ -d \"\$d\" ] && basename \"\$(dirname \"\$d\")\"; done" \
         2>/dev/null); do
         echo "  $svc/data"

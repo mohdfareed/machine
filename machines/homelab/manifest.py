@@ -30,6 +30,7 @@ manifest = MachineManifest(
         *brew("font-computer-modern", "font-jetbrains-mono-nerd-font"),
     ],
     env={
+        "MC_ENV_FILES": "homelab tailscale agents",
         "ICLOUD": "$HOME/Library/Mobile Documents/com~apple~CloudDocs",
         "MC_PRIVATE": "$ICLOUD/.machine",
     },

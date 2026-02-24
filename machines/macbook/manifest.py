@@ -3,7 +3,6 @@
 from machine.manifest import MachineManifest, brew, cask, mas
 
 manifest = MachineManifest(
-    name="mohds-macbook",
     modules=["git", "shell", "ssh", "vscode", "ghostty", "core"],
     packages=[
         # Dev languages
@@ -27,6 +26,8 @@ manifest = MachineManifest(
         *mas(Noir=1592917505, AdGuard=1440147259, Peek=1554235898),
     ],
     env={
+        "MC_HOSTNAME": "mohds-macbook",
+        "MC_ENV_FILES": "macbook agents tailscale",
         "ICLOUD": "$HOME/Library/Mobile Documents/com~apple~CloudDocs",
         "MC_PRIVATE": "$ICLOUD/.machine",
     },

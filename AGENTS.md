@@ -66,7 +66,9 @@ passed to scripts at runtime (not written to files).
 - Repo root derived from `Path(__file__).parents[2]` — no env var needed
 - App data: `typer.get_app_dir("mc")` for logs/state
 - State file: `~/.local/share/mc/state.json` tracks installed packages and script runs
-- Secrets: `MC_PRIVATE/env/<MC_ID>.env` symlinked → `~/.env`; plain dotenv format (no `export`)
+- Secrets: `MC_PRIVATE/env/<name>.env` concatenated → `~/.env`; manifest declares
+  `MC_ENV_FILES="homelab tailscale agents"` (space-separated); falls back to
+  `MC_PRIVATE/.env` when `MC_ENV_FILES` is unset; plain dotenv (no `export`)
 - CLI path helpers: `mc home` prints MC_HOME, `mc private` prints MC_PRIVATE (pipe to `code`)
 
 ## Commands

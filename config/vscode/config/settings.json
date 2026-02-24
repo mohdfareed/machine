@@ -2,10 +2,10 @@
   // ===========================================================================
   // MARK: editor
   // #region ===================================================================
+  "editor.formatOnSave": true,
   "editor.wordWrap": "on",
   "editor.wrappingIndent": "indent",
   "editor.guides.bracketPairs": true,
-  "editor.formatOnSave": true,
   "editor.occurrencesHighlight": "multiFile",
   "editor.stickyScroll.enabled": true,
   "explorer.confirmDelete": false,
@@ -163,7 +163,15 @@
   // MARK: json
   // #region ===================================================================
   "[json]": {
-    "editor.tabSize": 2
+    "editor.detectIndentation": false,
+    "editor.indentSize": 2
+  },
+  // # endregion ===============================================================
+  // MARK: yaml
+  // #region ===================================================================
+  "[yaml]": {
+    "editor.detectIndentation": false,
+    "editor.indentSize": 2
   },
   // # endregion ===============================================================
   // MARK: swift
@@ -227,6 +235,12 @@
   // MARK: powershell
   // #region ===================================================================
   "powershell.promptToUpdatePowerShell": false,
+  // # endregion ===============================================================
+  // MARK: shellcheck
+  // #region ===================================================================
+  "shellcheck.customArgs": [
+    "--severity=warning"
+  ],
   // # endregion ===============================================================
   "cSpell.userWords": [
     "endregion",

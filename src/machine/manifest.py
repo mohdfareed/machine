@@ -77,7 +77,6 @@ class MachineManifest(BaseModel):
     Defined in ``machines/<id>/manifest.py``.
     """
 
-    name: str | None = None  # public display name; defaults to machine ID
     modules: list[str | Module] = []
     files: list[FileMapping] = []  # machine-specific file mappings
     packages: list[Package] = []  # machine-specific packages

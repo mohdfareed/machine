@@ -46,7 +46,7 @@ Run `mc -h` or `mc <command> -h` for full options.
 │       └── …
 ├── machines/                ← per-host manifests
 │   └── <id>/
-│       ├── manifest.py      ← MachineManifest(name, modules, files, packages, scripts, env)
+│       ├── manifest.py      ← MachineManifest(modules, files, packages, scripts, env)
 │       └── …
 └── src/machine/             ← CLI (core.py, app.py, cli.py, manifest.py)
 ```
@@ -97,7 +97,7 @@ Run `mc -h` or `mc <command> -h` for full options.
 
 - `MC_HOME`: The root directory of the machine config (e.g., `~/.machine`)
 - `MC_ID`: The machine ID (e.g., `my-laptop`)
-- `MC_NAME`: The machine name (defaults to `MC_ID`), can be overridden in manifest
+- `MC_HOSTNAME`: Optional machine hostname; set in manifest `env` to rename the host
 
 **Local overrides:** modules declare which `*.local` files they accept via the `overrides` field. Drop matching files in your machine dir and they are auto-discovered and symlinked:
 
@@ -114,8 +114,10 @@ set in the manifest's `env` dict (e.g. `$ICLOUD/.machine` on macOS,
 
 ```
 MC_PRIVATE/
-├── machine.env      ← shared secrets (OPENAI_API_KEY, etc.)
-├── homelab.env      ← homelab-only overrides (optional)
+├── env/
+│   ├── homelab.env  ← homelab secrets
+│   ├── tailscale.env← Tailscale keys
+│   └── agents.env   ← AI agent keys (OPENAI_API_KEY, etc.)
 ├── ssh/
 │   └── <MC_ID>      ← private key named after machine ID
 │   └── <MC_ID>.pub  ← optional matching public key
@@ -125,10 +127,12 @@ MC_PRIVATE/
 
 ### How secrets flow
 
-1. **Shell env** — `init_env.py` (shell module) concatenates
-   `MC_PRIVATE/machine.env` (shared) + `MC_PRIVATE/<MC_ID>.env` (machine-specific)
-   into `~/.env`. Uses plain dotenv format (no `export`). Machine-specific
-   keys layer on top of (or override) shared keys.
+1. **Shell env** — `init_secrets.py` (shell module) provisions `~/.env` in two modes:
+   - **Explicit**: when `MC_ENV_FILES` is set (space-separated, e.g. `"homelab tailscale
+     agents"`), looks up each `<name>.env` in `MC_PRIVATE/env/` and concatenates them.
+   - **Simple**: when `MC_ENV_FILES` is unset, falls back to `MC_PRIVATE/.env`.
+
+   Uses plain dotenv format (no `export`).
 
 2. **SSH keys** — `init_keys.py` (ssh module) copies a single key named `<MC_ID>` from
    `MC_PRIVATE/ssh/` into `~/.ssh/` and registers it with `ssh-add`. Skips gracefully
