@@ -9,7 +9,14 @@ set -Eeuo pipefail
 AUTO_WAKE_TIME="04:00:00"
 
 # unlock keychain for headless access
-security -v unlock-keychain ~/Library/Keychains/login.keychain-db
+echo "unlocking login keychain..."
+while true; do
+    if security unlock-keychain ~/Library/Keychains/login.keychain-db; then
+        break
+    fi
+    read -rp "try again? [Y/n] " answer
+    [[ "${answer:-y}" =~ ^[Yy]$ ]] || break
+done
 
 # MARK: Power & Sleep
 # =============================================================================
