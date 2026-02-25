@@ -34,10 +34,10 @@ set +a
 # Module services are deployed first, then machine-specific ones.
 
 # Recursively mirror a repo directory into a deploy target.
-# Creates real directories, symlinks individual files — never symlinks a whole
-# directory. This lets containers write runtime files (e.g. homepage-generated
-# config, sqlite DBs) alongside version-controlled files without touching the
-# repo.
+# Creates real directories, copies individual files. Copies (not symlinks)
+# because containers mount these dirs — symlink targets (repo paths) don't
+# exist inside the container. Existing runtime files (data/, logs/) that
+# aren't in the source are left untouched.
 sync_dir() {
     local src="$1" dst="$2"
     mkdir -p "$dst"
@@ -47,9 +47,9 @@ sync_dir() {
         sync_dir "$entry" "$dst/$(basename "$entry")"
     done < <(find "$src" -mindepth 1 -maxdepth 1 -type d -print0)
 
-    # Symlink individual files.
+    # Copy individual files (overwrite to pick up repo changes).
     while IFS= read -r -d '' entry; do
-        ln -sf "$entry" "$dst/$(basename "$entry")"
+        cp -f "$entry" "$dst/$(basename "$entry")"
     done < <(find "$src" -mindepth 1 -maxdepth 1 -type f -print0)
 }
 

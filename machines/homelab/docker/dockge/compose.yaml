@@ -42,7 +42,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/app/data
       - ${MC_HOMELAB_DIR:-${HOME}/.homelab}:${MC_HOMELAB_DIR:-${HOME}/.homelab}
-      - ${MC_HOME}:${MC_HOME}:ro  # symlink targets in ~/.homelab point into the repo
     environment:
       DOCKGE_STACKS_DIR: ${MC_HOMELAB_DIR:-${HOME}/.homelab}
 
