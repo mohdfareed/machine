@@ -58,7 +58,7 @@ Run `mc -h` or `mc <command> -h` for full options.
 | `files`        | `FileMapping(source, target)` → symlinked to `~`                    |
 | `packages`     | `Package(name, brew=, apt=, snap=, winget=, scoop=, mas=, script=)` |
 | `scripts`      | Platform-tagged scripts to run                                      |
-| `overrides`    | Local override files: `{filename: target}`                          |
+| `overrides`    | `FileMapping(source, target)` → machine-local override symlinks     |
 | `depends`      | Module names that must be included before this                      |
 | `required_env` | Env vars the manifest must provide                                  |
 

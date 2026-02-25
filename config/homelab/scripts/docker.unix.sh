@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 # Deploy all homelab Docker services.
 
-HOMELAB_DIR="$HOME/.homelab"
+HOMELAB_DIR="${MC_HOMELAB_DIR:-$HOME/.homelab}"
 MODULE_DOCKER="$MC_HOME/config/homelab/docker"
 MACHINE_DOCKER="$MC_HOME/machines/$MC_ID/docker"
 
@@ -72,12 +72,14 @@ done
 # ─── Deploy ──────────────────────────────────────────────────────────────────
 
 for svc_dir in "$HOMELAB_DIR"/*/; do
-    compose="$svc_dir/compose.yaml"
-    [[ -f "$compose" ]] || continue
-    svc="$(basename "$svc_dir")"
-    echo "deploying $svc..."
-    docker compose -f "$compose" pull --ignore-pull-failures
-    docker compose -f "$compose" up -d --remove-orphans
+    [[ -f "$svc_dir/compose.yaml" ]] || continue
+    echo "deploying $(basename "$svc_dir")..."
+
+(   # preserve cwd stack
+    cd "$svc_dir"
+    docker compose pull --ignore-pull-failures
+    docker compose up -d --remove-orphans
+)
 done
 
 echo "all services deployed."

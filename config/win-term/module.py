@@ -19,11 +19,13 @@ module = Module(
         Package(name="windows-terminal", winget="microsoft.WindowsTerminal"),
     ],
     overrides=(
-        {
-            "term.settings.json": "%LOCALAPPDATA%"
-            "/Microsoft/Windows Terminal/Fragments/settings.local.json"
-        }
+        [
+            FileMapping(
+                source="term.settings.json",
+                target="%LOCALAPPDATA%/Microsoft/Windows Terminal/Fragments/settings.local.json",
+            )
+        ]
         if PLATFORM == Platform.WINDOWS
-        else {}
+        else []
     ),
 )

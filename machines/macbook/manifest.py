@@ -33,9 +33,9 @@ manifest = MachineManifest(
         *mas(Noir=1592917505, AdGuard=1440147259, Peek=1554235898),
     ],
     env={
-        "MC_HOSTNAME": "mohds-macbook",
-        "MC_ENV_FILES": "macbook agents tailscale",
         "ICLOUD": "$HOME/Library/Mobile Documents/com~apple~CloudDocs",
+        "MC_HOSTNAME": "mohds-macbook",
+        "MC_ENV_FILES": "agents tailscale misc",
         "MC_PRIVATE": "$ICLOUD/.machine",
     },
 )

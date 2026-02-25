@@ -18,6 +18,8 @@ manifest = MachineManifest(
         ),
     ],
     env={
-        "MC_ENV_FILES": "rpi tailscale",
+        "MC_ENV_FILES": "tailscale",
+        "HOMEPAGE_TITLE": "Raspberry Pi",
+        "HOMEPAGE_FAVICON": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/raspberry-pi-light.svg",
     },
 )

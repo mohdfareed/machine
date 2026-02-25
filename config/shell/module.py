@@ -27,11 +27,11 @@ module = Module(
         Package(name="oh-my-posh", brew="oh-my-posh", winget="JanDeDobbeleer.OhMyPosh"),
         *(apt("unzip") if PLATFORM == Platform.LINUX else []),
     ],
-    overrides={
+    overrides=[
         # zsh
-        ".zshrc": "~/.zshrc.local",
-        ".zshenv": "~/.zshenv.local",
+        FileMapping(source=".zshrc", target="~/.zshrc.local"),
+        FileMapping(source=".zshenv", target="~/.zshenv.local"),
         # powershell
-        "profile.ps1": "~/.config/powershell/profile.local.ps1",
-    },
+        FileMapping(source="profile.ps1", target="~/.config/powershell/profile.local.ps1"),
+    ],
 )

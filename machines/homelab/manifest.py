@@ -38,5 +38,7 @@ manifest = MachineManifest(
         "MC_ENV_FILES": "homelab tailscale agents",
         "ICLOUD": "$HOME/Library/Mobile Documents/com~apple~CloudDocs",
         "MC_PRIVATE": "$ICLOUD/.machine",
+        "HOMEPAGE_TITLE": "HomeLab",
+        "HOMEPAGE_FAVICON": "mdi-home-analytics",
     },
 )

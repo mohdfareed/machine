@@ -32,12 +32,18 @@ services:
     depends_on:
       - ts-dockge
     restart: unless-stopped
+    labels:
+      - homepage.group=Infrastructure
+      - homepage.name=Dockge
+      - homepage.icon=dockge
+      - homepage.href=https://dockge.${TAILNET_NAME}.ts.net
+      - homepage.description=Docker Compose manager
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/app/data
-      - ${HOME}/.homelab:${HOME}/.homelab
+      - ${MC_HOMELAB_DIR:-${HOME}/.homelab}:${MC_HOMELAB_DIR:-${HOME}/.homelab}
     environment:
-      DOCKGE_STACKS_DIR: ${HOME}/.homelab
+      DOCKGE_STACKS_DIR: ${MC_HOMELAB_DIR:-${HOME}/.homelab}
 
 volumes:
   ts-dockge-state:

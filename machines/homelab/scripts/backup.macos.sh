@@ -8,15 +8,17 @@ set -Eeuo pipefail
 # Add remote servers to the SERVERS array below.
 
 BACKUP_ROOT="${MC_PRIVATE:-$ICLOUD/.machine}/backups"
-# NOTE: Update this list when adding new remote homelab machines.
-SERVERS=(rpi)
+HOMELAB_DIR="${MC_HOMELAB_DIR:-$HOME/.homelab}"
 SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=10"
 RSYNC_EXCLUDE=(--exclude='*.log' --exclude='__pycache__/')
+
+# NOTE: Update this list when adding new remote homelab machines.
+SERVERS=(rpi)
 
 # ─── Local ────────────────────────────────────────────────────────────────────
 echo "backing up local services..."
 local_dest="$BACKUP_ROOT/$(hostname -s)"
-for dir in "$HOME/.homelab"/*/data/; do
+for dir in "$HOMELAB_DIR"/*/data/; do
     [[ -d "$dir" ]] || continue
     svc="$(basename "$(dirname "$dir")")"
     echo "  $svc/data"

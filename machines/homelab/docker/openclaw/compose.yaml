@@ -34,6 +34,12 @@ services:
     network_mode: service:ts-openclaw
     depends_on:
       - ts-openclaw
+    labels:
+      - homepage.group=Services
+      - homepage.name=OpenClaw
+      - homepage.icon=https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openclaw.svg
+      - homepage.href=https://openclaw.${TAILNET_NAME}.ts.net
+      - homepage.description=Personal AI assistant
     # mounting
     volumes:
       - ./data:/home/node/.openclaw

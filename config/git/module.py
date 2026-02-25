@@ -28,5 +28,5 @@ module = Module(
             winget="Git.Git GitHub.cli GitHub.GitLFS",
         ),
     ],
-    overrides={".gitconfig": "~/.gitconfig.local"},
+    overrides=[FileMapping(source=".gitconfig", target="~/.gitconfig.local")],
 )

@@ -9,6 +9,12 @@ services:
     build: https://github.com/mohdfareed/discord-telegram-bot.git
     container_name: discord-telegram-bot
     restart: unless-stopped
+    labels:
+      - homepage.group=Services
+      - homepage.name=Discord-Telegram Bot
+      - homepage.icon=mdi-robot
+      - homepage.href=https://github.com/mohdfareed/discord-telegram-bot
+      - homepage.description=Discord Telegram Bot
     environment:
       DISCORD_BOT_TOKEN: ${DTB_DISCORD_BOT_TOKEN}
       TELEGRAM_BOT_TOKEN: ${DTB_TELEGRAM_BOT_TOKEN}

@@ -67,7 +67,7 @@ class Module(BaseModel):
     packages: list[Package] = []
     scripts: list[str] = []  # paths relative to module dir
     required_env: list[str] = []  # env vars a manifest must provide
-    overrides: dict[str, str] = {}  # local override files: filename → target
+    overrides: list[FileMapping] = []  # local override files, relative source → target
 
 
 class MachineManifest(BaseModel):
@@ -264,12 +264,12 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
     for mod_ref in result.modules:
         name = mod_ref if isinstance(mod_ref, str) else mod_ref.name
         mod_obj = load_module(name, root)
-        for filename, target in mod_obj.overrides.items():
-            local_file = machine_dir / filename
+        for override in mod_obj.overrides:
+            local_file = machine_dir / override.source
             if local_file.exists():
-                already = any(f.target == target for f in result.files)
+                already = any(f.target == override.target for f in result.files)
                 if not already:
-                    result.files.append(FileMapping(source=str(local_file), target=target))
+                    result.files.append(FileMapping(source=str(local_file), target=override.target))
 
     # Auto-discover scripts/ directory
     scripts_dir = machine_dir / "scripts"

@@ -1,0 +1,18 @@
+---
+# Homepage settings
+title: "{{HOMEPAGE_VAR_TITLE}}"
+favicon: "{{HOMEPAGE_VAR_FAVICON}}"
+
+headerStyle: clean
+statusStyle: dot
+cardBlur: md
+bookmarksStyle: icons
+showStats: true
+
+layout:
+  Services:
+    style: rows
+    columns: 4
+  Infrastructure:
+    style: rows
+    columns: 2
