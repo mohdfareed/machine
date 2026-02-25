@@ -40,7 +40,11 @@ services:
       - homepage.widget.fields=["download","upload","ping"]
     volumes:
       - ./data/speedtest:/config
+    tmpfs:
+      - /config/keys # prevent nginx from binding 443 (tailscale handles TLS)
     environment:
+      PUID: 1000
+      PGID: 1000
       APP_KEY: ${SPEEDTEST_APP_KEY:-}
       APP_URL: "https://speedtest.${TAILNET_NAME}.ts.net"
       DB_CONNECTION: sqlite
