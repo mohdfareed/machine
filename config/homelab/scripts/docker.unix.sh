@@ -33,31 +33,29 @@ set +a
 # Sync repo compose files into ~/.homelab as real directories.
 # Module services are deployed first, then machine-specific ones.
 
-sync_service() {
-    local svc_dir svc target
-    svc_dir="$1"
-    svc="$(basename "$svc_dir")"
-    target="$HOMELAB_DIR/$svc"
-    mkdir -p "$target"
+# Recursively mirror a repo directory into a deploy target.
+# Creates real directories, symlinks individual files — never symlinks a whole
+# directory. This lets containers write runtime files (e.g. homepage-generated
+# config, sqlite DBs) alongside version-controlled files without touching the
+# repo.
+sync_dir() {
+    local src="$1" dst="$2"
+    mkdir -p "$dst"
 
-    # Symlink compose.yaml.
-    if [[ -f "$svc_dir/compose.yaml" ]]; then
-        ln -sf "$svc_dir/compose.yaml" "$target/compose.yaml"
-    fi
-
-    # Symlink version-controlled files and sub-dirs.
-    # Note: can't symlink the whole service dir because of runtime state (data/, logs/).
-    for entry in "$svc_dir"*/; do
+    for entry in "$src"*/; do
         [[ -e "$entry" ]] || continue
-        name="$(basename "$entry")"
-        ln -sfn "$entry" "$target/$name"
+        sync_dir "$entry" "$dst/$(basename "$entry")"
     done
-    for entry in "$svc_dir"*; do
+
+    for entry in "$src"*; do
         [[ -f "$entry" ]] || continue
-        name="$(basename "$entry")"
-        [[ "$name" == "compose.yaml" ]] && continue
-        ln -sf "$entry" "$target/$name"
+        ln -sf "$entry" "$dst/$(basename "$entry")"
     done
+}
+
+sync_service() {
+    local svc_dir="$1"
+    sync_dir "$svc_dir" "$HOMELAB_DIR/$(basename "$svc_dir")"
 }
 
 for svc_dir in "$MODULE_DOCKER"/*/; do
