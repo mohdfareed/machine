@@ -2,7 +2,7 @@
 # Non-container service entries. Docker containers are auto-discovered via
 # homepage.* labels in their compose files.
 
-- Infrastructure:
+- Machines:
     - HomeLab:
         icon: mdi-home-analytics
         href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net

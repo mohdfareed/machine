@@ -12,7 +12,10 @@ showStats: true
 layout:
   Services:
     style: rows
-    columns: 4
+    columns: 1
+  Machines:
+    style: rows
+    columns: 1
   Infrastructure:
     style: rows
-    columns: 2
+    columns: 1

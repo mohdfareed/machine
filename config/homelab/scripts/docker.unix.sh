@@ -42,15 +42,15 @@ sync_dir() {
     local src="$1" dst="$2"
     mkdir -p "$dst"
 
-    for entry in "$src"*/; do
-        [[ -e "$entry" ]] || continue
+    # Recurse into subdirectories (real dirs, not symlinks).
+    while IFS= read -r -d '' entry; do
         sync_dir "$entry" "$dst/$(basename "$entry")"
-    done
+    done < <(find "$src" -mindepth 1 -maxdepth 1 -type d -print0)
 
-    for entry in "$src"*; do
-        [[ -f "$entry" ]] || continue
+    # Symlink individual files.
+    while IFS= read -r -d '' entry; do
         ln -sf "$entry" "$dst/$(basename "$entry")"
-    done
+    done < <(find "$src" -mindepth 1 -maxdepth 1 -type f -print0)
 }
 
 sync_service() {
