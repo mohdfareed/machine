@@ -63,11 +63,12 @@ class Module(BaseModel):
 
     name: str = ""
     depends: list[str] = []  # modules that must be included before this one
-    files: list[FileMapping] = []
-    packages: list[Package] = []
-    scripts: list[str] = []  # paths relative to module dir
     required_env: list[str] = []  # env vars a manifest must provide
-    overrides: list[FileMapping] = []  # local override files, relative source → target
+    scripts: list[str] = []  # paths relative to module dir
+    files: list[FileMapping] = []
+    overrides: list[FileMapping] = []  # machine-local override files
+    # REVIEW: Consider replacing with scripts + conventions.
+    packages: list[Package] = []
 
 
 class MachineManifest(BaseModel):
@@ -78,10 +79,10 @@ class MachineManifest(BaseModel):
     """
 
     modules: list[str | Module] = []
+    env: dict[str, str] = {}
+    scripts: list[str] = []  # paths relative to machine dir
     files: list[FileMapping] = []  # machine-specific file mappings
     packages: list[Package] = []  # machine-specific packages
-    scripts: list[str] = []  # paths relative to machine dir
-    env: dict[str, str] = {}
 
 
 # MARK: Package Helpers

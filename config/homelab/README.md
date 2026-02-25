@@ -83,7 +83,7 @@ Service-specific secrets go in `MC_PRIVATE/docker/<service>.env`.
 ## Adding a Service
 
 1. Create `machines/<id>/docker/<name>/compose.yaml`
-2. Run `mc setup <machine>` — the deploy script syncs and starts it
+2. Run `mc apply <machine>` — the deploy script syncs and starts it
 
 ### Internet-facing (Tailscale sidecar + funnel)
 

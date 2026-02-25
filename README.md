@@ -28,9 +28,9 @@ Re-run bootstrap on an existing machine to reinstall the CLI after moving the re
 ## Usage
 
 ```
-mc setup <machine> [modules]   Deploy configs, packages, and scripts
-mc update                      Pull latest repo changes
-mc upgrade [modules]           Run upgrade scripts
+mc apply <machine> [modules]   Deploy configs, packages, and scripts
+mc sync                        Pull and push latest repo changes
+mc update [modules]            Run update scripts
 mc info / list / show          Display machine info
 ```
 
@@ -86,18 +86,18 @@ Run `mc -h` or `mc <command> -h` for full options.
 
 **Script prefixes** control execution behavior:
 
-| Prefix     | Behavior                                 |
-| ---------- | ---------------------------------------- |
-| `init_`    | Runs before packages (env/tool setup)    |
-| `once_`    | Runs once per machine, then skipped      |
-| `watch_`   | Reruns when the script's content changes |
-| `upgrade_` | Runs only during `mc upgrade`            |
+| Prefix   | Behavior                                 |
+| -------- | ---------------------------------------- |
+| `init_`  | Runs before packages (env/tool setup)    |
+| `once_`  | Runs once per machine, then skipped      |
+| `watch_` | Reruns when the script's content changes |
+| `up_`    | Runs only during `mc update`             |
 
 **Env vars** are injected into every script subprocess at runtime — never written to files:
 
 - `MC_HOME`: The root directory of the machine config (e.g., `~/.machine`)
 - `MC_ID`: The machine ID (e.g., `my-laptop`)
-- `MC_HOSTNAME`: Optional machine hostname; set in manifest `env` to rename the host
+- *Modules can provide their own and depend on other env vars.*
 
 **Local overrides:** modules declare which `*.local` files they accept via the `overrides` field. Drop matching files in your machine dir and they are auto-discovered and symlinked:
 

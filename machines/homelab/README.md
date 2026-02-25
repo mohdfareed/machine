@@ -32,7 +32,7 @@ configs, etc.).
 
 ### Restoring a remote server
 
-After `mc setup <machine>` deploys compose files (but no data):
+After `mc apply <machine>` deploys compose files (but no data):
 
 ```sh
 BACKUP="$MC_PRIVATE/backups/<hostname>"
@@ -48,7 +48,7 @@ done
 
 1. Add the `compose.yaml` to the new machine's `docker/` dir in git
 2. Transfer `data/` + `.env` via scp (from backup or old host)
-3. `mc setup <machine>` deploys and starts it
+3. `mc apply <machine>` deploys and starts it
 
 ## Network
 

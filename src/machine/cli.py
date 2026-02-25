@@ -145,7 +145,7 @@ def _make_script_cbs(
 
 
 @app.command(rich_help_panel="Lifecycle")
-def setup(
+def apply(
     machine: Annotated[
         str,
         typer.Option(
@@ -188,7 +188,7 @@ def setup(
     root = settings.home
     machine_id = machine
     if not machine_id:
-        err_console.print("[red]No machine set. Run: mc setup <machine>[/]")
+        err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
         raise SystemExit(1)
     save_current_machine(machine_id)
     module_filter = set(modules)
@@ -241,17 +241,17 @@ def setup(
         script_owners.setdefault(s, machine_id)
 
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
-    console.print(f"{mode}Setting up [bold]{machine_id}[/]")
+    console.print(f"{mode}Applying [bold]{machine_id}[/]")
     console.print(f"  Modules: {', '.join(m.name for m in active_modules)}")
 
     cache_sudo()
 
-    # init_* prepares env/tools before packages; upgrade_* is for mc upgrade only
+    # init_* prepares env/tools before packages; up_* is for mc update only
     setup_scripts = [s for s in all_scripts if Path(s).name.startswith("init_")]
     post_scripts = [
         s
         for s in all_scripts
-        if not Path(s).name.startswith("init_") and not Path(s).name.startswith("upgrade_")
+        if not Path(s).name.startswith("init_") and not Path(s).name.startswith("up_")
     ]
 
     log_file = settings.app_dir / "mc.log"
@@ -275,7 +275,7 @@ def setup(
         )
 
         with progress:
-            task = progress.add_task("setup", total=total, phase="Files", current="")
+            task = progress.add_task("apply", total=total, phase="Files", current="")
 
             def _advance(name: str) -> None:
                 progress.advance(task)
@@ -322,16 +322,16 @@ def setup(
 
 
 @app.command(rich_help_panel="Lifecycle")
-def upgrade(
+def update(
     modules: Annotated[
         list[str],
         typer.Argument(
-            help="Limit setup to the specified modules.",
+            help="Limit to the specified modules.",
             autocompletion=_complete_modules,
         ),
     ] = [],
 ) -> None:
-    """Run upgrade_* scripts for the current machine."""
+    """Run up_* maintenance scripts for the current machine."""
     from machine.app import (
         Failure,
         build_script_env,
@@ -345,7 +345,7 @@ def upgrade(
     root = settings.home
     machine_id = get_current_machine()
     if not machine_id:
-        err_console.print("[red]No machine set. Run: mc setup <machine>[/]")
+        err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
         raise SystemExit(1)
 
     manifest = load_manifest(machine_id, root)
@@ -361,12 +361,10 @@ def upgrade(
     else:
         raw_scripts = [s for m in all_modules for s in m.scripts] + manifest.scripts
 
-    upgrade_scripts = [
-        s for s in filter_scripts(raw_scripts) if Path(s).name.startswith("upgrade_")
-    ]
+    up_scripts = [s for s in filter_scripts(raw_scripts) if Path(s).name.startswith("up_")]
 
-    if not upgrade_scripts:
-        console.print("[dim]No upgrade scripts found.[/]")
+    if not up_scripts:
+        console.print("[dim]No update scripts found.[/]")
         return
 
     script_owners: dict[str, str] = {}
@@ -378,7 +376,7 @@ def upgrade(
 
     script_env = build_script_env(manifest, machine_id, root)
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
-    console.print(f"{mode}Upgrading [bold]{machine_id}[/]")
+    console.print(f"{mode}Updating [bold]{machine_id}[/]")
 
     cache_sudo()
 
@@ -386,7 +384,7 @@ def upgrade(
 
     failures: list[Failure] = []
     if settings.debug:
-        failures = run_scripts(upgrade_scripts, env=script_env, owners=script_owners)
+        failures = run_scripts(up_scripts, env=script_env, owners=script_owners)
     else:
         progress = Progress(
             TextColumn("[bold]{task.fields[phase]:<10}"),
@@ -397,14 +395,12 @@ def upgrade(
             transient=True,
         )
         with progress:
-            task = progress.add_task(
-                "upgrade", total=len(upgrade_scripts), phase="Upgrade", current=""
-            )
+            task = progress.add_task("update", total=len(up_scripts), phase="Update", current="")
             _pause, _resume = _make_script_cbs(progress, task)
 
             failures.extend(
                 run_scripts(
-                    upgrade_scripts,
+                    up_scripts,
                     env=script_env,
                     on_before=_pause,
                     on_after=_resume,
@@ -416,20 +412,20 @@ def upgrade(
 
 
 @app.command(rich_help_panel="Lifecycle")
-def update(
+def sync(
     stash: bool = typer.Option(
-        False, "-s", "--stash", help="Stash local changes and reapply after pull."
+        False, "-s", "--stash", help="Stash local changes and reapply after sync."
     ),
-    force: bool = typer.Option(False, "-f", "--force", help="Discard local changes before pull."),
-    no_setup: bool = typer.Option(False, "--no-setup", help="Skip running setup after pull."),
+    force: bool = typer.Option(False, "-f", "--force", help="Discard local changes before sync."),
+    no_apply: bool = typer.Option(False, "--no-apply", help="Skip running apply after sync."),
 ) -> None:
-    """Pull the latest repo changes and re-run setup."""
+    """Pull and push repo changes, then re-run apply."""
     if stash and force:
         err_console.print("[red]--stash and --force are mutually exclusive.[/]")
         raise SystemExit(1)
 
     if settings.dry_run:
-        console.print("[dim](dry-run)[/] Would pull latest repo changes")
+        console.print("[dim](dry-run)[/] Would sync repo changes")
         return
 
     root = settings.home
@@ -445,28 +441,39 @@ def update(
             subprocess.run([*git, "reset", "--hard", "origin/HEAD"])
             console.print("[yellow]Local changes discarded.[/]")
         else:
-            subprocess.run([*git, "stash", "push", "-m", "mc update"])
-            console.print("[yellow]Local changes stashed with message 'mc update'.[/]")
+            subprocess.run([*git, "stash", "push", "-m", "mc sync"])
+            console.print("[yellow]Local changes stashed with message 'mc sync'.[/]")
             stashed = True
 
-    result = subprocess.run([*git, "pull", "--ff-only"], text=True)
+    result = subprocess.run([*git, "pull", "--rebase"], capture_output=True, text=True)
     if result.returncode != 0:
-        err_console.print("[red]Pull failed.[/]")
+        subprocess.run([*git, "rebase", "--abort"], capture_output=True)
+        _logger.error("git pull --rebase failed:\n%s\n%s", result.stdout, result.stderr)
+        err_console.print("[red]Pull failed — rebase conflict or network error.[/]")
+        err_console.print("[dim]Resolve conflicts manually, then run: mc sync[/]")
         raise SystemExit(1)
-    console.print("[green]Repo updated successfully.[/]")
+    console.print("[green]Pulled latest changes.[/]")
+
+    result = subprocess.run([*git, "push"], capture_output=True, text=True)
+    if result.returncode != 0:
+        _logger.error("git push failed:\n%s\n%s", result.stdout, result.stderr)
+        err_console.print("[red]Push failed.[/]")
+        err_console.print(f"[dim]{result.stderr.strip()}[/]")
+        raise SystemExit(1)
+    console.print("[green]Pushed local commits.[/]")
 
     if stashed:
         subprocess.run([*git, "stash", "pop"])
 
-    if not no_setup:
+    if not no_apply:
         from machine.app import get_current_machine
 
         machine_id = get_current_machine()
         if machine_id:
             console.print()
-            setup(machine=machine_id)
+            apply(machine=machine_id)
         else:
-            console.print("[dim]No machine set — skipping setup.[/]")
+            console.print("[dim]No machine set — skipping apply.[/]")
 
 
 def _prompt_force(stash: bool, force: bool) -> bool:
@@ -515,7 +522,7 @@ def private() -> None:
 
     machine_id = get_current_machine()
     if not machine_id:
-        err_console.print("[red]No machine set. Run: mc setup <machine>[/]")
+        err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
         raise SystemExit(1)
 
     manifest = load_manifest(machine_id, settings.home)
@@ -643,14 +650,14 @@ def show(
 
     # Split scripts into three groups, tagged with module
     init_scripts: list[tuple[str, str]] = []
-    upgrade_scripts: list[tuple[str, str]] = []
+    up_scripts: list[tuple[str, str]] = []
     post_scripts: list[tuple[str, str]] = []
 
     def _bucket(name: str) -> list[tuple[str, str]]:
         if name.startswith("init_"):
             return init_scripts
-        if name.startswith("upgrade_"):
-            return upgrade_scripts
+        if name.startswith("up_"):
+            return up_scripts
         return post_scripts
 
     for m in modules:
@@ -664,7 +671,7 @@ def show(
     for title, group in [
         ("Init Scripts", init_scripts),
         ("Scripts", post_scripts),
-        ("Upgrade Scripts", upgrade_scripts),
+        ("Update Scripts", up_scripts),
     ]:
         if group:
             table = Table(title=title, show_header=True)

@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 # Shared power-management settings for the homelab Mac.
-# Sourced by init_server.macos.sh and upgrade_server.macos.sh.
+# Sourced by init_server.macos.sh and up_server.macos.sh.
 # Prefixed with _ so it is not auto-discovered as a standalone script.
 
 echo "configuring power management..."

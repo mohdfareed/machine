@@ -7,6 +7,7 @@ Loads every module and every manifest, checks that:
 - All module/machine scripts exist on disk
 - All required_env vars are satisfied by the manifest
 - All referenced modules exist
+- All present module override files are included in the manifest
 """
 
 from pathlib import Path
@@ -20,6 +21,7 @@ from machine.manifest import (
     list_modules,
     load_manifest,
     load_module,
+    resolve_modules,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -94,6 +96,29 @@ def test_manifest_env_satisfies_modules(machine_id: str) -> None:
     modules = [load_module(m, ROOT) if isinstance(m, str) else m for m in manifest.modules]
     errors = validate(modules, manifest.env, machine_id)
     assert not errors, "\n".join(errors)
+
+
+def test_manifest_overrides_included(machine_id: str) -> None:
+    """Every module override file present in the machine dir is in the manifest files."""
+    machine_dir = ROOT / "machines" / machine_id
+    if not machine_dir.is_dir():
+        pytest.skip("flat manifest — no machine directory")
+
+    manifest = load_manifest(machine_id, ROOT)
+    modules = resolve_modules(manifest.modules, ROOT)
+    targeted = {fm.target for fm in manifest.files}
+
+    missing: list[str] = []
+    for mod in modules:
+        for override in mod.overrides:
+            local_file = machine_dir / override.source
+            if local_file.exists() and override.target not in targeted:
+                missing.append(
+                    f"  module '{mod.name}': '{override.source}' exists"
+                    f" but target '{override.target}' not in manifest files"
+                )
+
+    assert not missing, f"{machine_id} has unincluded overrides:\n" + "\n".join(missing)
 
 
 # MARK: Validation Edge Cases

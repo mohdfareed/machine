@@ -60,7 +60,7 @@ passed to scripts at runtime (not written to files).
 - Before writing new code, check the codebase for existing patterns and follow them
 - No generated env files — shell configs are static, committed files
 - Platform tags on scripts: `name.macos.sh`, `name.unix.sh`, `name.win.ps1`
-- Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages, `upgrade_` = run only during `mc upgrade`, `_` = helper (never auto-executed, sourced by other scripts)
+- Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages, `up_` = run only during `mc update`, `_` = helper (never auto-executed, sourced by other scripts)
 - Execution order: files → `init_*` scripts → packages → remaining scripts
 - Machine extras: `extra.zsh` → `~/.zshrc.local`
 - Repo root derived from `Path(__file__).parents[2]` — no env var needed

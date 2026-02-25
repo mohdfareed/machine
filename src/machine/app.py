@@ -43,7 +43,7 @@ def cache_sudo() -> None:
     """Prompt for sudo once and keep credentials alive in the background.
 
     A daemon thread runs ``sudo -v`` every 60 s so the credential cache
-    never expires during a long ``mc setup`` or ``mc upgrade`` run.
+    never expires during a long ``mc apply`` or ``mc update`` run.
     Harmless on Windows (no-op) and when the user has passwordless sudo.
     """
     global _sudo_keepalive
