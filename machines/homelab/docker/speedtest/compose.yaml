@@ -30,7 +30,7 @@ services:
     labels:
       - homepage.group=Infrastructure
       - homepage.name=Speedtest Tracker
-      - homepage.icon=speedtest-tracker
+      - homepage.icon=mdi-speedometer
       - homepage.href=https://speedtest.${TAILNET_NAME}.ts.net
       - homepage.description=Internet speed monitoring
       - homepage.widget.type=speedtest
