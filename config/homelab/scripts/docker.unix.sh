@@ -34,10 +34,11 @@ set +a
 # Module services are deployed first, then machine-specific ones.
 
 # Recursively mirror a repo directory into a deploy target.
-# Creates real directories, copies individual files. Copies (not symlinks)
-# because containers mount these dirs — symlink targets (repo paths) don't
-# exist inside the container. Existing runtime files (data/, logs/) that
-# aren't in the source are left untouched.
+# Creates real directories, hardlinks individual files. Hardlinks (not
+# symlinks or copies) because: containers need real files (symlink targets
+# don't exist inside the container), and changes made by a container must
+# propagate back to the repo for committing. Existing runtime files
+# (data/, logs/) that aren't in the source are left untouched.
 sync_dir() {
     local src="$1" dst="$2"
     mkdir -p "$dst"
@@ -47,9 +48,9 @@ sync_dir() {
         sync_dir "$entry" "$dst/$(basename "$entry")"
     done < <(find "$src" -mindepth 1 -maxdepth 1 -type d -print0)
 
-    # Copy individual files (overwrite to pick up repo changes).
+    # Hardlink individual files (overwrites existing; same inode = same file).
     while IFS= read -r -d '' entry; do
-        cp -f "$entry" "$dst/$(basename "$entry")"
+        ln -f "$entry" "$dst/$(basename "$entry")"
     done < <(find "$src" -mindepth 1 -maxdepth 1 -type f -print0)
 }
 

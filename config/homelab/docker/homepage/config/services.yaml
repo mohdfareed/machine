@@ -12,15 +12,6 @@
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_HOMELAB_DEVICE_ID}}"
           key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
           fields: ["address", "last_seen", "expires"]
-    - RPi:
-        icon: mdi-raspberry-pi
-        href: https://rpi.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
-        description: Raspberry Pi
-        widget:
-          type: tailscale
-          deviceid: "{{HOMEPAGE_VAR_TAILSCALE_RPI_DEVICE_ID}}"
-          key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
-          fields: ["address", "last_seen", "expires"]
     - PC:
         icon: mdi-desktop-tower
         href: https://pc.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
@@ -28,5 +19,14 @@
         widget:
           type: tailscale
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_PC_DEVICE_ID}}"
+          key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
+          fields: ["address", "last_seen", "expires"]
+    - RPi:
+        icon: mdi-raspberry-pi
+        href: https://rpi.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
+        description: Raspberry Pi
+        widget:
+          type: tailscale
+          deviceid: "{{HOMEPAGE_VAR_TAILSCALE_RPI_DEVICE_ID}}"
           key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
           fields: ["address", "last_seen", "expires"]
