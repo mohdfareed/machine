@@ -5,8 +5,8 @@
 - Infrastructure:
     - HomeLab:
         icon: mdi-home-analytics
-        href: https://login.tailscale.com/admin
-        description: VPN mesh network
+        href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
+        description: Home Lab server
         widget:
           type: tailscale
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_HOMELAB_DEVICE_ID}}"
@@ -15,7 +15,7 @@
     - RPi:
         icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/raspberry-pi-light.svg
         href: https://rpi.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
-        description: VPN mesh network
+        description: Raspberry Pi
         widget:
           type: tailscale
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_RPI_DEVICE_ID}}"
