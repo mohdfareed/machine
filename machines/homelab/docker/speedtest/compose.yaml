@@ -41,6 +41,8 @@ services:
     volumes:
       - ./data/speedtest:/config
     environment:
+      APP_KEY: ${SPEEDTEST_APP_KEY:-}
+      APP_URL: "https://speedtest.${TAILNET_NAME}.ts.net"
       DB_CONNECTION: sqlite
 
 volumes:
