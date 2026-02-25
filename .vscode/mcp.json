@@ -8,10 +8,6 @@
         "machine",
       ]
     },
-    "test-memories": {
-      "type": "http",
-      "url": "https://kbm.tail2a477.ts.net/personal"
-    },
   },
   "inputs": []
 }
