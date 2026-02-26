@@ -1,8 +1,4 @@
-"""VS Code configuration module.
-
-Deploys settings, keybindings, MCP config, snippets, and prompts.
-Target directory is platform-aware.
-"""
+"""VS Code configuration module."""
 
 from machine.core import PLATFORM, Platform
 from machine.manifest import FileMapping, Module, Package

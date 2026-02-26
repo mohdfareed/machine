@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""SSH key provisioning.
-
-Copies a single private key named after MC_ID from MC_PRIVATE (or its
-ssh/ subdirectory) into ~/.ssh/ and registers it with the SSH agent.
-Skips gracefully when MC_PRIVATE is unset. Exits with an error if
-MC_PRIVATE exists but the key does not.
-"""
+"""SSH key provisioning from MC_PRIVATE."""
 
 import os
 import shutil

@@ -1,8 +1,4 @@
-"""Shell configuration module.
-
-Deploys zsh and PowerShell configs to well-known paths. Installs
-shell tools via brew/apt.
-"""
+"""Shell configuration module."""
 
 from machine.core import PLATFORM, Platform
 from machine.manifest import FileMapping, Module, Package, apt, brew

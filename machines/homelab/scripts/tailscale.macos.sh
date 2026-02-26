@@ -1,19 +1,12 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Homelab-specific Tailscale serve/funnel config.
-# Per-service sidecars handle their own hostnames; this configures the
-# machine's own HTTPS URL to serve Homepage.
-#   https://homelab.<tailnet>.ts.net → localhost:3000 (Homepage)
+# https://<machine>.<tailnet>.ts.net → localhost:3000 (Homepage)
 
 if ! command -v tailscale &>/dev/null; then
     echo "tailscale not found"
     exit 1
 fi
-
-echo "resetting stale tailscale serve/funnel config..."
-sudo tailscale serve reset
-sudo tailscale funnel reset 2>/dev/null || true
 
 echo "configuring tailscale serve (Homepage dashboard)..."
 sudo tailscale serve --bg http://127.0.0.1:3000

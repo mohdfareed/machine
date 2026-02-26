@@ -102,12 +102,7 @@ _output_logger.propagate = False
 
 
 def setup_console_logging() -> None:
-    """Configure rich console logging.
-
-    Normal mode shows WARNING+ only (errors/warnings); user-facing
-    progress goes through ``console.print``.  Debug mode shows
-    everything.
-    """
+    """Configure rich console logging."""
     global _console_handler
     level = logging.DEBUG if settings.debug else logging.WARNING
     handler = RichHandler(
@@ -161,11 +156,7 @@ def run(
     capture: bool = False,
     env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Run a shell command. Skipped (logged) in dry-run mode.
-
-    ``env`` is merged on top of the current process environment, so
-    scripts inherit PATH and other system vars plus any injected keys.
-    """
+    """Run a shell command. Skipped (logged) in dry-run mode."""
     _logger.debug("$ %s", _short(cmd))
 
     if settings.dry_run:
@@ -191,13 +182,7 @@ def tee_run(
     env: dict[str, str] | None = None,
     label: str = "",
 ) -> int:
-    """Run a shell command, streaming output to terminal and logging each line.
-
-    Unlike :func:`run`, output is captured and written to both the
-    terminal and the file logger so nothing is lost after scrolling.
-    On Unix a pseudo-terminal is used so child processes keep their
-    color output.  Returns the process exit code.
-    """
+    """Run a shell command, streaming output to terminal and log file."""
     _logger.debug("$ %s", _short(cmd))
 
     if settings.dry_run:

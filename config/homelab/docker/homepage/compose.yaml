@@ -1,8 +1,4 @@
 # Homepage — Homelab Dashboard
-# Access: https://<machine>.<tailnet>.ts.net (via machine's tailscale serve)
-#
-# Config files are mounted from ./config/.
-# Docker integration auto-discovers running containers.
 
 services:
   homepage:

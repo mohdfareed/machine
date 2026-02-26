@@ -1,8 +1,4 @@
-"""Git configuration module.
-
-Deploys shared gitconfig (with ``[include]`` for platform and local
-overrides) and a global gitignore. Installs git, git-lfs, and gh.
-"""
+"""Git configuration module."""
 
 from machine.core import PLATFORM, Platform
 from machine.manifest import FileMapping, Module, Package

@@ -40,12 +40,7 @@ _sudo_keepalive: threading.Event | None = None
 
 
 def cache_sudo() -> None:
-    """Prompt for sudo once and keep credentials alive in the background.
-
-    A daemon thread runs ``sudo -v`` every 60 s so the credential cache
-    never expires during a long ``mc apply`` or ``mc update`` run.
-    Harmless on Windows (no-op) and when the user has passwordless sudo.
-    """
+    """Prompt for sudo once and keep credentials alive in the background."""
     global _sudo_keepalive
 
     if not is_unix or settings.dry_run or _sudo_keepalive is not None:
@@ -158,12 +153,7 @@ def install_packages(
     on_after: Callable[[str], None] | None = None,
     owners: dict[str, str] | None = None,
 ) -> list[Failure]:
-    """Install packages using available managers. Returns list of failures.
-
-    Skips packages already recorded in the state file from a previous
-    successful install.  To force reinstall, clear state with
-    ``rm $(mc info | grep State)`` or delete the specific entry.
-    """
+    """Install packages using available managers. Returns list of failures."""
     if not packages:
         return []
 
@@ -312,11 +302,7 @@ def run_scripts(
     on_after: Callable[[str], None] | None = None,
     owners: dict[str, str] | None = None,
 ) -> list[Failure]:
-    """Run pre-filtered scripts, respecting ``once_``/``watch_`` tracking.
-
-    Expects scripts already filtered by :func:`filter_scripts`.
-    Returns a list of failures.
-    """
+    """Run pre-filtered scripts, respecting ``once_``/``watch_`` tracking."""
     if not scripts:
         return []
 

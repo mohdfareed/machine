@@ -1,8 +1,5 @@
 # KBM — Knowledge Base Memory
-# Access: https://kbm.<tailnet>.ts.net/{personal,work,private} (funnel)
-#
-# Single Tailscale sidecar with path-based routing to three KBM instances.
-# All persistent data lives under ./data/<name>/. KBM_HOME=/data inside each container.
+# Access: https://<mc_id>-kbm.<tailnet>.ts.net/{personal,work} (funnel)
 
 services:
   ts-kbm:

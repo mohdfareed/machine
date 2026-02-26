@@ -9,7 +9,6 @@ manifest = MachineManifest(
         "ssh",
         "ssh-server",
         "vscode",
-        "vsc-tunnel",
         "win-term",
         "core",
     ],

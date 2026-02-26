@@ -1,4 +1,4 @@
-"""VS Code tunnel setup module."""
+"""VS Code Server (code serve-web) module."""
 
 from machine.manifest import Module
 

@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
-"""Provision ``~/.env`` from env files in MC_PRIVATE.
-
-Two modes:
-
-1. **Explicit** — ``MC_ENV_FILES`` is set (space-separated list).  Each name
-   maps to ``MC_PRIVATE/env/<name>.env``.  Files are concatenated in order.
-2. **Simple** — ``MC_ENV_FILES`` is unset.  Falls back to ``MC_PRIVATE/.env``
-   if it exists.
-
-Output is written to ``~/.env`` (mode 600).
-Skips silently when MC_PRIVATE is unset or no matching files are found.
-"""
+"""Provision ``~/.env`` from env files in MC_PRIVATE."""
 
 import os
 import stat
@@ -23,12 +12,7 @@ TARGET = Path.home() / ".env"
 
 
 def resolve_env_sources(private_dir: Path, env_files: str | None) -> list[Path]:
-    """Return the ordered list of env files to concatenate.
-
-    When *env_files* is set (space-separated names), look up each
-    ``<name>.env`` in ``<private_dir>/env/``.  Otherwise fall back
-    to ``<private_dir>/.env``.
-    """
+    """Return the ordered list of env files to concatenate."""
     if env_files:
         env_dir = private_dir / "env"
         if not env_dir.is_dir():

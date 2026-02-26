@@ -1,8 +1,4 @@
 # Discord-Telegram Bot
-#
-# Env vars (resolved from ~/.env via deploy script):
-#   DISCORD_BOT_TOKEN   — Discord bot token
-#   TELEGRAM_BOT_TOKEN  — Telegram bot token
 
 services:
   discord-telegram-bot:

@@ -1,8 +1,4 @@
-"""SSH server setup module.
-
-Scripts are auto-discovered from ``scripts/`` and filtered by platform
-suffix at runtime.
-"""
+"""SSH server setup module."""
 
 from machine.manifest import Module
 

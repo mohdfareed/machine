@@ -1,10 +1,11 @@
 # Speedtest Tracker with Tailscale
+# Access: https://<mc_id>-speedtest.<tailnet>.ts.net
 
 services:
   ts-speedtest:
     image: tailscale/tailscale:latest
     container_name: ts-speedtest
-    hostname: speedtest
+    hostname: ${MC_ID}-speedtest
     environment:
       TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
       TS_EXTRA_ARGS: --advertise-tags=tag:container
@@ -13,7 +14,7 @@ services:
       TS_USERSPACE: "false"
     volumes:
       - ts-speedtest-state:/var/lib/tailscale
-      - ./ts-config-speedtest:/config
+      - ./ts-config:/config
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
@@ -31,7 +32,7 @@ services:
       - homepage.group=Infrastructure
       - homepage.name=Speedtest Tracker
       - homepage.icon=mdi-speedometer
-      - homepage.href=https://speedtest.${TAILNET_NAME}.ts.net
+      - homepage.href=https://${MC_ID}-speedtest.${TAILNET_NAME}.ts.net
       - homepage.description=Internet speed monitoring
       - homepage.widget.type=speedtest
       - homepage.widget.url=http://127.0.0.1:80
@@ -41,13 +42,15 @@ services:
     volumes:
       - ./data/speedtest:/config
     tmpfs:
-      - /config/keys # prevent nginx from binding 443 (tailscale handles TLS)
+      - /config/keys
     environment:
       PUID: 1000
       PGID: 1000
       APP_KEY: ${SPEEDTEST_APP_KEY:-}
-      APP_URL: "https://speedtest.${TAILNET_NAME}.ts.net"
+      APP_URL: "https://${MC_ID}-speedtest.${TAILNET_NAME}.ts.net"
       DB_CONNECTION: sqlite
+      # Disable internal HTTPS — Tailscale sidecar handles TLS on :443.
+      APP_DISABLE_HTTPS: "true"
 
 volumes:
   ts-speedtest-state:

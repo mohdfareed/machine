@@ -1,14 +1,4 @@
-"""Manifest and module validation tests.
-
-Loads every module and every manifest, checks that:
-- All modules import cleanly and produce valid Module objects
-- All manifests import cleanly and produce valid MachineManifest objects
-- All module file sources exist on disk
-- All module/machine scripts exist on disk
-- All required_env vars are satisfied by the manifest
-- All referenced modules exist
-- All present module override files are included in the manifest
-"""
+"""Manifest and module validation tests."""
 
 from pathlib import Path
 
@@ -141,14 +131,13 @@ def test_ssh_module_loads_key_provisioning() -> None:
 
 def test_module_dependencies_auto_included() -> None:
     """Modules with depends= auto-include their dependencies."""
-    tunnel = load_module("vsc-tunnel", ROOT)
-    assert "vscode" in tunnel.depends
+    ssh_server = load_module("ssh-server", ROOT)
+    assert "ssh" in ssh_server.depends
 
-    # Build a manifest with only vsc-tunnel — vscode should be auto-included
+    # Build a manifest with only ssh-server — ssh should be auto-included
     from machine.manifest import MachineManifest
 
-    manifest = MachineManifest(modules=["vsc-tunnel"])
-    # Simulate load_manifest dependency resolution
+    manifest = MachineManifest(modules=["ssh-server"])
     resolved: list[str] = []
     seen: set[str] = set()
     for name in manifest.modules:
@@ -161,4 +150,4 @@ def test_module_dependencies_auto_included() -> None:
         if name not in seen:
             seen.add(name)
             resolved.append(name)
-    assert resolved == ["vscode", "vsc-tunnel"]
+    assert resolved == ["ssh", "ssh-server"]

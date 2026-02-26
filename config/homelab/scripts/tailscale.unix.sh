@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Connect the host to Tailscale.
-# Individual Docker services use Tailscale sidecars for their own host names.
-# Machine-specific tailscale serve/funnel config lives in machines/<id>/scripts/.
-
 if ! command -v tailscale &>/dev/null; then
     echo "tailscale not found, skipping"
     exit 0

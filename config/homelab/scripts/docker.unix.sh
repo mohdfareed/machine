@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Deploy all homelab Docker services.
-
 HOMELAB_DIR="${MC_HOMELAB_DIR:-$HOME/.homelab}"
 MODULE_DOCKER="$MC_HOME/config/homelab/docker"
 MACHINE_DOCKER="$MC_HOME/machines/$MC_ID/docker"
@@ -29,56 +27,59 @@ set -a
 [[ -f "$HOME/.env" ]] && source "$HOME/.env"
 set +a
 
-# ─── Sync service directories ────────────────────────────────────────────────
-# Sync repo compose files into ~/.homelab as real directories.
-# Module services are deployed first, then machine-specific ones.
+# Symlink ~/.homelab/<service> → repo service dirs for Dockge.
+mkdir -p "$HOMELAB_DIR"
 
-# Recursively mirror a repo directory into a deploy target.
-# Creates real directories, hardlinks individual files. Hardlinks (not
-# symlinks or copies) because: containers need real files (symlink targets
-# don't exist inside the container), and changes made by a container must
-# propagate back to the repo for committing. Existing runtime files
-# (data/, logs/) that aren't in the source are left untouched.
-sync_dir() {
-    local src="$1" dst="$2"
-    mkdir -p "$dst"
-
-    # Recurse into subdirectories (real dirs, not symlinks).
-    while IFS= read -r -d '' entry; do
-        sync_dir "$entry" "$dst/$(basename "$entry")"
-    done < <(find "$src" -mindepth 1 -maxdepth 1 -type d -print0)
-
-    # Hardlink individual files (overwrites existing; same inode = same file).
-    while IFS= read -r -d '' entry; do
-        ln -f "$entry" "$dst/$(basename "$entry")"
-    done < <(find "$src" -mindepth 1 -maxdepth 1 -type f -print0)
-}
-
-sync_service() {
+link_service() {
     local svc_dir="$1"
-    sync_dir "$svc_dir" "$HOMELAB_DIR/$(basename "$svc_dir")"
+    local name
+    name="$(basename "$svc_dir")"
+    local link="$HOMELAB_DIR/$name"
+
+    # Migrate runtime data from old deploy dirs.
+    if [[ -d "$link" && ! -L "$link" ]]; then
+        for runtime in data logs; do
+            if [[ -d "$link/$runtime" && ! -d "$svc_dir/$runtime" ]]; then
+                echo "migrating $name/$runtime → repo..."
+                mv "$link/$runtime" "$svc_dir/$runtime"
+            fi
+        done
+        rm -rf "$link"
+    fi
+
+    # Create or update symlink.
+    if [[ -L "$link" ]]; then
+        [[ "$(readlink "$link")" == "$svc_dir" ]] && return
+        rm "$link"
+    fi
+    ln -s "$svc_dir" "$link"
 }
 
 for svc_dir in "$MODULE_DOCKER"/*/; do
     [[ -d "$svc_dir" ]] || continue
-    sync_service "$svc_dir"
+    link_service "$svc_dir"
 done
 for svc_dir in "$MACHINE_DOCKER"/*/; do
     [[ -d "$svc_dir" ]] || continue
-    sync_service "$svc_dir"
+    link_service "$svc_dir"
 done
 
-# ─── Deploy ──────────────────────────────────────────────────────────────────
+# ─── Deploy ─────────────────────────────────────────────────────────────────────────────
 
-for svc_dir in "$HOMELAB_DIR"/*/; do
-    [[ -f "$svc_dir/compose.yaml" ]] || continue
-    echo "deploying $(basename "$svc_dir")..."
+deploy_services() {
+    local docker_dir="$1"
+    for svc_dir in "$docker_dir"/*/; do
+        [[ -f "$svc_dir/compose.yaml" ]] || continue
+        echo "deploying $(basename "$svc_dir")..."
+    (
+        cd "$svc_dir"
+        docker compose pull --ignore-pull-failures
+        docker compose up -d --remove-orphans
+    )
+    done
+}
 
-(   # preserve cwd stack
-    cd "$svc_dir"
-    docker compose pull --ignore-pull-failures
-    docker compose up -d --remove-orphans
-)
-done
+deploy_services "$MODULE_DOCKER"
+deploy_services "$MACHINE_DOCKER"
 
 echo "all services deployed."

@@ -1,11 +1,5 @@
 # OpenClaw — Personal AI Assistant Gateway
-# Access: https://openclaw.<tailnet>.ts.net (tailnet + public funnel)
-#
-# Onboarding (run while gateway is running):
-#   docker compose -f ~/.homelab/openclaw/compose.yaml run --rm openclaw onboard
-#
-# Other CLI commands:
-#   docker compose -f ~/.homelab/openclaw/compose.yaml run --rm openclaw <command>
+# Access: https://<mc_id>-openclaw.<tailnet>.ts.net (funnel)
 
 services:
   ts-openclaw:
@@ -63,7 +57,7 @@ services:
     # entrypoint
     init: true
     restart: unless-stopped
-    entrypoint: ["node", "dist/index.js"]
+    entrypoint: ["openclaw"]
     command: ["gateway"]
 
 volumes:

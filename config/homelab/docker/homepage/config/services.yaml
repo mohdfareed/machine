@@ -30,3 +30,13 @@
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_RPI_DEVICE_ID}}"
           key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
           fields: ["address", "last_seen", "expires"]
+
+- Services:
+    - VS Code (HomeLab):
+        icon: mdi-microsoft-visual-studio-code
+        href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/code
+        description: VS Code Server
+    - VS Code (RPi):
+        icon: mdi-microsoft-visual-studio-code
+        href: https://rpi.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/code
+        description: VS Code Server

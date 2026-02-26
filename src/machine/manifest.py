@@ -12,14 +12,10 @@ SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 
 
 class FileMapping(BaseModel):
-    """A config file or directory to symlink.
-
-    Paths are relative to the owning module or machine directory.
-    Resolved to absolute paths by the loader.
-    """
+    """A config file or directory to symlink."""
 
     source: str
-    target: str  # absolute or ~ path
+    target: str
 
 
 class Package(BaseModel):
@@ -50,39 +46,25 @@ class Package(BaseModel):
 
 
 class Module(BaseModel):
-    """A composable unit of configuration.
-
-    Groups related files, packages, and scripts for a single concern
-    (e.g. git, shell). Defined in ``config/<name>/module.py``.
-
-    Scripts under a ``scripts/`` subdirectory are auto-discovered by
-    the loader.  Explicit entries in ``scripts`` are still supported
-    for files outside that directory (e.g. ``init_keys.py`` in the
-    module root).
-    """
+    """A composable unit of configuration."""
 
     name: str = ""
-    depends: list[str] = []  # modules that must be included before this one
-    required_env: list[str] = []  # env vars a manifest must provide
-    scripts: list[str] = []  # paths relative to module dir
+    depends: list[str] = []
+    required_env: list[str] = []
+    scripts: list[str] = []
     files: list[FileMapping] = []
-    overrides: list[FileMapping] = []  # machine-local override files
-    # REVIEW: Consider replacing with scripts + conventions.
+    overrides: list[FileMapping] = []
     packages: list[Package] = []
 
 
 class MachineManifest(BaseModel):
-    """Complete machine declaration.
-
-    Composes modules and adds machine-specific overrides.
-    Defined in ``machines/<id>/manifest.py``.
-    """
+    """Complete machine declaration."""
 
     modules: list[str | Module] = []
     env: dict[str, str] = {}
-    scripts: list[str] = []  # paths relative to machine dir
-    files: list[FileMapping] = []  # machine-specific file mappings
-    packages: list[Package] = []  # machine-specific packages
+    scripts: list[str] = []
+    files: list[FileMapping] = []
+    packages: list[Package] = []
 
 
 # MARK: Package Helpers
@@ -127,11 +109,7 @@ def mas(**apps: int) -> list[Package]:
 
 
 def list_modules(root: Path) -> list[str]:
-    """List available module names by scanning ``config/``.
-
-    Discovers both directory modules (``config/<name>/module.py``)
-    and flat modules (``config/<name>.py``).
-    """
+    """List available module names by scanning ``config/``."""
     modules_dir = root / "config"
     if not modules_dir.exists():
         return []
@@ -145,11 +123,7 @@ def list_modules(root: Path) -> list[str]:
 
 
 def list_machines(root: Path) -> list[str]:
-    """List available machine IDs by scanning ``machines/``.
-
-    Discovers both directory manifests (``machines/<id>/manifest.py``)
-    and flat manifests (``machines/<id>.py``).
-    """
+    """List available machine IDs by scanning ``machines/``."""
     machines_dir = root / "machines"
     if not machines_dir.exists():
         return []
@@ -168,12 +142,7 @@ _module_cache: dict[str, Module] = {}
 
 
 def load_module(name: str, root: Path) -> Module:
-    """Load a module from ``config/<name>/module.py`` or ``config/<name>.py``.
-
-    Directory modules get file/script path resolution and auto-discovery
-    of a ``scripts/`` subdirectory.  Flat modules (single ``.py`` file)
-    are for packages-only definitions with no associated files.
-    """
+    """Load a module from ``config/<name>/module.py`` or ``config/<name>.py``."""
     module_dir = root / "config" / name
     dir_path = module_dir / "module.py"
     flat_path = root / "config" / f"{name}.py"
@@ -220,13 +189,7 @@ def load_module(name: str, root: Path) -> Module:
 
 
 def load_manifest(machine_id: str, root: Path) -> MachineManifest:
-    """Load a machine manifest from ``machines/<id>/manifest.py`` or
-    ``machines/<id>.py``.
-
-    Directory manifests get file/script path resolution and
-    auto-discovery.  Flat manifests (single ``.py`` file) are for
-    lightweight definitions with no machine-specific files.
-    """
+    """Load a machine manifest from ``machines/<id>/manifest.py`` or ``machines/<id>.py``."""
     machine_dir = root / "machines" / machine_id
     dir_path = machine_dir / "manifest.py"
     flat_path = root / "machines" / f"{machine_id}.py"
@@ -289,13 +252,7 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
 
 
 def _resolve_deps(modules: list[str | Module], root: Path) -> list[str | Module]:
-    """Resolve module dependencies recursively and auto-include ``pkgs``.
-
-    Walks each module's ``depends`` list (and their deps, transitively)
-    and inserts missing deps before the dependent.  If any resolved
-    module declares packages, the ``pkgs`` module is auto-included at
-    the front (if it exists and wasn't already listed).
-    """
+    """Resolve module dependencies recursively and auto-include ``pkgs``."""
     resolved: list[str | Module] = []
     seen: set[str] = set()
 
