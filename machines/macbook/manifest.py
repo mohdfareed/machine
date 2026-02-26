@@ -1,15 +1,10 @@
 """Personal laptop (macOS) machine manifest."""
 
-from machine.manifest import FileMapping, MachineManifest, brew, cask, mas
+from machine.manifest import MachineManifest, brew, cask, mas
 
 manifest = MachineManifest(
     modules=["git", "shell", "ssh", "vscode", "ghostty", "core"],
-    files=[
-        FileMapping(
-            source="openclaw.json",
-            target="~/.openclaw/openclaw.json",
-        )
-    ],
+    files=[],
     packages=[
         *cask("openclaw"),
         # Dev languages

@@ -19,10 +19,6 @@ manifest = MachineManifest(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
         ),
-        FileMapping(
-            source="openclaw.json",
-            target="~/.openclaw/openclaw.json",
-        ),
     ],
     packages=[
         *cask("openclaw"),

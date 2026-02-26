@@ -7,6 +7,7 @@
   "gateway": {
     "mode": "local",
     "bind": "lan", // container port mapping
+    "trustedProxies": ["127.0.0.1", "::1"], // tailscale sidecar
     "auth": {
       "allowTailscale": true,
       "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }
