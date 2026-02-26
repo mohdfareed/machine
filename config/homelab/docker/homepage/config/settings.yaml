@@ -1,21 +1,38 @@
 ---
-# Homepage settings
 title: "{{HOMEPAGE_VAR_TITLE}}"
 favicon: "{{HOMEPAGE_VAR_FAVICON}}"
 
+theme: dark
+color: slate
+
 headerStyle: clean
 statusStyle: dot
-cardBlur: md
+cardBlur: xl
+hideVersion: true
 bookmarksStyle: icons
 showStats: true
 
+background:
+  image: https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?w=1920
+  blur: sm
+  opacity: 20
+
+quicklaunch:
+  searchDescriptions: true
+  showSearchSuggestions: true
+  mobileButtonPosition: bottom-right
+  provider: google
+
 layout:
-  Services:
-    style: rows
-    columns: 1
   Machines:
-    style: rows
-    columns: 1
+    icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tailscale.svg
+    style: row
+    columns: 3
+  Services:
+    icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/brain.svg
+    style: row
+    columns: 3
   Infrastructure:
-    style: rows
-    columns: 1
+    icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/docker-moby.svg
+    style: row
+    columns: 3

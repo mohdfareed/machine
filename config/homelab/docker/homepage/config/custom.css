@@ -1,0 +1,83 @@
+/* ── Glass-morphism card style ─────────────────────────────────────── */
+
+/* Service & bookmark cards */
+div[class*="service"]>div,
+li[class*="bookmark"]>a {
+    background: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(16px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+    border: 1px solid rgba(148, 163, 184, 0.08) !important;
+    border-radius: 16px !important;
+    box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+div[class*="service"]>div:hover,
+li[class*="bookmark"]>a:hover {
+    transform: translateY(-2px) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(148, 163, 184, 0.15) !important;
+}
+
+/* Widget cards (resources, datetime, greeting) */
+#information-widgets>div>div {
+    background: rgba(15, 23, 42, 0.4) !important;
+    backdrop-filter: blur(16px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+    border: 1px solid rgba(148, 163, 184, 0.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ── Section headers ──────────────────────────────────────────────── */
+
+h2 {
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    color: rgba(148, 163, 184, 0.7) !important;
+}
+
+/* ── Icon glow effect ─────────────────────────────────────────────── */
+
+div[class*="service"] img,
+li[class*="bookmark"] img {
+    filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.3)) !important;
+    transition: filter 0.2s ease !important;
+}
+
+div[class*="service"]:hover img,
+li[class*="bookmark"]:hover img {
+    filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5)) !important;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.35);
+}
+
+/* ── Tab/group active highlight ───────────────────────────────────── */
+
+nav a[class*="active"],
+nav button[class*="active"] {
+    border-bottom-color: rgba(99, 102, 241, 0.7) !important;
+}

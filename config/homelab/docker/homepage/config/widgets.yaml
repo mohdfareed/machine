@@ -1,20 +1,14 @@
 ---
 # Homepage widgets (top bar)
-- resources:
-    cpu: true
-    memory: true
-- resources:
-    cputemp: true
-    uptime: true
-- resources:
-    expanded: true
-    disk: /
-- resources:
-    expanded: true
-    network: true
+- logo:
+    icon: "{{HOMEPAGE_VAR_FAVICON}}"
 - datetime:
-    text_size: xl
+    text_size: 3xl
     format:
       dateStyle: short
       timeStyle: short
-      hour12: true
+- resources:
+    cpu: true
+    memory: true
+    uptime: true
+    disk: /

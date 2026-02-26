@@ -1,11 +1,22 @@
 ---
-- Dev:
+- Admin Consoles:
     - Tailscale Admin Console:
         - icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tailscale.svg
           href: https://login.tailscale.com/admin
-    - HomeLab VSCode:
-        - icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/code.svg
+- Dashboards:
+    - HomeLab:
+        - icon: mdi-home-analytics
+          href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
+    - PC:
+        - icon: mdi-desktop-tower
+          href: https://pc.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
+    - RPi:
+        - icon: mdi-raspberry-pi
+          href: https://rpi.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
+- Code Servers:
+    - HomeLab:
+        - icon: mdi-home-analytics
           href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/code
-    - RPi VSCode:
-        - icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/code.svg
+    - RPi:
+        - icon: mdi-raspberry-pi
           href: https://rpi.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/code
