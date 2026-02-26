@@ -35,7 +35,7 @@ services:
       - homepage.href=https://${MC_ID}-speedtest.${TAILNET_NAME}.ts.net
       - homepage.description=Internet speed monitoring
       - homepage.widget.type=speedtest
-      - homepage.widget.url=http://127.0.0.1:80
+      - homepage.widget.url=https://${MC_ID}-speedtest.${TAILNET_NAME}.ts.net
       - homepage.widget.version=2
       - homepage.widget.key=${SPEEDTEST_API_KEY:-}
       - homepage.widget.fields=["download","upload","ping"]

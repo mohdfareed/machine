@@ -4,7 +4,7 @@ set -Eeuo pipefail
 if command -v brew &>/dev/null; then
     echo "upgrading brew packages..."
     brew update
-    brew upgrade
+    brew upgrade || true
     brew upgrade --cask --greedy-latest
     brew autoremove
     brew cleanup --prune=all
