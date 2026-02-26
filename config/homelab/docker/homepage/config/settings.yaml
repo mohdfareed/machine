@@ -2,20 +2,14 @@
 title: "{{HOMEPAGE_VAR_TITLE}}"
 favicon: "{{HOMEPAGE_VAR_FAVICON}}"
 
-theme: dark
-color: slate
-
-headerStyle: clean
-statusStyle: dot
-cardBlur: xl
+headerStyle:
 hideVersion: true
 bookmarksStyle: icons
+statusStyle: dot
 showStats: true
 
 background:
-  image: https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?w=1920
-  blur: sm
-  opacity: 20
+  image: https://singlecolorimage.com/get/1e1e1e/100x100
 
 quicklaunch:
   searchDescriptions: true
@@ -25,14 +19,11 @@ quicklaunch:
 
 layout:
   Machines:
-    icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tailscale.svg
-    style: row
-    columns: 3
+    style: column
+    rows: 1
   Services:
-    icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/brain.svg
-    style: row
-    columns: 3
+    style: column
+    rows: 1
   Infrastructure:
-    icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/docker-moby.svg
-    style: row
-    columns: 3
+    style: column
+    rows: 1
