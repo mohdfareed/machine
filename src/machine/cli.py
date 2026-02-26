@@ -417,9 +417,10 @@ def sync(
         False, "-s", "--stash", help="Stash local changes and reapply after sync."
     ),
     force: bool = typer.Option(False, "-f", "--force", help="Discard local changes before sync."),
+    push: bool = typer.Option(False, "-p", "--push", help="Push local commits after pulling."),
     no_apply: bool = typer.Option(False, "--no-apply", help="Skip running apply after sync."),
 ) -> None:
-    """Pull and push repo changes, then re-run apply."""
+    """Pull repo changes and re-run apply."""
     if stash and force:
         err_console.print("[red]--stash and --force are mutually exclusive.[/]")
         raise SystemExit(1)
@@ -454,13 +455,14 @@ def sync(
         raise SystemExit(1)
     console.print("[green]Pulled latest changes.[/]")
 
-    result = subprocess.run([*git, "push"], capture_output=True, text=True)
-    if result.returncode != 0:
-        _logger.error("git push failed:\n%s\n%s", result.stdout, result.stderr)
-        err_console.print("[red]Push failed.[/]")
-        err_console.print(f"[dim]{result.stderr.strip()}[/]")
-        raise SystemExit(1)
-    console.print("[green]Pushed local commits.[/]")
+    if push:
+        result = subprocess.run([*git, "push"], capture_output=True, text=True)
+        if result.returncode != 0:
+            _logger.error("git push failed:\n%s\n%s", result.stdout, result.stderr)
+            err_console.print("[red]Push failed.[/]")
+            err_console.print(f"[dim]{result.stderr.strip()}[/]")
+            raise SystemExit(1)
+        console.print("[green]Pushed local commits.[/]")
 
     if stashed:
         subprocess.run([*git, "stash", "pop"])
