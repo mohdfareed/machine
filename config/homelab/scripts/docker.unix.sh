@@ -53,6 +53,9 @@ link_service() {
         rm "$link"
     fi
     ln -s "$svc_dir" "$link"
+
+    # Symlink ~/.env into the service dir so docker compose auto-loads it.
+    [[ -f "$HOME/.env" ]] && ln -sf "$HOME/.env" "$svc_dir/.env"
 }
 
 for svc_dir in "$MODULE_DOCKER"/*/; do
