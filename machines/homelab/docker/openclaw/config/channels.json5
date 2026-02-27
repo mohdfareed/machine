@@ -14,8 +14,9 @@
       sticker: true,
     },
 
-    // Webhook mode — Tailscale Funnel exposes port 8443 publicly.
-    webhookUrl: "${TELEGRAM_WEBHOOK_URL}",
-    webhookSecret: "${TELEGRAM_WEBHOOK_SECRET}",
+    // Webhook mode — Tailscale Funnel exposes port 443 publicly.
+    // REVIEW: Disabled due to unknown conflict on port 8787 in container.
+    // webhookUrl: "${TELEGRAM_WEBHOOK_URL}",
+    // webhookSecret: "${TELEGRAM_WEBHOOK_SECRET}",
   },
 }

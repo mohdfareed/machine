@@ -31,6 +31,8 @@ cat > "$PLIST" <<EOF
         <string>serve-web</string>
         <string>--port</string>
         <string>$VSC_PORT</string>
+        <string>--server-base-path</string>
+        <string>/code</string>
         <string>--without-connection-token</string>
         <string>--accept-server-license-terms</string>
     </array>

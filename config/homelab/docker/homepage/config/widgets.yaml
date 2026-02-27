@@ -10,7 +10,6 @@
     cpu: true
     memory: true
     uptime: true
-- resources:
-    cputemp: true
-    network: true
     disk: /
+- resources:
+    network: true

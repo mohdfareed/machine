@@ -7,14 +7,11 @@
   "Web": {
     "${TS_CERT_DOMAIN}:443": {
       "Handlers": {
-        "/personal/": {
-          "Proxy": "http://127.0.0.1:3001"
+        "/personal": {
+          "Proxy": "http://127.0.0.1:3001/personal"
         },
-        "/work/": {
-          "Proxy": "http://127.0.0.1:3002"
-        },
-        "/private/": {
-          "Proxy": "http://127.0.0.1:3003"
+        "/work": {
+          "Proxy": "http://127.0.0.1:3002/work"
         }
       }
     }

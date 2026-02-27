@@ -19,6 +19,12 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
+    healthcheck:
+      test: ["CMD", "tailscale", "--socket=/tmp/tailscaled.sock", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
     restart: unless-stopped
 
   openclaw:
@@ -27,7 +33,9 @@ services:
     # networking
     network_mode: service:ts-openclaw
     depends_on:
-      - ts-openclaw
+      ts-openclaw:
+        condition: service_healthy
+        restart: true
     labels:
       - homepage.group=Services
       - homepage.name=OpenClaw
@@ -40,17 +48,23 @@ services:
       - ./config:/home/node/.openclaw/config
       - ./workspace:/home/node/.openclaw/workspace
       - ./openclaw.json:/home/node/.openclaw/openclaw.json
-      - ./openclaw.sh:/usr/local/bin/openclaw:ro # alias for CLI access
+      - ./entrypoint.sh:/usr/local/bin/openclaw:ro # entrypoint + CLI alias
+      - openclaw-brew:/home/node/.linuxbrew
+      - openclaw-npm:/home/node/.npm-global
     # env vars
     environment:
       TERM: xterm-256color
-      OPENAI_API_KEY: ${OPENAI_API_KEY}         # llm
-      BRAVE_API_KEY: ${BRAVE_API_KEY}           # web search
-      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY} # text-to-speech
-      GEMINI_API_KEY: ${GEMINI_API_KEY}         # image generation
+      # agent
+      OPENAI_API_KEY: ${OPENAI_API_KEY}                # chatgpt models
+      ANTHROPIC_API_KEY_VAR: ${ANTHROPIC_API_KEY_VAR}  # claude models
+      GEMINI_API_KEY: ${GEMINI_API_KEY}                # image generation
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}        # text-to-speech
+      BRAVE_API_KEY: ${BRAVE_API_KEY}                  # web search
+      # openclaw
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       OPENCLAW_HOOKS_TOKEN: ${OPENCLAW_HOOKS_TOKEN}
       OPENCLAW_CRON_TOKEN: ${OPENCLAW_CRON_TOKEN}
+      # telegram bot
       TELEGRAM_BOT_TOKEN: ${OPENCLAW_TELEGRAM_BOT_TOKEN}
       TELEGRAM_WEBHOOK_SECRET: ${OPENCLAW_TELEGRAM_WEBHOOK_SECRET}
       TELEGRAM_WEBHOOK_URL: ${OPENCLAW_TELEGRAM_WEBHOOK_URL}
@@ -62,3 +76,5 @@ services:
 
 volumes:
   ts-openclaw-state:
+  openclaw-brew:
+  openclaw-npm:

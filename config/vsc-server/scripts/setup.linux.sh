@@ -27,7 +27,7 @@ After=network.target
 
 [Service]
 Type=exec
-ExecStart=$CODE_BIN serve-web --port $VSC_PORT --without-connection-token --accept-server-license-terms
+ExecStart=$CODE_BIN serve-web --port $VSC_PORT --server-base-path /code --without-connection-token --accept-server-license-terms
 Restart=on-failure
 RestartSec=5
 
