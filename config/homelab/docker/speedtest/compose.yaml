@@ -42,6 +42,7 @@ services:
       - homepage.icon=mdi-speedometer
       - homepage.href=https://${MC_ID}-speedtest.${TAILNET_NAME}.ts.net
       - homepage.description=Internet speed monitoring
+      - homepage.showStats=false
       - homepage.widget.type=speedtest
       - homepage.widget.url=https://${MC_ID}-speedtest.${TAILNET_NAME}.ts.net
       - homepage.widget.version=2
