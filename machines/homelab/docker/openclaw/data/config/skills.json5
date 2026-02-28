@@ -12,6 +12,11 @@
     },
     "openai-image-gen": {
       "enabled": true
+    },
+
+    // Installed via ClawHub into ~/workspace/skills/
+    "openclaw-github-assistant": {
+      "enabled": true
     }
   }
 }

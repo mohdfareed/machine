@@ -1,29 +1,36 @@
 // Plugins — extensions and memory
 {
   "enabled": true,
-  "slots": { "memory": "memory-lancedb" },
+
+  // Keep ONE memory provider active.
+  "slots": { "memory": "openclaw-mem0" },
+
   "entries": {
     "telegram": { "enabled": true },
     "device-pair": { "enabled": true },
     "llm-task": { "enabled": true },
     "lobster": { "enabled": true },
-    "memory-core": { "enabled": true },
-    // REVIEW: Docker image missing required 'openai' module.
-    "memory-lancedb": {
+
+    // Memory slot companions (disabled because slot is owned by mem0)
+    "memory-core": { "enabled": false },
+    "memory-lancedb": { "enabled": false },
+
+    // Mem0 memory plugin
+    "openclaw-mem0": {
       "enabled": true,
       "config": {
-        "autoRecall": true,
-        "autoCapture": true,
-        "embedding": { "apiKey": "${OPENAI_API_KEY}" },
-      },
+        "mode": "open-source",
+        "userId": "mohammed"
+      }
     },
+
     "voice-call": {
       "enabled": true,
       "config": {
         "enabled": true,
         "streaming": { "enabled": true },
-        "tts": { "enabled": true, "mode": "all" },
-      },
-    },
-  },
+        "tts": { "enabled": true, "mode": "all" }
+      }
+    }
+  }
 }

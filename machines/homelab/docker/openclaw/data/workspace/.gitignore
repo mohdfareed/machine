@@ -3,8 +3,12 @@
 # Working clones/sandboxes
 projects/
 
+skills/
+tmp/
+
 # Local runtime/state inside workspace
 .openclaw/
+.clawhub/
 .trash/
 
 # OS/editor/runtime noise
