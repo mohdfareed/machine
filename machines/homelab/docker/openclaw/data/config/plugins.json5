@@ -20,7 +20,7 @@
       "enabled": true,
       "config": {
         "mode": "open-source",
-        "userId": "mohammed"
+        "userId": "${MEM0_USER_ID}",
       }
     },
 

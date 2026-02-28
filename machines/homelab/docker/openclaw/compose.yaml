@@ -49,6 +49,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}  # text-to-speech
       BRAVE_API_KEY: ${BRAVE_API_KEY}            # web search
+      MEM0_USER_ID: ${MEM0_USER_ID}              # agent memory
       # openclaw
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       OPENCLAW_HOOKS_TOKEN: ${OPENCLAW_HOOKS_TOKEN}
