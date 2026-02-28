@@ -13,5 +13,15 @@
       ],
     },
     "workspace": "/home/node/.openclaw/workspace",
+    "contextPruning": {
+      "mode": "cache-ttl",
+      "ttl": "1h"
+    },
+    "compaction": {
+      "mode": "safeguard"
+    },
+    "heartbeat": {
+      "every": "30m"
+    }
   }
 }

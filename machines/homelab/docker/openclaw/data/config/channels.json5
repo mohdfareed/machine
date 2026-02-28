@@ -6,7 +6,8 @@
     "botToken": "${TELEGRAM_BOT_TOKEN}",
     "dmPolicy": "pairing",
     "allowFrom": ["tg:${TELEGRAM_USER_ID}"],
-    "streamMode": "partial",
+    "groupPolicy": "allowlist",
+    "streaming": "partial",
     "actions": {
       "sendMessage": true,
       "deleteMessage": true,

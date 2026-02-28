@@ -6,6 +6,12 @@
   "entries": {
     "sag": {
       "apiKey": "${ELEVENLABS_API_KEY}",
+    },
+    "apple-notes": {
+      "enabled": true
+    },
+    "openai-image-gen": {
+      "enabled": true
     }
   }
 }
