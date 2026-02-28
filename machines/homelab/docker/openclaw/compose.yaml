@@ -21,22 +21,13 @@ services:
       - net_admin
     restart: unless-stopped
 
-  openclaw-init:
-    image: busybox:latest
-    volumes:
-      - openclaw-brew:/home/linuxbrew/.linuxbrew
-      - openclaw-npm:/home/node/.npm
-    command: ["sh", "-c", "chown -R 1000:1000 /home/linuxbrew/.linuxbrew /home/node/.npm"]
-    restart: "no"
-
   openclaw:
-    image: ghcr.io/openclaw/openclaw:latest
+    build: .
     container_name: openclaw
     # networking
     network_mode: service:ts-openclaw
     depends_on:
       - ts-openclaw
-      - openclaw-init
     labels:
       - homepage.group=Services
       - homepage.name=OpenClaw
@@ -46,11 +37,6 @@ services:
     # volume mounting
     volumes:
       - ./data:/home/node/.openclaw
-      - ./config:/home/node/.openclaw/config
-      - ./workspace:/home/node/.openclaw/workspace
-      - ./openclaw.json:/home/node/.openclaw/openclaw.json
-      # entrypoint + CLI alias + brew/npm persistence
-      - ./entrypoint.sh:/usr/local/bin/openclaw:ro
       - openclaw-brew:/home/linuxbrew/.linuxbrew
       - openclaw-npm:/home/node/.npm
     # env vars
@@ -69,13 +55,12 @@ services:
       OPENCLAW_CRON_TOKEN: ${OPENCLAW_CRON_TOKEN}
       # telegram bot
       TELEGRAM_BOT_TOKEN: ${OPENCLAW_TELEGRAM_BOT_TOKEN}
+      TELEGRAM_USER_ID: ${OPENCLAW_TELEGRAM_USER_ID}
       TELEGRAM_WEBHOOK_SECRET: ${OPENCLAW_TELEGRAM_WEBHOOK_SECRET}
       TELEGRAM_WEBHOOK_URL: ${OPENCLAW_TELEGRAM_WEBHOOK_URL}
     # entrypoint
     init: true
     restart: unless-stopped
-    entrypoint: ["openclaw"]
-    command: ["gateway"]
 
 volumes:
   ts-openclaw-state:

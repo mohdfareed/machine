@@ -1,41 +1,35 @@
 #!/bin/bash
 set -e
 
-BREW_HOME="/home/linuxbrew/.linuxbrew"
-NPM_PREFIX="/home/node/.npm"
+# Restrict state dir permissions (Docker bind mount creates it as 755)
+chmod 700 /home/node/.openclaw
 
-# --- Environment (always set — gateway and CLI) ---
-if [ -x "$BREW_HOME/bin/brew" ]; then
-    eval "$("$BREW_HOME/bin/brew" shellenv)"
+# --- Non-gateway: just exec straight through ---
+if [ "$1" != "gateway" ]; then
+    exec openclaw "$@"
 fi
 
-export NPM_CONFIG_PREFIX="$NPM_PREFIX"
-export PATH="$NPM_PREFIX/bin:$PATH"
-export NODE_PATH="$NPM_PREFIX/lib/node_modules:${NODE_PATH:-}"
+# --- Gateway mode ---
 
-# --- Gateway first-run setup (skipped for CLI invocations) ---
-if [ "$1" = "gateway" ]; then
-    # Linuxbrew (persisted via volume)
-    if [ ! -x "$BREW_HOME/bin/brew" ]; then
-        echo "[entrypoint] Installing Homebrew..."
-        git clone --depth=1 https://github.com/Homebrew/brew "$BREW_HOME/Homebrew"
+# Start gateway in background so we can run post-start tasks
+openclaw gateway &
+GW_PID=$!
 
-        mkdir -p "$BREW_HOME/bin"
-        ln -sf ../Homebrew/bin/brew "$BREW_HOME/bin/brew"
-        eval "$("$BREW_HOME/bin/brew" shellenv)"
-        echo "[entrypoint] Homebrew installed."
-    fi
+paired_file="/home/node/.openclaw/devices/paired.json"
+paired_contents=$({ [ -f "$paired_file" ] && cat "$paired_file"; } || echo "")
 
-    # npm modules (persisted via volume — global install so they survive recreates)
-    mkdir -p "$NPM_PREFIX"
-    if ! npm list -g openai >/dev/null 2>&1; then
-        echo "[entrypoint] Installing npm modules..."
-        npm install -g openai
-        echo "[entrypoint] Done."
-    fi
+# First-run only: approve this device then wait for gateway
+if [ "$paired_contents" = "" ] || [ "$paired_contents" = "{}" ]; then
+    # Wait for gateway to be reachable (up to 30 s)
+    echo "[entrypoint] Waiting for gateway..."
+    for _ in $(seq 1 30); do
+        curl -sf http://127.0.0.1:18789 >/dev/null 2>&1 && break
+        sleep 1
+    done
 
-    # Tighten session file permissions
-    find /home/node/.openclaw -name "sessions.json" -exec chmod 600 {} + 2>/dev/null || true
+    echo "[entrypoint] Approving local device..."
+    openclaw devices approve 2>/dev/null || true
 fi
 
-exec node /app/dist/index.js "$@"
+# Hand control back to gateway process
+wait "$GW_PID"

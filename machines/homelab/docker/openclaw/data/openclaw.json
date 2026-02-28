@@ -3,7 +3,7 @@
   "env": {
     "shellEnv": { "enabled": true, },
   },
-  // Networking configuration
+  // Networking
   "gateway": {
     "mode": "local",
     "bind": "loopback",
@@ -29,12 +29,12 @@
   "cron": {
     "webhookToken": "${OPENCLAW_CRON_TOKEN}",
   },
-  // Messages configuration
+  // Messaging behavior
   messages: {
     ackReactionScope: "all",
     removeAckAfterReply: true,
   },
-  // REVIEW: Onboarding
+  // App voice chat
   "talk": {
     "provider": "elevenlabs",
     "providers": {
@@ -42,16 +42,20 @@
         "apiKey": "${ELEVENLABS_API_KEY}"
       }
     },
-    "apiKey": "${ELEVENLABS_API_KEY}"
+    "apiKey": "${ELEVENLABS_API_KEY}",
+    interruptOnSpeech: true,
   },
+  // Admin commands
   "commands": {
     "native": "auto",
     "nativeSkills": "auto",
+    "bash": true,
+    "config": true,
+    "debug": true,
     "restart": true,
-    "ownerDisplay": "raw"
-  },
-  "session": {
-    "dmScope": "per-channel-peer"
+    "allowFrom": {
+      "telegram": ["${TELEGRAM_USER_ID}"],
+    },
   },
   // Included Configurations ==================================================
   "agents": {

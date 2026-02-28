@@ -1,1 +1,8 @@
-workspace/.openclaw/
+!data
+data/*
+
+!data/config/
+!data/workspace/
+!data/openclaw.json
+
+data/workspace/.openclaw/

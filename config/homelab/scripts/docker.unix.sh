@@ -68,7 +68,7 @@ deploy_services() {
     (
         cd "$svc_dir"
         docker compose pull --ignore-pull-failures
-        docker compose up -d --remove-orphans
+        docker compose up -d --build --remove-orphans
     )
     done
 }
