@@ -42,13 +42,13 @@ services:
     # env vars
     environment:
       TERM: xterm-256color
-      TAILNET_NAME: ${TAILNET_NAME}                    # control ui hosts
+      TAILNET_NAME: ${TAILNET_NAME}
       # agent
-      OPENAI_API_KEY: ${OPENAI_API_KEY}                # chatgpt models
-      ANTHROPIC_API_KEY_VAR: ${ANTHROPIC_API_KEY_VAR}  # claude models
-      GEMINI_API_KEY: ${GEMINI_API_KEY}                # image generation
-      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}        # text-to-speech
-      BRAVE_API_KEY: ${BRAVE_API_KEY}                  # web search
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}  # text-to-speech
+      BRAVE_API_KEY: ${BRAVE_API_KEY}            # web search
       # openclaw
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       OPENCLAW_HOOKS_TOKEN: ${OPENCLAW_HOOKS_TOKEN}

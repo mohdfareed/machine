@@ -17,7 +17,7 @@
     // Webhook mode — Tailscale Funnel exposes port 443 publicly.
     // Requires funnel to be enabled in ts-config/serve.json
     // REVIEW: Disabled due to unknown conflict on port 8787 in container.
-    // "webhookUrl": "${TELEGRAM_WEBHOOK_URL}",
+    // "webhookUrl": "https://openclaw.${TAILNET_NAME}.ts.net/telegram-webhook",
     // "webhookSecret": "${TELEGRAM_WEBHOOK_SECRET}",
   },
 }
