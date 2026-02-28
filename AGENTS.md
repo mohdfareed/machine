@@ -72,7 +72,8 @@ Composes modules and adds machine-specific overrides.
 - `mc` loads all three tiers into every script subprocess — scripts should NOT re-source them
 - `machine.env` uses plain `KEY=VALUE` (no `export`); values may reference earlier vars
 - Keep code minimal — avoid unnecessary abstractions, callbacks, or progress bars
-- CLI path helpers: `mc home` prints MC_HOME, `mc private` prints MC_PRIVATE (pipe to `code`)
+- `MC_PRIVATE` has no default — only set when `machine.env` defines it; scripts skip gracefully when unset
+- CLI path helpers: `mc home` prints MC_HOME, `mc private` prints MC_PRIVATE (errors when unset)
 
 ## Commands
 
