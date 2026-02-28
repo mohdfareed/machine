@@ -9,7 +9,7 @@
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>source "$HOME/.zshenv" 2>/dev/null; exec "$HOME/.machine/machines/homelab/scripts/backup.macos.sh"</string>
+        <string>source "$HOME/.zshenv" 2>/dev/null; exec "$HOME/.machine/machines/homelab/scripts/backup.sh"</string>
     </array>
 
     <!-- Run every hour -->

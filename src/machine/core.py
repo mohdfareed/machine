@@ -144,39 +144,7 @@ def setup_file_logging() -> None:
 # MARK: Shell
 
 
-def _short(cmd: str) -> str:
-    """Replace absolute repo paths with relative ones for cleaner logs."""
-    return cmd.replace(str(_REPO_ROOT) + os.sep, "").replace(str(_REPO_ROOT), ".")
-
-
 def run(
-    cmd: str,
-    *,
-    check: bool = True,
-    capture: bool = False,
-    env: dict[str, str] | None = None,
-) -> subprocess.CompletedProcess[str]:
-    """Run a shell command. Skipped (logged) in dry-run mode."""
-    _logger.debug("$ %s", _short(cmd))
-
-    if settings.dry_run:
-        _logger.info("[dry-run] %s", _short(cmd))
-        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
-
-    merged_env = {**os.environ, **(env or {})}
-    exe = shutil.which("powershell.exe") if is_windows else None
-    return subprocess.run(
-        cmd,
-        shell=True,
-        check=check,
-        executable=exe,
-        text=True,
-        capture_output=capture,
-        env=merged_env,
-    )
-
-
-def tee_run(
     cmd: str,
     *,
     env: dict[str, str] | None = None,
@@ -280,3 +248,8 @@ def _tee_pipe(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
 
     proc.wait()
     return proc.returncode, collected
+
+
+def _short(cmd: str) -> str:
+    """Replace absolute repo paths with relative ones for cleaner logs."""
+    return cmd.replace(str(_REPO_ROOT) + os.sep, "").replace(str(_REPO_ROOT), ".")

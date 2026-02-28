@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+export PATH="$DEV_BIN:$PATH" # local dev binaries
+
 # profile a command with gnu time
 function profile {
     usage="usage: $0 command [args...]"

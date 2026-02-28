@@ -3,27 +3,18 @@
 import logging
 import subprocess
 import sys
-from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 import click
 import typer
-from rich.progress import BarColumn, MofNCompleteColumn, Progress, TaskID, TextColumn
 from rich.prompt import Prompt
-from rich.table import Table
 
 from machine.app import get_current_machine
-from machine.core import (
-    console,
-    err_console,
-    settings,
-    setup_console_logging,
-    setup_file_logging,
-)
+from machine.core import console, err_console, settings, setup_console_logging, setup_file_logging
 
 if TYPE_CHECKING:
-    from machine.manifest import Package
+    from machine.manifest import MachineManifest, Module, Package
 
 app = typer.Typer(
     help=settings.description,
@@ -47,8 +38,7 @@ def main(prog_name: str | None = None) -> None:
     except Exception as e:
         _logger.debug("Unhandled exception", exc_info=True)
         err_console.print(f"[bold red]Error:[/] {e}")
-        log_file = settings.app_dir / "mc.log"
-        err_console.print(f"[dim]See {log_file}[/]")
+        err_console.print(f"[dim]See {settings.app_dir / 'mc.log'}[/]")
         sys.exit(1)
 
 
@@ -71,7 +61,6 @@ def callback(
         console.print(f"{settings.name} {settings.version}")
         sys.exit(0)
 
-    # Only log to file for real command runs, not help/version
     if not {"-h", "--help"} & set(sys.argv):
         setup_file_logging()
 
@@ -90,10 +79,7 @@ def get_modules() -> list[str]:
 
 def _complete_machines(incomplete: str) -> list[tuple[str, str]]:
     return [
-        (
-            n,
-            "Machine (default)" if n == get_current_machine() else "Machine",
-        )
+        (n, "Machine (default)" if n == get_current_machine() else "Machine")
         for n in get_machines()
         if n.startswith(incomplete)
     ]
@@ -105,40 +91,6 @@ def _complete_modules(incomplete: str) -> list[tuple[str, str]]:
 
 machines = click.Choice(get_machines(), case_sensitive=False)
 modules = click.Choice(get_modules(), case_sensitive=False)
-
-
-def _print_summary(failures: list[tuple[str, str, str]], log_file: Path) -> None:
-    """Print a final status line. If there were failures, list each one."""
-    if not failures:
-        console.print(f"\n[bold green]Done![/] [dim](log: {log_file})[/]")
-        return
-
-    err_console.print(f"\n[bold yellow]Completed with {len(failures)} failure(s):[/]")
-    for module, item, detail in failures:
-        err_console.print(f"  [red]\\[{module}][/] {item} [dim]({detail})[/]")
-    err_console.print(f"[dim]See {log_file}[/]")
-
-
-def _make_script_cbs(
-    progress: Progress, task: TaskID
-) -> tuple[Callable[[str], None], Callable[[str], None]]:
-    """Create on_before/on_after callbacks that pause/resume the progress bar."""
-    paused = False
-
-    def _pause(_name: str = "") -> None:
-        nonlocal paused
-        progress.stop()
-        paused = True
-
-    def _resume(name: str) -> None:
-        nonlocal paused
-        if paused:
-            progress.start()
-            paused = False
-        progress.advance(task)
-        progress.update(task, current=name)
-
-    return _pause, _resume
 
 
 # MARK: Lifecycle Commands
@@ -158,20 +110,16 @@ def apply(
             prompt=True,
         ),
     ] = get_current_machine() or "",
-    modules: Annotated[
+    module_names: Annotated[
         list[str],
         typer.Argument(
+            metavar="modules",
             help="Limit setup to the specified modules.",
             autocompletion=_complete_modules,
         ),
     ] = [],
 ) -> None:
-    """Deploy configs, install packages, and run scripts.
-
-    Pass a machine ID to set it as the current machine, or omit it to
-    reuse the last-used machine.  Optionally list module names after to
-    run only those modules.
-    """
+    """Deploy configs, install packages, and run scripts."""
     from machine.app import (
         Failure,
         build_script_env,
@@ -182,24 +130,24 @@ def apply(
         run_scripts,
         save_current_machine,
         validate,
+        write_env_file,
     )
-    from machine.manifest import load_manifest, load_module, resolve_modules
+    from machine.manifest import load_manifest, resolve_modules
 
     root = settings.home
-    machine_id = machine
-    if not machine_id:
+    if not machine:
         err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
         raise SystemExit(1)
-    save_current_machine(machine_id)
-    module_filter = set(modules)
+    save_current_machine(machine)
+    write_env_file(machine, root)
 
-    manifest = load_manifest(machine_id, root)
+    manifest = load_manifest(machine, root)
     all_modules = resolve_modules(manifest.modules, root)
+    module_filter = set(module_names)
 
-    errors = validate(all_modules, manifest.env, machine_id)
+    errors = validate(all_modules, machine)
     if errors:
         for e in errors:
-            _logger.error("Validation: %s", e)
             err_console.print(f"[red]  {e}[/]")
         raise SystemExit(1)
 
@@ -208,124 +156,83 @@ def apply(
         if unknown:
             err_console.print(f"[red]Unknown modules: {', '.join(sorted(unknown))}[/]")
             raise SystemExit(1)
-        active_modules = [m for m in all_modules if m.name in module_filter]
-        all_files = [f for m in active_modules for f in m.files]
-        all_packages = [p for m in active_modules for p in m.packages]
-        raw_scripts = [s for m in active_modules for s in m.scripts]
+        active = [m for m in all_modules if m.name in module_filter]
+        all_files = [f for m in active for f in m.files]
+        all_packages = [p for m in active for p in m.packages]
+        raw_scripts = [s for m in active for s in m.scripts]
     else:
-        active_modules = all_modules
-        all_files = [f for m in active_modules for f in m.files] + manifest.files
-        all_packages = [p for m in active_modules for p in m.packages] + manifest.packages
-        raw_scripts = [s for m in active_modules for s in m.scripts] + manifest.scripts
+        active = all_modules
+        all_files = [f for m in active for f in m.files] + manifest.files
+        all_packages = [p for m in active for p in m.packages] + manifest.packages
+        raw_scripts = [s for m in active for s in m.scripts] + manifest.scripts
 
     all_scripts = filter_scripts(raw_scripts)
-    script_env = build_script_env(manifest, machine_id, root)
-
-    # Build ownership maps for module context in log messages
-    script_owners: dict[str, str] = {}
-    file_owners: dict[str, str] = {}
-    pkg_owners: dict[str, str] = {}
-    for m in active_modules:
-        for s in m.scripts:
-            script_owners[s] = m.name
-        for f in m.files:
-            file_owners[f.source] = m.name
-        for p in m.packages:
-            pkg_owners[p.name] = m.name
-    # Tag manifest-level items with the machine ID
-    for f in manifest.files:
-        file_owners.setdefault(f.source, machine_id)
-    for p in manifest.packages:
-        pkg_owners.setdefault(p.name, machine_id)
-    for s in manifest.scripts:
-        script_owners.setdefault(s, machine_id)
+    script_env = build_script_env(machine, root)
+    owners = _build_owners(active, manifest, machine)
 
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
-    console.print(f"{mode}Applying [bold]{machine_id}[/]")
-    console.print(f"  Modules: {', '.join(m.name for m in active_modules)}")
+    console.print(f"{mode}Applying [bold]{machine}[/]")
+    console.print(f"  Modules: {', '.join(m.name for m in active)}")
 
-    cache_sudo()
-
-    # init_* prepares env/tools before packages; up_* is for mc update only
-    setup_scripts = [s for s in all_scripts if Path(s).name.startswith("init_")]
+    init_scripts = [s for s in all_scripts if Path(s).name.startswith("init_")]
     post_scripts = [
         s
         for s in all_scripts
         if not Path(s).name.startswith("init_") and not Path(s).name.startswith("up_")
     ]
 
-    log_file = settings.app_dir / "mc.log"
+    cache_sudo()
     failures: list[Failure] = []
-    if settings.debug:
-        # Debug mode — no progress bar, full logging to console
-        _, file_failures = deploy_files(all_files, owners=file_owners)
-        failures.extend(file_failures)
-        failures.extend(run_scripts(setup_scripts, env=script_env, owners=script_owners))
-        failures.extend(install_packages(all_packages, owners=pkg_owners))
-        failures.extend(run_scripts(post_scripts, env=script_env, owners=script_owners))
-    else:
-        total = len(all_files) + len(setup_scripts) + len(all_packages) + len(post_scripts)
-        progress = Progress(
-            TextColumn("[bold]{task.fields[phase]:<10}"),
-            BarColumn(),
-            MofNCompleteColumn(),
-            TextColumn("[dim]{task.fields[current]}"),
-            console=err_console,
-            transient=True,
-        )
 
-        with progress:
-            task = progress.add_task("apply", total=total, phase="Files", current="")
+    _, file_failures = deploy_files(all_files, owners=owners)
+    failures.extend(file_failures)
+    failures.extend(run_scripts(init_scripts, env=script_env, owners=owners))
+    failures.extend(install_packages(all_packages, owners=owners))
+    failures.extend(run_scripts(post_scripts, env=script_env, owners=owners))
 
-            def _advance(name: str) -> None:
-                progress.advance(task)
-                progress.update(task, current=name)
+    _print_summary(failures, settings.app_dir / "mc.log")
 
-            _pause, _resume = _make_script_cbs(progress, task)
 
-            _, file_failures = deploy_files(all_files, on_advance=_advance, owners=file_owners)
-            failures.extend(file_failures)
-            progress.update(task, phase="Init")
+def _print_summary(failures: list[tuple[str, str, str]], log_file: Path) -> None:
+    """Print a final status line. If there were failures, list each one."""
+    if not failures:
+        console.print(f"\n[bold green]Done![/] [dim](log: {log_file})[/]")
+        return
+    err_console.print(f"\n[bold yellow]Completed with {len(failures)} failure(s):[/]")
+    for module, item, detail in failures:
+        err_console.print(f"  [red]\\[{module}][/] {item} [dim]({detail})[/]")
+    err_console.print(f"[dim]See {log_file}[/]")
 
-            failures.extend(
-                run_scripts(
-                    setup_scripts,
-                    env=script_env,
-                    on_before=_pause,
-                    on_after=_resume,
-                    owners=script_owners,
-                )
-            )
-            progress.update(task, phase="Packages")
 
-            failures.extend(
-                install_packages(
-                    all_packages,
-                    on_before=_pause,
-                    on_after=_resume,
-                    owners=pkg_owners,
-                )
-            )
-            progress.update(task, phase="Scripts")
-
-            failures.extend(
-                run_scripts(
-                    post_scripts,
-                    env=script_env,
-                    on_before=_pause,
-                    on_after=_resume,
-                    owners=script_owners,
-                )
-            )
-
-    _print_summary(failures, log_file)
+def _build_owners(
+    active_modules: list["Module"],
+    manifest: "MachineManifest",
+    machine_id: str,
+) -> dict[str, str]:
+    """Build a single owner map for files, packages, and scripts."""
+    owners: dict[str, str] = {}
+    for m in active_modules:
+        for s in m.scripts:
+            owners[s] = m.name
+        for f in m.files:
+            owners[f.source] = m.name
+        for p in m.packages:
+            owners[p.name] = m.name
+    for f in manifest.files:
+        owners.setdefault(f.source, machine_id)
+    for p in manifest.packages:
+        owners.setdefault(p.name, machine_id)
+    for s in manifest.scripts:
+        owners.setdefault(s, machine_id)
+    return owners
 
 
 @app.command(rich_help_panel="Lifecycle")
 def update(
-    modules: Annotated[
+    module_names: Annotated[
         list[str],
         typer.Argument(
+            metavar="modules",
             help="Limit to the specified modules.",
             autocompletion=_complete_modules,
         ),
@@ -340,7 +247,7 @@ def update(
         get_current_machine,
         run_scripts,
     )
-    from machine.manifest import load_manifest, load_module, resolve_modules
+    from machine.manifest import load_manifest, resolve_modules
 
     root = settings.home
     machine_id = get_current_machine()
@@ -351,74 +258,43 @@ def update(
     manifest = load_manifest(machine_id, root)
     all_modules = resolve_modules(manifest.modules, root)
 
-    if modules:
-        unknown = set(modules) - {m.name for m in all_modules}
+    if module_names:
+        unknown = set(module_names) - {m.name for m in all_modules}
         if unknown:
             err_console.print(f"[red]Unknown modules: {', '.join(sorted(unknown))}[/]")
             raise SystemExit(1)
-        active = [m for m in all_modules if m.name in set(modules)]
+        active = [m for m in all_modules if m.name in set(module_names)]
         raw_scripts = [s for m in active for s in m.scripts]
     else:
         raw_scripts = [s for m in all_modules for s in m.scripts] + manifest.scripts
 
     up_scripts = [s for s in filter_scripts(raw_scripts) if Path(s).name.startswith("up_")]
-
     if not up_scripts:
         console.print("[dim]No update scripts found.[/]")
         return
 
-    script_owners: dict[str, str] = {}
+    owners: dict[str, str] = {}
     for m in all_modules:
         for s in m.scripts:
-            script_owners[s] = m.name
+            owners[s] = m.name
     for s in manifest.scripts:
-        script_owners.setdefault(s, machine_id)
+        owners.setdefault(s, machine_id)
 
-    script_env = build_script_env(manifest, machine_id, root)
+    script_env = build_script_env(machine_id, root)
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
     console.print(f"{mode}Updating [bold]{machine_id}[/]")
 
     cache_sudo()
-
-    log_file = settings.app_dir / "mc.log"
-
-    failures: list[Failure] = []
-    if settings.debug:
-        failures = run_scripts(up_scripts, env=script_env, owners=script_owners)
-    else:
-        progress = Progress(
-            TextColumn("[bold]{task.fields[phase]:<10}"),
-            BarColumn(),
-            MofNCompleteColumn(),
-            TextColumn("[dim]{task.fields[current]}"),
-            console=err_console,
-            transient=True,
-        )
-        with progress:
-            task = progress.add_task("update", total=len(up_scripts), phase="Update", current="")
-            _pause, _resume = _make_script_cbs(progress, task)
-
-            failures.extend(
-                run_scripts(
-                    up_scripts,
-                    env=script_env,
-                    on_before=_pause,
-                    on_after=_resume,
-                    owners=script_owners,
-                )
-            )
-
-    _print_summary(failures, log_file)
+    failures: list[Failure] = run_scripts(up_scripts, env=script_env, owners=owners)
+    _print_summary(failures, settings.app_dir / "mc.log")
 
 
 @app.command(rich_help_panel="Lifecycle")
 def sync(
-    stash: bool = typer.Option(
-        False, "-s", "--stash", help="Stash local changes and reapply after sync."
-    ),
-    force: bool = typer.Option(False, "-f", "--force", help="Discard local changes before sync."),
-    push: bool = typer.Option(False, "-p", "--push", help="Push local commits after pulling."),
-    no_apply: bool = typer.Option(False, "--no-apply", help="Skip running apply after sync."),
+    stash: bool = typer.Option(False, "-s", "--stash", help="Stash changes before sync."),
+    force: bool = typer.Option(False, "-f", "--force", help="Discard changes before sync."),
+    push: bool = typer.Option(False, "-p", "--push", help="Push after pulling."),
+    no_apply: bool = typer.Option(False, "--no-apply", help="Skip apply after sync."),
 ) -> None:
     """Pull repo changes and re-run apply."""
     if stash and force:
@@ -431,11 +307,10 @@ def sync(
 
     root = settings.home
     git = ["git", "-C", str(root)]
-
     result = subprocess.run([*git, "status", "--porcelain"], capture_output=True, text=True)
     is_dirty = bool(result.stdout.strip())
-
     stashed = False
+
     if is_dirty:
         if _prompt_force(stash=stash, force=force):
             subprocess.run([*git, "fetch", "--all"], capture_output=True)
@@ -490,21 +365,15 @@ def _prompt_force(stash: bool, force: bool) -> bool:
             default="abort",
         )
 
-    aborted = False
-    if choice == "stash":
-        force = False
-        aborted = False
-    elif choice == "discard":
-        force = True
-        aborted = not typer.confirm("This cannot be undone. Are you sure?")
-    else:  # abort
-        force = False
-        aborted = True
-
-    if aborted:
+    if choice == "abort":
         console.print("[dim]Aborted.[/]")
         raise SystemExit(0)
-    return force
+    if choice == "discard":
+        if not typer.confirm("This cannot be undone. Are you sure?"):
+            console.print("[dim]Aborted.[/]")
+            raise SystemExit(0)
+        return True
+    return False
 
 
 # MARK: Info Commands
@@ -520,15 +389,13 @@ def home() -> None:
 def private() -> None:
     """Print the resolved MC_PRIVATE path for the current machine."""
     from machine.app import build_script_env, get_current_machine
-    from machine.manifest import load_manifest
 
     machine_id = get_current_machine()
     if not machine_id:
         err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
         raise SystemExit(1)
 
-    manifest = load_manifest(machine_id, settings.home)
-    env = build_script_env(manifest, machine_id, settings.home)
+    env = build_script_env(machine_id, settings.home)
     path = env.get("MC_PRIVATE", "")
     if not path:
         err_console.print("[red]MC_PRIVATE is not set for this machine.[/]")
@@ -547,8 +414,6 @@ def info() -> None:
         console.print(f"  Machine: {machine}")
     console.print(f"  Home:    {settings.home}")
     console.print(f"  Data:    {settings.app_dir}")
-    console.print(f"  Logs:    {settings.app_dir / 'mc.log'}")
-    console.print(f"  State:   {settings.app_dir / 'state.json'}")
 
 
 @app.command("list", rich_help_panel="Info")
@@ -557,22 +422,13 @@ def list_all() -> None:
     from machine.manifest import list_machines, list_modules
 
     root = settings.home
-    machines = list_machines(root)
-    modules = list_modules(root)
-
-    if machines:
-        console.print("[bold]Machines:[/]")
-        for name in machines:
-            console.print(f"  {name}")
-    else:
-        console.print("[dim]No machines found[/]")
-
-    if modules:
-        console.print("[bold]Modules:[/]")
-        for name in modules:
-            console.print(f"  {name}")
-    else:
-        console.print("[dim]No modules found[/]")
+    for label, names in [("Machines", list_machines(root)), ("Modules", list_modules(root))]:
+        if names:
+            console.print(f"[bold]{label}:[/]")
+            for name in names:
+                console.print(f"  {name}")
+        else:
+            console.print(f"[dim]No {label.lower()} found[/]")
 
 
 @app.command(rich_help_panel="Info")
@@ -591,113 +447,66 @@ def show(
     ] = get_current_machine() or "",
 ) -> None:
     """Show resolved configuration for a machine."""
-    from machine.manifest import load_manifest, load_module, resolve_modules
+    from machine.app import matches_platform
+    from machine.manifest import load_manifest, resolve_modules
 
     root = settings.home
     manifest = load_manifest(machine, root)
-    modules = resolve_modules(manifest.modules, root)
-
-    console.print(f"[bold]{machine}[/]")
-    if modules:
-        console.print(f"\n[bold]Modules:[/] {', '.join(m.name for m in modules)}")
-
-    # Show only manifest env (MC_HOME/MC_ID are runtime, not config)
-    if manifest.env:
-        console.print("\n[bold]Environment:[/]")
-        for k, v in manifest.env.items():
-            console.print(f"  {k}={v}")
-
-    # Helper: shorten absolute paths relative to repo root
+    mods = resolve_modules(manifest.modules, root)
     root_prefix = str(root) + "/"
 
     def _short(path: str) -> str:
         return path.removeprefix(root_prefix)
 
-    # Build (item, module_name) pairs for files, packages, scripts
-    tagged_files: list[tuple[str, str, str]] = []
-    for m in modules:
-        for f in m.files:
-            tagged_files.append((_short(f.source), f.target, m.name))
-    for f in manifest.files:
-        tagged_files.append((_short(f.source), f.target, machine))
+    console.print(f"[bold]{machine}[/]")
+    if mods:
+        console.print(f"  Modules: {', '.join(m.name for m in mods)}")
 
-    if tagged_files:
-        table = Table(title="Files", show_header=True)
-        table.add_column("Module", style="cyan")
-        table.add_column("Source", style="dim")
-        table.add_column("Target")
-        for src, tgt, mod in tagged_files:
-            table.add_row(mod, src, tgt)
-        console.print()
-        console.print(table)
+    # Files
+    files = [(m.name, f) for m in mods for f in m.files] + [(machine, f) for f in manifest.files]
+    if files:
+        console.print("\n[bold]Files:[/]")
+        for mod, f in files:
+            console.print(f"  [cyan]{mod:<12}[/] {_short(f.source)} → {f.target}")
 
-    tagged_pkgs: list[tuple[str, str, str]] = []
-    for m in modules:
-        for p in m.packages:
-            tagged_pkgs.append((p.name, _pkg_sources(p), m.name))
-    for p in manifest.packages:
-        tagged_pkgs.append((p.name, _pkg_sources(p), machine))
+    # Packages
+    pkgs = [(m.name, p) for m in mods for p in m.packages] + [
+        (machine, p) for p in manifest.packages
+    ]
+    if pkgs:
+        console.print("\n[bold]Packages:[/]")
+        for mod, p in pkgs:
+            console.print(f"  [cyan]{mod:<12}[/] {p.name} [dim]({_pkg_sources(p)})[/]")
 
-    if tagged_pkgs:
-        table = Table(title="Packages", show_header=True)
-        table.add_column("Module", style="cyan")
-        table.add_column("Name")
-        table.add_column("Source", style="dim")
-        for name, sources, mod in tagged_pkgs:
-            table.add_row(mod, name, sources)
-        console.print()
-        console.print(table)
-
-    from machine.app import matches_platform
-
-    # Split scripts into three groups, tagged with module
-    init_scripts: list[tuple[str, str]] = []
-    up_scripts: list[tuple[str, str]] = []
-    post_scripts: list[tuple[str, str]] = []
-
-    def _bucket(name: str) -> list[tuple[str, str]]:
-        if name.startswith("init_"):
-            return init_scripts
-        if name.startswith("up_"):
-            return up_scripts
-        return post_scripts
-
-    for m in modules:
-        for s in m.scripts:
-            if matches_platform(Path(s)) and not Path(s).stem.startswith("_"):
-                _bucket(Path(s).name).append((_short(s), m.name))
-    for s in manifest.scripts:
-        if matches_platform(Path(s)) and not Path(s).stem.startswith("_"):
-            _bucket(Path(s).name).append((_short(s), machine))
-
-    for title, group in [
-        ("Init Scripts", init_scripts),
-        ("Scripts", post_scripts),
-        ("Update Scripts", up_scripts),
+    # Scripts (grouped by phase)
+    all_scripts = [(m.name, s) for m in mods for s in m.scripts] + [
+        (machine, s) for s in manifest.scripts
+    ]
+    for title, prefix_test in [
+        ("Init Scripts", lambda n: n.startswith("init_")),
+        ("Scripts", lambda n: not n.startswith(("init_", "up_", "_"))),
+        ("Update Scripts", lambda n: n.startswith("up_")),
     ]:
+        group = [
+            (mod, s)
+            for mod, s in all_scripts
+            if matches_platform(Path(s))
+            and not Path(s).stem.startswith("_")
+            and prefix_test(Path(s).name)
+        ]
         if group:
-            table = Table(title=title, show_header=True)
-            table.add_column("Module", style="cyan")
-            table.add_column("Script", style="dim")
-            for s, mod in group:
-                table.add_row(mod, s)
-            console.print()
-            console.print(table)
+            console.print(f"\n[bold]{title}:[/]")
+            for mod, s in group:
+                console.print(f"  [cyan]{mod:<12}[/] {_short(s)}")
 
 
 def _pkg_sources(p: "Package") -> str:
     """Format package install sources as a short string."""
     sources: list[str] = []
-    if p.brew:
-        sources.append(f"brew: {p.brew}")
-    if p.apt:
-        sources.append(f"apt: {p.apt}")
-    if p.snap:
-        sources.append(f"snap: {p.snap}")
-    if p.winget:
-        sources.append(f"winget: {p.winget}")
-    if p.scoop:
-        sources.append(f"scoop: {p.scoop}")
+    for attr in ("brew", "apt", "snap", "winget", "scoop"):
+        val = getattr(p, attr, None)
+        if val:
+            sources.append(f"{attr}: {val}")
     if p.mas is not None:
         sources.append(f"mas: {p.mas}")
     if p.script:

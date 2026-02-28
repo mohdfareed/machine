@@ -19,12 +19,6 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
-    healthcheck:
-      test: ["CMD", "tailscale", "--socket=/tmp/tailscaled.sock", "status"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 15s
     restart: unless-stopped
 
   speedtest:
@@ -32,9 +26,7 @@ services:
     container_name: speedtest
     network_mode: service:ts-speedtest
     depends_on:
-      ts-speedtest:
-        condition: service_healthy
-        restart: true
+      - ts-speedtest
     restart: unless-stopped
     labels:
       - homepage.group=Infrastructure

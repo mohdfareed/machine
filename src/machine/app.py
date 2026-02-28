@@ -8,12 +8,11 @@ import shutil
 import subprocess
 import sys
 import threading
-from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
-from machine.core import PLATFORM, Platform, err_console, is_unix, settings, tee_run
-from machine.manifest import SCRIPT_SUFFIXES, FileMapping, MachineManifest, Module, Package
+from machine.core import PLATFORM, Platform, err_console, is_unix, run, settings
+from machine.manifest import SCRIPT_SUFFIXES, FileMapping, Module, Package
 
 logger = logging.getLogger(__name__)
 
@@ -68,20 +67,12 @@ def cache_sudo() -> None:
 
 def validate(
     modules: list[Module],
-    manifest_env: dict[str, str],
     machine_id: str,
 ) -> list[str]:
-    """Validate resolved modules against the manifest. Returns a list of errors."""
+    """Validate resolved modules. Returns a list of errors."""
     errors: list[str] = []
-    provided = {"MC_HOME", "MC_ID"} | manifest_env.keys()
 
     for mod in modules:
-        for var in mod.required_env:
-            if var not in provided:
-                errors.append(
-                    f"Module '{mod.name}' requires env '{var}' "
-                    f"but '{machine_id}' does not provide it"
-                )
         for fm in mod.files:
             if not Path(fm.source).exists():
                 errors.append(f"Module '{mod.name}' file source missing: {fm.source}")
@@ -97,7 +88,6 @@ def validate(
 
 def deploy_files(
     files: list[FileMapping],
-    on_advance: Callable[[str], None] | None = None,
     owners: dict[str, str] | None = None,
 ) -> tuple[int, list[Failure]]:
     """Symlink all file mappings. Returns (count created, failures)."""
@@ -112,8 +102,6 @@ def deploy_files(
             failures.append((module, str(src), "source not found"))
         elif _symlink(src, tgt):
             created += 1
-        if on_advance:
-            on_advance(tgt.name)
     return created, failures
 
 
@@ -149,8 +137,6 @@ def _symlink(source: Path, target: Path) -> bool:
 
 def install_packages(
     packages: list[Package],
-    on_before: Callable[[str], None] | None = None,
-    on_after: Callable[[str], None] | None = None,
     owners: dict[str, str] | None = None,
 ) -> list[Failure]:
     """Install packages using available managers. Returns list of failures."""
@@ -169,19 +155,13 @@ def install_packages(
         if pkg.name in installed:
             logger.debug("Skip (installed): %s", pkg.name)
             skipped += 1
-            if on_after:
-                on_after(pkg.name)
             continue
-        if on_before:
-            on_before(pkg.name)
         module = (owners or {}).get(pkg.name, "?")
         fail = _install(pkg, managers, module)
         if fail:
             failures.append(fail)
         else:
             installed.add(pkg.name)
-        if on_after:
-            on_after(pkg.name)
 
     state["packages"] = sorted(installed)
     _save_state(state)
@@ -203,7 +183,7 @@ def _install(
             continue
         cmd = _INSTALL_CMD[mgr].format(val)
         logger.info("[%s] %s: %s", module, pkg.name, mgr)
-        rc = tee_run(cmd, label=module)
+        rc = run(cmd, label=module)
         if rc != 0:
             logger.error(
                 "[%s] failed to install %s via %s (exit %d): %s", module, pkg.name, mgr, rc, cmd
@@ -213,7 +193,7 @@ def _install(
 
     if pkg.script:
         logger.info("[%s] %s: script", module, pkg.name)
-        rc = tee_run(pkg.script, label=module)
+        rc = run(pkg.script, label=module)
         if rc != 0:
             logger.error(
                 "[%s] failed to install %s via script (exit %d): %s",
@@ -232,19 +212,59 @@ def _install(
 # MARK: Scripts
 
 
+_ENV_FILE = Path.home() / ".env"
+
+
 def build_script_env(
-    manifest: MachineManifest,
     machine_id: str,
     root: Path,
 ) -> dict[str, str]:
-    """Build and resolve the env dict injected into every script subprocess."""
-    raw = {
+    """Build the env dict injected into every script subprocess.
+
+    Three-tier sourcing:
+      1. MC_HOME + MC_ID (always present)
+      2. ``machines/<id>/machine.env`` — committed config vars
+      3. ``$MC_PRIVATE/env/$MC_ID.env`` — machine secrets (if MC_PRIVATE set)
+
+    Values may reference earlier vars with ``$VAR``; all references are
+    resolved iteratively.
+    """
+    raw: dict[str, str] = {
         "MC_HOME": str(root),
         "MC_ID": machine_id,
-        **manifest.env,
     }
+
+    def _parse_env(path: Path) -> None:
+        if not path.is_file():
+            return
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            key, _, value = line.partition("=")
+            if key and _:
+                value = value.strip().strip('"').strip("'")
+                raw[key.strip()] = value
+
+    # Tier 2: committed machine config vars
+    _parse_env(root / "machines" / machine_id / "machine.env")
+
+    # Resolve $VAR references so MC_PRIVATE is available for tier 3
+    env = _resolve_env(raw)
+
+    # Tier 3: private secrets
+    mc_private = env.get("MC_PRIVATE", "")
+    if mc_private:
+        _parse_env(Path(mc_private) / "env" / f"{machine_id}.env")
+        env = _resolve_env(raw)
+
+    return env
+
+
+def _resolve_env(raw: dict[str, str]) -> dict[str, str]:
+    """Expand ``$VAR`` references in env values until stable."""
     env = {k: os.path.expandvars(v) for k, v in raw.items()}
-    for _ in range(len(env)):  # converge chained $VAR references
+    for _ in range(len(env)):
         changed = False
         for key, value in env.items():
             new = value
@@ -256,6 +276,17 @@ def build_script_env(
         if not changed:
             break
     return env
+
+
+def write_env_file(machine_id: str, root: Path) -> None:
+    """Write ``~/.env`` with MC_HOME and MC_ID for login shell consumption."""
+    if settings.dry_run:
+        logger.info("[dry-run] write %s", _ENV_FILE)
+        return
+    content = f"MC_HOME={root}\nMC_ID={machine_id}\n"
+    _ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _ENV_FILE.write_text(content)
+    logger.info("Wrote %s", _ENV_FILE)
 
 
 def matches_platform(script: Path) -> bool:
@@ -298,8 +329,6 @@ def filter_scripts(scripts: list[str]) -> list[str]:
 def run_scripts(
     scripts: list[str],
     env: dict[str, str] | None = None,
-    on_before: Callable[[str], None] | None = None,
-    on_after: Callable[[str], None] | None = None,
     owners: dict[str, str] | None = None,
 ) -> list[Failure]:
     """Run pre-filtered scripts, respecting ``once_``/``watch_`` tracking."""
@@ -318,18 +347,12 @@ def run_scripts(
         if tracked and script.name in state:
             if script.name.startswith("once_"):
                 logger.debug("Skip (already ran): %s", script.name)
-                if on_after:
-                    on_after(script.stem)
                 continue
             cur_hash = hashlib.sha256(script.read_bytes()).hexdigest()[:16]
             if state[script.name].get("hash") == cur_hash:
                 logger.debug("Skip (unchanged): %s", script.name)
-                if on_after:
-                    on_after(script.stem)
                 continue
 
-        if on_before:
-            on_before(script.stem)
         fail = _execute(script, env, module)
         if fail:
             failures.append(fail)
@@ -339,8 +362,6 @@ def run_scripts(
                 "hash": hashlib.sha256(script.read_bytes()).hexdigest()[:16],
                 "ran": datetime.now(timezone.utc).isoformat(),
             }
-        if on_after:
-            on_after(script.stem)
 
     _save_state(state)
     return failures
@@ -374,7 +395,7 @@ def _execute(
         case _:
             cmd = str(script)
 
-    rc = tee_run(cmd, env=env, label=module)
+    rc = run(cmd, env=env, label=module)
     if rc != 0:
         # Show path relative to repo root for readability
         try:

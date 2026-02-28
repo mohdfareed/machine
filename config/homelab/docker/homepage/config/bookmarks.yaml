@@ -3,13 +3,6 @@
     - Tailscale Admin Console:
         - icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tailscale-light.svg
           href: https://login.tailscale.com/admin
-- Dashboards:
-    - HomeLab:
-        - icon: mdi-home-analytics
-          href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
-    - RPi:
-        - icon: mdi-raspberry-pi
-          href: https://rpi.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net
 - Code Servers:
     - HomeLab:
         - icon: mdi-home-analytics

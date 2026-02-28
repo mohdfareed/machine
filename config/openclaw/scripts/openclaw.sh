@@ -2,18 +2,15 @@
 set -Eeuo pipefail
 
 # Template openclaw.json with secrets for the native macOS app.
-# macOS GUI apps don't inherit shell env vars, so we resolve ${VAR}
+# GUI apps don't inherit shell env vars, so we resolve ${VAR}
 # references into the actual config file from the environment.
-# mc injects all three env tiers into the subprocess.
 
-src="$MC_HOME/machines/$MC_ID/openclaw.json"
+src="$MC_HOME/config/openclaw/openclaw.json"
 dst="$HOME/.openclaw/openclaw.json"
-
 mkdir -p "$(dirname "$dst")"
 
 # Resolve ${VAR} references with values from environment.
-perl -pe 's/\$\{(\w+)\}/defined $ENV{$1} ? $ENV{$1} : "\${$1}"/ge' \
-    "$src" > "$dst"
+perl -pe 's/\$\{(\w+)\}/defined $ENV{$1} ? $ENV{$1} : "\${$1}"/ge' "$src" > "$dst"
 
 chmod 600 "$dst" # contains secrets
-echo "templated openclaw.json → $dst"
+echo "openclaw: templated → $dst"

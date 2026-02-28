@@ -3,10 +3,9 @@
 from machine.manifest import MachineManifest, brew, cask, mas
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "vscode", "ghostty", "core"],
+    modules=["git", "shell", "ssh", "vscode", "ghostty", "openclaw", "core"],
     files=[],
     packages=[
-        *cask("openclaw"),
         # Dev languages
         *brew("uv", "python", "python-freethreading"),
         *brew("go", "shellcheck"),
@@ -27,10 +26,4 @@ manifest = MachineManifest(
         *mas(Keynote=409183694, Numbers=409203825, Pages=409201541),
         *mas(Noir=1592917505, AdGuard=1440147259, Peek=1554235898),
     ],
-    env={
-        "ICLOUD": "$HOME/Library/Mobile Documents/com~apple~CloudDocs",
-        "MC_HOSTNAME": "mohds-macbook",
-        "MC_ENV_FILES": "agents tailscale misc",
-        "MC_PRIVATE": "$ICLOUD/.machine",
-    },
 )

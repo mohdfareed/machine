@@ -19,12 +19,6 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
-    healthcheck:
-      test: ["CMD", "tailscale", "--socket=/tmp/tailscaled.sock", "status"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 15s
     restart: unless-stopped
 
   openclaw:
@@ -33,22 +27,23 @@ services:
     # networking
     network_mode: service:ts-openclaw
     depends_on:
-      ts-openclaw:
-        condition: service_healthy
-        restart: true
+      - ts-openclaw
     labels:
       - homepage.group=Services
       - homepage.name=OpenClaw
       - homepage.icon=https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openclaw.svg
       - homepage.href=https://openclaw.${TAILNET_NAME}.ts.net
       - homepage.description=Personal AI assistant
-    # mounting
+    # volume mounting
     volumes:
       - ./data:/home/node/.openclaw
       - ./config:/home/node/.openclaw/config
       - ./workspace:/home/node/.openclaw/workspace
       - ./openclaw.json:/home/node/.openclaw/openclaw.json
-      - ./entrypoint.sh:/usr/local/bin/openclaw:ro # entrypoint + CLI alias
+      # entrypoint + CLI alias + brew/npm persistence
+      - ./entrypoint.sh:/usr/local/bin/openclaw:ro
+      - openclaw-brew:/home/node/.linuxbrew
+      - openclaw-npm:/home/node/.npm
     # env vars
     environment:
       TERM: xterm-256color
@@ -74,3 +69,5 @@ services:
 
 volumes:
   ts-openclaw-state:
+  openclaw-brew:
+  openclaw-npm:

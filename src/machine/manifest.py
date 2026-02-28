@@ -8,6 +8,7 @@ from pydantic import BaseModel, model_validator
 
 SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 
+
 # MARK: Models
 
 
@@ -50,7 +51,6 @@ class Module(BaseModel):
 
     name: str = ""
     depends: list[str] = []
-    required_env: list[str] = []
     scripts: list[str] = []
     files: list[FileMapping] = []
     overrides: list[FileMapping] = []
@@ -60,8 +60,7 @@ class Module(BaseModel):
 class MachineManifest(BaseModel):
     """Complete machine declaration."""
 
-    modules: list[str | Module] = []
-    env: dict[str, str] = {}
+    modules: list[str] = []
     scripts: list[str] = []
     files: list[FileMapping] = []
     packages: list[Package] = []
@@ -225,9 +224,8 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
     result.modules = _resolve_deps(result.modules, root)
 
     # Auto-discover local overrides declared by modules
-    for mod_ref in result.modules:
-        name = mod_ref if isinstance(mod_ref, str) else mod_ref.name
-        mod_obj = load_module(name, root)
+    for mod_name in result.modules:
+        mod_obj = load_module(mod_name, root)
         for override in mod_obj.overrides:
             local_file = machine_dir / override.source
             if local_file.exists():
@@ -251,29 +249,26 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
 # MARK: Helpers
 
 
-def _resolve_deps(modules: list[str | Module], root: Path) -> list[str | Module]:
+def _resolve_deps(modules: list[str], root: Path) -> list[str]:
     """Resolve module dependencies recursively and auto-include ``pkgs``."""
-    resolved: list[str | Module] = []
+    resolved: list[str] = []
     seen: set[str] = set()
 
-    def _add(mod_ref: str | Module) -> None:
-        name = mod_ref if isinstance(mod_ref, str) else mod_ref.name
+    def _add(name: str) -> None:
         if name in seen:
             return
         mod_obj = load_module(name, root)
         for dep in mod_obj.depends:
-            _add(dep)  # recurse into transitive deps
+            _add(dep)
         seen.add(name)
-        resolved.append(mod_ref)
+        resolved.append(name)
 
-    for mod_ref in modules:
-        _add(mod_ref)
+    for name in modules:
+        _add(name)
 
     # Auto-include 'pkgs' when any module declares packages
     if "pkgs" not in seen:
-        has_pkgs = any(
-            (load_module(m, root) if isinstance(m, str) else m).packages for m in resolved
-        )
+        has_pkgs = any(load_module(m, root).packages for m in resolved)
         if has_pkgs:
             resolved.insert(0, "pkgs")
 
@@ -290,6 +285,6 @@ def _import_py(path: Path, module_name: str) -> object:
     return module
 
 
-def resolve_modules(modules: list[str | Module], root: Path) -> list[Module]:
-    """Resolve module string references to loaded Module objects."""
-    return [load_module(m, root) if isinstance(m, str) else m for m in modules]
+def resolve_modules(modules: list[str], root: Path) -> list[Module]:
+    """Load full Module objects from module name strings."""
+    return [load_module(name, root) for name in modules]

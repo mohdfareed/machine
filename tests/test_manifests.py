@@ -62,8 +62,7 @@ def test_manifest_modules_exist(machine_id: str) -> None:
     manifest = load_manifest(machine_id, ROOT)
     available = set(list_modules(ROOT))
     for m in manifest.modules:
-        name = m if isinstance(m, str) else m.name
-        assert name in available, f"{machine_id}: unknown module '{name}'"
+        assert m in available, f"{machine_id}: unknown module '{m}'"
 
 
 def test_manifest_files_exist(machine_id: str) -> None:
@@ -81,10 +80,10 @@ def test_manifest_scripts_exist(machine_id: str) -> None:
 
 
 def test_manifest_env_satisfies_modules(machine_id: str) -> None:
-    """All required_env vars from included modules are provided."""
+    """All module files and scripts exist for this machine."""
     manifest = load_manifest(machine_id, ROOT)
-    modules = [load_module(m, ROOT) if isinstance(m, str) else m for m in manifest.modules]
-    errors = validate(modules, manifest.env, machine_id)
+    modules = [load_module(m, ROOT) for m in manifest.modules]
+    errors = validate(modules, machine_id)
     assert not errors, "\n".join(errors)
 
 
@@ -114,14 +113,6 @@ def test_manifest_overrides_included(machine_id: str) -> None:
 # MARK: Validation Edge Cases
 
 
-def test_missing_required_env_detected() -> None:
-    """validate() catches modules whose required_env is not satisfied."""
-    mod = Module(name="fake", required_env=["MISSING_VAR"])
-    errors = validate([mod], {}, "test-machine")
-    assert len(errors) == 1
-    assert "MISSING_VAR" in errors[0]
-
-
 def test_ssh_module_loads_key_provisioning() -> None:
     """The ssh module includes the key-provisioning script."""
     ssh = load_module("ssh", ROOT)
@@ -132,7 +123,8 @@ def test_ssh_module_loads_key_provisioning() -> None:
 def test_module_dependencies_auto_included() -> None:
     """Modules with depends= auto-include their dependencies."""
     ssh_server = load_module("ssh-server", ROOT)
-    assert "ssh" in ssh_server.depends
+    dep_names = ssh_server.depends
+    assert "ssh" in dep_names
 
     # Build a manifest with only ssh-server — ssh should be auto-included
     from machine.manifest import MachineManifest
@@ -140,14 +132,13 @@ def test_module_dependencies_auto_included() -> None:
     manifest = MachineManifest(modules=["ssh-server"])
     resolved: list[str] = []
     seen: set[str] = set()
-    for name in manifest.modules:
-        assert isinstance(name, str)
-        mod = load_module(name, ROOT)
+    for mod_name in manifest.modules:
+        mod = load_module(mod_name, ROOT)
         for dep in mod.depends:
             if dep not in seen:
                 seen.add(dep)
                 resolved.append(dep)
-        if name not in seen:
-            seen.add(name)
-            resolved.append(name)
+        if mod_name not in seen:
+            seen.add(mod_name)
+            resolved.append(mod_name)
     assert resolved == ["ssh", "ssh-server"]

@@ -11,6 +11,7 @@ manifest = MachineManifest(
         "vscode",
         "vsc-server",
         "ghostty",
+        "openclaw",
         "homelab",
         "core",
     ],
@@ -21,7 +22,6 @@ manifest = MachineManifest(
         ),
     ],
     packages=[
-        *cask("openclaw"),
         # Dev tools
         *cask("dotnet-sdk", "powershell"),
         *brew("uv", "python", "go"),
@@ -30,11 +30,4 @@ manifest = MachineManifest(
         *brew("mas", "fastfetch"),
         *brew("font-computer-modern", "font-jetbrains-mono-nerd-font"),
     ],
-    env={
-        "MC_ENV_FILES": "homelab tailscale agents",
-        "ICLOUD": "$HOME/Library/Mobile Documents/com~apple~CloudDocs",
-        "MC_PRIVATE": "$ICLOUD/.machine",
-        "HOMEPAGE_TITLE": "HomeLab",
-        "HOMEPAGE_FAVICON": "mdi-home-analytics",
-    },
 )

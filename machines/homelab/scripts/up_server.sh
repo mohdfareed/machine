@@ -3,13 +3,6 @@ set -Eeuo pipefail
 
 # Server maintenance tasks run during `mc update`.
 
-# MARK: Verify Power Settings
-# =============================================================================
-
-echo "verifying power management settings..."
-# Re-apply critical server power settings in case they were reset by an update.
-source "$(dirname "$0")/_power.macos.sh"
-
 # MARK: System Maintenance
 # =============================================================================
 

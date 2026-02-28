@@ -17,9 +17,4 @@ manifest = MachineManifest(
             script="curl -s https://dot.net/v1/dotnet-install.sh | bash -s -- --channel LTS",
         ),
     ],
-    env={
-        "MC_ENV_FILES": "tailscale",
-        "HOMEPAGE_TITLE": "Raspberry Pi",
-        "HOMEPAGE_FAVICON": "mdi-raspberry-pi",
-    },
 )

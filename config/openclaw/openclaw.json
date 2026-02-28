@@ -6,7 +6,7 @@
     "mode" : "remote",
     "remote" : {
       "transport" : "direct",
-      "url" : "wss://openclaw.tail2a477.ts.net",
+      "url" : "wss://openclaw.${TAILNET_NAME}.ts.net",
       "token" : "${OPENCLAW_GATEWAY_TOKEN}"
     }
   }
