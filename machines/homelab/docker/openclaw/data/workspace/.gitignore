@@ -1,0 +1,15 @@
+# Claudia workspace hygiene
+
+# Working clones/sandboxes
+projects/
+
+# Local runtime/state inside workspace
+.openclaw/
+.trash/
+
+# OS/editor/runtime noise
+.DS_Store
+*.log
+*.tmp
+*.swp
+*.swo
