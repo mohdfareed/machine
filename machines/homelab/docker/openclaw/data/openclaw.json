@@ -19,7 +19,11 @@
   // Authentication
   "auth": {
     "profiles": {
-      "anthropic-oauth:default": {
+      "anthropic-setup-token:default": {
+        "provider": "anthropic",
+        "mode": "token"
+      },
+      "anthropic:default": {
         "provider": "anthropic",
         "mode": "token"
       },

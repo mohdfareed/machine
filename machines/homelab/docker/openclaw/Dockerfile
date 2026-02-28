@@ -15,7 +15,9 @@ ENV NPM_CONFIG_PREFIX="/home/node/.npm"
 ENV NODE_PATH="/home/node/.npm/lib/node_modules"
 
 # --- Modules ---
+# LanceDB plugin dependencies
 RUN mkdir -p /home/node/.npm && npm install -g openai
+RUN cd /app && pnpm add -w @lancedb/lancedb@0.26.2
 
 # --- Scripts ---
 COPY --chmod=755 openclaw.sh /usr/local/bin/openclaw
