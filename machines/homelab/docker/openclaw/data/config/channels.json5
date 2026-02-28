@@ -1,23 +1,23 @@
 // Channel — agent messaging
 {
   // Telegram channel — webhook mode via Tailscale Funnel
-  telegram: {
-    enabled: true,
-    botToken: "${TELEGRAM_BOT_TOKEN}",
-    dmPolicy: "pairing",
-    allowFrom: ["tg:${TELEGRAM_USER_ID}"],
-    streamMode: "partial",
-    actions: {
-      sendMessage: true,
-      deleteMessage: true,
-      reactions: true,
-      sticker: true,
+  "telegram": {
+    "enabled": true,
+    "botToken": "${TELEGRAM_BOT_TOKEN}",
+    "dmPolicy": "pairing",
+    "allowFrom": ["tg:${TELEGRAM_USER_ID}"],
+    "streamMode": "partial",
+    "actions": {
+      "sendMessage": true,
+      "deleteMessage": true,
+      "reactions": true,
+      "sticker": true,
     },
 
     // Webhook mode — Tailscale Funnel exposes port 443 publicly.
     // Requires funnel to be enabled in ts-config/serve.json
     // REVIEW: Disabled due to unknown conflict on port 8787 in container.
-    // webhookUrl: "${TELEGRAM_WEBHOOK_URL}",
-    // webhookSecret: "${TELEGRAM_WEBHOOK_SECRET}",
+    // "webhookUrl": "${TELEGRAM_WEBHOOK_URL}",
+    // "webhookSecret": "${TELEGRAM_WEBHOOK_SECRET}",
   },
 }

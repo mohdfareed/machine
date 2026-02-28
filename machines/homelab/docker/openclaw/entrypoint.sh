@@ -3,6 +3,8 @@ set -e
 
 # Restrict state dir permissions (Docker bind mount creates it as 755)
 chmod 700 /home/node/.openclaw
+chmod 600 /home/node/.openclaw/openclaw.json 2>/dev/null || true
+find /home/node/.openclaw/config -type f -exec chmod 600 {} + 2>/dev/null || true
 
 # --- Non-gateway: just exec straight through ---
 if [ "$1" != "gateway" ]; then

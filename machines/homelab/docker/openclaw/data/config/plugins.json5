@@ -1,28 +1,28 @@
 // Plugins — extensions and memory
 {
-  enabled: true,
-  slots: { memory: "memory-lancedb" },
-  entries: {
-    "telegram": { enabled: true },
-    "device-pair": { enabled: true },
-    "llm-task": { enabled: true },
-    "lobster": { enabled: true },
-    "memory-core": { enabled: true },
+  "enabled": true,
+  "slots": { "memory": "memory-lancedb" },
+  "entries": {
+    "telegram": { "enabled": true },
+    "device-pair": { "enabled": true },
+    "llm-task": { "enabled": true },
+    "lobster": { "enabled": true },
+    "memory-core": { "enabled": true },
     // REVIEW: Docker image missing required 'openai' module.
     "memory-lancedb": {
-      enabled: true,
-      config: {
-        autoRecall: true,
-        autoCapture: true,
-        embedding: { apiKey: "${OPENAI_API_KEY}" },
+      "enabled": true,
+      "config": {
+        "autoRecall": true,
+        "autoCapture": true,
+        "embedding": { "apiKey": "${OPENAI_API_KEY}" },
       },
     },
     "voice-call": {
-      enabled: true,
-      config: {
-        enabled: true,
-        streaming: { enabled: true },
-        tts: { enabled: true, mode: "all" },
+      "enabled": true,
+      "config": {
+        "enabled": true,
+        "streaming": { "enabled": true },
+        "tts": { "enabled": true, "mode": "all" },
       },
     },
   },

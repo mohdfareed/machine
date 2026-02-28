@@ -19,10 +19,22 @@
   // Authentication
   "auth": {
     "profiles": {
+      "anthropic-oauth:default": {
+        "provider": "anthropic",
+        "mode": "token"
+      },
       "openai-codex:default": {
         "provider": "openai-codex",
         "mode": "oauth"
-      }
+      },
+      "openai:default": {
+        "provider": "openai",
+        "mode": "token"
+      },
+      "google:default": {
+        "provider": "google",
+        "mode": "token"
+      },
     }
   },
   // Scheduled tasks
@@ -30,9 +42,9 @@
     "webhookToken": "${OPENCLAW_CRON_TOKEN}",
   },
   // Messaging behavior
-  messages: {
-    ackReactionScope: "all",
-    removeAckAfterReply: true,
+  "messages": {
+    "ackReactionScope": "all",
+    "removeAckAfterReply": true,
   },
   // App voice chat
   "talk": {
@@ -43,7 +55,7 @@
       }
     },
     "apiKey": "${ELEVENLABS_API_KEY}",
-    interruptOnSpeech: true,
+    "interruptOnSpeech": true,
   },
   // Admin commands
   "commands": {
