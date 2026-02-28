@@ -222,9 +222,9 @@ def build_script_env(
     """Build the env dict injected into every script subprocess.
 
     Three-tier sourcing:
-      1. MC_HOME, MC_ID
-      2. ``machines/<id>/machine.env`` — committed config vars (sets MC_PRIVATE, etc.)
-      3. ``$MC_PRIVATE/env/$MC_ID.env`` — machine secrets (skipped when MC_PRIVATE unset)
+      1. MC_HOME, MC_ID, MC_PRIVATE (defaults to ``app_dir/private``)
+      2. ``machines/<id>/machine.env`` — committed config vars (may override MC_PRIVATE)
+      3. ``$MC_PRIVATE/env/$MC_ID.env`` — machine secrets (skipped when dir missing)
 
     Values may reference earlier vars with ``$VAR``; all references are
     resolved iteratively.
@@ -232,6 +232,7 @@ def build_script_env(
     raw: dict[str, str] = {
         "MC_HOME": str(root),
         "MC_ID": machine_id,
+        "MC_PRIVATE": str(settings.app_dir / "private"),
     }
 
     def _parse_env(path: Path) -> None:
@@ -246,7 +247,7 @@ def build_script_env(
                 value = value.strip().strip('"').strip("'")
                 raw[key.strip()] = value
 
-    # Tier 2: committed machine config vars (sets MC_PRIVATE, etc.)
+    # Tier 2: committed machine config vars (may override MC_PRIVATE)
     _parse_env(root / "machines" / machine_id / "machine.env")
 
     # Resolve $VAR references so MC_PRIVATE is available for tier 3

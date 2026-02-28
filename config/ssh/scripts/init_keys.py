@@ -11,12 +11,7 @@ SSH_DIR = Path.home() / ".ssh"
 
 
 def main() -> None:
-    private_path = os.environ.get("MC_PRIVATE", "").strip()
-    if not private_path:
-        print("ssh: MC_PRIVATE is not set, skipping key provisioning")
-        return
-
-    private_root = Path(os.path.expandvars(private_path)).expanduser()
+    private_root = Path(os.environ["MC_PRIVATE"]).expanduser()
     if not private_root.is_dir():
         print(f"ssh: {private_root} does not exist, skipping key provisioning")
         return

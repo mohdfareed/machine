@@ -396,11 +396,7 @@ def private() -> None:
         raise SystemExit(1)
 
     env = build_script_env(machine_id, settings.home)
-    path = env.get("MC_PRIVATE", "")
-    if not path:
-        err_console.print("[red]MC_PRIVATE is not set for this machine.[/]")
-        raise SystemExit(1)
-    print(path)
+    print(env["MC_PRIVATE"])
 
 
 @app.command(rich_help_panel="Info")

@@ -111,8 +111,8 @@ tiers so env vars are available in interactive shells too.
 
 ## Secrets (`MC_PRIVATE`)
 
-Secrets are stored outside the repo in `MC_PRIVATE` — a machine-specific path
-set in `machine.env` (e.g. `$ICLOUD/.machine` on macOS,
+Secrets are stored outside the repo in `MC_PRIVATE` — defaults to `app_dir/private`
+but typically overridden in `machine.env` (e.g. `$ICLOUD/.machine` on macOS,
 `$HOME/.machine` on Linux). The directory is never checked into git.
 
 ```
@@ -137,7 +137,7 @@ MC_PRIVATE/
 
 2. **SSH keys** — `init_keys.py` (ssh module) copies a single key named `<MC_ID>` from
    `MC_PRIVATE/ssh/` into `~/.ssh/` and registers it with `ssh-add`. Skips gracefully
-   when `MC_PRIVATE` is unset; errors if MC_PRIVATE exists but the key doesn't.
+   when the `MC_PRIVATE` directory doesn't exist; errors if it exists but the key doesn't.
 
 3. **Docker .env** — the `homelab` module's deploy script (`docker.unix.sh`) sources
    the same three-tier env chain, then Docker Compose inherits the shell environment.
