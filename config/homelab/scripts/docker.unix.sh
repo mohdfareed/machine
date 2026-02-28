@@ -21,7 +21,7 @@ if ! docker info &>/dev/null; then
     exit 1
 fi
 
-# Symlink ~/.homelab/<service> → repo service dirs for Dockge.
+# Symlink ~/.homelab/<service> → repo service dirs.
 mkdir -p "$HOMELAB_DIR"
 
 link_service() {

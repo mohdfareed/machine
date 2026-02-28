@@ -11,6 +11,7 @@ fi
 
 export NPM_CONFIG_PREFIX="$NPM_PREFIX"
 export PATH="$NPM_PREFIX/bin:$PATH"
+export NODE_PATH="$NPM_PREFIX/lib/node_modules:${NODE_PATH:-}"
 
 # --- Gateway first-run setup (skipped for CLI invocations) ---
 if [ "$1" = "gateway" ]; then
@@ -25,13 +26,11 @@ if [ "$1" = "gateway" ]; then
         echo "[entrypoint] Homebrew installed."
     fi
 
-    # npm modules (persisted via volume)
+    # npm modules (persisted via volume — global install so they survive recreates)
     mkdir -p "$NPM_PREFIX"
-    if ! npm list openai >/dev/null 2>&1; then
+    if ! npm list -g openai >/dev/null 2>&1; then
         echo "[entrypoint] Installing npm modules..."
-
-        npm update --loglevel=warn
-        npm install openai
+        npm install -g openai
         echo "[entrypoint] Done."
     fi
 fi

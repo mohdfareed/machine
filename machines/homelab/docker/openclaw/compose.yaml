@@ -56,6 +56,7 @@ services:
     # env vars
     environment:
       TERM: xterm-256color
+      TAILNET_NAME: ${TAILNET_NAME}                    # control ui hosts
       # agent
       OPENAI_API_KEY: ${OPENAI_API_KEY}                # chatgpt models
       ANTHROPIC_API_KEY_VAR: ${ANTHROPIC_API_KEY_VAR}  # claude models

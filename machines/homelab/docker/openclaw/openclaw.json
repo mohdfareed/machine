@@ -7,6 +7,10 @@
   "gateway": {
     "mode": "local",
     "bind": "loopback",
+    "trustedProxies": ["127.0.0.1"],
+    "controlUi": {
+      "allowedOrigins": ["https://openclaw.${TAILNET_NAME}.ts.net"],
+    },
     "auth": {
       "allowTailscale": true,
       "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }

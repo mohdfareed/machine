@@ -20,7 +20,6 @@ config/homelab/docker/<svc>/   ─┐
 machines/<id>/docker/<svc>/    ─┘
 ```
 
-Shared services (Dockge) live in the module's `docker/` dir.
 Machine-specific services (Homepage, OpenClaw, KBM, etc.) go in
 `machines/<id>/docker/`.
 
