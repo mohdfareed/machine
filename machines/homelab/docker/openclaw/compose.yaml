@@ -21,6 +21,14 @@ services:
       - net_admin
     restart: unless-stopped
 
+  openclaw-init:
+    image: busybox:latest
+    volumes:
+      - openclaw-brew:/home/node/.linuxbrew
+      - openclaw-npm:/home/node/.npm
+    command: ["sh", "-c", "chown -R 1000:1000 /home/node/.linuxbrew /home/node/.npm"]
+    restart: "no"
+
   openclaw:
     image: ghcr.io/openclaw/openclaw:latest
     container_name: openclaw
@@ -28,6 +36,7 @@ services:
     network_mode: service:ts-openclaw
     depends_on:
       - ts-openclaw
+      - openclaw-init
     labels:
       - homepage.group=Services
       - homepage.name=OpenClaw
