@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-BREW_HOME="/home/node/.linuxbrew"
+BREW_HOME="/home/linuxbrew/.linuxbrew"
 NPM_PREFIX="/home/node/.npm"
 
 # --- Environment (always set — gateway and CLI) ---
@@ -33,6 +33,9 @@ if [ "$1" = "gateway" ]; then
         npm install -g openai
         echo "[entrypoint] Done."
     fi
+
+    # Tighten session file permissions
+    find /home/node/.openclaw -name "sessions.json" -exec chmod 600 {} + 2>/dev/null || true
 fi
 
 exec node /app/dist/index.js "$@"

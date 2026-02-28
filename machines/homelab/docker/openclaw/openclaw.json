@@ -34,6 +34,25 @@
     ackReactionScope: "all",
     removeAckAfterReply: true,
   },
+  // REVIEW: Onboarding
+  "talk": {
+    "provider": "elevenlabs",
+    "providers": {
+      "elevenlabs": {
+        "apiKey": "${ELEVENLABS_API_KEY}"
+      }
+    },
+    "apiKey": "${ELEVENLABS_API_KEY}"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
   // Included Configurations ==================================================
   "agents": {
     "$include": "./config/agents.json5"

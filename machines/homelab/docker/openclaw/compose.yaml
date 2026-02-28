@@ -24,9 +24,9 @@ services:
   openclaw-init:
     image: busybox:latest
     volumes:
-      - openclaw-brew:/home/node/.linuxbrew
+      - openclaw-brew:/home/linuxbrew/.linuxbrew
       - openclaw-npm:/home/node/.npm
-    command: ["sh", "-c", "chown -R 1000:1000 /home/node/.linuxbrew /home/node/.npm"]
+    command: ["sh", "-c", "chown -R 1000:1000 /home/linuxbrew/.linuxbrew /home/node/.npm"]
     restart: "no"
 
   openclaw:
@@ -51,7 +51,7 @@ services:
       - ./openclaw.json:/home/node/.openclaw/openclaw.json
       # entrypoint + CLI alias + brew/npm persistence
       - ./entrypoint.sh:/usr/local/bin/openclaw:ro
-      - openclaw-brew:/home/node/.linuxbrew
+      - openclaw-brew:/home/linuxbrew/.linuxbrew
       - openclaw-npm:/home/node/.npm
     # env vars
     environment:
