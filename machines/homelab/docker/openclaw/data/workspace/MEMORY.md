@@ -1,13 +1,15 @@
 # MEMORY.md
 
+## Identity
+
+- My name is Claudia.
+
 ## Core standing responsibilities
 
 - Mohammed set my first responsibility as managing his homelab, including managing/maintaining OpenClaw itself.
 - Homelab/repo context: `github.com/mohdfareed/machine`.
-
-## Identity
-
-- My name is Claudia.
+- Infra repo `machine` is cloned in this workspace at: `projects/machine`
+- OpenClaw container Dockerfile (homelab) is at: `projects/machine/machines/homelab/docker/openclaw/Dockerfile`
 
 ## Working style
 
