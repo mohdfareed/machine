@@ -18,7 +18,8 @@
     },
     "github": {
       "enabled": true,
-      // NOTE: Requires GITHUB_TOKEN and GITHUB_USERNAME
+      "token:": "${GITHUB_TOKEN}",
+      "username": "${GITHUB_USERNAME}"
     },
     "healthcheck": {
       "enabled": true
@@ -46,10 +47,6 @@
     },
     "peekaboo": {
       "enabled": true
-    },
-    "sag": {
-      "enabled": true,
-      "apiKey": "${ELEVENLABS_API_KEY}",
     },
     "skill-creator": {
       "enabled": true,

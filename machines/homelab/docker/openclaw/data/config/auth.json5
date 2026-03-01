@@ -5,20 +5,16 @@
       "provider": "github-copilot",
       "mode": "token"
     },
-    "anthropic-setup-token:default": {
-      "provider": "anthropic",
-      "mode": "token"
-    },
-    "anthropic:default": {
-      "provider": "anthropic",
-      "mode": "token"
-    },
     "openai-codex:default": {
       "provider": "openai-codex",
       "mode": "oauth"
     },
     "openai:default": {
       "provider": "openai",
+      "mode": "token"
+    },
+    "anthropic:default": {
+      "provider": "anthropic",
       "mode": "token"
     },
     "google:default": {
