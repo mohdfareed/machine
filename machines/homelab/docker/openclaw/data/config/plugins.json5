@@ -1,6 +1,9 @@
 // Plugins — extensions and memory
 {
   "enabled": true,
+  "allow": [
+    "openclaw-mem0"
+  ],
 
   // Keep ONE memory provider active.
   "slots": { "memory": "openclaw-mem0" },
