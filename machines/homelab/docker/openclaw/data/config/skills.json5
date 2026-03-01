@@ -4,19 +4,64 @@
     "nodeManager": "npm"
   },
   "entries": {
-    "sag": {
-      "apiKey": "${ELEVENLABS_API_KEY}",
-    },
     "apple-notes": {
       "enabled": true
     },
-    "openai-image-gen": {
+    "apple-reminders": {
       "enabled": true
     },
-
-    // Installed via ClawHub into ~/workspace/skills/
-    "openclaw-github-assistant": {
+    "clawhub": {
       "enabled": true
-    }
+    },
+    "coding-agent": {
+      "enabled": true
+    },
+    "github": {
+      "enabled": true,
+      // NOTE: Requires GITHUB_TOKEN and GITHUB_USERNAME
+    },
+    "healthcheck": {
+      "enabled": true
+    },
+    "himalaya": {
+      "enabled": true
+    },
+    "mcporter": {
+      "enabled": true
+    },
+    "nano-banana-pro": {
+      "enabled": true,
+      "apiKey": "${GEMINI_API_KEY}",
+    },
+    "nano-pdf": {
+      "enabled": true
+    },
+    "openai-image-gen": {
+      "enabled": true,
+      "apiKey": "${OPENAI_API_KEY}",
+    },
+    "openai-whisper-api": {
+      "enabled": true,
+      "apiKey": "${OPENAI_API_KEY}",
+    },
+    "peekaboo": {
+      "enabled": true
+    },
+    "sag": {
+      "enabled": true,
+      "apiKey": "${ELEVENLABS_API_KEY}",
+    },
+    "skill-creator": {
+      "enabled": true,
+    },
+    "summarize": {
+      "enabled": true,
+    },
+    "tmux": {
+      "enabled": true,
+    },
+    "voice-call": {
+      "enabled": true,
+    },
   }
 }
