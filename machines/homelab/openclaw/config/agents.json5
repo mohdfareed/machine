@@ -11,9 +11,9 @@
         "github-copilot/gpt-5-mini"
       ],
     },
-    "workspace": "/home/node/.openclaw/workspace",
+    "workspace": "~/.openclaw/workspace",
     "heartbeat": {
-      "every": "30m"
+      "every": "10m"
     }
   }
 }

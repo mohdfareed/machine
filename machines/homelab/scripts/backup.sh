@@ -26,6 +26,19 @@ for dir in "$HOMELAB_DIR"/*/data/; do
     rsync -a --delete "${RSYNC_EXCLUDE[@]}" "$dir" "$local_dest/$svc/data/"
 done
 
+# ─── OpenClaw ─────────────────────────────────────────────────────────────────
+# Back up OpenClaw runtime state (credentials, devices, sessions, etc.).
+# Config/workspace/cron are tracked in git and don't need backup.
+OPENCLAW_DIR="$HOME/.openclaw"
+if [[ -d "$OPENCLAW_DIR" ]]; then
+    echo "backing up openclaw..."
+    oc_dest="$local_dest/openclaw"
+    mkdir -p "$oc_dest"
+    rsync -a --delete "${RSYNC_EXCLUDE[@]}" \
+        --exclude='config/' --exclude='workspace/' --exclude='cron/' \
+        "$OPENCLAW_DIR/" "$oc_dest/"
+fi
+
 # ─── Remote ───────────────────────────────────────────────────────────────────
 for host in "${SERVERS[@]}"; do
     echo "backing up $host..."

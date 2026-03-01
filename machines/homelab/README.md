@@ -1,6 +1,19 @@
 # Homelab (macOS)
 
-Always-on Mac as a headless server. Works on MacBook (clamshell), Mac Mini, etc.
+Always-on Mac as a headless server, owned by OpenClaw. Works on MacBook
+(clamshell), Mac Mini, etc.
+
+## OpenClaw Gateway
+
+OpenClaw runs **natively** on the Mac via the macOS app (cask). The app
+manages the gateway `launchd` service (`ai.openclaw.gateway`) and
+installs the CLI. A Tailscale sidecar container gives the gateway its
+own tailnet hostname (`openclaw`) without interfering with the machine's
+own Tailscale identity (`homelab`).
+
+- Gateway: `https://openclaw.<tailnet>.ts.net`
+- Config: `~/.openclaw/` (symlinked from `machines/homelab/openclaw/` by `mc apply`)
+- Daemon management: `openclaw daemon status|start|stop|restart`
 
 ## Docker Services
 

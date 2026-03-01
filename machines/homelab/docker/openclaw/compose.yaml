@@ -1,5 +1,7 @@
-# OpenClaw — Personal AI Assistant Gateway
-# Access: https://<mc_id>-openclaw.<tailnet>.ts.net (funnel)
+# OpenClaw — Tailscale ingress sidecar
+# Gives the native OpenClaw gateway its own tailnet hostname ("openclaw").
+# The gateway itself runs natively on the Mac via launchd.
+# Access: https://openclaw.<tailnet>.ts.net
 
 services:
   ts-openclaw:
@@ -19,54 +21,13 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
-    restart: unless-stopped
-
-  openclaw:
-    build: .
-    container_name: openclaw
-    # networking
-    network_mode: service:ts-openclaw
-    depends_on:
-      - ts-openclaw
     labels:
       - homepage.group=Services
       - homepage.name=OpenClaw
       - homepage.icon=https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openclaw.svg
       - homepage.href=https://openclaw.${TAILNET_NAME}.ts.net
       - homepage.description=Personal AI assistant
-    # volume mounting
-    volumes:
-      - ./data:/home/node/.openclaw
-      - openclaw-brew:/home/linuxbrew/.linuxbrew
-      - openclaw-npm:/home/node/.npm
-    # env vars
-    environment:
-      TERM: xterm-256color
-      TAILNET_NAME: ${TAILNET_NAME}
-      # agent
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}    # llm
-      GEMINI_API_KEY: ${GEMINI_API_KEY}          # image generation
-      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}  # text-to-speech
-      # tools
-      BRAVE_API_KEY: ${BRAVE_API_KEY}            # web search
-      MEM0_USER_ID: ${MEM0_USER_ID}              # agent memory
-      GITHUB_USERNAME: ${GITHUB_USERNAME}
-      GITHUB_TOKEN: ${OPENCLAW_GITHUB_TOKEN}
-      CRAFT_API_KEY: ${OPENCLAW_CRAFT_API_KEY}
-      # openclaw
-      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
-      OPENCLAW_HOOKS_TOKEN: ${OPENCLAW_HOOKS_TOKEN}
-      OPENCLAW_CRON_TOKEN: ${OPENCLAW_CRON_TOKEN}
-      # telegram bot
-      TELEGRAM_USER_ID: ${TELEGRAM_USER_ID}
-      TELEGRAM_BOT_TOKEN: ${OPENCLAW_TELEGRAM_BOT_TOKEN}
-      TELEGRAM_WEBHOOK_SECRET: ${OPENCLAW_TELEGRAM_WEBHOOK_SECRET}
-    # entrypoint
-    init: true
     restart: unless-stopped
 
 volumes:
   ts-openclaw-state:
-  openclaw-brew:
-  openclaw-npm:

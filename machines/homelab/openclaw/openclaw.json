@@ -25,17 +25,6 @@
     "ackReactionScope": "all",
     "removeAckAfterReply": true,
   },
-  // App voice chat
-  "talk": {
-    "provider": "elevenlabs",
-    "providers": {
-      "elevenlabs": {
-        "apiKey": "${ELEVENLABS_API_KEY}"
-      }
-    },
-    "apiKey": "${ELEVENLABS_API_KEY}",
-    "interruptOnSpeech": true,
-  },
   // Admin commands
   "commands": {
     "native": "auto",

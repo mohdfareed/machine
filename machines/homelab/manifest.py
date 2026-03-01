@@ -11,7 +11,6 @@ manifest = MachineManifest(
         "vscode",
         "vsc-server",
         "ghostty",
-        "openclaw",
         "homelab",
         "core",
     ],
@@ -20,8 +19,15 @@ manifest = MachineManifest(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
         ),
+        # OpenClaw gateway config (symlinked to ~/.openclaw/)
+        FileMapping(source="openclaw/openclaw.json", target="~/.openclaw/openclaw.json"),
+        FileMapping(source="openclaw/config", target="~/.openclaw/config"),
+        FileMapping(source="openclaw/workspace", target="~/.openclaw/workspace"),
+        FileMapping(source="openclaw/cron", target="~/.openclaw/cron"),
     ],
     packages=[
+        # OpenClaw (macOS app — gateway + CLI + node)
+        *cask("openclaw"),
         # Dev tools
         *brew("uv", "python"),
         *cask("powershell"),
