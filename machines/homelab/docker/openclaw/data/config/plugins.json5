@@ -2,7 +2,12 @@
 {
   "enabled": true,
   "allow": [
-    "openclaw-mem0"
+    "telegram",
+    "device-pair",
+    "llm-task",
+    "lobster",
+    "openclaw-mem0",
+    "voice-call"
   ],
 
   // Keep ONE memory provider active.
@@ -22,6 +27,7 @@
       "config": {
         "mode": "open-source",
         "userId": "${MEM0_USER_ID}",
+        "graph": true,
         "oss": {
           "vectorStore": {
             "provider": "qdrant",
