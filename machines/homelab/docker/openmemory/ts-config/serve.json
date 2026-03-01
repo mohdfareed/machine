@@ -1,0 +1,34 @@
+{
+  "TCP": {
+    "443": {
+      "HTTPS": true
+    },
+    "6333": {
+      "TCPForward": "mem0-qdrant:6333"
+    }
+  },
+  "Web": {
+    "${TS_CERT_DOMAIN}:443": {
+      "Handlers": {
+        "/api/": {
+          "Proxy": "http://127.0.0.1:8765"
+        },
+        "/mcp/": {
+          "Proxy": "http://127.0.0.1:8765"
+        },
+        "/docs": {
+          "Proxy": "http://127.0.0.1:8765"
+        },
+        "/openapi.json": {
+          "Proxy": "http://127.0.0.1:8765"
+        },
+        "/": {
+          "Proxy": "http://127.0.0.1:3000"
+        }
+      }
+    }
+  },
+  "AllowFunnel": {
+    "${TS_CERT_DOMAIN}:443": false
+  }
+}

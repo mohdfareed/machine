@@ -20,8 +20,14 @@
         "mode": "open-source",
         "userId": "${MEM0_USER_ID}",
         "oss": {
-          // Avoid native sqlite3 bindings in this container/runtime.
-          "disableHistory": true
+          // "disableHistory": true,
+          "vectorStore": {
+            "provider": "qdrant",
+            "config": {
+              "host": "mem0.${TAILNET_NAME}.ts.net",
+              "port": 6333
+            }
+          }
         }
       }
     },

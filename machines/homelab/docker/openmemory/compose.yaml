@@ -1,0 +1,79 @@
+# OpenMemory — AI Memory Layer (MCP Server + Dashboard)
+# Access: https://<mc_id>-mem0.<tailnet>.ts.net (tailnet-only)
+# MCP:    https://<mc_id>-mem0.<tailnet>.ts.net/mcp/<client>/sse/<user>
+# Qdrant: mem0.<tailnet>.ts.net:6333 (tailnet-only, no auth)
+#
+# Volume convention:
+#   Named volumes  — disposable state (survives restarts, not backups)
+#   ./data/         — precious data (backed up, portable across machines)
+#   ./logs/         — logs (backed up)
+#   ./ (repo root)  — version-controlled config
+
+services:
+  ts-mem0:
+    image: tailscale/tailscale:latest
+    container_name: ts-mem0
+    hostname: mem0
+    environment:
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+    volumes:
+      - ts-mem0-state:/var/lib/tailscale
+      - ./ts-config:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
+  mem0-qdrant:
+    image: qdrant/qdrant:latest
+    container_name: mem0-qdrant
+    restart: unless-stopped
+    volumes:
+      - ./data/qdrant:/qdrant/storage
+    labels:
+      - homepage.group=Infrastructure
+      - homepage.name=Qdrant
+      - homepage.icon=mdi-database-search
+      - homepage.description=Vector store for mem0
+
+  mem0-api:
+    image: mem0/openmemory-mcp:latest
+    container_name: mem0-api
+    network_mode: service:ts-mem0
+    depends_on:
+      - ts-mem0
+      - mem0-qdrant
+    restart: unless-stopped
+    volumes:
+      - ./data/api:/usr/src/openmemory
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      USER: ${MEM0_USER_ID}
+      QDRANT_HOST: mem0-qdrant
+      QDRANT_PORT: "6333"
+    labels:
+      - homepage.group=Services
+      - homepage.name=OpenMemory
+      - homepage.icon=mdi-memory
+      - homepage.href=https://mem0.${TAILNET_NAME}.ts.net
+      - homepage.description=AI memory layer (MCP)
+
+  mem0-ui:
+    image: mem0/openmemory-ui:latest
+    container_name: mem0-ui
+    network_mode: service:ts-mem0
+    depends_on:
+      - ts-mem0
+      - mem0-api
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ""
+      NEXT_PUBLIC_USER_ID: ${MEM0_USER_ID}
+
+volumes:
+  ts-mem0-state:
