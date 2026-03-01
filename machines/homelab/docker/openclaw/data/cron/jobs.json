@@ -8,7 +8,7 @@
       "name": "Daily OpenClaw recommendations check-in",
       "enabled": true,
       "createdAtMs": 1772296903351,
-      "updatedAtMs": 1772296903351,
+      "updatedAtMs": 1772368252688,
       "schedule": {
         "kind": "cron",
         "expr": "30 7 * * *",
@@ -25,7 +25,15 @@
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1772368200000
+        "nextRunAtMs": 1772454600000,
+        "lastRunAtMs": 1772368200032,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 52656,
+        "lastError": "⚠️ ✉️ Message failed",
+        "lastDelivered": true,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 1
       }
     },
     {
@@ -35,7 +43,7 @@
       "name": "OpenClaw auth monitor",
       "enabled": true,
       "createdAtMs": 1772297188942,
-      "updatedAtMs": 1772297188942,
+      "updatedAtMs": 1772370011919,
       "schedule": {
         "kind": "cron",
         "expr": "0 8 * * *",
@@ -52,7 +60,14 @@
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1772370000000
+        "nextRunAtMs": 1772456400000,
+        "lastRunAtMs": 1772370000022,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 11897,
+        "lastDelivered": true,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 0
       }
     }
   ]

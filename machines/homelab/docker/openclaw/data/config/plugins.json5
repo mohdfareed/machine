@@ -6,8 +6,7 @@
     "device-pair",
     "llm-task",
     "lobster",
-    "openclaw-mem0",
-    "voice-call"
+    "openclaw-mem0"
   ],
 
   // Keep ONE memory provider active.
@@ -37,15 +36,6 @@
             }
           }
         }
-      }
-    },
-
-    "voice-call": {
-      "enabled": true,
-      "config": {
-        "enabled": true,
-        "streaming": { "enabled": true },
-        "tts": { "enabled": true, "mode": "all" }
       }
     }
   }

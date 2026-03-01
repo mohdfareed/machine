@@ -38,3 +38,16 @@ Run these commands and report ✅/⚠️/❌ with 1-line cause per failure:
 5) openclaw doctor
 6) openclaw channels status --probe
 7) openclaw logs --follow (sample briefly; don’t hang unless asked)
+
+## Workflow rule: repo vs live system changes
+
+- Treat `workspace/projects/**` as the place to make changes, test, and prepare PRs.
+- Do NOT directly modify anything outside `workspace/` and `workspace/projects/` (e.g. `~/.openclaw/**`) without explicit approval.
+- For changes needed in `~/.openclaw/**` or the homelab, provide Mohammed with the exact diff/instructions instead.
+- Always leave future-self breadcrumbs: write a short note in `memory/YYYY-MM-DD.md` after any operational change or discovery.
+
+## Craft Docs MCP
+
+- MCP server URL: https://mcp.craft.do/links/Dwf70HLs61a/mcp
+- Password: claudia.craft.all
+- Status: saved for future use; AppleScript doesn't work well with Craft
