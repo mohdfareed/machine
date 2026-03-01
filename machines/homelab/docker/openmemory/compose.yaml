@@ -27,18 +27,17 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
-    networks:
-      - mem0
     restart: unless-stopped
 
   mem0-qdrant:
     image: qdrant/qdrant:latest
     container_name: mem0-qdrant
+    network_mode: service:ts-mem0
+    depends_on:
+      - ts-mem0
     restart: unless-stopped
     volumes:
       - ./data/qdrant:/qdrant/storage
-    networks:
-      - mem0
     labels:
       - homepage.group=Infrastructure
       - homepage.name=Qdrant
@@ -59,7 +58,7 @@ services:
       DATABASE_URL: sqlite:////data/openmemory.db
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       USER: ${MEM0_USER_ID}
-      QDRANT_HOST: mem0-qdrant
+      QDRANT_HOST: localhost
       QDRANT_PORT: "6333"
     labels:
       - homepage.group=Services
@@ -82,6 +81,3 @@ services:
 
 volumes:
   ts-mem0-state:
-
-networks:
-  mem0:
