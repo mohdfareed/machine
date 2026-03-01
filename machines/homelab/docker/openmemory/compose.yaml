@@ -54,12 +54,12 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/db:/data
+    extra_hosts:
+      - "mem0_store:127.0.0.1"
     environment:
       DATABASE_URL: sqlite:////data/openmemory.db
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       USER: ${MEM0_USER_ID}
-      QDRANT_HOST: localhost
-      QDRANT_PORT: "6333"
     labels:
       - homepage.group=Services
       - homepage.name=OpenMemory

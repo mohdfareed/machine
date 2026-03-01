@@ -1,6 +1,6 @@
 """HomeLab (macOS) machine manifest."""
 
-from machine.manifest import FileMapping, MachineManifest, brew, cask
+from machine.manifest import FileMapping, MachineManifest, brew, cask, mas
 
 manifest = MachineManifest(
     modules=[
@@ -23,11 +23,12 @@ manifest = MachineManifest(
     ],
     packages=[
         # Dev tools
-        *cask("dotnet-sdk", "powershell"),
-        *brew("uv", "python", "go"),
-        *brew("copilot-cli", "codex"),
+        *brew("uv", "python"),
+        *cask("powershell"),
         # Utilities
         *brew("mas", "fastfetch"),
         *brew("font-computer-modern", "font-jetbrains-mono-nerd-font"),
+        # Mac App Store
+        *mas(Peek=1554235898),
     ],
 )
