@@ -5,4 +5,8 @@ data/*
 !data/workspace/
 !data/openclaw.json
 
+!data/cron
+data/cron/*
+!data/cron/jobs.json
+
 data/workspace/.openclaw/

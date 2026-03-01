@@ -11,16 +11,18 @@
     "llm-task": { "enabled": true },
     "lobster": { "enabled": true },
 
-    // Memory slot companions (disabled because slot is owned by mem0)
+    // Memory slot companions
     "memory-core": { "enabled": false },
     "memory-lancedb": { "enabled": false },
-
-    // Mem0 memory plugin
     "openclaw-mem0": {
       "enabled": true,
       "config": {
         "mode": "open-source",
         "userId": "${MEM0_USER_ID}",
+        "oss": {
+          // Avoid native sqlite3 bindings in this container/runtime.
+          "disableHistory": true
+        }
       }
     },
 

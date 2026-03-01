@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "5ee840ad-cc80-4ab2-a904-20ca8944b988",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:30786",
+      "name": "Daily OpenClaw recommendations check-in",
+      "enabled": true,
+      "createdAtMs": 1772296903351,
+      "updatedAtMs": 1772296903351,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 7 * * *",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Daily reminder: prepare and send Mohammed a concise morning check-in with OpenClaw improvements (tools/config/workflow), what changed since last check, recommended next action, and any approval-needed items.",
+        "timeoutSeconds": 0
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "nextRunAtMs": 1772368200000
+      }
+    },
+    {
+      "id": "74ece3bf-b96f-4a19-9bc9-72c34f1e72b4",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:30786",
+      "name": "OpenClaw auth monitor",
+      "enabled": true,
+      "createdAtMs": 1772297188942,
+      "updatedAtMs": 1772297188942,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * *",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run `openclaw models status --check` and send Mohammed a short auth health report. If any provider is near expiry, expired, or needs reauth, clearly label it and provide exact next action.",
+        "timeoutSeconds": 0
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "nextRunAtMs": 1772370000000
+      }
+    }
+  ]
+}
