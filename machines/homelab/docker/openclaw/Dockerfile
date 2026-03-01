@@ -1,6 +1,14 @@
 FROM homebrew/brew:latest AS brew
 FROM ghcr.io/openclaw/openclaw:latest
 
+# --- OS deps (for native node modules like sqlite3) ---
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    python3 make g++ pkg-config libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
+USER node
+
 # --- Homebrew (Linux) ---
 USER root
 COPY --from=brew /home/linuxbrew/.linuxbrew /home/linuxbrew/.linuxbrew
