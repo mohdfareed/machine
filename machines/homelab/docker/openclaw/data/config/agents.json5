@@ -2,14 +2,12 @@
 {
   "defaults": {
     "model": {
-      "primary": "anthropic/claude-opus-4-6",
+      "primary": "github-copilot/claude-opus-4.6",
       "fallbacks": [
-        "anthropic/claude-sonnet-4-6",
+        "anthropic/claude-opus-4-6",
         "openai-codex/gpt-5.3-codex",
-        "openai/gpt-5.2",
+        "openai/gpt-5.3-codex",
         "google/gemini-3.1-pro",
-        "google/gemini-3-flash",
-
       ],
     },
     "workspace": "/home/node/.openclaw/workspace",

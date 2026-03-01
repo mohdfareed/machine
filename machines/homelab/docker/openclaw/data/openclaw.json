@@ -16,31 +16,6 @@
       "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }
     }
   },
-  // Authentication
-  "auth": {
-    "profiles": {
-      "anthropic-setup-token:default": {
-        "provider": "anthropic",
-        "mode": "token"
-      },
-      "anthropic:default": {
-        "provider": "anthropic",
-        "mode": "token"
-      },
-      "openai-codex:default": {
-        "provider": "openai-codex",
-        "mode": "oauth"
-      },
-      "openai:default": {
-        "provider": "openai",
-        "mode": "token"
-      },
-      "google:default": {
-        "provider": "google",
-        "mode": "token"
-      },
-    }
-  },
   // Scheduled tasks
   "cron": {
     "webhookToken": "${OPENCLAW_CRON_TOKEN}",
@@ -76,6 +51,9 @@
   // Included Configurations ==================================================
   "agents": {
     "$include": "./config/agents.json5"
+  },
+  "auth": {
+    "$include": "./config/auth.json5"
   },
   "channels": {
     "$include": "./config/channels.json5"

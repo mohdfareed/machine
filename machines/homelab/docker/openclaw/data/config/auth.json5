@@ -1,0 +1,29 @@
+// Authentication — model provider credentials
+{
+  "profiles": {
+    "github-copilot:default": {
+    "provider": "github-copilot",
+    "mode": "oauth"
+    },
+    "anthropic-setup-token:default": {
+    "provider": "anthropic",
+    "mode": "token"
+    },
+    "anthropic:default": {
+    "provider": "anthropic",
+    "mode": "token"
+    },
+    "openai-codex:default": {
+    "provider": "openai-codex",
+    "mode": "oauth"
+    },
+    "openai:default": {
+    "provider": "openai",
+    "mode": "token"
+    },
+    "google:default": {
+    "provider": "google",
+    "mode": "token"
+    },
+  }
+}
