@@ -27,7 +27,6 @@
       "config": {
         "mode": "open-source",
         "userId": "${MEM0_USER_ID}",
-        "graph": true,
         "oss": {
           "vectorStore": {
             "provider": "qdrant",

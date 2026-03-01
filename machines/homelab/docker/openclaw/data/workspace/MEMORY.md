@@ -26,3 +26,15 @@
 - Avoid silent stalls: provide lightweight proactive visibility (started/done/blocked) so Mohammed knows I'm actively working.
 - Research operating patterns before major changes; use thoughtful structure rather than jumping straight into implementation.
 - Think beyond email/notes/coding assistance: proactively expand into higher-level life/ops delegation over time.
+
+## Operational check routine (when Mohammed says “check everything”)
+
+Run these commands and report ✅/⚠️/❌ with 1-line cause per failure:
+
+1) openclaw status
+2) openclaw status --all
+3) openclaw gateway status
+4) openclaw gateway probe
+5) openclaw doctor
+6) openclaw channels status --probe
+7) openclaw logs --follow (sample briefly; don’t hang unless asked)
