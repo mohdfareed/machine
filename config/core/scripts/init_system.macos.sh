@@ -58,3 +58,7 @@ defaults write com.apple.dock tilesize -int 48
 defaults write com.apple.dock showAppExposeGestureEnabled -bool true
 # rearrange spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
+# Finder: default to list view
+defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+# Finder: sort folders first
+defaults write com.apple.finder _FXSortFoldersFirst -bool true

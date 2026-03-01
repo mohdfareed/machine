@@ -18,8 +18,10 @@
     },
     "github": {
       "enabled": true,
-      "token:": "${GITHUB_TOKEN}",
-      "username": "${GITHUB_USERNAME}"
+      "config": {
+        "token": "${GITHUB_TOKEN}",
+        "username": "${GITHUB_USERNAME}"
+      }
     },
     "healthcheck": {
       "enabled": true

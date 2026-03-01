@@ -45,6 +45,7 @@
     "debug": true,
     "restart": true,
     "allowFrom": {
+      "webchat": ["openclaw-control-ui"],
       "telegram": ["${TELEGRAM_USER_ID}"],
     },
   },
