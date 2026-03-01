@@ -26,6 +26,8 @@ ENV NODE_PATH="/home/node/.npm/lib/node_modules"
 # LanceDB plugin dependencies
 RUN mkdir -p /home/node/.npm && npm install -g openai
 RUN cd /app && pnpm add -w @lancedb/lancedb@0.26.2
+# sqlite3 native bindings for mem0 plugin
+RUN cd /app && pnpm add -w sqlite3
 
 # --- Scripts ---
 COPY --chmod=755 openclaw.sh /usr/local/bin/openclaw

@@ -2,28 +2,28 @@
 {
   "profiles": {
     "github-copilot:default": {
-    "provider": "github-copilot",
-    "mode": "oauth"
+      "provider": "github-copilot",
+      "mode": "token"
     },
     "anthropic-setup-token:default": {
-    "provider": "anthropic",
-    "mode": "token"
+      "provider": "anthropic",
+      "mode": "token"
     },
     "anthropic:default": {
-    "provider": "anthropic",
-    "mode": "token"
+      "provider": "anthropic",
+      "mode": "token"
     },
     "openai-codex:default": {
-    "provider": "openai-codex",
-    "mode": "oauth"
+      "provider": "openai-codex",
+      "mode": "oauth"
     },
     "openai:default": {
-    "provider": "openai",
-    "mode": "token"
+      "provider": "openai",
+      "mode": "token"
     },
     "google:default": {
-    "provider": "google",
-    "mode": "token"
+      "provider": "google",
+      "mode": "token"
     },
   }
 }
