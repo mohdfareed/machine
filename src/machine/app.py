@@ -135,6 +135,19 @@ def _symlink(source: Path, target: Path) -> bool:
 # MARK: Packages
 
 
+def refresh_path() -> None:
+    """Re-read PATH from a login shell so managers installed by init scripts
+    (e.g. Homebrew on a fresh Mac) are visible to ``shutil.which``."""
+    try:
+        shell = os.environ.get("SHELL", "/bin/sh")
+        out = subprocess.check_output([shell, "-lc", "echo $PATH"], text=True, timeout=5).strip()
+        if out:
+            os.environ["PATH"] = out
+            logger.debug("Refreshed PATH: %s", out)
+    except Exception as exc:
+        logger.debug("PATH refresh failed: %s", exc)
+
+
 def install_packages(
     packages: list[Package],
     owners: dict[str, str] | None = None,
@@ -143,11 +156,15 @@ def install_packages(
     if not packages:
         return []
 
-    managers = {m for m in _MANAGERS if shutil.which(m)}
-    logger.info("Managers: %s", ", ".join(sorted(managers)) or "none")
+    # Re-read PATH from a login shell so managers installed by prior init
+    # scripts (e.g. Homebrew) are discoverable via shutil.which.
+    refresh_path()
 
     state = _load_state()
     installed: set[str] = set(state.get("packages", []))
+
+    managers = {m for m in _MANAGERS if shutil.which(m)}
+    logger.info("Managers: %s", ", ".join(sorted(managers)) or "none")
 
     failures: list[Failure] = []
     skipped = 0
@@ -206,7 +223,7 @@ def _install(
         return None
 
     logger.warning("[%s] no manager for: %s", module, pkg.name)
-    return None
+    return (module, pkg.name, "no manager available")
 
 
 # MARK: Scripts
