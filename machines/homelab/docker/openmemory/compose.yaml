@@ -1,7 +1,7 @@
 # OpenMemory — AI Memory Layer (MCP Server + Dashboard)
-# Access: https://<mc_id>-mem0.<tailnet>.ts.net (tailnet-only)
-# MCP:    https://<mc_id>-mem0.<tailnet>.ts.net/mcp/<client>/sse/<user>
-# Qdrant: mem0.<tailnet>.ts.net:6333 (tailnet-only, no auth)
+# UI/API:  https://<mc_id>-mem0.<tailnet>.ts.net        (tailnet-only, :443)
+# MCP:     https://<mc_id>-mem0.<tailnet>.ts.net:8443   (funnel, public)
+# Qdrant:  mem0.<tailnet>.ts.net:6333                   (tailnet-only)
 #
 # Volume convention:
 #   Named volumes  — disposable state (survives restarts, not backups)
@@ -50,8 +50,9 @@ services:
       - mem0-qdrant
     restart: unless-stopped
     volumes:
-      - ./data/api:/usr/src/openmemory
+      - ./data/db:/data
     environment:
+      DATABASE_URL: sqlite:////data/openmemory.db
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       USER: ${MEM0_USER_ID}
       QDRANT_HOST: mem0-qdrant
