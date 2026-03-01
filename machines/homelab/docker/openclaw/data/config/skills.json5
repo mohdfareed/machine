@@ -17,11 +17,7 @@
       "enabled": true
     },
     "github": {
-      "enabled": true,
-      "config": {
-        "token": "${GITHUB_TOKEN}",
-        "username": "${GITHUB_USERNAME}"
-      }
+      "enabled": true
     },
     "healthcheck": {
       "enabled": true

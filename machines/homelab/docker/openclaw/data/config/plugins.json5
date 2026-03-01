@@ -28,6 +28,7 @@
         "mode": "open-source",
         "userId": "${MEM0_USER_ID}",
         "oss": {
+          "disableHistory": true,
           "vectorStore": {
             "provider": "qdrant",
             "config": {
