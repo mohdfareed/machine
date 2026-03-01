@@ -27,6 +27,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
+    networks:
+      - mem0
     restart: unless-stopped
 
   mem0-qdrant:
@@ -35,6 +37,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/qdrant:/qdrant/storage
+    networks:
+      - mem0
     labels:
       - homepage.group=Infrastructure
       - homepage.name=Qdrant
@@ -78,3 +82,6 @@ services:
 
 volumes:
   ts-mem0-state:
+
+networks:
+  mem0:
