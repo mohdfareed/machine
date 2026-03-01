@@ -66,8 +66,5 @@
   },
   "skills": {
     "$include": "./config/skills.json5"
-  },
-  "tools": {
-    "$include": "./config/tools.json5"
   }
 }
