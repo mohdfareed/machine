@@ -31,3 +31,10 @@ for var in "${OPENCLAW_VARS[@]}"; do
 done
 
 echo "openclaw: env vars injected into launchd (${#OPENCLAW_VARS[@]} vars)"
+
+# Restart the gateway so it re-runs shellEnv with the new vars.
+# The daemon may not be running yet (first deploy) — that's fine.
+if command -v openclaw &>/dev/null && openclaw gateway status &>/dev/null; then
+    echo "openclaw: restarting gateway to pick up env vars..."
+    openclaw gateway restart
+fi

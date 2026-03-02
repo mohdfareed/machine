@@ -19,6 +19,12 @@ services:
       - ./ts-config:/config
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://host.docker.internal:18789/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
