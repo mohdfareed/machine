@@ -3,7 +3,7 @@
 from machine.manifest import MachineManifest, brew, cask, mas
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "vscode", "ghostty", "openclaw", "core"],
+    modules=["git", "shell", "ssh", "vscode", "ghostty", "core"],
     files=[],
     packages=[
         # Dev languages
