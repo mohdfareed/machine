@@ -325,7 +325,7 @@ def sync(
     if result.returncode != 0:
         subprocess.run([*git, "rebase", "--abort"], capture_output=True)
         _logger.error("git pull --rebase failed:\n%s\n%s", result.stdout, result.stderr)
-        err_console.print("[red]Pull failed — rebase conflict or network error.[/]")
+        err_console.print("[red]Pull failed - rebase conflict or network error.[/]")
         err_console.print("[dim]Resolve conflicts manually, then run: mc sync[/]")
         raise SystemExit(1)
     console.print("[green]Pulled latest changes.[/]")
@@ -350,7 +350,7 @@ def sync(
             console.print()
             apply(machine=machine_id)
         else:
-            console.print("[dim]No machine set — skipping apply.[/]")
+            console.print("[dim]No machine set - skipping apply.[/]")
 
 
 def _prompt_force(stash: bool, force: bool) -> bool:

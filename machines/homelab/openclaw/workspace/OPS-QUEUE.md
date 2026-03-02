@@ -2,7 +2,7 @@
 
 ## Active / Pending
 
-- **Set up dedicated Apple ID for Claudia on homelab Mac** — sign homelab Mac into Claudia's Apple ID, then share relevant calendars/reminder lists/notes from Mohammed's personal account. This keeps a clean security boundary without manual access management.
+- **Set up dedicated Apple ID for Claudia on homelab Mac** - sign homelab Mac into Claudia's Apple ID, then share relevant calendars/reminder lists/notes from Mohammed's personal account. This keeps a clean security boundary without manual access management.
 
 
 - Read through `projects/machine` repo and build homelab operations context.

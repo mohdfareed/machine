@@ -35,7 +35,7 @@ Services are exposed via Tailscale using one of three patterns:
 | --------------------- | ------------------------------------------ | --------- |
 | **Internet (funnel)** | Tailscale sidecar with `AllowFunnel: true` | OpenClaw  |
 | **Tailnet only**      | Host loopback port + `tailscale serve`     | Homepage  |
-| **Internal**          | No sidecar, no ports — container-only      | KBM, bots |
+| **Internal**          | No sidecar, no ports - container-only      | KBM, bots |
 
 Internet-facing services each get their own tailnet hostname via a sidecar
 container (e.g. `openclaw.<tailnet>.ts.net`). Tailnet-only services bind to
@@ -53,7 +53,7 @@ Add to your [tailnet policy](https://login.tailscale.com/admin/acls):
 "nodeAttrs": [{ "target": ["tag:container"], "attr": ["funnel"] }]
 ```
 
-The `funnel` attribute grants the **capability** — each service's
+The `funnel` attribute grants the **capability** - each service's
 `AllowFunnel` in `serve.json` decides whether to use it.
 
 ### 2. OAuth Client
@@ -82,7 +82,7 @@ Service-specific secrets go in `MC_PRIVATE/docker/<service>.env`.
 ## Adding a Service
 
 1. Create `machines/<id>/docker/<name>/compose.yaml`
-2. Run `mc apply <machine>` — the deploy script syncs and starts it
+2. Run `mc apply <machine>` - the deploy script syncs and starts it
 
 ### Internet-facing (Tailscale sidecar + funnel)
 

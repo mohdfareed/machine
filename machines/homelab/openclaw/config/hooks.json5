@@ -1,4 +1,4 @@
-// Hooks — agent event hooks
+// Hooks - agent event hooks
 {
   "enabled": true,
   "token": "${OPENCLAW_HOOKS_TOKEN}",

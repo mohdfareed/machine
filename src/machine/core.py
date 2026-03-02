@@ -96,7 +96,7 @@ err_console = Console(stderr=True)
 _logger = logging.getLogger(__name__)
 _console_handler: logging.Handler | None = None
 
-# Output logger for tee'd subprocess lines — file only, never to console
+# Output logger for tee'd subprocess lines - file only, never to console
 _output_logger = logging.getLogger(__name__ + ".output")
 _output_logger.propagate = False
 

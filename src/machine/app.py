@@ -45,7 +45,7 @@ def cache_sudo() -> None:
     if not is_unix or settings.dry_run or _sudo_keepalive is not None:
         return
 
-    # Initial prompt — the only interactive one.
+    # Initial prompt - the only interactive one.
     rc = subprocess.call(["sudo", "-v"], stdin=sys.stdin)
     if rc != 0:
         logger.warning("sudo -v failed (exit %d); scripts may re-prompt", rc)
@@ -240,8 +240,8 @@ def build_script_env(
 
     Three-tier sourcing:
       1. MC_HOME, MC_ID, MC_PRIVATE (defaults to ``app_dir/private``)
-      2. ``machines/<id>/machine.env`` — committed config vars (may override MC_PRIVATE)
-      3. ``$MC_PRIVATE/env/$MC_ID.env`` — machine secrets (skipped when dir missing)
+      2. ``machines/<id>/machine.env`` - committed config vars (may override MC_PRIVATE)
+      3. ``$MC_PRIVATE/env/$MC_ID.env`` - machine secrets (skipped when dir missing)
 
     Values may reference earlier vars with ``$VAR``; all references are
     resolved iteratively.
@@ -333,7 +333,7 @@ def filter_scripts(scripts: list[str]) -> list[str]:
     """Return scripts that match the current platform and are runnable.
 
     Scripts whose stem starts with ``_`` are helpers intended to be
-    sourced by other scripts — they are never executed directly.
+    sourced by other scripts - they are never executed directly.
     """
     return [
         s

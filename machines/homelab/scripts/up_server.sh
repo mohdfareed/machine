@@ -11,7 +11,7 @@ echo "checking for macOS updates..."
 sw_output=$(softwareupdate -l 2>&1)
 if echo "$sw_output" | grep -q "Software Update found"; then
     if echo "$sw_output" | grep -q "restart"; then
-        echo "updates require a restart — skipping to avoid unplanned downtime."
+        echo "updates require a restart - skipping to avoid unplanned downtime."
         echo "run 'sudo softwareupdate --install --recommended --agree-to-license' manually."
     else
         echo "installing macOS updates (no restart required)..."

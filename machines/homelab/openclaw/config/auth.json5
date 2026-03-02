@@ -1,4 +1,4 @@
-// Authentication — model provider credentials
+// Authentication - model provider credentials
 {
   "profiles": {
     "github-copilot:default": {

@@ -1,6 +1,6 @@
 """HomeLab (macOS) machine manifest."""
 
-from machine.manifest import FileMapping, MachineManifest, brew, cask, mas
+from machine.manifest import FileMapping, MachineManifest, Package, brew, cask
 
 manifest = MachineManifest(
     modules=[
@@ -19,22 +19,22 @@ manifest = MachineManifest(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
         ),
-        # OpenClaw gateway config (symlinked to ~/.openclaw/)
-        FileMapping(source="openclaw/openclaw.json", target="~/.openclaw/openclaw.json"),
-        FileMapping(source="openclaw/config", target="~/.openclaw/config"),
-        FileMapping(source="openclaw/workspace", target="~/.openclaw/workspace"),
-        FileMapping(source="openclaw/cron", target="~/.openclaw/cron"),
+        # OpenClaw gateway config (symlink entire dir so $include resolves)
+        FileMapping(source="openclaw", target="~/.openclaw"),
     ],
     packages=[
-        # OpenClaw (macOS app — gateway + CLI + node)
+        # OpenClaw (macOS app - node)
         *cask("openclaw"),
+        # OpenClaw (CLI - gateway)
+        Package(
+            name="openclaw-cli",
+            script="curl -fsSL https://openclaw.ai/install.sh | bash",
+        ),
         # Dev tools
         *brew("uv", "python"),
         *cask("powershell"),
         # Utilities
         *brew("mas", "fastfetch"),
         *brew("font-computer-modern", "font-jetbrains-mono-nerd-font"),
-        # Mac App Store
-        *mas(Peek=1554235898),
     ],
 )

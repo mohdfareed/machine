@@ -10,7 +10,7 @@ These are the patterns that cause real problems in this codebase:
 1. **Shared module scripts must work on every machine that includes the module.**
    If a script only applies to some machines, it belongs in `machines/<id>/scripts/`,
    not in the module's `scripts/` directory. Watch for hardcoded path probes
-   (checking if a file exists at runtime to decide behavior) — that's always a
+   (checking if a file exists at runtime to decide behavior) - that's always a
    sign the logic is in the wrong place.
 
 2. **No duplicate ownership.** A package, file target, or env var should be
@@ -35,4 +35,4 @@ These are the patterns that cause real problems in this codebase:
 
 For each issue: file path, line numbers, what's wrong, severity
 (HIGH/MEDIUM/LOW), and a concrete fix. End with a summary table sorted by
-severity. If nothing is found, say so — don't invent problems.
+severity. If nothing is found, say so - don't invent problems.

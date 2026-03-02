@@ -1,4 +1,4 @@
-# OpenClaw — Tailscale ingress sidecar
+# OpenClaw - Tailscale ingress sidecar
 # Gives the native OpenClaw gateway its own tailnet hostname ("openclaw").
 # The gateway itself runs natively on the Mac via launchd.
 # Access: https://openclaw.<tailnet>.ts.net

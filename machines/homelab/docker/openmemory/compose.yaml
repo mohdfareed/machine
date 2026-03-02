@@ -1,13 +1,13 @@
-# OpenMemory — AI Memory Layer (MCP Server + Dashboard)
+# OpenMemory - AI Memory Layer (MCP Server + Dashboard)
 # UI/API:  https://<mc_id>-mem0.<tailnet>.ts.net        (tailnet-only, :443)
 # MCP:     https://<mc_id>-mem0.<tailnet>.ts.net:8443   (funnel, public)
 # Qdrant:  mem0.<tailnet>.ts.net:6333                   (tailnet-only)
 #
 # Volume convention:
-#   Named volumes  — disposable state (survives restarts, not backups)
-#   ./data/         — precious data (backed up, portable across machines)
-#   ./logs/         — logs (backed up)
-#   ./ (repo root)  — version-controlled config
+#   Named volumes  - disposable state (survives restarts, not backups)
+#   ./data/         - precious data (backed up, portable across machines)
+#   ./logs/         - logs (backed up)
+#   ./ (repo root)  - version-controlled config
 
 services:
   ts-mem0:

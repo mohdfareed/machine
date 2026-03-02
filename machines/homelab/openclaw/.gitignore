@@ -1,0 +1,17 @@
+# Whitelist approach — ignore everything, track only what we need.
+# OpenClaw creates runtime files/dirs everywhere; this is the only
+# robust way to keep the repo clean.
+
+*
+!*/
+!.gitignore
+
+# Gateway config
+!openclaw.json
+!config/*.json5
+
+# Cron job definitions
+!cron/jobs.json
+
+# Workspace (its own .gitignore handles subtree rules)
+!workspace/**

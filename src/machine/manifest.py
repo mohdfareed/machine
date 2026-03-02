@@ -162,7 +162,7 @@ def load_module(name: str, root: Path) -> Module:
 
     result.name = name
 
-    # Flat modules have no directory — skip path resolution
+    # Flat modules have no directory - skip path resolution
     if not dir_path.exists():
         _module_cache[name] = result
         return result
@@ -209,7 +209,7 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
     if not isinstance(result, MachineManifest):
         raise TypeError(f"'manifest' must be MachineManifest, got {type(result)}")
 
-    # Flat manifests have no directory — skip path/script resolution
+    # Flat manifests have no directory - skip path/script resolution
     if not is_dir_manifest:
         result.modules = _resolve_deps(result.modules, root)
         return result

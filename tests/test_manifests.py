@@ -91,7 +91,7 @@ def test_manifest_overrides_included(machine_id: str) -> None:
     """Every module override file present in the machine dir is in the manifest files."""
     machine_dir = ROOT / "machines" / machine_id
     if not machine_dir.is_dir():
-        pytest.skip("flat manifest — no machine directory")
+        pytest.skip("flat manifest - no machine directory")
 
     manifest = load_manifest(machine_id, ROOT)
     modules = resolve_modules(manifest.modules, ROOT)
@@ -126,7 +126,7 @@ def test_module_dependencies_auto_included() -> None:
     dep_names = ssh_server.depends
     assert "ssh" in dep_names
 
-    # Build a manifest with only ssh-server — ssh should be auto-included
+    # Build a manifest with only ssh-server - ssh should be auto-included
     from machine.manifest import MachineManifest
 
     manifest = MachineManifest(modules=["ssh-server"])

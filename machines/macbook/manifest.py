@@ -21,6 +21,7 @@ manifest = MachineManifest(
         # Apps
         *cask("iina", "mos", "monitorcontrol", "swish"),
         *cask("tailscale", "craft", "chatgpt", "figma", "sf-symbols"),
+        *cask("openclaw"),
         # Mac App Store
         *mas(Xcode=497799835, Copilot=1447330651),
         *mas(Keynote=409183694, Numbers=409203825, Pages=409201541),

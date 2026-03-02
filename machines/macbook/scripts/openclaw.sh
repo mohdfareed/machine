@@ -5,7 +5,7 @@ set -Eeuo pipefail
 # GUI apps don't inherit shell env vars, so we resolve ${VAR}
 # references into the actual config file from the environment.
 
-src="$MC_HOME/config/openclaw/openclaw.json"
+src="$MC_HOME/machines/$MC_ID/openclaw.json"
 dst="$HOME/.openclaw/openclaw.json"
 mkdir -p "$(dirname "$dst")"
 

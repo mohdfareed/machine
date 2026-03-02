@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 # Back up homelab service data to iCloud.
 # Syncs ~/.homelab/*/data/ from this machine and remote servers.
-# Secrets (~/. env) are NOT backed up here — they live in MC_PRIVATE.
+# Secrets (~/. env) are NOT backed up here - they live in MC_PRIVATE.
 #
 # Add remote servers to the SERVERS array below.
 

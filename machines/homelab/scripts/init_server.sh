@@ -97,4 +97,4 @@ if [[ -f "$PLIST" ]]; then
     launchctl bootstrap "gui/$(id -u)" "$PLIST"
 fi
 
-echo "server setup complete — reboot recommended for all changes to take effect."
+echo "server setup complete - reboot recommended for all changes to take effect."

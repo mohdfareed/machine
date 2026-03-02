@@ -17,7 +17,7 @@ fi # linux/wsl (arm64 or x86_64)
 # python
 if command -v brew &>/dev/null; then
   export PATH="$HOMEBREW_PREFIX/opt/python/libexec/bin:$PATH"
-  # python free-threading (thread-safe) — only if installed
+  # python free-threading (thread-safe) - only if installed
   [[ -d "$HOMEBREW_PREFIX/opt/python-freethreading/bin" ]] \
     && export PATH="$HOMEBREW_PREFIX/opt/python-freethreading/bin:$PATH"
 fi
@@ -96,7 +96,7 @@ source "${ZINIT_HOME}/zinit.zsh"
 # fzf (before fzf-tab)
 eval "$(fzf --zsh)"
 
-# plugins (turbo — deferred to first idle prompt)
+# plugins (turbo - deferred to first idle prompt)
 zinit wait lucid for \
   atinit"zicompinit; _post_compinit; zicdreplay" zdharma-continuum/fast-syntax-highlighting \
   blockf zsh-users/zsh-completions \
