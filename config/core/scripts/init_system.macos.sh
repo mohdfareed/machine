@@ -2,9 +2,10 @@
 set -Eeuo pipefail
 
 # set hostname
-if [[ -n "${MC_HOSTNAME:-}" ]]; then
+HOSTNAME="${MC_HOSTNAME:-$MC_ID}"
+if [[ -n "$HOSTNAME" ]]; then
     echo "setting hostname..."
-    sudo scutil --set LocalHostName "$MC_HOSTNAME"
+    sudo scutil --set LocalHostName "$HOSTNAME"
 fi
 
 # enable Touch ID for sudo

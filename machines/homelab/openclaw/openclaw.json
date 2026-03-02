@@ -11,9 +11,6 @@
     "controlUi": {
       "allowedOrigins": ["https://openclaw.${TAILNET_NAME}.ts.net"],
     },
-    "tailscale": {
-      "mode": "serve"
-    },
     "auth": {
       "allowTailscale": true,
       "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }
