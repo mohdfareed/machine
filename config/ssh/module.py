@@ -3,7 +3,7 @@
 from machine.manifest import FileMapping, Module
 
 module = Module(
-    files=[
+    overrides=[
         FileMapping(source="ssh.config", target="~/.ssh/config"),
     ],
 )
