@@ -17,6 +17,8 @@ services:
     volumes:
       - ts-openclaw-state:/var/lib/tailscale
       - ./ts-config:/config
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
