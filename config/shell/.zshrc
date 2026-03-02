@@ -56,6 +56,9 @@ _post_compinit() {
   if command -v dotnet &>/dev/null; then
     eval "$(dotnet completions script zsh)"
   fi
+
+  # openclaw
+  source "$HOME/.openclaw/completions/openclaw.zsh"
 }
 
 # Configuration
