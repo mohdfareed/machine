@@ -28,7 +28,7 @@ manifest = MachineManifest(
         # OpenClaw (CLI - gateway)
         Package(
             name="openclaw-cli",
-            script="curl -fsSL https://openclaw.ai/install.sh | bash",
+            script="curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard",
         ),
         # Dev tools
         *brew("uv", "python"),
