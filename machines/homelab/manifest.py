@@ -19,8 +19,6 @@ manifest = MachineManifest(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
         ),
-        # OpenClaw gateway config (symlink entire dir so $include resolves)
-        FileMapping(source="openclaw", target="~/.openclaw"),
     ],
     packages=[
         # OpenClaw (macOS app - node)

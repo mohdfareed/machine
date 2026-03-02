@@ -10,7 +10,7 @@ set -Eeuo pipefail
 BACKUP_ROOT="${MC_PRIVATE:-$ICLOUD/.machine}/backups"
 HOMELAB_DIR="${MC_HOMELAB_DIR:-$HOME/.homelab}"
 SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=10"
-RSYNC_EXCLUDE=(--exclude='*.log' --exclude='__pycache__/')
+RSYNC_EXCLUDE=(--exclude='*.log' --exclude='__pycache__/' --exclude='*.sock' --exclude='.DS_Store')
 
 # NOTE: Update this list when adding new remote homelab machines.
 SERVERS=(rpi)
