@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mc.openclaw-env</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>source "$HOME/.zshenv" 2>/dev/null; exec "$HOME/.machine/machines/homelab/scripts/openclaw.sh"</string>
+    </array>
+
+    <!-- Re-inject env vars into launchd on every login. -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/mc-openclaw-env.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/mc-openclaw-env.log</string>
+</dict>
+</plist>

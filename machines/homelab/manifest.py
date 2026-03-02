@@ -19,6 +19,11 @@ manifest = MachineManifest(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
         ),
+        FileMapping(
+            source="com.mc.openclaw-env.plist",
+            target="~/Library/LaunchAgents/com.mc.openclaw-env.plist",
+        ),
+        FileMapping(source="openclaw", target="~/.openclaw"),
     ],
     packages=[
         # OpenClaw (macOS app - node)
