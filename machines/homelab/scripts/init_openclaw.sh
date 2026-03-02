@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 if ! command -v openclaw &>/dev/null; then
     echo "installing openclaw..."
-    curl -fsSL https://openclaw.ai/install.sh | bash
+    curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard
 fi
 
 if ! openclaw plugins list 2>/dev/null | grep -q openclaw-mem0; then
