@@ -8,7 +8,7 @@
       "name": "Daily OpenClaw recommendations check-in",
       "enabled": true,
       "createdAtMs": 1772296903351,
-      "updatedAtMs": 1772368252688,
+      "updatedAtMs": 1772458224299,
       "schedule": {
         "kind": "cron",
         "expr": "30 7 * * *",
@@ -18,22 +18,22 @@
       "wakeMode": "now",
       "payload": {
         "kind": "agentTurn",
-        "message": "Daily reminder: prepare and send Mohammed a concise morning check-in with OpenClaw improvements (tools/config/workflow), what changed since last check, recommended next action, and any approval-needed items.",
+        "message": "Daily check-in: review OpenClaw improvements (tools/config/workflow), what changed since last check, recommended next action, and any approval-needed items. Reply with a concise morning summary — do not use the message tool.",
         "timeoutSeconds": 0
       },
       "delivery": {
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1772454600000,
-        "lastRunAtMs": 1772368200032,
+        "nextRunAtMs": 1772541000000,
+        "lastRunAtMs": 1772454600014,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 52656,
-        "lastError": "⚠️ ✉️ Message failed",
+        "lastDurationMs": 133394,
         "lastDelivered": true,
         "lastDeliveryStatus": "delivered",
-        "consecutiveErrors": 1
+        "consecutiveErrors": 2,
+        "lastError": "⚠️ ✉️ Message failed"
       }
     },
     {
@@ -43,7 +43,7 @@
       "name": "OpenClaw auth monitor",
       "enabled": true,
       "createdAtMs": 1772297188942,
-      "updatedAtMs": 1772370011919,
+      "updatedAtMs": 1772458229311,
       "schedule": {
         "kind": "cron",
         "expr": "0 8 * * *",
@@ -53,21 +53,22 @@
       "wakeMode": "now",
       "payload": {
         "kind": "agentTurn",
-        "message": "Run `openclaw models status --check` and send Mohammed a short auth health report. If any provider is near expiry, expired, or needs reauth, clearly label it and provide exact next action.",
+        "message": "Run `openclaw models status --check` and reply with a short auth health report. If any provider is near expiry, expired, or needs reauth, clearly label it and provide the exact next action. Do not use the message tool.",
         "timeoutSeconds": 0
       },
       "delivery": {
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1772456400000,
-        "lastRunAtMs": 1772370000022,
-        "lastRunStatus": "ok",
-        "lastStatus": "ok",
-        "lastDurationMs": 11897,
+        "nextRunAtMs": 1772542800000,
+        "lastRunAtMs": 1772456400007,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 183270,
         "lastDelivered": true,
         "lastDeliveryStatus": "delivered",
-        "consecutiveErrors": 0
+        "consecutiveErrors": 1,
+        "lastError": "⚠️ ✉️ Message failed"
       }
     }
   ]
