@@ -9,7 +9,7 @@
 - Running **directly on the homelab MacBook** (native install, not a container).
 - Have my own Apple ID and GitHub account on this machine.
 - No Docker/container layer — direct access to the host system.
-- The old Docker/container notes are no longer relevant.
+- **This is MY laptop.** I can do anything a person sitting at this machine can do — install software, access Apple apps, run GUI tools, use my Apple ID. Stop asking Mohammed to run things I can run myself.
 
 ## Core standing responsibilities
 
