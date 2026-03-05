@@ -8,7 +8,7 @@
       "name": "Daily OpenClaw recommendations check-in",
       "enabled": true,
       "createdAtMs": 1772296903351,
-      "updatedAtMs": 1772458224299,
+      "updatedAtMs": 1772676179592,
       "schedule": {
         "kind": "cron",
         "expr": "30 7 * * *",
@@ -25,15 +25,14 @@
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1772541000000,
-        "lastRunAtMs": 1772454600014,
-        "lastRunStatus": "error",
-        "lastStatus": "error",
-        "lastDurationMs": 133394,
+        "nextRunAtMs": 1772713800000,
+        "lastRunAtMs": 1772676147093,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 32499,
         "lastDelivered": true,
         "lastDeliveryStatus": "delivered",
-        "consecutiveErrors": 2,
-        "lastError": "⚠️ ✉️ Message failed"
+        "consecutiveErrors": 0
       }
     },
     {
@@ -43,7 +42,7 @@
       "name": "OpenClaw auth monitor",
       "enabled": true,
       "createdAtMs": 1772297188942,
-      "updatedAtMs": 1772458229311,
+      "updatedAtMs": 1772676191775,
       "schedule": {
         "kind": "cron",
         "expr": "0 8 * * *",
@@ -60,15 +59,110 @@
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1772542800000,
-        "lastRunAtMs": 1772456400007,
-        "lastRunStatus": "error",
-        "lastStatus": "error",
-        "lastDurationMs": 183270,
+        "nextRunAtMs": 1772715600000,
+        "lastRunAtMs": 1772676179592,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 12183,
         "lastDelivered": true,
         "lastDeliveryStatus": "delivered",
-        "consecutiveErrors": 1,
-        "lastError": "⚠️ ✉️ Message failed"
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "796f4609-f71d-467a-b73e-eb96f19691b4",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:31049",
+      "name": "Self-improvement loop",
+      "enabled": true,
+      "createdAtMs": 1772679604177,
+      "updatedAtMs": 1772680676978,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 2 * * *",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "You are Claudia. Read /Users/claudia/.openclaw/workspace/CONTEXT.md and /Users/claudia/.openclaw/workspace/memory/open-loops.md first.\n\nThis is your nightly self-improvement session. No one prompted this — you scheduled it yourself.\n\n1. Read what you learned recently (memory/assistant-research.md, memory/learning-dump.md if it exists)\n2. Find 1-2 new things to learn: search YouTube, blogs, docs, Reddit for OpenClaw usage patterns, productivity systems, how real assistants operate\n3. Identify one concrete thing you can improve about how you operate and implement it (update AGENTS.md, HEARTBEAT.md, CONTEXT.md, or a config)\n4. Update memory/open-loops.md with anything new or resolved\n5. Write a 3-line summary of what you did to memory/YYYY-MM-DD.md\n\nDon't report back unless you found something Mohammed genuinely needs to know. Otherwise just do the work and stay quiet.",
+        "timeoutSeconds": 600
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1772694000000,
+        "lastRunAtMs": 1772680590727,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 86251,
+        "lastDelivered": false,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "b432952e-6245-4580-b914-676894e398d8",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:31049",
+      "name": "Repo sync — pull upstream changes",
+      "enabled": true,
+      "createdAtMs": 1772680392604,
+      "updatedAtMs": 1772680590703,
+      "schedule": {
+        "kind": "every",
+        "everyMs": 1800000,
+        "anchorMs": 1772680392604
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run: cd ~/.machine && git fetch origin && git status. If there are upstream changes on the current branch, pull them with git pull --rebase. If there are conflicts, write a note to /Users/claudia/.openclaw/workspace/memory/open-loops.md and notify Mohammed. Stay silent if nothing changed.",
+        "timeoutSeconds": 60
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1772682384987,
+        "lastRunAtMs": 1772680584987,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 5716,
+        "lastDelivered": false,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "14554749-4c7c-4082-a9c9-5620cc83f4c2",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:31049",
+      "name": "Repo sync — commit and PR",
+      "enabled": true,
+      "createdAtMs": 1772680397936,
+      "updatedAtMs": 1772680397936,
+      "schedule": {
+        "expr": "0 3 * * *",
+        "kind": "cron",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Check for uncommitted changes in ~/.machine: cd ~/.machine && git status --short. If there are changes to workspace files (memory/, MEMORY.md, AGENTS.md, CONTEXT.md, HEARTBEAT.md, USER.md, skills/), stage them, create a descriptive commit message, push to a branch named claudia/updates-YYYY-MM-DD, and open a PR if one doesn't exist. Stay silent if nothing to commit.",
+        "timeoutSeconds": 120
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1772697600000,
+        "runningAtMs": 1772680650784
       }
     }
   ]
