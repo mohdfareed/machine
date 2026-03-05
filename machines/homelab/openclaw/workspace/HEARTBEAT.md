@@ -2,8 +2,8 @@
 
 ## Checks (every heartbeat)
 
-- **Overdue reminders**: run `remindctl overdue --json` on homelab Mac node, ping Mohammed if anything is due.
-- **Upcoming events (next 2h)**: check calendar for events in the next 2 hours; if any have a location, spin up a cron job for a "leave in X" ping at the right time.
+- **Overdue reminders**: ⚠️ BLOCKED — `remindctl overdue --json` denied by node security=deny. Re-enable when node exec security is loosened.
+- **Upcoming events (next 2h)**: ⚠️ BLOCKED — `calendar.list` not in node allowlist. Re-enable when added to allowlist.
 - **Email triage**: (pending email forwarding setup) check for urgent unread emails.
 
 ## Rules
