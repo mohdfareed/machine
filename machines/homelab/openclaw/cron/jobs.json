@@ -25,7 +25,7 @@
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1772713800000,
+        "nextRunAtMs": 1772969400000,
         "lastRunAtMs": 1772676147093,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
@@ -59,7 +59,7 @@
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1772715600000,
+        "nextRunAtMs": 1772971200000,
         "lastRunAtMs": 1772676179592,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
@@ -93,7 +93,7 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1772694000000,
+        "nextRunAtMs": 1772953200000,
         "lastRunAtMs": 1772680590727,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
@@ -110,7 +110,7 @@
       "name": "Repo sync — pull upstream changes",
       "enabled": true,
       "createdAtMs": 1772680392604,
-      "updatedAtMs": 1772680590703,
+      "updatedAtMs": 1772925196732,
       "schedule": {
         "kind": "every",
         "everyMs": 1800000,
@@ -127,11 +127,11 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1772682384987,
-        "lastRunAtMs": 1772680584987,
+        "nextRunAtMs": 1772926992618,
+        "lastRunAtMs": 1772925192618,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 5716,
+        "lastDurationMs": 4114,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0
@@ -144,7 +144,7 @@
       "name": "Repo sync — commit and PR",
       "enabled": true,
       "createdAtMs": 1772680397936,
-      "updatedAtMs": 1772680397936,
+      "updatedAtMs": 1772680698484,
       "schedule": {
         "expr": "0 3 * * *",
         "kind": "cron",
@@ -161,8 +161,14 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1772697600000,
-        "runningAtMs": 1772680650784
+        "nextRunAtMs": 1772953200000,
+        "lastRunAtMs": 1772680650784,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 47700,
+        "lastDelivered": false,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0
       }
     }
   ]

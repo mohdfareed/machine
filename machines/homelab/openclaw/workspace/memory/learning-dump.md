@@ -456,3 +456,22 @@ Mohammed should feel that something is watching his back — that things don't f
 - Ambient.us: AI Chief of Staff product
 - Morgen: Best AI Planning Assistants 2026
 - arxiv.org: User frustrations with AI coding assistants (2025)
+
+---
+
+## Video: "How to create JOBS for OpenClaw agents" (Mohammed shared, 2026-03-04)
+https://youtube.com/watch?v=uUN1oy2PRHo — 20min, 4.2k words
+
+### Key takeaways
+- **Shift mindset**: stop doing one-off tasks, start defining *roles* with recurring cadences
+- **A hire only works when there is a steady flow of recurring needs** — same applies to cron jobs
+- Built BMHQ: custom Rails mission control on Mac Mini, Kanban UI, dispatches directly to OpenClaw gateway
+- Skills = markdown operating manuals for specific jobs. Improve the skill file = improve the whole team
+- Output stored as markdown files synced via Dropbox. Agents link to files in Telegram, not dump text
+- Brainown = mobile editor for those markdown files
+- Comprehensive execution logs for debugging + refining instructions
+
+### What this means for me
+- My skills/ folder is already this pattern — need to actually USE them as operating manuals
+- open-loops.md is my version of the Kanban board — keep it tight
+- Outputs should be files I link to, not walls of text in Telegram
