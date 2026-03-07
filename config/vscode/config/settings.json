@@ -87,8 +87,7 @@
   "git.replaceTagsWhenPull": true,
   "git.openRepositoryInParentFolders": "never",
   "diffEditor.renderSideBySide": false,
-  "diffEditor.ignoreTrimWhitespace": false,
-  "diffEditor.experimental.showMoves": true,
+    "diffEditor.experimental.showMoves": true,
   "scm.repositories.explorer": true,
   // # endregion ===============================================================
   // MARK: copilot

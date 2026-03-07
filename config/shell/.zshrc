@@ -45,7 +45,7 @@ fi
 FPATH="$HOME/.local/docker/completions:${FPATH}"
 FPATH="$HOME/.docker/completions:${FPATH}"
 
-# python (typer) apps completions (must remain commented)
+# python (typer) apps completions; must remain commented
 # fpath+=~/.zfunc; autoload -Uz compinit; compinit
 
 _post_compinit() {
@@ -58,7 +58,9 @@ _post_compinit() {
   fi
 
   # openclaw
-  source "$HOME/.openclaw/completions/openclaw.zsh"
+  if [ -f "$HOME/.openclaw/completions/openclaw.zsh" ]; then
+    source "$HOME/.openclaw/completions/openclaw.zsh"
+  fi
 }
 
 # Configuration

@@ -24,17 +24,20 @@ OPENCLAW_VARS=(
     TELEGRAM_WEBHOOK_SECRET
 )
 
+changed=false
 for var in "${OPENCLAW_VARS[@]}"; do
     val="${!var:-}"
     [[ -z "$val" ]] && { echo "warning: $var is not set"; continue; }
+    current="$(launchctl getenv "$var" 2>/dev/null || true)"
+    [[ "$current" == "$val" ]] && continue
     launchctl setenv "$var" "$val"
+    changed=true
 done
 
-echo "openclaw: env vars injected into launchd (${#OPENCLAW_VARS[@]} vars)"
+echo "openclaw: env vars synced to launchd (${#OPENCLAW_VARS[@]} vars)"
 
-# Restart the gateway so it re-runs shellEnv with the new vars.
-# The daemon may not be running yet (first deploy) — that's fine.
-if command -v openclaw &>/dev/null && openclaw gateway status &>/dev/null; then
-    echo "openclaw: restarting gateway to pick up env vars..."
+# Restart the gateway only if env vars changed, so it re-runs shellEnv.
+if $changed && command -v openclaw &>/dev/null && openclaw gateway status &>/dev/null; then
+    echo "openclaw: env vars changed, restarting gateway..."
     openclaw gateway restart
 fi

@@ -6,11 +6,11 @@
     "device-pair",
     "llm-task",
     "lobster",
-    "openclaw-mem0"
+    "memory-lancedb"
   ],
 
   // Keep ONE memory provider active.
-  "slots": { "memory": "openclaw-mem0" },
+  "slots": { "memory": "memory-lancedb" },
 
   "entries": {
     "telegram": { "enabled": true },
@@ -20,21 +20,13 @@
 
     // Memory slot companions
     "memory-core": { "enabled": false },
-    "memory-lancedb": { "enabled": false },
-    "openclaw-mem0": {
+    "memory-lancedb": {
       "enabled": true,
       "config": {
-        "mode": "open-source",
-        "userId": "${MEM0_USER_ID}",
-        "oss": {
-          "disableHistory": true,
-          "vectorStore": {
-            "provider": "qdrant",
-            "config": {
-              "host": "mem0.${TAILNET_NAME}.ts.net",
-              "port": 6333
-            }
-          }
+        "autoCapture": true,
+        "autoRecall": true,
+        "embedding": {
+          "apiKey": "${OPENAI_API_KEY}",
         }
       }
     }
