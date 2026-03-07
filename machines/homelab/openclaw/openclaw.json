@@ -1,31 +1,86 @@
 {
-  // Load missing expected env vars from login shell
-  "env": {
-    "shellEnv": { "enabled": true, },
+  "meta": {
+    "lastTouchedVersion": "2026.3.2",
+    "lastTouchedAt": "2026-03-07T22:57:47.442Z"
   },
-  // Networking
-  "gateway": {
-    "mode": "local",
-    "bind": "loopback",
-    "trustedProxies": ["127.0.0.1"],
-    "controlUi": {
-      "allowedOrigins": ["https://openclaw.${TAILNET_NAME}.ts.net"],
-    },
-    "auth": {
-      "allowTailscale": true,
-      "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }
+  "env": {
+    "shellEnv": {
+      "enabled": true
     }
   },
-  // Scheduled tasks
-  "cron": {
-    "webhookToken": "${OPENCLAW_CRON_TOKEN}",
+  "auth": {
+    "profiles": {
+      "github-copilot:default": {
+        "provider": "github-copilot",
+        "mode": "token"
+      },
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      },
+      "openai:default": {
+        "provider": "openai",
+        "mode": "token"
+      },
+      "anthropic:default": {
+        "provider": "anthropic",
+        "mode": "token"
+      },
+      "google:default": {
+        "provider": "google",
+        "mode": "token"
+      }
+    }
   },
-  // Messaging behavior
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "github-copilot/claude-sonnet-4.6",
+        "fallbacks": [
+          "anthropic/claude-sonnet-4-6",
+          "openai-codex/gpt-5.3-codex",
+          "openai/gpt-5.3-codex",
+          "google/gemini-3.1-pro",
+          "github-copilot/gpt-5-mini"
+        ]
+      },
+      "workspace": "~/.openclaw/workspace",
+      "memorySearch": {
+        "sources": [
+          "memory",
+          "sessions"
+        ],
+        "experimental": {
+          "sessionMemory": true
+        },
+        "query": {
+          "hybrid": {
+            "enabled": true,
+            "vectorWeight": 0.7,
+            "textWeight": 0.3,
+            "mmr": {
+              "enabled": true,
+              "lambda": 0.7
+            },
+            "temporalDecay": {
+              "enabled": true,
+              "halfLifeDays": 30
+            }
+          }
+        }
+      },
+      "heartbeat": {
+        "every": "10m"
+      }
+    }
+  },
+  "tools": {
+    "profile": "full"
+  },
   "messages": {
     "ackReactionScope": "all",
-    "removeAckAfterReply": true,
+    "removeAckAfterReply": true
   },
-  // Admin commands
   "commands": {
     "native": "auto",
     "nativeSkills": "auto",
@@ -33,28 +88,191 @@
     "config": true,
     "debug": true,
     "restart": true,
+    "ownerDisplay": "raw",
     "allowFrom": {
-      "webchat": ["openclaw-control-ui"],
-      "telegram": ["${TELEGRAM_USER_ID}"],
-    },
+      "webchat": [
+        "openclaw-control-ui"
+      ],
+      "telegram": [
+        1092659787
+      ]
+    }
   },
-  // Included Configurations ==================================================
-  "agents": {
-    "$include": "./config/agents.json5"
+  "session": {
+    "dmScope": "per-channel-peer"
   },
-  "auth": {
-    "$include": "./config/auth.json5"
-  },
-  "channels": {
-    "$include": "./config/channels.json5"
+  "cron": {
+    "webhookToken": "${OPENCLAW_CRON_TOKEN}"
   },
   "hooks": {
-    "$include": "./config/hooks.json5"
+    "enabled": true,
+    "token": "${OPENCLAW_HOOKS_TOKEN}",
+    "defaultSessionKey": "hook:ingress",
+    "allowRequestSessionKey": false,
+    "allowedSessionKeyPrefixes": [
+      "hook:"
+    ],
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "boot-md": {
+          "enabled": true
+        },
+        "command-logger": {
+          "enabled": true
+        },
+        "session-memory": {
+          "enabled": true
+        },
+        "bootstrap-extra-files": {
+          "enabled": true
+        }
+      }
+    }
   },
-  "plugins": {
-    "$include": "./config/plugins.json5"
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "pairing",
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "allowFrom": [
+        "tg:${TELEGRAM_USER_ID}"
+      ],
+      "groupPolicy": "allowlist",
+      "streaming": "partial",
+      "actions": {
+        "reactions": true,
+        "sendMessage": true,
+        "deleteMessage": true,
+        "sticker": true
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "controlUi": {
+      "allowedOrigins": [
+        "https://openclaw.${TAILNET_NAME}.ts.net"
+      ]
+    },
+    "trustedProxies": [
+      "127.0.0.1"
+    ],
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
   },
   "skills": {
-    "$include": "./config/skills.json5"
+    "install": {
+      "nodeManager": "npm"
+    },
+    "entries": {
+      "apple-reminders": {
+        "enabled": true
+      },
+      "apple-calendar": {
+        "enabled": true
+      },
+      "clawhub": {
+        "enabled": true
+      },
+      "coding-agent": {
+        "enabled": true
+      },
+      "github": {
+        "enabled": true
+      },
+      "healthcheck": {
+        "enabled": true
+      },
+      "himalaya": {
+        "enabled": true
+      },
+      "mcporter": {
+        "enabled": true
+      },
+      "nano-banana-pro": {
+        "enabled": true,
+        "apiKey": "${GEMINI_API_KEY}"
+      },
+      "nano-pdf": {
+        "enabled": true,
+        "apiKey": "${GEMINI_API_KEY}"
+      },
+      "openai-image-gen": {
+        "enabled": true,
+        "apiKey": "${OPENAI_API_KEY}"
+      },
+      "openai-whisper-api": {
+        "enabled": true,
+        "apiKey": "${OPENAI_API_KEY}"
+      },
+      "skill-creator": {
+        "enabled": true
+      },
+      "summarize": {
+        "enabled": true
+      }
+    }
+  },
+  "plugins": {
+    "enabled": true,
+    "allow": [
+      "telegram",
+      "device-pair",
+      "llm-task",
+      "lobster",
+      "openclaw-mem0"
+    ],
+    "slots": {
+      "memory": "memory-lancedb"
+    },
+    "entries": {
+      "telegram": {
+        "enabled": true
+      },
+      "device-pair": {
+        "enabled": true
+      },
+      "llm-task": {
+        "enabled": true
+      },
+      "lobster": {
+        "enabled": true
+      },
+      "memory-core": {
+        "enabled": false
+      },
+      "memory-lancedb": {
+        "enabled": true,
+        "config": {
+          "autoCapture": true,
+          "autoRecall": true,
+          "embedding": {
+            "apiKey": "${OPENAI_API_KEY}"
+          }
+        }
+      },
+      "openclaw-mem0": {
+        "enabled": true,
+        "config": {
+          "mode": "open-source",
+          "userId": "${MEM0_USER_ID}",
+          "oss": {
+            "disableHistory": true,
+            "vectorStore": {
+              "provider": "qdrant",
+              "config": {
+                "host": "mem0.${TAILNET_NAME}.ts.net",
+                "port": 6333
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
