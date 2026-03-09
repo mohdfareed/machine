@@ -1,6 +1,6 @@
 # open-loops.md — Everything Active
 
-_Last updated: 2026-03-08 03:00 EST_
+_Last updated: 2026-03-09 02:00 EST_
 _Any session can read this to know what's going on._
 
 ## Active cron jobs
@@ -20,6 +20,7 @@ _Any session can read this to know what's going on._
 - [x] Read self-improving and continuity-framework skills (done 2026-03-08 nightly session)
 - [x] Initialize ~/self-improving/ directory structure (done 2026-03-08)
 - [x] Create memory/questions.md for continuity-framework pattern (done 2026-03-08)
+- [x] Create BOOT.md to activate boot-md hook at gateway startup (done 2026-03-09)
 - [ ] Rewire existing cron jobs to deliver to dedicated Telegram topics instead of isolated sessions
 - [ ] Create dedicated Telegram topics (one per category)
 - [ ] Test apple-calendar-cli skill
