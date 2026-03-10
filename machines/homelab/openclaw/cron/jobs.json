@@ -8,7 +8,7 @@
       "name": "Daily OpenClaw recommendations check-in",
       "enabled": true,
       "createdAtMs": 1772296903351,
-      "updatedAtMs": 1772969420830,
+      "updatedAtMs": 1773055844168,
       "schedule": {
         "kind": "cron",
         "expr": "30 7 * * *",
@@ -25,16 +25,16 @@
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1773055800000,
-        "lastRunAtMs": 1772969400014,
+        "nextRunAtMs": 1773142200000,
+        "lastRunAtMs": 1773055800014,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 20816,
+        "lastDurationMs": 44154,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0,
-        "lastError": "cron announce delivery failed",
-        "lastDeliveryError": "cron announce delivery failed"
+        "lastDeliveryError": "cron announce delivery failed",
+        "lastError": "cron announce delivery failed"
       }
     },
     {
@@ -44,7 +44,7 @@
       "name": "OpenClaw auth monitor",
       "enabled": true,
       "createdAtMs": 1772297188942,
-      "updatedAtMs": 1772971216876,
+      "updatedAtMs": 1773057619069,
       "schedule": {
         "kind": "cron",
         "expr": "0 8 * * *",
@@ -61,16 +61,16 @@
         "mode": "announce"
       },
       "state": {
-        "nextRunAtMs": 1773057600000,
-        "lastRunAtMs": 1772971200034,
+        "nextRunAtMs": 1773144000000,
+        "lastRunAtMs": 1773057600011,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 16842,
+        "lastDurationMs": 19058,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0,
-        "lastError": "cron announce delivery failed",
-        "lastDeliveryError": "cron announce delivery failed"
+        "lastDeliveryError": "cron announce delivery failed",
+        "lastError": "cron announce delivery failed"
       }
     },
     {
@@ -80,7 +80,7 @@
       "name": "Self-improvement loop",
       "enabled": true,
       "createdAtMs": 1772679604177,
-      "updatedAtMs": 1773036116709,
+      "updatedAtMs": 1773122474196,
       "schedule": {
         "kind": "cron",
         "expr": "0 2 * * *",
@@ -97,11 +97,11 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1773122400000,
-        "lastRunAtMs": 1773036000011,
+        "nextRunAtMs": 1773208800000,
+        "lastRunAtMs": 1773122400010,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 116698,
+        "lastDurationMs": 74186,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0
@@ -114,7 +114,7 @@
       "name": "Repo sync — pull upstream changes",
       "enabled": true,
       "createdAtMs": 1772680392604,
-      "updatedAtMs": 1773038602387,
+      "updatedAtMs": 1773125013051,
       "schedule": {
         "kind": "every",
         "everyMs": 1800000,
@@ -131,11 +131,11 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1773040393321,
-        "lastRunAtMs": 1773038593321,
+        "nextRunAtMs": 1773126793889,
+        "lastRunAtMs": 1773124993889,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 9066,
+        "lastDurationMs": 19162,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0
@@ -148,7 +148,7 @@
       "name": "Repo sync — commit and PR",
       "enabled": true,
       "createdAtMs": 1772680397936,
-      "updatedAtMs": 1772953340482,
+      "updatedAtMs": 1773039629370,
       "schedule": {
         "expr": "0 3 * * *",
         "kind": "cron",
@@ -165,15 +165,15 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1773039600000,
-        "lastRunAtMs": 1772953318398,
+        "nextRunAtMs": 1773126000000,
+        "lastRunAtMs": 1773039600017,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 22084,
+        "lastDurationMs": 29353,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0,
-        "runningAtMs": 1773039600010
+        "runningAtMs": 1773126000007
       }
     }
   ]
