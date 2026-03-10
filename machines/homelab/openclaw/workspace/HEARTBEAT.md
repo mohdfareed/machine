@@ -8,6 +8,16 @@
 - **Open loops sweep**: Scan `memory/open-loops.md` — surface anything stale >3 days or newly blocked.
 - **Questions surfacing**: Check `memory/questions.md` — if a question has been pending >3 days, bring it up naturally.
 
+## Stale Item Protocol
+
+When an item in `memory/waiting-for.md` is past its "Stale after" date:
+1. Include it in the next morning heartbeat message (not a separate ping)
+2. Format: "⏳ Still waiting on [item] from [person] (added [date])"
+3. After surfacing, update the "Stale after" date by +4 days so it doesn't repeat until then
+4. Don't re-surface if Mohammed acknowledged it in the current conversation
+
+When `memory/open-loops.md` has a pending item with no activity for >7 days: surface it in morning brief as "🔲 No movement on: [item]"
+
 ## Rules
 
 - Don't ping for things already pinged in the last heartbeat cycle.
