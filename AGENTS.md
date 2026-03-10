@@ -29,7 +29,7 @@ Cross-platform machine bootstrapper and dotfile manager.
 - `src/machine/` - Python package (CLI app)
 - `config/` - Shared dotfiles and configs
 - `machines/` - Per-host configurations
-- `bootstrap.sh` / `bootstrap.ps1` - Bare-machine bootstrap
+- `scripts/bootstrap.sh` / `scripts/bootstrap.ps1` - Bare-machine bootstrap
 
 ## Architecture
 
