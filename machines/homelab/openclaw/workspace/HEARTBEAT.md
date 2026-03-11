@@ -18,11 +18,27 @@ When an item in `memory/waiting-for.md` is past its "Stale after" date:
 
 When `memory/open-loops.md` has a pending item with no activity for >7 days: surface it in morning brief as "🔲 No movement on: [item]"
 
+## Value Threshold — When to Surface vs Stay Silent
+
+Before sending anything proactively, score it:
+
+| Score | Meaning | Example |
+|-------|---------|---------|
+| 5 | Urgent / time-sensitive | Meeting in 30 min, deadline today |
+| 4 | Actionable and timely | Stale waiting-for, unresolved blocker |
+| 3 | Useful but not urgent | Something interesting to know |
+| 2 | Low value / noise | Confirming something already known |
+| 1 | Nothing | No new information |
+
+**Rule: Only surface items scoring ≥ 4 in a proactive ping.** Score 3 items can be batched into the morning brief if there's already a reason to message. Scores 1–2 = stay silent (HEARTBEAT_OK).
+
+When multiple items: surface highest-value first, batch the rest in one message. Never send multiple pings for the same heartbeat cycle.
+
 ## Rules
 
 - Don't ping for things already pinged in the last heartbeat cycle.
 - Only reach out if something actually needs attention.
-- Late night (23:00–08:00 America/New_York): only ping for urgent items.
+- Late night (23:00–08:00 America/New_York): only ping for urgent items (score 5).
 - Batch similar alerts into one message — don't send multiple pings for related issues.
 
 ## Morning Heartbeat (~8-9 AM)
