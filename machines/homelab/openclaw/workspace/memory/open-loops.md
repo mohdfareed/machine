@@ -1,6 +1,6 @@
 # open-loops.md — Everything Active
 
-_Last updated: 2026-03-10 02:00 EST_
+_Last updated: 2026-03-11 02:00 EST_
 _Any session can read this to know what's going on._
 
 ## Active cron jobs
@@ -11,6 +11,12 @@ _Any session can read this to know what's going on._
 | Repo sync — PR | 3am nightly | Batch commit my changes, open PR |
 | OpenClaw daily check | 7:30am | (existing, needs to be rewired to topic thread) |
 | Auth monitor | 8:00am | (existing, needs to be rewired to topic thread) |
+
+## ⚠️ Repo Conflict — needs Mohammed (2026-03-10 03:13 AM)
+- Branch `claudia/updates-2026-03-10` has conflicts with `origin/main` when rebasing
+- Conflicting files: `machines/homelab/openclaw/cron/jobs.json`, `machines/homelab/openclaw/workspace/MEMORY.md`, `machines/homelab/openclaw/workspace/memory/2026-03-04.md`
+- Repo left in clean state (rebase aborted). Branch is behind origin/main until resolved.
+- Options: (a) merge instead of rebase, (b) resolve conflicts manually, (c) reset branch to main and re-apply changes
 
 ## Pending: needs Mohammed
 - [ ] Approve PRs I open on `mohdfareed/machine`
