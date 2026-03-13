@@ -8,7 +8,7 @@
       "name": "Daily OpenClaw recommendations check-in",
       "enabled": true,
       "createdAtMs": 1772296903351,
-      "updatedAtMs": 1773055844168,
+      "updatedAtMs": 1773443089258,
       "schedule": {
         "kind": "cron",
         "expr": "30 7 * * *",
@@ -22,19 +22,21 @@
         "timeoutSeconds": 0
       },
       "delivery": {
-        "mode": "announce"
+        "mode": "announce",
+        "channel": "telegram",
+        "to": "1092659787"
       },
       "state": {
-        "nextRunAtMs": 1773142200000,
-        "lastRunAtMs": 1773055800014,
+        "nextRunAtMs": 1773228600000,
+        "lastRunAtMs": 1773142200011,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 44154,
+        "lastDurationMs": 21765,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0,
         "lastDeliveryError": "cron announce delivery failed",
-        "lastError": "cron announce delivery failed"
+        "runningAtMs": 1773443034713
       }
     },
     {
@@ -44,7 +46,7 @@
       "name": "OpenClaw auth monitor",
       "enabled": true,
       "createdAtMs": 1772297188942,
-      "updatedAtMs": 1773057619069,
+      "updatedAtMs": 1773443090354,
       "schedule": {
         "kind": "cron",
         "expr": "0 8 * * *",
@@ -58,19 +60,21 @@
         "timeoutSeconds": 0
       },
       "delivery": {
-        "mode": "announce"
+        "mode": "announce",
+        "channel": "telegram",
+        "to": "1092659787"
       },
       "state": {
-        "nextRunAtMs": 1773144000000,
-        "lastRunAtMs": 1773057600011,
+        "nextRunAtMs": 1773230400000,
+        "lastRunAtMs": 1773144000025,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 19058,
+        "lastDurationMs": 17287,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0,
         "lastDeliveryError": "cron announce delivery failed",
-        "lastError": "cron announce delivery failed"
+        "runningAtMs": 1773443034713
       }
     },
     {
@@ -80,7 +84,7 @@
       "name": "Self-improvement loop",
       "enabled": true,
       "createdAtMs": 1772679604177,
-      "updatedAtMs": 1773122474196,
+      "updatedAtMs": 1773208884195,
       "schedule": {
         "kind": "cron",
         "expr": "0 2 * * *",
@@ -97,14 +101,15 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1773208800000,
-        "lastRunAtMs": 1773122400010,
+        "nextRunAtMs": 1773295200000,
+        "lastRunAtMs": 1773208800017,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 74186,
+        "lastDurationMs": 84178,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
-        "consecutiveErrors": 0
+        "consecutiveErrors": 0,
+        "runningAtMs": 1773443034713
       }
     },
     {
@@ -114,7 +119,7 @@
       "name": "Repo sync — pull upstream changes",
       "enabled": true,
       "createdAtMs": 1772680392604,
-      "updatedAtMs": 1773125013051,
+      "updatedAtMs": 1773213221621,
       "schedule": {
         "kind": "every",
         "everyMs": 1800000,
@@ -131,14 +136,15 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1773126793889,
-        "lastRunAtMs": 1773124993889,
+        "nextRunAtMs": 1773214994456,
+        "lastRunAtMs": 1773213194456,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 19162,
+        "lastDurationMs": 27165,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
-        "consecutiveErrors": 0
+        "consecutiveErrors": 0,
+        "runningAtMs": 1773443034713
       }
     },
     {
@@ -148,7 +154,7 @@
       "name": "Repo sync — commit and PR",
       "enabled": true,
       "createdAtMs": 1772680397936,
-      "updatedAtMs": 1773039629370,
+      "updatedAtMs": 1773212419793,
       "schedule": {
         "expr": "0 3 * * *",
         "kind": "cron",
@@ -158,22 +164,22 @@
       "wakeMode": "now",
       "payload": {
         "kind": "agentTurn",
-        "message": "Check for uncommitted changes in ~/.machine: cd ~/.machine && git status --short. If there are changes to workspace files (memory/, MEMORY.md, AGENTS.md, CONTEXT.md, HEARTBEAT.md, USER.md, skills/), stage them, create a descriptive commit message, push to a branch named claudia/updates-YYYY-MM-DD, and open a PR if one doesn't exist. Stay silent if nothing to commit.",
+        "message": "Check for uncommitted changes in ~/.machine: cd ~/.machine && git status --short. If there are changes to workspace files (memory/, MEMORY.md, AGENTS.md, CONTEXT.md, HEARTBEAT.md, USER.md, skills/), do the following:\n\n1. Stage and commit with a concise, descriptive message (no date in the message).\n2. Push to the branch `claudia/workspace-updates` (create if needed, always reuse this same branch).\n3. Check if a PR already exists for that branch: GITHUB_TOKEN=$CLAUDIA_GITHUB_TOKEN gh pr list --repo mohdfareed/machine --head claudia/workspace-updates --json number,title\n   - If no PR exists: open one with title 'claudia: workspace updates' (no date) using GITHUB_TOKEN=$CLAUDIA_GITHUB_TOKEN gh pr create ...\n   - If a PR already exists: leave it open, do nothing extra.\n4. Stay silent if nothing to commit.",
         "timeoutSeconds": 120
       },
       "delivery": {
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1773126000000,
-        "lastRunAtMs": 1773039600017,
+        "nextRunAtMs": 1773298800000,
+        "lastRunAtMs": 1773212400010,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 29353,
+        "lastDurationMs": 19783,
         "lastDelivered": false,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0,
-        "runningAtMs": 1773126000007
+        "runningAtMs": 1773443034713
       }
     }
   ]
