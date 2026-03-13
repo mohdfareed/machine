@@ -2,8 +2,8 @@
 
 ## Checks (every heartbeat)
 
-- **Overdue reminders**: ⚠️ BLOCKED — `remindctl overdue --json` denied by node security=deny. Re-enable when node exec security is loosened.
-- **Upcoming events (next 2h)**: ⚠️ BLOCKED — `calendar.list` not in node allowlist. Re-enable when added to allowlist.
+- **Overdue reminders**: Run `remindctl overdue --json` — surface any Personal/Work reminders overdue >7 days. Skip recurring chore reminders unless they've been stale >30 days.
+- **Upcoming events (next 2h)**: Run `remindctl list --due-in 2h --json` to check for upcoming reminders. (Calendar via AppleScript if needed.)
 - **Email triage**: (pending email forwarding setup) check for urgent unread emails.
 - **Open loops sweep**: Scan `memory/open-loops.md` — surface anything stale >3 days or newly blocked.
 - **Questions surfacing**: Check `memory/questions.md` — if a question has been pending >3 days, bring it up naturally.
