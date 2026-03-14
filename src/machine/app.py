@@ -100,15 +100,38 @@ def deploy_files(
         if not src.exists():
             logger.warning("[%s] source not found: %s", module, src)
             failures.append((module, str(src), "source not found"))
-        elif _symlink(src, tgt):
-            created += 1
+        else:
+            try:
+                if _symlink(src, tgt):
+                    created += 1
+            except OSError as exc:
+                logger.error("[%s] failed to link %s → %s: %s", module, tgt, src, exc)
+                failures.append((module, str(tgt), str(exc)))
     return created, failures
 
 
 def _symlink(source: Path, target: Path) -> bool:
     """Create or update a symlink. Returns True if changed."""
+
+    def _norm(path: Path) -> str:
+        try:
+            return os.path.normcase(str(path.resolve(strict=False)))
+        except OSError:
+            return os.path.normcase(str(path.absolute()))
+
+    def _points_to_source(link_path: Path, src_path: Path) -> bool:
+        try:
+            link_target = link_path.readlink()
+        except OSError:
+            return False
+
+        if not link_target.is_absolute():
+            link_target = link_path.parent / link_target
+
+        return _norm(link_target) == _norm(src_path)
+
     if settings.dry_run:
-        if target.is_symlink() and target.resolve() == source.resolve():
+        if target.is_symlink() and _points_to_source(target, source):
             return False
         logger.info("[dry-run] link %s → %s", target, source)
         return True
@@ -116,7 +139,7 @@ def _symlink(source: Path, target: Path) -> bool:
     target.parent.mkdir(parents=True, exist_ok=True)
 
     if target.is_symlink():
-        if target.resolve() == source.resolve():
+        if _points_to_source(target, source):
             logger.debug("OK: %s", target)
             return False
         logger.info("Update: %s → %s", target, source)
