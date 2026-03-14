@@ -4,7 +4,7 @@
 
 - **Overdue reminders**: Run `remindctl overdue --json` — surface any Personal/Work reminders overdue >7 days. Skip recurring chore reminders unless they've been stale >30 days.
 - **Upcoming events (next 2h)**: Run `remindctl list --due-in 2h --json` to check for upcoming reminders. (Calendar via AppleScript if needed.)
-- **Email triage**: (pending email forwarding setup) check for urgent unread emails.
+- **Email triage**: `CLAUDIA_EMAIL_PASSWORD=$CLAUDIA_EMAIL_PASSWORD himalaya envelope list --page-size 30 --output json` — compare against last-seen ID in `memory/email-state.json`. For any new emails: immediately ping Mohammed if urgent (security alerts, financial notices, messages from real people). Skip newsletters/marketing unless actionable. Daily summary at ~8 AM batching everything from overnight.
 - **Open loops sweep**: Scan `memory/open-loops.md` — surface anything stale >3 days or newly blocked.
 - **Questions surfacing**: Check `memory/questions.md` — if a question has been pending >3 days, bring it up naturally.
 
