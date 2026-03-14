@@ -54,7 +54,13 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
 }
 
 # dotnet completions
-dotnet completions script pwsh | Out-String | Invoke-Expression
+if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+    $dotnetCompletionScript = (& dotnet completions script pwsh 2>$null) | Out-String
+    if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($dotnetCompletionScript)) {
+        $dotnetCompletionScript | Invoke-Expression
+    }
+    Remove-Variable -Name "dotnetCompletionScript" -ErrorAction SilentlyContinue
+}
 
 # Infrastructure
 # =============================================================================
