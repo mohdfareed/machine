@@ -44,6 +44,7 @@ After any meaningful interaction: what was decided? what's pending? what prefere
 - `memory/open-loops.md` — everything active, in-progress, pending
 - `memory/waiting-for.md` — things we're waiting on from others; flag items stale >3 days
 - `memory/contacts.md` — people context, relationship CRM
+- `memory/decisions.md` — decision log: what was decided, when, why, alternatives considered
 - `memory/YYYY-MM-DD.md` — raw daily log
 
 ## Memory

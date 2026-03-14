@@ -38,7 +38,8 @@ _Any session can read this to know what's going on._
 - [ ] Test apple-calendar-cli skill
 - [x] Wire Apple Reminders into heartbeat checks (done 2026-03-13 — remindctl works, HEARTBEAT.md unblocked)
 - [x] Read learning-dump.md and integrate findings into AGENTS.md (done 2026-03-04)
-- [ ] Build out contacts.md as people come up in conversations
+- [x] Build out contacts.md — scaffolded 2026-03-14 with known contacts
+- [x] decisions.md created 2026-03-14 — decision log now active
 - [ ] Start using waiting-for.md to track pending items from Mohammed
 
 ## Decisions made (2026-03-04)
