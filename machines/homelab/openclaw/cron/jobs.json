@@ -8,7 +8,7 @@
       "name": "Daily OpenClaw recommendations check-in",
       "enabled": true,
       "createdAtMs": 1772296903351,
-      "updatedAtMs": 1772368252688,
+      "updatedAtMs": 1773443089258,
       "schedule": {
         "kind": "cron",
         "expr": "30 7 * * *",
@@ -18,22 +18,25 @@
       "wakeMode": "now",
       "payload": {
         "kind": "agentTurn",
-        "message": "Daily reminder: prepare and send Mohammed a concise morning check-in with OpenClaw improvements (tools/config/workflow), what changed since last check, recommended next action, and any approval-needed items.",
+        "message": "Daily check-in: review OpenClaw improvements (tools/config/workflow), what changed since last check, recommended next action, and any approval-needed items. Reply with a concise morning summary — do not use the message tool.",
         "timeoutSeconds": 0
       },
       "delivery": {
-        "mode": "announce"
+        "mode": "announce",
+        "channel": "telegram",
+        "to": "1092659787"
       },
       "state": {
-        "nextRunAtMs": 1772454600000,
-        "lastRunAtMs": 1772368200032,
-        "lastRunStatus": "error",
-        "lastStatus": "error",
-        "lastDurationMs": 52656,
-        "lastError": "⚠️ ✉️ Message failed",
-        "lastDelivered": true,
-        "lastDeliveryStatus": "delivered",
-        "consecutiveErrors": 1
+        "nextRunAtMs": 1773228600000,
+        "lastRunAtMs": 1773142200011,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 21765,
+        "lastDelivered": false,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0,
+        "lastDeliveryError": "cron announce delivery failed",
+        "runningAtMs": 1773443034713
       }
     },
     {
@@ -43,7 +46,7 @@
       "name": "OpenClaw auth monitor",
       "enabled": true,
       "createdAtMs": 1772297188942,
-      "updatedAtMs": 1772370011919,
+      "updatedAtMs": 1773443090354,
       "schedule": {
         "kind": "cron",
         "expr": "0 8 * * *",
@@ -53,21 +56,130 @@
       "wakeMode": "now",
       "payload": {
         "kind": "agentTurn",
-        "message": "Run `openclaw models status --check` and send Mohammed a short auth health report. If any provider is near expiry, expired, or needs reauth, clearly label it and provide exact next action.",
+        "message": "Run `openclaw models status --check` and reply with a short auth health report. If any provider is near expiry, expired, or needs reauth, clearly label it and provide the exact next action. Do not use the message tool.",
         "timeoutSeconds": 0
       },
       "delivery": {
-        "mode": "announce"
+        "mode": "announce",
+        "channel": "telegram",
+        "to": "1092659787"
       },
       "state": {
-        "nextRunAtMs": 1772456400000,
-        "lastRunAtMs": 1772370000022,
+        "nextRunAtMs": 1773230400000,
+        "lastRunAtMs": 1773144000025,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 11897,
-        "lastDelivered": true,
-        "lastDeliveryStatus": "delivered",
-        "consecutiveErrors": 0
+        "lastDurationMs": 17287,
+        "lastDelivered": false,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0,
+        "lastDeliveryError": "cron announce delivery failed",
+        "runningAtMs": 1773443034713
+      }
+    },
+    {
+      "id": "796f4609-f71d-467a-b73e-eb96f19691b4",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:31049",
+      "name": "Self-improvement loop",
+      "enabled": true,
+      "createdAtMs": 1772679604177,
+      "updatedAtMs": 1773208884195,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 2 * * *",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "You are Claudia. Read /Users/claudia/.openclaw/workspace/CONTEXT.md and /Users/claudia/.openclaw/workspace/memory/open-loops.md first.\n\nThis is your nightly self-improvement session. No one prompted this — you scheduled it yourself.\n\n1. Read what you learned recently (memory/assistant-research.md, memory/learning-dump.md if it exists)\n2. Find 1-2 new things to learn: search YouTube, blogs, docs, Reddit for OpenClaw usage patterns, productivity systems, how real assistants operate\n3. Identify one concrete thing you can improve about how you operate and implement it (update AGENTS.md, HEARTBEAT.md, CONTEXT.md, or a config)\n4. Update memory/open-loops.md with anything new or resolved\n5. Write a 3-line summary of what you did to memory/YYYY-MM-DD.md\n\nDon't report back unless you found something Mohammed genuinely needs to know. Otherwise just do the work and stay quiet.",
+        "timeoutSeconds": 600
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1773295200000,
+        "lastRunAtMs": 1773208800017,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 84178,
+        "lastDelivered": false,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0,
+        "runningAtMs": 1773443034713
+      }
+    },
+    {
+      "id": "b432952e-6245-4580-b914-676894e398d8",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:31049",
+      "name": "Repo sync — pull upstream changes",
+      "enabled": true,
+      "createdAtMs": 1772680392604,
+      "updatedAtMs": 1773213221621,
+      "schedule": {
+        "kind": "every",
+        "everyMs": 1800000,
+        "anchorMs": 1772680392604
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run: cd ~/.machine && git fetch origin && git status. If there are upstream changes on the current branch, pull them with git pull --rebase. If there are conflicts, write a note to /Users/claudia/.openclaw/workspace/memory/open-loops.md and notify Mohammed. Stay silent if nothing changed.",
+        "timeoutSeconds": 60
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1773214994456,
+        "lastRunAtMs": 1773213194456,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 27165,
+        "lastDelivered": false,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0,
+        "runningAtMs": 1773443034713
+      }
+    },
+    {
+      "id": "14554749-4c7c-4082-a9c9-5620cc83f4c2",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:31049",
+      "name": "Repo sync — commit and PR",
+      "enabled": true,
+      "createdAtMs": 1772680397936,
+      "updatedAtMs": 1773212419793,
+      "schedule": {
+        "expr": "0 3 * * *",
+        "kind": "cron",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Check for uncommitted changes in ~/.machine: cd ~/.machine && git status --short. If there are changes to workspace files (memory/, MEMORY.md, AGENTS.md, CONTEXT.md, HEARTBEAT.md, USER.md, skills/), do the following:\n\n1. Stage and commit with a concise, descriptive message (no date in the message).\n2. Push to the branch `claudia/workspace-updates` (create if needed, always reuse this same branch).\n3. Check if a PR already exists for that branch: GITHUB_TOKEN=$CLAUDIA_GITHUB_TOKEN gh pr list --repo mohdfareed/machine --head claudia/workspace-updates --json number,title\n   - If no PR exists: open one with title 'claudia: workspace updates' (no date) using GITHUB_TOKEN=$CLAUDIA_GITHUB_TOKEN gh pr create ...\n   - If a PR already exists: leave it open, do nothing extra.\n4. Stay silent if nothing to commit.",
+        "timeoutSeconds": 120
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1773298800000,
+        "lastRunAtMs": 1773212400010,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 19783,
+        "lastDelivered": false,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0,
+        "runningAtMs": 1773443034713
       }
     }
   ]

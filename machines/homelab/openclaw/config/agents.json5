@@ -12,6 +12,27 @@
       ],
     },
     "workspace": "~/.openclaw/workspace",
+    "memorySearch": {
+      "sources": ["memory", "sessions"],
+      "experimental": {
+        "sessionMemory": true
+      },
+      "query": {
+        "hybrid": {
+          "enabled": true,
+          "vectorWeight": 0.7,
+          "textWeight": 0.3,
+          "mmr": {
+            "enabled": true,
+            "lambda": 0.7
+          },
+          "temporalDecay": {
+            "enabled": true,
+            "halfLifeDays": 30
+          }
+        }
+      }
+    },
     "heartbeat": {
       "every": "10m"
     }
