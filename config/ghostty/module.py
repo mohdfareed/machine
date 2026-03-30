@@ -1,4 +1,4 @@
-"""Ghostty terminal configuration module (macOS/Linux only)."""
+"""Ghostty (cmux on macOS) terminal configuration module (macOS/Linux only)."""
 
 from machine.core import PLATFORM, Platform
 from machine.manifest import FileMapping, Module, Package
@@ -10,6 +10,6 @@ module = Module(
         else [FileMapping(source="config", target="~/.config/ghostty/config")]
     ),
     packages=[
-        Package(name="ghostty", brew="ghostty --cask", snap="ghostty --classic"),
+        Package(name="ghostty", brew="cmux --cask", snap="ghostty --classic"),
     ],
 )

@@ -33,6 +33,7 @@
     ".gitignore",
   ],
   "cSpell.words": [
+    "cmux",
     "Dockge",
     "dotenv",
     "elevenlabs",
