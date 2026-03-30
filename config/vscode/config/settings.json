@@ -15,6 +15,16 @@
   "files.trimFinalNewlines": true,
   "files.insertFinalNewline": true,
   // # endregion ===============================================================
+  // MARK: files associations
+  // #region ===================================================================
+  "files.associations": {
+    "*.json": "jsonc",
+    "AGENTS.md": "instructions"
+  },
+  "material-icon-theme.files.associations": {
+    "AGENTS.md": "copilot"
+  },
+  // # endregion ===============================================================
   // MARK: visual
   // #region ===================================================================
   "workbench.tree.enableStickyScroll": true,
@@ -87,7 +97,7 @@
   "git.replaceTagsWhenPull": true,
   "git.openRepositoryInParentFolders": "never",
   "diffEditor.renderSideBySide": false,
-    "diffEditor.experimental.showMoves": true,
+  "diffEditor.experimental.showMoves": true,
   "scm.repositories.explorer": true,
   // # endregion ===============================================================
   // MARK: copilot
@@ -115,12 +125,6 @@
     "https://*.openclaw.ai": true,
     "https://mem0.ai": true,
     "https://*.mem0.ai": true
-  },
-  "files.associations": {
-    "AGENTS.md": "instructions"
-  },
-  "material-icon-theme.files.associations": {
-    "AGENTS.md": "copilot"
   },
   // # endregion ===============================================================
   // MARK: comments
@@ -161,7 +165,7 @@
   // # endregion ===============================================================
   // MARK: json
   // #region ===================================================================
-  "[json]": {
+  "[jsonc]": {
     "editor.detectIndentation": false,
     "editor.indentSize": 2
   },
