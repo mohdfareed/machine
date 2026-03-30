@@ -1,0 +1,14 @@
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      // bookmark extension
+      "alt-m": [
+        "task::Spawn",
+        {
+          "task_name": "Bookmark: Add bookmark"
+        }
+      ]
+    }
+  }
+]

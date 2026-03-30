@@ -1,1 +1,18 @@
-{}
+{
+  "context_servers": {
+    "mcp-server-github": {
+      "enabled": true,
+      "remote": false,
+      "settings": {
+        "github_personal_access_token": "GITHUB_MCP_TOKEN"
+      }
+    }
+  },
+  "languages": {
+    "Plain Text": {
+      "language_servers": [
+        "bookmark-language-server"
+      ]
+    }
+  }
+}
