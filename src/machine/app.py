@@ -221,6 +221,10 @@ def _install(
         val = getattr(pkg, mgr, None)
         if val is None or mgr not in managers:
             continue
+        # Skip Homebrew cask installs on Linux
+        if mgr == "brew" and PLATFORM == Platform.LINUX and "--cask" in str(val):
+            logger.info("[skip] %s: brew cask not supported on Linux", pkg.name)
+            continue
         cmd = _INSTALL_CMD[mgr].format(val)
         logger.info("[%s] %s: %s", module, pkg.name, mgr)
         rc = run(cmd, label=module)
