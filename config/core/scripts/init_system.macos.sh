@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# # MARK: General Settings
+# =============================================================================
+
 # set hostname
 HOSTNAME="${MC_HOSTNAME:-$MC_ID}"
 if [[ -n "$HOSTNAME" ]]; then
@@ -27,7 +30,7 @@ sudo launchctl kickstart -k system/com.apple.screensharing 2>/dev/null || true
 # enable hush login
 [ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
 
-# MARK: System Defaults
+# # MARK: System Defaults
 # =============================================================================
 
 echo "setting system defaults..."

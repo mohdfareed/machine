@@ -9,7 +9,7 @@ from pydantic import BaseModel, model_validator
 SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 
 
-# MARK: Models
+# # MARK: Models
 
 
 class FileMapping(BaseModel):
@@ -66,7 +66,7 @@ class MachineManifest(BaseModel):
     packages: list[Package] = []
 
 
-# MARK: Package Helpers
+# # MARK: Package Helpers
 
 
 def brew(*names: str) -> list[Package]:
@@ -104,7 +104,7 @@ def mas(**apps: int) -> list[Package]:
     return [Package(name=k, mas=v) for k, v in apps.items()]
 
 
-# MARK: Discovery
+# # MARK: Discovery
 
 
 def list_modules(root: Path) -> list[str]:
@@ -135,7 +135,7 @@ def list_machines(root: Path) -> list[str]:
     return sorted(names)
 
 
-# MARK: Loaders
+# # MARK: Loaders
 
 _module_cache: dict[str, Module] = {}
 
@@ -246,7 +246,7 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
     return result
 
 
-# MARK: Helpers
+# # MARK: Helpers
 
 
 def _resolve_deps(modules: list[str], root: Path) -> list[str]:

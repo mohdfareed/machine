@@ -4,7 +4,7 @@ version = "0.4.0"
 description = "Machine setup CLI app."
 readme = "README.md"
 
-# MARK: - Dependencies
+# # MARK: - Dependencies
 
 requires-python = ">=3.14"
 dependencies = [
@@ -21,7 +21,7 @@ dev = [
     "shellcheck-py>=0.11",
 ]
 
-# MARK: - Build System
+# # MARK: - Build System
 
 [project.scripts]
 mc = "machine.cli:main"
@@ -33,7 +33,7 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = ["machine"]
 
-# MARK: - Tool Configuration
+# # MARK: - Tool Configuration
 
 [tool.ruff]
 line-length = 100

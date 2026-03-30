@@ -33,7 +33,7 @@ _INSTALL_CMD = {
 }
 
 
-# MARK: Sudo
+# # MARK: Sudo
 
 _sudo_keepalive: threading.Event | None = None
 
@@ -62,7 +62,7 @@ def cache_sudo() -> None:
     t.start()
 
 
-# MARK: Validation
+# # MARK: Validation
 
 
 def validate(
@@ -83,7 +83,7 @@ def validate(
     return errors
 
 
-# MARK: Files
+# # MARK: Files
 
 
 def deploy_files(
@@ -155,7 +155,7 @@ def _symlink(source: Path, target: Path) -> bool:
     return True
 
 
-# MARK: Packages
+# # MARK: Packages
 
 
 def refresh_path() -> None:
@@ -253,7 +253,7 @@ def _install(
     return (module, pkg.name, "no manager available")
 
 
-# MARK: Scripts
+# # MARK: Scripts
 
 
 _ENV_FILE = Path.home() / ".env"
@@ -452,7 +452,7 @@ def _execute(
     return None
 
 
-# MARK: Machine
+# # MARK: Machine
 
 
 def get_current_machine() -> str | None:
@@ -466,7 +466,7 @@ def save_current_machine(machine_id: str) -> None:
     _MACHINE_FILE.write_text(machine_id)
 
 
-# MARK: State
+# # MARK: State
 
 
 def _load_state() -> dict:

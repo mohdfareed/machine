@@ -5,7 +5,7 @@ set -Eeuo pipefail
 
 echo "running deep storage cleanup..."
 
-# MARK: Package Manager Cleanup
+# # MARK: Package Manager Cleanup
 # =============================================================================
 
 if command -v apt &>/dev/null; then
@@ -22,7 +22,7 @@ if command -v snap &>/dev/null; then
     done
 fi
 
-# MARK: Log Cleanup
+# # MARK: Log Cleanup
 # =============================================================================
 
 echo "cleaning old logs..."
@@ -33,7 +33,7 @@ sudo find /var/log -name "*.gz" -mtime +7 -delete 2>/dev/null || true
 sudo find /var/log -name "*.old" -mtime +7 -delete 2>/dev/null || true
 sudo find /var/log -name "*.1" -mtime +7 -delete 2>/dev/null || true
 
-# MARK: Docker Cleanup
+# # MARK: Docker Cleanup
 # =============================================================================
 
 if command -v docker &>/dev/null; then
@@ -41,7 +41,7 @@ if command -v docker &>/dev/null; then
     docker system prune -af --volumes 2>/dev/null || true
 fi
 
-# MARK: Temp & Cache Cleanup
+# # MARK: Temp & Cache Cleanup
 # =============================================================================
 
 echo "cleaning temp and cache files..."

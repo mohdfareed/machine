@@ -9,7 +9,6 @@ manifest = MachineManifest(
         # Dev languages
         *brew("uv", "python", "python-freethreading"),
         *brew("go", "shellcheck"),
-        *brew("dagger/tap/container-use"),  # mcp server
         *cask("powershell", "dotnet-sdk"),
         # NOTE: Docker Desktop cask ("docker") only delivers an Intel binary via
         # Homebrew as of 2026-02. Install Docker Desktop manually on Apple Silicon

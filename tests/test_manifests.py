@@ -17,7 +17,7 @@ from machine.manifest import (
 ROOT = Path(__file__).resolve().parents[1]
 
 
-# MARK: Module Tests
+# # MARK: Module Tests
 
 
 @pytest.fixture(params=list_modules(ROOT), ids=list_modules(ROOT))
@@ -43,7 +43,7 @@ def test_module_scripts_exist(module: Module) -> None:
         assert Path(script).exists(), f"{module.name}: missing {script}"
 
 
-# MARK: Manifest Tests
+# # MARK: Manifest Tests
 
 
 @pytest.fixture(params=list_machines(ROOT), ids=list_machines(ROOT))
@@ -110,7 +110,7 @@ def test_manifest_overrides_included(machine_id: str) -> None:
     assert not missing, f"{machine_id} has unincluded overrides:\n" + "\n".join(missing)
 
 
-# MARK: Validation Edge Cases
+# # MARK: Validation Edge Cases
 
 
 def test_ssh_module_loads_key_provisioning() -> None:

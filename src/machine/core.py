@@ -16,7 +16,7 @@ import typer
 from rich.console import Console
 from rich.logging import RichHandler
 
-# MARK: Settings
+# # MARK: Settings
 
 _meta = metadata("machine")
 # __file__ = src/machine/core.py → parents[2] = repo root
@@ -43,7 +43,7 @@ settings = Settings()
 """Runtime settings singleton."""
 
 
-# MARK: Platform
+# # MARK: Platform
 
 
 class Platform(StrEnum):
@@ -83,14 +83,14 @@ is_wsl = PLATFORM == Platform.WSL
 is_unix = not is_windows
 
 
-# MARK: Console
+# # MARK: Console
 
 
 console = Console()
 err_console = Console(stderr=True)
 
 
-# MARK: Logging
+# # MARK: Logging
 
 
 _logger = logging.getLogger(__name__)
@@ -141,7 +141,7 @@ def setup_file_logging() -> None:
     _logger.debug("=" * 60)
 
 
-# MARK: Shell
+# # MARK: Shell
 
 
 def run(

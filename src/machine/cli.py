@@ -16,14 +16,16 @@ from machine.core import console, err_console, settings, setup_console_logging, 
 if TYPE_CHECKING:
     from machine.manifest import MachineManifest, Module, Package
 
+_logger = logging.getLogger(__name__)
+
+# # MARK: App Entry Point
+
 app = typer.Typer(
     help=settings.description,
     no_args_is_help=True,
     invoke_without_command=True,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
-
-_logger = logging.getLogger(__name__)
 
 
 def main(prog_name: str | None = None) -> None:
@@ -42,7 +44,7 @@ def main(prog_name: str | None = None) -> None:
         sys.exit(1)
 
 
-# MARK: Callbacks
+# # MARK: Callbacks
 
 
 @app.callback()
@@ -93,7 +95,7 @@ machines = click.Choice(get_machines(), case_sensitive=False)
 modules = click.Choice(get_modules(), case_sensitive=False)
 
 
-# MARK: Lifecycle Commands
+# # MARK: Lifecycle Commands
 
 
 @app.command(rich_help_panel="Lifecycle")
@@ -376,7 +378,7 @@ def _prompt_force(stash: bool, force: bool) -> bool:
     return False
 
 
-# MARK: Info Commands
+# # MARK: Info Commands
 
 
 @app.command(rich_help_panel="Info")
