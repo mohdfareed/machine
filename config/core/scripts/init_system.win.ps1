@@ -23,6 +23,9 @@ try
     Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-RemoteDesktopConnection
     Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName HypervisorPlatform
     Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName VirtualMachinePlatform
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-Hyper-V-All
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Containers
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Containers-DisposableClientVM
 } catch
 {
     Write-Warning "Failed to enable optional windows features, enable them manually: $_"
