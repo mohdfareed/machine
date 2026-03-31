@@ -8,4 +8,13 @@ if (-not $env:MC_ID)
 }
 
 Write-Output "setting up vscode tunnel: $env:MC_ID"
-code tunnel service install --name "$env:MC_ID" --accept-server-license-terms
+$p = Start-Process -FilePath "code" `
+    -ArgumentList "tunnel","service","install","--name",$env:MC_ID,"--accept-server-license-terms" `
+    -PassThru
+
+$p.WaitForExit()
+if ($p.ExitCode -ne 0)
+{
+    Write-Host "Failed to install VS Code tunnel service (exit code $($p.ExitCode))"
+    exit $p.ExitCode
+}

@@ -52,53 +52,56 @@ if ($env:MC_PRIVATE -and $env:MC_ID)
 # Configuration
 # =============================================================================
 
+$mcAppDir = if ($IsWindows)
+{ "$env:APPDATA/mc"
+} elseif ($IsMacOS)
+{ "$HOME/Library/Application Support/mc"
+} else
+{ "$HOME/.local/share/mc"
+}
+$mcShellCache = "$mcAppDir/shell"
+
+function Invoke-Cached($key, [scriptblock]$generate)
+{
+    $file = "$mcShellCache/$key.ps1"
+    if (-not (Test-Path $file))
+    {
+        New-Item -ItemType Directory -Force -Path $mcShellCache | Out-Null
+        try
+        { $output = & $generate 2>$null
+        } catch
+        { $output = $null
+        }
+        Set-Content $file ($output -join "`n")
+    }
+    if ((Get-Item $file).Length -gt 0)
+    { . $file
+    }
+}
+
 # homebrew
-if (Test-Path -Path "/opt/homebrew/bin/brew")
+Invoke-Cached "brew-arm"   { /opt/homebrew/bin/brew shellenv }          # arm macos
+Invoke-Cached "brew-intel" { /usr/local/bin/brew shellenv }             # intel macos
+Invoke-Cached "brew-linux" { /home/linuxbrew/.linuxbrew/bin/brew shellenv } # linux/wsl
+
+# homebrew completions (source files directly — no subprocess needed)
+if (Test-Path ($comp = "$env:HOMEBREW_PREFIX/share/pwsh/completions"))
 {
-    $(/opt/homebrew/bin/brew shellenv) | Invoke-Expression
-} # arm macos
-if (Test-Path -Path "/usr/local/bin/brew")
-{
-    $(/usr/local/bin/brew shellenv) | Invoke-Expression
-} # intel macos
-if (Test-Path -Path "/home/linuxbrew/.linuxbrew/bin/brew")
-{
-    $(/home/linuxbrew/.linuxbrew/bin/brew shellenv) | Invoke-Expression
-} # linux/wsl
+    foreach ($f in Get-ChildItem -Path $comp -File)
+    { . $f
+    }
+}
+
+# tools completions
+Invoke-Cached "uv"     { uv generate-shell-completion powershell }
+Invoke-Cached "uvx"    { uvx --generate-shell-completion powershell }
+Invoke-Cached "dotnet" { dotnet completions script pwsh }
 
 # oh-my-posh
 oh-my-posh init pwsh --config "pure" | Invoke-Expression
 
-# Completions
-# =============================================================================
-
 # tab-completion
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
-
-# homebrew completions
-if (Get-Command brew -ErrorAction SilentlyContinue)
-{
-    if (Test-Path ($comp = "$env:HOMEBREW_PREFIX/share/pwsh/completions"))
-    {
-        foreach ($f in Get-ChildItem -Path $comp -File)
-        {
-            . $f
-        }
-    }
-}
-
-# uv completions (python version manager)
-if (Get-Command uv -ErrorAction SilentlyContinue)
-{
-    (& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
-    (& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
-}
-
-# dotnet completions
-if (Get-Command dotnet -ErrorAction SilentlyContinue)
-{
-    dotnet completions script pwsh | Out-String | Invoke-Expression
-}
 
 # Infrastructure
 # =============================================================================
