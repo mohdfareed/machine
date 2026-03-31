@@ -15,11 +15,15 @@ trap 'rm -f "$shell_scripts" "$python_scripts"' EXIT
 find . -name '*.sh' ! -path './.venv/*' -print0 > "$shell_scripts"
 if [[ -s "$shell_scripts" ]]; then
     xargs -0 uv run shellcheck --severity=warning < "$shell_scripts"
-    while IFS= read -r -d '' f; do
-        if head -1 "$f" | grep -q 'env zsh'; then
-            zsh -n "$f"
-        fi
-    done < "$shell_scripts"
+    if command -v zsh >/dev/null 2>&1; then
+        while IFS= read -r -d '' f; do
+            if head -1 "$f" | grep -q 'env zsh'; then
+                zsh -n "$f"
+            fi
+        done < "$shell_scripts"
+    else
+        echo "Skipping zsh syntax checks because zsh is not installed."
+    fi
 fi
 
 find . -name '*.py' ! -path './.venv/*' -print0 > "$python_scripts"
