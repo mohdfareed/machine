@@ -17,13 +17,16 @@
   },
   // # MARK: Languages ========================================================
   "file_types": {
-    "JSONC": ["**/*.json"],
+    "JSONC": ["**/*.json", "**/*.code-snippets"],
   },
   "languages": {
     "Python": {
       "code_actions_on_format": {
         "source.organizeImports.ruff": true,
       },
+    },
+    "Shell Script": {
+      "tab_size": 2,
     },
     "JSONC": {
       "tab_size": 2,
@@ -76,6 +79,24 @@
       "remote": false,
       "settings": {
         "github_personal_access_token": "GITHUB_MCP_TOKEN",
+      },
+    },
+    "mem0": {
+      "enabled": true,
+      "settings": {
+        "url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed",
+      },
+    },
+    "personal-memories": {
+      "enabled": true,
+      "settings": {
+        "url": "https://kbm.tail2a477.ts.net/personal",
+      },
+    },
+    "work-memories": {
+      "enabled": true,
+      "settings": {
+        "url": "https://kbm.tail2a477.ts.net/work",
       },
     },
   },

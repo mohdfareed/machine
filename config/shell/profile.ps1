@@ -3,31 +3,35 @@
 # Environment
 # =============================================================================
 
-$env:PATH += ";$HOME/.local/bin" # user local bin
+$env:PATH += "$([IO.Path]::PathSeparator)$HOME/.local/bin" # user local bin
 $env:PIP_REQUIRE_VIRTUALENV = $true  # python
 
 # Configuration
 # =============================================================================
 
 # homebrew
-if (Test-Path -Path "/opt/homebrew/bin/brew") {
+if (Test-Path -Path "/opt/homebrew/bin/brew")
+{
     $(/opt/homebrew/bin/brew shellenv) | Invoke-Expression
 } # arm macos
-if (Test-Path -Path "/usr/local/bin/brew") {
+if (Test-Path -Path "/usr/local/bin/brew")
+{
     $(/usr/local/bin/brew shellenv) | Invoke-Expression
 } # intel macos
-if (Test-Path -Path "/home/linuxbrew/.linuxbrew/bin/brew") {
+if (Test-Path -Path "/home/linuxbrew/.linuxbrew/bin/brew")
+{
     $(/home/linuxbrew/.linuxbrew/bin/brew shellenv) | Invoke-Expression
 } # linux/wsl
 
 # oh-my-posh
-if ($env:HOMEBREW_PREFIX) {
+if ($env:HOMEBREW_PREFIX)
+{
     $theme = "$env:HOMEBREW_PREFIX/opt/oh-my-posh/themes/pure.omp.json"
-}
-elseif ($IsWindows) {
+} elseif ($IsWindows)
+{
     $theme = "$env:LOCALAPPDATA/Programs/oh-my-posh/themes/pure.omp.json"
-}
-else {
+} else
+{
     $theme = "$((oh-my-posh cache path))/themes/pure.omp.json"
 }
 oh-my-posh init pwsh --config "$theme" | Invoke-Expression
@@ -40,29 +44,40 @@ Remove-Variable -Name "theme"
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 
 # homebrew completions
-if ((Get-Command brew -ErrorAction SilentlyContinue) -and
-    (Test-Path ($comp = "$env:HOMEBREW_PREFIX/share/pwsh/completions"))) {
-    foreach ($f in Get-ChildItem -Path $comp -File) {
-        . $f
+if (Get-Command brew -ErrorAction SilentlyContinue)
+{
+    if (Test-Path ($comp = "$env:HOMEBREW_PREFIX/share/pwsh/completions"))
+    {
+        foreach ($f in Get-ChildItem -Path $comp -File)
+        {
+            . $f
+        }
     }
 }
 
 # uv completions (python version manager)
-if (Get-Command uv -ErrorAction SilentlyContinue) {
+if (Get-Command uv -ErrorAction SilentlyContinue)
+{
     (& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
     (& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
 }
 
 # dotnet completions
-dotnet completions script pwsh | Out-String | Invoke-Expression
+if (Get-Command dotnet -ErrorAction SilentlyContinue)
+{
+    dotnet completions script pwsh | Out-String | Invoke-Expression
+}
 
 # Infrastructure
 # =============================================================================
 
-function Import-DotEnv($path) {
-    if (Test-Path $path) {
+function Import-DotEnv($path)
+{
+    if (Test-Path $path)
+    {
         Get-Content $path | ForEach-Object {
-            if ($_ -match '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
+            if ($_ -match '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$')
+            {
                 $val = $Matches[2] -replace '^["'']|["'']$', ''
                 [System.Environment]::SetEnvironmentVariable($Matches[1], $val)
             }
@@ -74,19 +89,22 @@ function Import-DotEnv($path) {
 Import-DotEnv "$HOME/.env"
 
 # machine config vars
-if ($env:MC_HOME -and $env:MC_ID) {
+if ($env:MC_HOME -and $env:MC_ID)
+{
     Import-DotEnv "$env:MC_HOME/machines/$env:MC_ID/machine.env"
 }
 
 # private secrets
-if ($env:MC_PRIVATE -and $env:MC_ID) {
+if ($env:MC_PRIVATE -and $env:MC_ID)
+{
     Import-DotEnv "$env:MC_PRIVATE/env/$env:MC_ID.env"
 }
 
 # functions & aliases
-. "~/.config/powershell/aliases.ps1"
+. (Join-Path $PSScriptRoot "aliases.ps1")
 
 # machine-specific extras
-if (Test-Path "~/.config/powershell/profile.local.ps1") {
-    . "~/.config/powershell/profile.local.ps1"
+if (Test-Path (Join-Path $PSScriptRoot "profile.local.ps1"))
+{
+    . (Join-Path $PSScriptRoot "profile.local.ps1")
 }

@@ -1,7 +1,6 @@
 {
   // ===========================================================================
-  // MARK: editor
-  // #region ===================================================================
+  // # MARK: editor
   "editor.formatOnSave": true,
   "editor.wordWrap": "on",
   "editor.wrappingIndent": "indent",
@@ -14,29 +13,24 @@
   "files.trimTrailingWhitespace": true,
   "files.trimFinalNewlines": true,
   "files.insertFinalNewline": true,
-  // # endregion ===============================================================
-  // MARK: files associations
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: files associations
   "files.associations": {
     "*.json": "jsonc",
-    "AGENTS.md": "instructions"
+    "AGENTS.md": "instructions",
   },
   "material-icon-theme.files.associations": {
-    "AGENTS.md": "copilot"
+    "AGENTS.md": "copilot",
   },
-  // # endregion ===============================================================
-  // MARK: visual
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: visual
   "workbench.tree.enableStickyScroll": true,
   "workbench.activityBar.location": "top",
   "workbench.editor.showTabs": "single",
   "workbench.panel.showLabels": false,
   "editor.smoothScrolling": true,
   "editor.cursorSmoothCaretAnimation": "on",
-  "editor.rulers": [
-    80,
-    120
-  ],
+  "editor.rulers": [80, 120],
   // startup -------------------------------------------------------------------
   "workbench.editor.empty.hint": "hidden",
   "workbench.startupEditor": "newUntitledFile",
@@ -56,18 +50,16 @@
   "editor.fontFamily": "JetBrainsMono Nerd Font",
   "editor.fontSize": 14,
   "editor.fontLigatures": true,
-  // # endregion ===============================================================
-  // MARK: suggestions
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: suggestions
   "editor.suggest.preview": true,
   "editor.inlineSuggest.enabled": true,
   "cSpell.showAutocompleteDirectiveSuggestions": false,
   "cSpell.enabledFileTypes": {
-    "*": true
+    "*": true,
   },
-  // # endregion ===============================================================
-  // MARK: terminal
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: terminal
   "terminal.integrated.macOptionIsMeta": true,
   "terminal.integrated.gpuAcceleration": "auto",
   "terminal.integrated.cursorStyle": "line",
@@ -75,7 +67,7 @@
   "terminal.integrated.stickyScroll.enabled": true,
   "terminal.integrated.enableVisualBell": true,
   "accessibility.signals.terminalBell": {
-    "sound": "on"
+    "sound": "on",
   },
   "terminal.integrated.defaultProfile.osx": "zsh",
   "terminal.integrated.defaultProfile.linux": "zsh",
@@ -85,9 +77,8 @@
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.smoothScrolling": true,
   "terminal.integrated.fontLigatures.enabled": true,
-  // # endregion ===============================================================
-  // MARK: git
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: git
   "git.allowForcePush": true,
   "git.autofetch": "all",
   "git.ignoreRebaseWarning": true,
@@ -99,15 +90,14 @@
   "diffEditor.renderSideBySide": false,
   "diffEditor.experimental.showMoves": true,
   "scm.repositories.explorer": true,
-  // # endregion ===============================================================
-  // MARK: copilot
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: copilot
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
   "github.copilot.enable": {
     "*": true,
     "plaintext": true,
     "markdown": true,
-    "scminput": true
+    "scminput": true,
   },
   "chat.mcp.gallery.enabled": true,
   "chat.viewSessions.orientation": "stacked",
@@ -124,11 +114,10 @@
     "https://openclaw.ai": true,
     "https://*.openclaw.ai": true,
     "https://mem0.ai": true,
-    "https://*.mem0.ai": true
+    "https://*.mem0.ai": true,
   },
-  // # endregion ===============================================================
-  // MARK: comments
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: comments
   "commentAnchors.scrollPosition": "center",
   "commentAnchors.workspace.lazyLoad": false,
   "commentAnchors.tags.provideAutoCompletion": false,
@@ -137,54 +126,49 @@
   "commentAnchors.tags.anchors": {
     "ANCHOR": {
       "enabled": false,
-      "scope": "hidden"
+      "scope": "hidden",
     },
     "REVIEW": {
       "highlightColor": "#00ff84",
       "iconColor": "#00ff84",
-      "scope": "workspace"
-    }
+      "scope": "workspace",
+    },
   },
   "commentAnchors.workspace.excludeFiles": "**/{.git,bin,.venv}/**/*",
-  // # endregion ===============================================================
-  // MARK: markdown
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: markdown
   "markdown.preview.typographer": true,
   "markdown.preview.scrollPreviewWithEditor": false,
   "markdown.preview.scrollEditorWithPreview": false,
   "[markdown]": {
     "editor.codeActionsOnSave": {
-      "source.fixAll.markdownlint": "always"
+      "source.fixAll.markdownlint": "always",
     },
     "editor.quickSuggestions": {
       "comments": "on",
       "strings": "on",
-      "other": "on"
-    }
+      "other": "on",
+    },
   },
-  // # endregion ===============================================================
-  // MARK: json
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: json
   "[jsonc]": {
     "editor.detectIndentation": false,
-    "editor.indentSize": 2
+    "editor.indentSize": 2,
   },
-  // # endregion ===============================================================
-  // MARK: yaml
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: yaml
   "[yaml]": {
     "editor.detectIndentation": false,
-    "editor.indentSize": 2
+    "editor.indentSize": 2,
   },
-  // # endregion ===============================================================
-  // MARK: swift
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: swift
   "[swift]": {
-    "editor.inlayHints.enabled": "offUnlessPressed"
+    "editor.inlayHints.enabled": "offUnlessPressed",
   },
-  // # endregion ===============================================================
-  // MARK: python
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: python
   "python.analysis.typeCheckingMode": "strict",
   "python.analysis.autoSearchPaths": true,
   "python.analysis.diagnosticMode": "workspace",
@@ -203,53 +187,40 @@
     "editor.formatOnType": true,
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit",
-      "source.fixAll": "explicit"
-    }
+      "source.fixAll": "explicit",
+    },
   },
   "notebook.codeActionsOnSave": {
     "notebook.source.organizeImports": "explicit",
-    "notebook.source.fixAll": "explicit"
+    "notebook.source.fixAll": "explicit",
   },
-  "python.testing.pytestArgs": [
-    "--color=yes"
-  ],
+  "python.testing.pytestArgs": ["--color=yes"],
   "python.useEnvironmentsExtension": true,
-  // # endregion ===============================================================
-  // MARK: c#
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: c#
   "[csharp]": {
     "editor.codeActionsOnSave": {
-      "source.addMissingImports": "explicit"
+      "source.addMissingImports": "explicit",
     },
     "editor.formatOnPaste": true,
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
   },
   "dotnet.formatting.organizeImportsOnFormat": true,
   "dotnet.codeLens.enableReferencesCodeLens": false,
   "godotTools.editorPath.godot4": "${GODOT}",
-  // # endregion ===============================================================
-  // MARK: go
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: go
   "go.toolsManagement.autoUpdate": true,
   "[go]": {
-    "editor.defaultFormatter": "golang.go"
+    "editor.defaultFormatter": "golang.go",
   },
-  // # endregion ===============================================================
-  // MARK: powershell
-  // #region ===================================================================
+  // ===========================================================================
+  // # MARK: powershell
   "powershell.promptToUpdatePowerShell": false,
-  // # endregion ===============================================================
-  // MARK: shellcheck
-  // #region ===================================================================
-  "shellcheck.customArgs": [
-    "--severity=warning"
-  ],
-  // # endregion ===============================================================
-  "cSpell.userWords": [
-    "endregion",
-    "Fareed",
-    "fastmcp",
-    "mohdfareed"
-  ]
-  // REVIEW - new customizations above =========================================
+  // ===========================================================================
+  // # MARK: shellcheck
+  "shellcheck.customArgs": ["--severity=warning"],
+  // ===========================================================================
+  "cSpell.userWords": ["endregion", "Fareed", "fastmcp", "mohdfareed"],
+  // # REVIEW - new customizations above =======================================
 }

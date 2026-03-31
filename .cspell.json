@@ -1,0 +1,40 @@
+{
+  "ignorePaths": [
+    ".git",
+    ".github",
+    ".venv",
+    ".vscode",
+    ".gitignore",
+    "*.lock"
+  ],
+  "words": [
+    "cmux",
+    "Dockge",
+    "dotenv",
+    "elevenlabs",
+    "fareed",
+    "fpath",
+    "GHCS",
+    "ghostty",
+    "homelab",
+    "hostnames",
+    "linuxbrew",
+    "macbook",
+    "mohdfareed",
+    "mohds",
+    "openclaw",
+    "pwsh",
+    "pydantic",
+    "pyright",
+    "shellcheck",
+    "tailnet",
+    "tailscale",
+    "typer",
+    "venv",
+    "winget",
+    "wslinfo",
+    "zfunc",
+    "zinit",
+    "keepalive"
+  ]
+}

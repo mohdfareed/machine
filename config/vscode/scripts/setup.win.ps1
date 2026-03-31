@@ -1,7 +1,8 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = 'Stop'
 
-if (-not $env:MC_ID) {
+if (-not $env:MC_ID)
+{
     Write-Host "MC_ID is not set; cannot set up vscode tunnel without a hostname"
     exit 1
 }

@@ -15,6 +15,6 @@ Get-Service -Name ssh-agent | Set-Service -StartupType Automatic
 $sshdConfig = "$env:ProgramData\ssh\sshd_config"
 (Get-Content $sshdConfig) -replace '^(Match Group administrators)', '#$1' `
     -replace '^(\s*AuthorizedKeysFile __PROGRAMDATA__)', '#$1' |
-Set-Content $sshdConfig
+    Set-Content $sshdConfig
 
 Restart-Service sshd

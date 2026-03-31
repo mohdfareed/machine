@@ -1,9 +1,16 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = 'Stop'
 
+# resolve hostname
+$hostname = if ($env:MC_HOSTNAME)
+{ $env:MC_HOSTNAME
+} else
+{ $env:MC_ID
+}
+
 # set hostname
-$hostname = if ($env:MC_HOSTNAME) { $env:MC_HOSTNAME } else { $env:MC_ID }
-if ($hostname) {
+if ($hostname -and $env:COMPUTERNAME -ine $hostname)
+{
     Write-Host "setting hostname..."
     Rename-Computer -NewName $hostname -Force
 }
@@ -17,4 +24,8 @@ Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRes
 
 # wsl
 Write-Host "setting up wsl..."
-wsl --install
+$distros = @(wsl -l -q 2>$null | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+if ($LASTEXITCODE -ne 0 -or $distros.Count -eq 0) # failed or no distors found
+{
+    wsl --install
+}

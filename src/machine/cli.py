@@ -147,7 +147,7 @@ def apply(
     all_modules = resolve_modules(manifest.modules, root)
     module_filter = set(module_names)
 
-    errors = validate(all_modules, machine)
+    errors = validate(all_modules)
     if errors:
         for e in errors:
             err_console.print(f"[red]  {e}[/]")

@@ -17,12 +17,10 @@ module = Module(
         ]
     ),
     packages=[
-        Package(
-            name="git",
-            brew="git gh git-lfs",
-            apt="git gh git-lfs",
-            winget="Git.Git GitHub.cli GitHub.GitLFS",
-        ),
+        Package(name="git", brew="git", apt="git", winget="Git.Git"),
+        Package(name="git-lfs", brew="git-lfs", apt="git-lfs", winget="GitHub.GitLFS"),
+        Package(name="github-cli", brew="gh", apt="gh", winget="GitHub.cli"),
+        Package(name="lazygit", brew="lazygit", apt="lazygit", winget="JesseDuffield.lazygit"),
     ],
     overrides=[FileMapping(source=".gitconfig", target="~/.gitconfig.local")],
 )

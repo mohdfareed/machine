@@ -23,7 +23,7 @@ Re-run bootstrap on an existing machine to reinstall the CLI after moving the re
 
 ```sh
 cd $MC_HOME
-./scripts/bootstrap.sh"
+./scripts/bootstrap.sh
 ```
 
 ## Usage
@@ -38,7 +38,7 @@ Run `mc -h` or `mc <command> -h` for full options.
 
 ## Design
 
-```
+```txt
 ~/.machine/
 ├── config/                  <- shared modules (git, shell, …)
 │   └── <name>/
@@ -98,11 +98,10 @@ Run `mc -h` or `mc <command> -h` for full options.
 2. `$MC_HOME/machines/$MC_ID/machine.env` - machine-specific config vars
 3. `$MC_PRIVATE/env/$MC_ID.env` - machine secrets, plain dotenv format
 
-`mc` loads all three tiers into every script subprocess - scripts should NOT
-re-source them. Shell profiles (`.zshenv`, `profile.ps1`) source the same three
-tiers so env vars are available in interactive shells too.
+`mc` loads all three tiers into every script subprocess.
+Shell profiles (`.zshenv`, `profile.ps1`) source the same three tiers.
 
-**Local overrides:** modules declare which `*.local` files they accept viathe `overrides` field.
+**Local overrides:** modules declare which machine-specific files they accept via the `overrides` field.
 Drop matching files in your machine dir and they are auto-discovered and symlinked:
 
 - `~/.gitconfig.local` - declared by `git` module, included by gitconfig
@@ -116,7 +115,7 @@ Secrets are stored outside the repo in `MC_PRIVATE` - defaults to `app_dir/priva
 but typically overridden in `machine.env` (e.g. `$ICLOUD/.machine` on macOS,
 `$HOME/.machine` on Linux). The directory is never checked into git.
 
-```
+```txt
 MC_PRIVATE/
 ├── env/
 │   └── <MC_ID>.env  <- per-machine secrets (plain dotenv)
@@ -144,7 +143,8 @@ cd $MC_HOME
 uv sync --dev
 uv run mc --help
 
-# format, lint, test
-# run before committing/deploying
-./scripts/test.sh
+# format and auto-fix (run before committing)
+./scripts/fix.sh
+# code validation (run before committing)
+./scripts/check.sh
 ```

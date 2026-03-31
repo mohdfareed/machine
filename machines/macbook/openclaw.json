@@ -1,13 +1,15 @@
 {
   "env": {
-    "shellEnv": { "enabled": true, },
+    "shellEnv": {
+      "enabled": true,
+    },
   },
-  "gateway" : {
-    "mode" : "remote",
-    "remote" : {
-      "transport" : "direct",
-      "url" : "wss://openclaw.${TAILNET_NAME}.ts.net",
-      "token" : "${OPENCLAW_GATEWAY_TOKEN}"
-    }
-  }
+  "gateway": {
+    "mode": "remote",
+    "remote": {
+      "transport": "direct",
+      "url": "wss://openclaw.${TAILNET_NAME}.ts.net",
+      "token": "${OPENCLAW_GATEWAY_TOKEN}",
+    },
+  },
 }

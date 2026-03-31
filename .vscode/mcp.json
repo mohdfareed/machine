@@ -3,11 +3,8 @@
     "machine-memories": {
       "type": "stdio",
       "command": "kbm",
-      "args": [
-        "start",
-        "machine",
-      ]
-    }
+      "args": ["start", "machine"],
+    },
   },
-  "inputs": []
+  "inputs": [],
 }

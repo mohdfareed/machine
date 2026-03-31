@@ -1,0 +1,14 @@
+{
+  "context_servers": {
+    "machine-memories": {
+      "command": "kbm",
+      "args": ["start", "machine"],
+    },
+  },
+  "file_types": {
+    "JSON5": ["**/openclaw.json"],
+    "ini": ["**/ghostty/config", "**/ssh.config"],
+    "Git Config": ["**/.gitconfig.*"],
+    "Shell Script": ["**/.zshenv.*", "**/.zshrc.*"],
+  },
+}

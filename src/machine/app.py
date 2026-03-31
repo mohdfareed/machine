@@ -8,30 +8,48 @@ import shutil
 import subprocess
 import sys
 import threading
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal
 
-from machine.core import PLATFORM, Platform, err_console, is_unix, run, settings
+from machine.core import PLATFORM, Platform, err_console, is_unix, run, run_collect, settings
 from machine.manifest import SCRIPT_SUFFIXES, FileMapping, Module, Package
 
 logger = logging.getLogger(__name__)
 
 # Structured failure record for end-of-run summaries
-Failure = tuple[str, str, str]  # (module, item, detail)
+type Failure = tuple[str, str, str]  # (module, item, detail)
+type PackageSource = Literal["brew", "cask", "apt", "snap", "winget", "scoop", "mas"]
+
+
+@dataclass(frozen=True, slots=True)
+class ManagerConfig:
+    binary: str
+    install_cmd: str
+
 
 _STATE_FILE = settings.app_dir / "state.json"
 _MACHINE_FILE = settings.app_dir / "machine.txt"
-_MANAGERS = ("brew", "apt", "snap", "winget", "scoop", "mas")
-
-_INSTALL_CMD = {
-    "brew": "brew install {}",
-    "apt": "sudo apt install -y {}",
-    "snap": "sudo snap install {}",
-    "winget": "winget install --accept-source-agreements --accept-package-agreements {}",
-    "scoop": "scoop install {}",
-    "mas": "mas install {}",
+_PLATFORM_SOURCES: dict[Platform, tuple[PackageSource, ...]] = {
+    Platform.MACOS: ("cask", "brew", "mas"),
+    Platform.LINUX: ("apt", "snap", "brew"),
+    Platform.WSL: ("apt", "snap", "brew"),
+    Platform.GHCS: ("apt", "snap", "brew"),
+    Platform.WINDOWS: ("winget", "scoop"),
 }
-
+_MANAGER_CONFIGS: dict[PackageSource, ManagerConfig] = {
+    "brew": ManagerConfig(binary="brew", install_cmd="brew install {}"),
+    "cask": ManagerConfig(binary="brew", install_cmd="brew install --cask {}"),
+    "apt": ManagerConfig(binary="apt", install_cmd="sudo apt install -y {}"),
+    "snap": ManagerConfig(binary="snap", install_cmd="sudo snap install {}"),
+    "winget": ManagerConfig(
+        binary="winget",
+        install_cmd="winget install --accept-source-agreements --accept-package-agreements {}",
+    ),
+    "scoop": ManagerConfig(binary="scoop", install_cmd="scoop install {}"),
+    "mas": ManagerConfig(binary="mas", install_cmd="mas install {}"),
+}
 
 # # MARK: Sudo
 
@@ -67,7 +85,6 @@ def cache_sudo() -> None:
 
 def validate(
     modules: list[Module],
-    machine_id: str,
 ) -> list[str]:
     """Validate resolved modules. Returns a list of errors."""
     errors: list[str] = []
@@ -161,6 +178,8 @@ def _symlink(source: Path, target: Path) -> bool:
 def refresh_path() -> None:
     """Re-read PATH from a login shell so managers installed by init scripts
     (e.g. Homebrew on a fresh Mac) are visible to ``shutil.which``."""
+    if not is_unix:
+        return
     try:
         shell = os.environ.get("SHELL", "/bin/sh")
         out = subprocess.check_output([shell, "-lc", "echo $PATH"], text=True, timeout=5).strip()
@@ -186,18 +205,43 @@ def install_packages(
     state = _load_state()
     installed: set[str] = set(state.get("packages", []))
 
-    managers = {m for m in _MANAGERS if shutil.which(m)}
-    logger.info("Managers: %s", ", ".join(sorted(managers)) or "none")
+    manager_bins = _available_manager_bins()
+    available_sources = _available_sources(manager_bins)
+    logger.info("Managers: %s", ", ".join(sorted(manager_bins)) or "none")
 
     failures: list[Failure] = []
-    skipped = 0
+    skipped_installed = 0
+    skipped_inapplicable = 0
     for pkg in packages:
-        if pkg.name in installed:
+        current_bins = _available_manager_bins()
+        if current_bins != manager_bins:
+            manager_bins = current_bins
+            available_sources = _available_sources(manager_bins)
+            logger.info("Managers: %s", ", ".join(sorted(manager_bins)) or "none")
+
+        applicable_sources = _applicable_sources(pkg)
+        can_run_script = bool(pkg.script and pkg.applies_to(PLATFORM))
+        if not applicable_sources and not can_run_script:
+            logger.debug("Skip (not applicable): %s", pkg.name)
+            skipped_inapplicable += 1
+            continue
+
+        installed_with_manager = _installed_with_requested_manager(
+            pkg,
+            available_sources,
+            applicable_sources,
+        )
+        if pkg.name in installed and installed_with_manager:
             logger.debug("Skip (installed): %s", pkg.name)
-            skipped += 1
+            skipped_installed += 1
+            continue
+        if installed_with_manager:
+            logger.debug("Skip (installed via manager): %s", pkg.name)
+            installed.add(pkg.name)
+            skipped_installed += 1
             continue
         module = (owners or {}).get(pkg.name, "?")
-        fail = _install(pkg, managers, module)
+        fail = _install(pkg, available_sources, applicable_sources, can_run_script, module)
         if fail:
             failures.append(fail)
         else:
@@ -206,36 +250,51 @@ def install_packages(
     state["packages"] = sorted(installed)
     _save_state(state)
 
-    if skipped:
-        logger.info("Skipped %d already-installed package(s)", skipped)
+    if skipped_installed:
+        logger.info("Skipped %d already-installed package(s)", skipped_installed)
+    if skipped_inapplicable:
+        logger.info("Skipped %d package(s) that do not apply on %s", skipped_inapplicable, PLATFORM)
     return failures
 
 
 def _install(
     pkg: Package,
-    managers: set[str],
+    available_sources: set[PackageSource],
+    applicable_sources: list[PackageSource],
+    can_run_script: bool,
     module: str = "?",
 ) -> Failure | None:
     """Try to install a package. Returns a Failure on error, else None."""
-    for mgr in _MANAGERS:
-        val = getattr(pkg, mgr, None)
-        if val is None or mgr not in managers:
-            continue
-        # Skip Homebrew cask installs on Linux
-        if mgr == "brew" and PLATFORM == Platform.LINUX and "--cask" in str(val):
-            logger.info("[skip] %s: brew cask not supported on Linux", pkg.name)
-            continue
-        cmd = _INSTALL_CMD[mgr].format(val)
-        logger.info("[%s] %s: %s", module, pkg.name, mgr)
-        rc = run(cmd, label=module)
+    source = _selected_source(applicable_sources, available_sources)
+    if source is not None:
+        val = _package_source_value(pkg, source)
+        if val is None:
+            raise AssertionError(f"Missing package source '{source}' for {pkg.name}")
+
+        cmd = _MANAGER_CONFIGS[source].install_cmd.format(val)
+        logger.info("[%s] %s: %s", module, pkg.name, source)
+        rc, output = run_collect(cmd, label=module)
+        if _install_succeeded(source, rc, output):
+            if source == "winget" and rc != 0:
+                logger.info("[%s] %s already installed; no upgrade available", module, pkg.name)
+            return None
         if rc != 0:
             logger.error(
-                "[%s] failed to install %s via %s (exit %d): %s", module, pkg.name, mgr, rc, cmd
+                "[%s] failed to install %s via %s (exit %d): %s",
+                module,
+                pkg.name,
+                source,
+                rc,
+                cmd,
             )
-            return (module, pkg.name, f"{mgr} exit {rc}")
+            return (module, pkg.name, f"{source} exit {rc}")
         return None
 
-    if pkg.script:
+    if applicable_sources:
+        logger.warning("[%s] no manager for: %s", module, pkg.name)
+        return (module, pkg.name, "no manager available")
+
+    if can_run_script and pkg.script:
         logger.info("[%s] %s: script", module, pkg.name)
         rc = run(pkg.script, label=module)
         if rc != 0:
@@ -249,8 +308,89 @@ def _install(
             return (module, pkg.name, f"script exit {rc}")
         return None
 
-    logger.warning("[%s] no manager for: %s", module, pkg.name)
-    return (module, pkg.name, "no manager available")
+    logger.debug("[%s] skip %s: no applicable package source on %s", module, pkg.name, PLATFORM)
+    return None
+
+
+def _install_succeeded(
+    manager: PackageSource,
+    rc: int,
+    output: bytes | bytearray,
+) -> bool:
+    """Classify manager exit codes that should count as a successful no-op."""
+    if rc == 0:
+        return True
+    if manager != "winget":
+        return False
+    text = output.decode(errors="replace").lower()
+    return "found an existing package already installed" in text and any(
+        msg in text
+        for msg in (
+            "no available upgrade found",
+            "no newer package versions are available from the configured sources",
+        )
+    )
+
+
+def _installed_with_requested_manager(
+    pkg: Package,
+    available_sources: set[PackageSource],
+    applicable_sources: list[PackageSource],
+) -> bool:
+    """Return True when the package is already present under its requested manager."""
+    source = _selected_source(applicable_sources, available_sources)
+    if source is None:
+        return False
+    return bool(source == "winget" and pkg.winget and _winget_installed(pkg.winget))
+
+
+def _applicable_sources(pkg: Package) -> list[PackageSource]:
+    """Return package sources that make sense on the current platform."""
+    if not pkg.applies_to(PLATFORM):
+        return []
+    return [
+        source
+        for source in _PLATFORM_SOURCES[PLATFORM]
+        if _package_source_value(pkg, source) is not None
+    ]
+
+
+def _available_manager_bins() -> set[str]:
+    """Return installed package-manager executables."""
+    return {config.binary for config in _MANAGER_CONFIGS.values() if shutil.which(config.binary)}
+
+
+def _available_sources(manager_bins: set[str]) -> set[PackageSource]:
+    """Return package sources whose backing managers are installed."""
+    return {source for source, config in _MANAGER_CONFIGS.items() if config.binary in manager_bins}
+
+
+def _selected_source(
+    applicable_sources: list[PackageSource],
+    available_sources: set[PackageSource],
+) -> PackageSource | None:
+    """Return the first applicable source whose manager is installed."""
+    for source in applicable_sources:
+        if source in available_sources:
+            return source
+    return None
+
+
+def _package_source_value(pkg: Package, source: PackageSource) -> str | int | None:
+    """Return the package value for a specific install source."""
+    return getattr(pkg, source)
+
+
+def _winget_installed(package_id: str) -> bool:
+    """Return True when winget already manages the exact package id."""
+    proc = subprocess.run(
+        ["winget", "list", "--exact", "--id", package_id],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    return proc.returncode == 0
 
 
 # # MARK: Scripts
@@ -405,7 +545,7 @@ def run_scripts(
         if tracked:
             state[script.name] = {
                 "hash": hashlib.sha256(script.read_bytes()).hexdigest()[:16],
-                "ran": datetime.now(timezone.utc).isoformat(),
+                "ran": datetime.now(UTC).isoformat(),
             }
 
     _save_state(state)

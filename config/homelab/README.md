@@ -13,7 +13,7 @@ directories on the host, symlinks compose files from the repo, and runs
 `docker compose up`. Runtime data (volumes, logs) stays in `~/.homelab/`
 and is never committed to git.
 
-```
+```txt
 Sources                              Deployed to
 config/homelab/docker/<svc>/   ─┐
                                 ├──▸  ~/.homelab/<svc>/  (symlinks)

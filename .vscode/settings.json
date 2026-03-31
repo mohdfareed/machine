@@ -1,63 +1,18 @@
 {
   // python
-  "ruff.lineLength": 100,
   "debugpy.debugJustMyCode": false,
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  // shell
-  "shellcheck.customArgs": [
-    "--shell=bash" // REVIEW: find zsh equivalent tool
-  ],
-  "shellcheck.exclude": [
-    "1071" // allow zsh
-  ],
-  "[shellscript]": {
-    "editor.detectIndentation": false,
-    "editor.tabSize": 2
-  },
   // file associations
   "files.associations": {
     "openclaw.json": "json5",
     "**/ghostty/config": "ini",
-    ".gitconfig.*": "ini",
+    ".gitconfig.*": "properties",
     ".zshenv.*": "shellscript",
     ".zshrc.*": "shellscript",
     "ssh.config": "ssh_config",
   },
-  // spelling
-  "cSpell.ignorePaths": [
-    ".git",
-    ".github",
-    ".venv",
-    ".vscode",
-    ".gitignore",
-  ],
-  "cSpell.words": [
-    "cmux",
-    "Dockge",
-    "dotenv",
-    "elevenlabs",
-    "fareed",
-    "fpath",
-    "GHCS",
-    "ghostty",
-    "homelab",
-    "linuxbrew",
-    "macbook",
-    "mohdfareed",
-    "mohds",
-    "openclaw",
-    "pwsh",
-    "pydantic",
-    "pyright",
-    "shellcheck",
-    "tailnet",
-    "tailscale",
-    "typer",
-    "venv",
-    "WINGET",
-    "wslinfo",
-    "zfunc",
-    "zinit"
-  ]
+  "material-icon-theme.files.associations": {
+    ".gitconfig.win": "git",
+  },
 }

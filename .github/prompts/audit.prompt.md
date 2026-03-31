@@ -1,7 +1,7 @@
 # Configuration Audit
 
 Read AGENTS.md for project conventions, then audit every file under `config/`
-and `machines/` for violations. Run `./scripts/test.sh` at the end.
+and `machines/` for violations. Run `./scripts/check.sh` at the end.
 
 ## Audit Methodology
 

@@ -1,0 +1,26 @@
+[
+  {
+    "label": "Bookmark: Toggle bookmark",
+    "command": "uv",
+    "args": [
+      "run",
+      "--script",
+      "$MC_HOME/config/zed/bookmark_add.py",
+      "$ZED_WORKTREE_ROOT",
+      "$ZED_RELATIVE_FILE",
+      "$ZED_ROW",
+      "$ZED_COLUMN",
+    ],
+    "env": {},
+    "hide": "on_success",
+    "reveal": "always",
+  },
+  {
+    "label": "Bookmark: Find bookmark",
+    "command": "zed",
+    "args": ["$ZED_WORKTREE_ROOT/.zed/bookmarks.txt"],
+    "env": {},
+    "hide": "always",
+    "reveal": "never",
+  },
+]

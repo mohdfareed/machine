@@ -6,6 +6,8 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
+from machine.core import Platform
+
 SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 
 
@@ -20,21 +22,28 @@ class FileMapping(BaseModel):
 
 
 class Package(BaseModel):
-    """A package with per-manager install names."""
+    """A package with optional per-manager install names."""
 
     name: str
     brew: str | None = None
+    cask: str | None = None
     apt: str | None = None
     snap: str | None = None
     winget: str | None = None
     scoop: str | None = None
     mas: int | None = None
     script: str | None = None
+    platforms: list[Platform] | None = None
+
+    def applies_to(self, platform: Platform) -> bool:
+        """Return True when this package should be considered on *platform*."""
+        return self.platforms is None or platform in self.platforms
 
     @model_validator(mode="after")
     def _check_source(self) -> Self:
         sources = [
             self.brew,
+            self.cask,
             self.apt,
             self.snap,
             self.winget,
@@ -64,44 +73,6 @@ class MachineManifest(BaseModel):
     scripts: list[str] = []
     files: list[FileMapping] = []
     packages: list[Package] = []
-
-
-# # MARK: Package Helpers
-
-
-def brew(*names: str) -> list[Package]:
-    """Create brew packages. Include flags in the name: ``'pkg --flag'``."""
-    return [Package(name=n.split()[0], brew=n) for n in names]
-
-
-def cask(*names: str) -> list[Package]:
-    """Create brew cask packages."""
-    return [Package(name=n.split()[0], brew=f"{n} --cask") for n in names]
-
-
-def apt(*names: str) -> list[Package]:
-    """Create apt packages."""
-    return [Package(name=n.split()[0], apt=n) for n in names]
-
-
-def snap(*names: str) -> list[Package]:
-    """Create snap packages."""
-    return [Package(name=n.split()[0], snap=n) for n in names]
-
-
-def winget(*names: str) -> list[Package]:
-    """Create winget packages."""
-    return [Package(name=n.split()[0], winget=n) for n in names]
-
-
-def scoop(*names: str) -> list[Package]:
-    """Create scoop packages."""
-    return [Package(name=n.split()[0], scoop=n) for n in names]
-
-
-def mas(**apps: int) -> list[Package]:
-    """Create Mac App Store packages: ``name=app_id``."""
-    return [Package(name=k, mas=v) for k, v in apps.items()]
 
 
 # # MARK: Discovery

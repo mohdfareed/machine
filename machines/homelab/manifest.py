@@ -1,6 +1,6 @@
 """HomeLab (macOS) machine manifest."""
 
-from machine.manifest import FileMapping, MachineManifest, Package, brew, cask
+from machine.manifest import FileMapping, MachineManifest, Package
 
 manifest = MachineManifest(
     modules=[
@@ -27,17 +27,17 @@ manifest = MachineManifest(
     ],
     packages=[
         # OpenClaw (macOS app - node)
-        *cask("openclaw"),
+        Package(name="openclaw", cask="openclaw"),
         # OpenClaw (CLI - gateway)
         Package(
             name="openclaw-cli",
             script="curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard",
         ),
         # Dev tools
-        *brew("uv", "python"),
-        *cask("powershell"),
+        *[Package(name=name, brew=name) for name in ("uv", "python")],
+        Package(name="powershell", cask="powershell"),
         # Utilities
-        *brew("mas", "fastfetch"),
-        *brew("font-computer-modern", "font-jetbrains-mono-nerd-font"),
+        *[Package(name=name, brew=name) for name in ("mas", "fastfetch", "font-computer-modern")],
+        Package(name="font-jetbrains-mono-nerd-font", brew="font-jetbrains-mono-nerd-font"),
     ],
 )

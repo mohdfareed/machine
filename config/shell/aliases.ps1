@@ -3,14 +3,17 @@
 # Functions and Aliases
 # =============================================================================
 
-if ($env:TERM_PROGRAM -eq 'vscode') {
-    function Clear {
+if ($env:TERM_PROGRAM -eq 'vscode')
+{
+    function Clear
+    {
         Clear-Host; Clear-Host
     }
 }
 
 # Clone a git repo
-function GitClone {
+function GitClone
+{
     param (
         [Parameter(Mandatory = $true)][string]$RepoName,
         [string[]]$AdditionalArgs
@@ -19,7 +22,8 @@ function GitClone {
 }
 
 # Generate a new SSH key pair
-function GenKey {
+function GenKey
+{
     param (
         [Parameter(Mandatory = $true)][string]$KeyName,
         [Parameter(Mandatory = $true)][string]$Email,
@@ -29,7 +33,8 @@ function GenKey {
 }
 
 # Register an SSH key to authorized_keys on a host
-function RegKey {
+function RegKey
+{
     param (
         [Parameter(Mandatory = $true)][string]$HostName,
         [Parameter(Mandatory = $true)][string]$KeyName,
@@ -37,7 +42,8 @@ function RegKey {
     )
 
     $pubKeyPath = "$HOME/.ssh/$KeyName.pub"
-    if (-Not (Test-Path $pubKeyPath)) {
+    if (-Not (Test-Path $pubKeyPath))
+    {
         Write-Error "Public key file not found: $pubKeyPath"
         return
     }

@@ -1,45 +1,45 @@
 {
   "TCP": {
     "443": {
-      "HTTPS": true
+      "HTTPS": true,
     },
     "8443": {
-      "HTTPS": true
+      "HTTPS": true,
     },
     "6333": {
-      "TCPForward": "localhost:6333"
-    }
+      "TCPForward": "localhost:6333",
+    },
   },
   "Web": {
     "${TS_CERT_DOMAIN}:443": {
       "Handlers": {
         "/api/": {
-          "Proxy": "http://127.0.0.1:8765/api/"
+          "Proxy": "http://127.0.0.1:8765/api/",
         },
         "/docs": {
-          "Proxy": "http://127.0.0.1:8765/docs"
+          "Proxy": "http://127.0.0.1:8765/docs",
         },
         "/openapi.json": {
-          "Proxy": "http://127.0.0.1:8765/openapi.json"
+          "Proxy": "http://127.0.0.1:8765/openapi.json",
         },
         "/mcp": {
-          "Proxy": "http://127.0.0.1:8765/mcp"
+          "Proxy": "http://127.0.0.1:8765/mcp",
         },
         "/": {
-          "Proxy": "http://127.0.0.1:3000"
-        }
-      }
+          "Proxy": "http://127.0.0.1:3000",
+        },
+      },
     },
     "${TS_CERT_DOMAIN}:8443": {
       "Handlers": {
         "/mcp": {
-          "Proxy": "http://127.0.0.1:8765/mcp"
-        }
-      }
-    }
+          "Proxy": "http://127.0.0.1:8765/mcp",
+        },
+      },
+    },
   },
   "AllowFunnel": {
     "${TS_CERT_DOMAIN}:443": false,
-    "${TS_CERT_DOMAIN}:8443": true
-  }
+    "${TS_CERT_DOMAIN}:8443": true,
+  },
 }
