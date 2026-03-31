@@ -10,8 +10,17 @@ import click
 import typer
 from rich.prompt import Prompt
 
-from machine.app import get_current_machine
 from machine.core import console, err_console, settings, setup_console_logging, setup_file_logging
+from machine.ops.files import deploy_files, validate
+from machine.ops.packages import cache_sudo, install_packages
+from machine.ops.scripts import (
+    build_script_env,
+    filter_scripts,
+    matches_platform,
+    run_scripts,
+    write_env_file,
+)
+from machine.persistence import get_current_machine, save_current_machine
 
 if TYPE_CHECKING:
     from machine.manifest import MachineManifest, Module, Package
@@ -122,24 +131,13 @@ def apply(
     ] = [],
 ) -> None:
     """Deploy configs, install packages, and run scripts."""
-    from machine.app import (
-        Failure,
-        build_script_env,
-        cache_sudo,
-        deploy_files,
-        filter_scripts,
-        install_packages,
-        run_scripts,
-        save_current_machine,
-        validate,
-        write_env_file,
-    )
     from machine.manifest import load_manifest, resolve_modules
 
     root = settings.home
     if not machine:
         err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
         raise SystemExit(1)
+
     save_current_machine(machine)
     write_env_file(machine, root)
 
@@ -184,7 +182,7 @@ def apply(
     ]
 
     cache_sudo()
-    failures: list[Failure] = []
+    failures: list[tuple[str, str, str]] = []
 
     _, file_failures = deploy_files(all_files, owners=owners)
     failures.extend(file_failures)
@@ -241,14 +239,6 @@ def update(
     ] = [],
 ) -> None:
     """Run up_* maintenance scripts for the current machine."""
-    from machine.app import (
-        Failure,
-        build_script_env,
-        cache_sudo,
-        filter_scripts,
-        get_current_machine,
-        run_scripts,
-    )
     from machine.manifest import load_manifest, resolve_modules
 
     root = settings.home
@@ -287,7 +277,7 @@ def update(
     console.print(f"{mode}Updating [bold]{machine_id}[/]")
 
     cache_sudo()
-    failures: list[Failure] = run_scripts(up_scripts, env=script_env, owners=owners)
+    failures: list[tuple[str, str, str]] = run_scripts(up_scripts, env=script_env, owners=owners)
     _print_summary(failures, settings.app_dir / "mc.log")
 
 
@@ -345,8 +335,6 @@ def sync(
         subprocess.run([*git, "stash", "pop"])
 
     if not no_apply:
-        from machine.app import get_current_machine
-
         machine_id = get_current_machine()
         if machine_id:
             console.print()
@@ -390,8 +378,6 @@ def home() -> None:
 @app.command(rich_help_panel="Info")
 def private() -> None:
     """Print the resolved MC_PRIVATE path for the current machine."""
-    from machine.app import build_script_env, get_current_machine
-
     machine_id = get_current_machine()
     if not machine_id:
         err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
@@ -404,8 +390,6 @@ def private() -> None:
 @app.command(rich_help_panel="Info")
 def info() -> None:
     """Show machine home, app directory, and version."""
-    from machine.app import get_current_machine
-
     console.print(f"[bold]{settings.name}[/] {settings.version}")
     machine = get_current_machine()
     if machine:
@@ -445,7 +429,6 @@ def show(
     ] = get_current_machine() or "",
 ) -> None:
     """Show resolved configuration for a machine."""
-    from machine.app import matches_platform
     from machine.manifest import load_manifest, resolve_modules
 
     root = settings.home
@@ -501,7 +484,7 @@ def show(
 def _pkg_sources(p: "Package") -> str:
     """Format package install sources as a short string."""
     sources: list[str] = []
-    for attr in ("brew", "apt", "snap", "winget", "scoop"):
+    for attr in ("brew", "cask", "apt", "snap", "winget", "scoop"):
         val = getattr(p, attr, None)
         if val:
             sources.append(f"{attr}: {val}")

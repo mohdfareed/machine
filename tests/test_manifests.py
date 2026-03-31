@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from machine.app import validate
 from machine.manifest import (
     Module,
     list_machines,
@@ -13,6 +12,7 @@ from machine.manifest import (
     load_module,
     resolve_modules,
 )
+from machine.ops.files import validate
 
 ROOT = Path(__file__).resolve().parents[1]
 

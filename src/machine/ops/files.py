@@ -6,7 +6,6 @@ from pathlib import Path
 
 from machine.core import settings
 from machine.manifest import FileMapping, Module
-from machine.types import Failure
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +28,10 @@ def validate(modules: list[Module]) -> list[str]:
 def deploy_files(
     files: list[FileMapping],
     owners: dict[str, str] | None = None,
-) -> tuple[int, list[Failure]]:
+) -> tuple[int, list[tuple[str, str, str]]]:
     """Symlink all file mappings. Returns (count created, failures)."""
     created = 0
-    failures: list[Failure] = []
+    failures: list[tuple[str, str, str]] = []
     for fm in files:
         src = Path(fm.source)
         tgt = Path(os.path.expandvars(fm.target)).expanduser()
