@@ -24,3 +24,6 @@ indent_size = 2
 
 [*.{code-snippets,code-workspace}]
 indent_size = 2
+
+[*.md]
+indent_size = 2

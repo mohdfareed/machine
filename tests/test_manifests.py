@@ -83,7 +83,7 @@ def test_manifest_env_satisfies_modules(machine_id: str) -> None:
     """All module files and scripts exist for this machine."""
     manifest = load_manifest(machine_id, ROOT)
     modules = [load_module(m, ROOT) for m in manifest.modules]
-    errors = validate(modules, machine_id)
+    errors = validate(modules)
     assert not errors, "\n".join(errors)
 
 

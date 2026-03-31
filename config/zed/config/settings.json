@@ -2,6 +2,7 @@
   // # MARK: Editor ===========================================================
   "theme": "One Dark Pro",
   "icon_theme": "Material Icon Theme",
+  "format_on_save": "on",
   "show_whitespaces": "all",
   "wrap_guides": [80, 120],
   "buffer_font_family": "JetBrainsMono Nerd Font",
@@ -34,6 +35,9 @@
     "YAML": {
       "tab_size": 2,
     },
+    "Markdown": {
+      "tab_size": 2,
+    },
     "Plain Text": {
       "language_servers": ["bookmark-language-server"],
     },
@@ -55,6 +59,13 @@
     },
   ],
   // # MARK: Agents ===========================================================
+  "agent": {
+    "inline_assistant_model": {
+      "provider": "copilot_chat",
+      "model": "gpt-5-mini",
+      "enable_thinking": false,
+    },
+  },
   "edit_predictions": {
     "provider": "copilot",
   },

@@ -198,6 +198,7 @@ def test_install_packages_uses_cask_source_on_macos(monkeypatch) -> None:
         lambda name: "/opt/homebrew/bin/brew" if name == "brew" else None,
     )
     monkeypatch.setattr(machine_app, "_winget_installed", lambda package_id: False)
+    monkeypatch.setattr(machine_app, "_source_installed", lambda source, value: False)
 
     def _fake_run_collect(cmd, **kwargs):  # type: ignore[no-untyped-def]
         commands.append(cmd)
@@ -230,3 +231,36 @@ def test_install_packages_uses_script_when_no_native_source_applies(monkeypatch)
 
     assert failures == []
     assert commands == ["install tailscale"]
+
+
+def test_install_packages_reads_mas_list_once_and_skips_installed_apps(monkeypatch) -> None:
+    """Apply should not re-run `mas install` for already installed App Store apps."""
+    packages = [Package(name="Xcode", mas=497799835), Package(name="Keynote", mas=409183694)]
+    calls = 0
+
+    monkeypatch.setattr(machine_app, "PLATFORM", machine_app.Platform.MACOS)
+    monkeypatch.setattr(machine_app, "refresh_path", lambda: None)
+    monkeypatch.setattr(
+        machine_app.shutil, "which", lambda name: "/usr/bin/mas" if name == "mas" else None
+    )
+
+    def _fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
+        nonlocal calls
+        calls += 1
+        return type(
+            "Proc", (), {"returncode": 0, "stdout": "497799835 Xcode\n409183694 Keynote\n"}
+        )()
+
+    monkeypatch.setattr(machine_app.subprocess, "run", _fake_run)
+    monkeypatch.setattr(
+        machine_app,
+        "_install",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("unexpected install")),
+    )
+
+    failures = machine_app.install_packages(
+        packages, owners={"Xcode": "macbook", "Keynote": "macbook"}
+    )
+
+    assert failures == []
+    assert calls == 1

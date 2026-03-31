@@ -37,7 +37,10 @@ manifest = MachineManifest(
         *[Package(name=name, brew=name) for name in ("uv", "python")],
         Package(name="powershell", cask="powershell"),
         # Utilities
-        *[Package(name=name, brew=name) for name in ("mas", "fastfetch", "font-computer-modern")],
-        Package(name="font-jetbrains-mono-nerd-font", brew="font-jetbrains-mono-nerd-font"),
+        *[Package(name=name, brew=name) for name in ("mas", "fastfetch")],
+        *[
+            Package(name=name, cask=name)
+            for name in ("font-computer-modern", "font-jetbrains-mono-nerd-font")
+        ],
     ],
 )

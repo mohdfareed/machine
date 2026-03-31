@@ -35,6 +35,7 @@
     "wslinfo",
     "zfunc",
     "zinit",
-    "keepalive"
+    "keepalive",
+    "chatmock"
   ]
 }

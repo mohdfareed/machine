@@ -204,6 +204,7 @@ def install_packages(
 
     manager_bins = _available_manager_bins()
     available_sources = _available_sources(manager_bins)
+    mas_ids = _mas_installed_ids() if "mas" in available_sources else set()
     logger.info("Managers: %s", ", ".join(sorted(manager_bins)) or "none")
 
     failures: list[Failure] = []
@@ -214,6 +215,7 @@ def install_packages(
         if current_bins != manager_bins:
             manager_bins = current_bins
             available_sources = _available_sources(manager_bins)
+            mas_ids = _mas_installed_ids() if "mas" in available_sources else set()
             logger.info("Managers: %s", ", ".join(sorted(manager_bins)) or "none")
 
         applicable_sources = _applicable_sources(pkg)
@@ -227,6 +229,7 @@ def install_packages(
             pkg,
             available_sources,
             applicable_sources,
+            mas_ids,
         )
         if installed_with_manager:
             logger.debug("Skip (installed): %s", pkg.name)
@@ -323,6 +326,7 @@ def _installed_with_requested_manager(
     pkg: Package,
     available_sources: set[PackageSource],
     applicable_sources: list[PackageSource],
+    mas_ids: set[int],
 ) -> bool:
     """Return True when the package is already present under its requested manager."""
     source = _selected_source(applicable_sources, available_sources)
@@ -331,6 +335,8 @@ def _installed_with_requested_manager(
     value = _package_source_value(pkg, source)
     if value is None:
         return False
+    if source == "mas":
+        return int(value) in mas_ids
     return _source_installed(source, value)
 
 
@@ -425,6 +431,11 @@ def _winget_installed(package_id: str) -> bool:
 
 def _mas_installed(app_id: int) -> bool:
     """Return True when the Mac App Store app id is already installed."""
+    return app_id in _mas_installed_ids()
+
+
+def _mas_installed_ids() -> set[int]:
+    """Return installed Mac App Store app ids from `mas list`."""
     proc = subprocess.run(
         ["mas", "list"],
         capture_output=True,
@@ -432,9 +443,9 @@ def _mas_installed(app_id: int) -> bool:
         timeout=30,
         check=False,
     )
-    return proc.returncode == 0 and any(
-        line.startswith(f"{app_id} ") for line in proc.stdout.splitlines()
-    )
+    if proc.returncode != 0:
+        return set()
+    return {int(parts[0]) for line in proc.stdout.splitlines() if (parts := line.split())}
 
 
 # # MARK: Scripts

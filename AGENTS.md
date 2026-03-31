@@ -79,10 +79,11 @@ Composes modules and adds machine-specific overrides.
   3. `$MC_PRIVATE/env/$MC_ID.env` - secrets, one file per machine, plain dotenv
 - `mc` loads all three tiers into every script subprocess - scripts should NOT re-source them
 - `machine.env` uses plain `KEY=VALUE` (no `export`); values may reference earlier vars
-- Keep code minimal - avoid unnecessary abstractions, callbacks, or progress bars
+- Keep code minimal - avoid unnecessary abstractions, callbacks, or progress bars; small user-facing scripts should keep their main flow local and readable
+- Keep `AGENTS.md` lean: only record durable, project-wide conventions, not one-off notes for a single helper or cleanup
 - Avoid trivial helper wrappers like `def _target(name): return str(base / name)`; use `str(base / path)` directly unless the helper adds real behavior
 - If a package/file/script list is just static data used once, keep it inline in the `Module(...)` or `MachineManifest(...)` definition; only extract it when there is real logic or reuse
-- Do not extract single-use message strings or matcher text into module-level constants; keep them local unless they are reused or represent shared domain vocabulary
+- Do not add scripts whose only job is printing setup reminders; put that guidance in docs unless the script performs real work
 - `MC_PRIVATE` defaults to `app_dir/private`; `machine.env` may override (e.g. `$ICLOUD/.machine`)
 - Scripts skip gracefully when `MC_PRIVATE` directory doesn't exist
 - `README.md` is high-level only: purpose, setup, top-level usage, broad layout, and links to deeper docs

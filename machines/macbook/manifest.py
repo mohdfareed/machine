@@ -3,7 +3,7 @@
 from machine.manifest import MachineManifest, Package
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "vscode", "ghostty", "core", "zed"],
+    modules=["git", "shell", "ssh", "vscode", "ghostty", "core", "zed", "raycast"],
     files=[],
     packages=[
         # Dev languages
@@ -23,12 +23,10 @@ manifest = MachineManifest(
         # Package(name="docker", cask="docker"),
         *[Package(name=name, cask=name) for name in ("powershell", "dotnet-sdk")],
         # Utilities
+        *[Package(name=name, brew=name) for name in ("mas", "gnu-time", "fastfetch")],
         *[
-            Package(name=name, brew=name)
+            Package(name=name, cask=name)
             for name in (
-                "mas",
-                "gnu-time",
-                "fastfetch",
                 "copilot-cli",
                 "codex",
                 "font-computer-modern",
