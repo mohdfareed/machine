@@ -8,7 +8,7 @@ module = Module(
     ],
     packages=[
         Package(name="uv", brew="uv", winget="astral-sh.uv"),
-        Package(name="raycast", cask="raycast", winget="Raycast.Raycast"),
+        Package(name="raycast", cask="raycast", winget="raycast"),
         Package(name="raycast-safari-ext", mas=6738274497),
         Package(name="chatmock", script="uv tool install chatmock"),
     ],
