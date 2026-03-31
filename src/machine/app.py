@@ -202,9 +202,6 @@ def install_packages(
     # scripts (e.g. Homebrew) are discoverable via shutil.which.
     refresh_path()
 
-    state = _load_state()
-    installed: set[str] = set(state.get("packages", []))
-
     manager_bins = _available_manager_bins()
     available_sources = _available_sources(manager_bins)
     logger.info("Managers: %s", ", ".join(sorted(manager_bins)) or "none")
@@ -231,24 +228,14 @@ def install_packages(
             available_sources,
             applicable_sources,
         )
-        if pkg.name in installed and installed_with_manager:
-            logger.debug("Skip (installed): %s", pkg.name)
-            skipped_installed += 1
-            continue
         if installed_with_manager:
-            logger.debug("Skip (installed via manager): %s", pkg.name)
-            installed.add(pkg.name)
+            logger.debug("Skip (installed): %s", pkg.name)
             skipped_installed += 1
             continue
         module = (owners or {}).get(pkg.name, "?")
         fail = _install(pkg, available_sources, applicable_sources, can_run_script, module)
         if fail:
             failures.append(fail)
-        else:
-            installed.add(pkg.name)
-
-    state["packages"] = sorted(installed)
-    _save_state(state)
 
     if skipped_installed:
         logger.info("Skipped %d already-installed package(s)", skipped_installed)
@@ -341,7 +328,10 @@ def _installed_with_requested_manager(
     source = _selected_source(applicable_sources, available_sources)
     if source is None:
         return False
-    return bool(source == "winget" and pkg.winget and _winget_installed(pkg.winget))
+    value = _package_source_value(pkg, source)
+    if value is None:
+        return False
+    return _source_installed(source, value)
 
 
 def _applicable_sources(pkg: Package) -> list[PackageSource]:
@@ -381,6 +371,46 @@ def _package_source_value(pkg: Package, source: PackageSource) -> str | int | No
     return getattr(pkg, source)
 
 
+def _source_installed(source: PackageSource, value: str | int) -> bool:
+    """Return True when the requested manager already has the package installed."""
+    match source:
+        case "brew":
+            return _command_succeeds(["brew", "list", "--formula", str(value)])
+        case "cask":
+            return _command_succeeds(["brew", "list", "--cask", str(value)])
+        case "apt":
+            proc = subprocess.run(
+                ["dpkg-query", "-W", "-f=${Status}", str(value)],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            return proc.returncode == 0 and "install ok installed" in proc.stdout.lower()
+        case "snap":
+            return _command_succeeds(["snap", "list", str(value)])
+        case "winget":
+            return _winget_installed(str(value))
+        case "scoop":
+            return _command_succeeds(["scoop", "list", str(value)])
+        case "mas":
+            return _mas_installed(int(value))
+
+    raise AssertionError(f"Unhandled package source: {source}")
+
+
+def _command_succeeds(cmd: list[str]) -> bool:
+    """Return True when *cmd* exits successfully."""
+    proc = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    return proc.returncode == 0
+
+
 def _winget_installed(package_id: str) -> bool:
     """Return True when winget already manages the exact package id."""
     proc = subprocess.run(
@@ -391,6 +421,20 @@ def _winget_installed(package_id: str) -> bool:
         check=False,
     )
     return proc.returncode == 0
+
+
+def _mas_installed(app_id: int) -> bool:
+    """Return True when the Mac App Store app id is already installed."""
+    proc = subprocess.run(
+        ["mas", "list"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    return proc.returncode == 0 and any(
+        line.startswith(f"{app_id} ") for line in proc.stdout.splitlines()
+    )
 
 
 # # MARK: Scripts

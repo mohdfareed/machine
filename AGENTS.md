@@ -68,7 +68,7 @@ Composes modules and adds machine-specific overrides.
 - Machine extras: `extra.zsh` → `~/.zshrc.local`
 - Repo root derived from `Path(__file__).parents[2]` - no env var needed
 - App data: `typer.get_app_dir("mc")` for logs/state
-- State file: `app_dir/state.json` tracks installed packages and script runs
+- State file: `app_dir/state.json` tracks script runs; package presence is determined from the requested package manager at apply time
 - Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/vscode/` and `config/zed/`
 - Editor modules should keep linked app config files under a `config/` subdirectory; top-level module files are for `module.py`, helpers, and special assets like snippets
 - Editor tasks should avoid ad hoc external tool dependencies; prefer shell builtins or repo-managed entrypoints so tasks stay portable across machines
