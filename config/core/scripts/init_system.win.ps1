@@ -34,7 +34,7 @@ try
 # wsl
 Write-Host "setting up wsl..."
 $distros = @(wsl -l -q 2>$null | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-if ($LASTEXITCODE -ne 0 -or $distros.Count -eq 0) # failed or no distors found
+if ($LASTEXITCODE -ne 0 -or $distros.Count -eq 0) # failed or no distros found
 {
     wsl --install --no-launch
 }

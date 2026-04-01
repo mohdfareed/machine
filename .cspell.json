@@ -1,13 +1,19 @@
 {
+  "version": "0.2",
+  "useGitignore": true,
   "ignorePaths": [
     ".git",
     ".github",
     ".venv",
     ".vscode",
     ".gitignore",
-    "*.lock"
+    "*.lock",
+    "**/__pycache__/**",
+    "machines/**/machine.env",
+    "machines/**/manifest.py"
   ],
   "words": [
+    "Eeuo",
     "cmux",
     "Dockge",
     "dotenv",
@@ -58,14 +64,11 @@
     "Aloxaf",
     "btop",
     "Dobbeleer",
-    "powertoys",
-    "MHTPHNGVV",
-    "DEVCOM",
-    "Luki",
     "gsserver",
     "winerror",
     "hardlink",
     "mklink",
-    "FMOHAMMEDRMT"
+    "pathlib",
+    "pytest"
   ]
 }
