@@ -12,45 +12,45 @@
   "defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
   "newTabMenu": [
     {
-      "type": "remainingProfiles",
-    },
+      "type": "remainingProfiles"
+    }
   ],
   "profiles": {
     "defaults": {
       "colorScheme": "Dark+",
       "font": {
         "face": "JetBrainsMono Nerd Font Mono",
-        "size": 14,
+        "size": 14
       },
-      "useAcrylic": true,
+      "useAcrylic": true
     },
     "list": [
       {
         "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
         "hidden": false,
         "name": "PowerShell",
-        "source": "Windows.Terminal.PowershellCore",
+        "source": "Windows.Terminal.PowershellCore"
       },
       {
         "guid": "{48c4878f-4609-55f2-9767-d410a7784339}",
         "hidden": false,
         "name": "WSL",
-        "source": "Microsoft.WSL",
-      },
-    ],
+        "source": "Microsoft.WSL"
+      }
+    ]
   },
   "keybindings": [
     {
       "id": "Terminal.CopyToClipboard",
-      "keys": "ctrl+c",
+      "keys": "ctrl+c"
     },
     {
       "id": "Terminal.FindText",
-      "keys": "ctrl+f",
+      "keys": "ctrl+f"
     },
     {
       "id": "Terminal.PasteFromClipboard",
-      "keys": "ctrl+v",
-    },
-  ],
+      "keys": "ctrl+v"
+    }
+  ]
 }

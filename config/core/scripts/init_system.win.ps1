@@ -17,15 +17,24 @@ if ($hostname -and $env:COMPUTERNAME -ine $hostname)
 
 # install windows features
 Write-Host "enabling windows features..."
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-RemoteDesktopConnection -NoRestart
-Enable-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform -NoRestart
-Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+try
+{
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-Windows-Subsystem-Linux
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-RemoteDesktopConnection
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName HypervisorPlatform
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName VirtualMachinePlatform
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-Hyper-V-All
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Containers
+    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Containers-DisposableClientVM
+} catch
+{
+    Write-Warning "Failed to enable optional windows features, enable them manually: $_"
+}
 
 # wsl
 Write-Host "setting up wsl..."
 $distros = @(wsl -l -q 2>$null | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-if ($LASTEXITCODE -ne 0 -or $distros.Count -eq 0) # failed or no distors found
+if ($LASTEXITCODE -ne 0 -or $distros.Count -eq 0) # failed or no distros found
 {
-    wsl --install
+    wsl --install --no-launch
 }
