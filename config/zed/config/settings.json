@@ -64,7 +64,7 @@
       "provider": "copilot_chat",
       "model": "claude-sonnet-4.6",
       "enable_thinking": true,
-      "effort": "high"
+      "effort": "high",
     },
     "inline_assistant_model": {
       "provider": "copilot_chat",
@@ -98,23 +98,21 @@
         "github_personal_access_token": "GITHUB_MCP_TOKEN",
       },
     },
+    "craft-docs": {
+      "url": "https://mcp.craft.do/links/Dwf70HLs61a/mcp",
+      "settings": {},
+    },
     "mem0": {
-      "enabled": true,
-      "settings": {
-        "url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed",
-      },
+      "url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed",
+      "settings": {},
     },
     "personal-memories": {
-      "enabled": true,
-      "settings": {
-        "url": "https://kbm.tail2a477.ts.net/personal",
-      },
+      "url": "https://kbm.tail2a477.ts.net/personal",
+      "settings": {},
     },
     "work-memories": {
-      "enabled": true,
-      "settings": {
-        "url": "https://kbm.tail2a477.ts.net/work",
-      },
+      "url": "https://kbm.tail2a477.ts.net/work",
+      "settings": {},
     },
   },
 }
