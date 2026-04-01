@@ -1,21 +1,25 @@
 {
-	"servers": {
-		"mem0": {
-			"type": "http",
-			"url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed"
-		},
-		"personal-memories": {
-			"type": "http",
-			"url": "https://kbm.tail2a477.ts.net/personal"
-		},
-		"work-memories": {
-			"type": "http",
-			"url": "https://kbm.tail2a477.ts.net/work"
-		},
-		"Figma": {
-			"url": "https://mcp.figma.com/mcp",
-			"type": "http"
-		}
-	},
-	"inputs": []
+  "servers": {
+    "mem0": {
+      "url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed",
+      "type": "http"
+    },
+    "personal-memories": {
+      "url": "https://kbm.tail2a477.ts.net/personal",
+      "type": "http"
+    },
+    "work-memories": {
+      "url": "https://kbm.tail2a477.ts.net/work",
+      "type": "http"
+    },
+    "Figma": {
+      "url": "https://mcp.figma.com/mcp",
+      "type": "http"
+    },
+    "craft-docs": {
+      "url": "https://mcp.craft.do/links/Dwf70HLs61a/mcp",
+      "type": "http"
+    }
+  },
+  "inputs": []
 }
