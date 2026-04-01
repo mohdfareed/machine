@@ -91,6 +91,13 @@
   },
   // # MARK: MCP Servers ======================================================
   "context_servers": {
+    "mcp-server-context7": {
+      "enabled": true,
+      "remote": false,
+      "settings": {
+        "context7_api_key": "CONTEXT7_API_KEY"
+      }
+    },
     "mcp-server-github": {
       "enabled": true,
       "remote": false,
