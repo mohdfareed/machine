@@ -1,18 +1,18 @@
 {
   "preferences": {
-    "menuBarEnabled": false,
-    "quickEntryShortcut": "double-tap-option",
-    "quickEntryDictationShortcut": "capslock",
+    "bypassPermissionsModeEnabled": false,
+    "ccdScheduledTasksEnabled": true,
+    "chicagoEnabled": true,
+    "coworkWebSearchEnabled": true,
+    "coworkScheduledTasksEnabled": true,
+    "coworkOnboardingResumeStep": null,
+    "dockBounceEnabled": true,
+    "keepAwakeEnabled": false,
     "launchPreviewPersistSession": true,
     "localAgentModeTrustedFolders": ["~/claude-code"],
-    "coworkScheduledTasksEnabled": true,
-    "ccdScheduledTasksEnabled": true,
-    "sidebarMode": "chat",
-    "dockBounceEnabled": true,
-    "coworkWebSearchEnabled": true,
-    "keepAwakeEnabled": false,
-    "coworkOnboardingResumeStep": null,
-    "chicagoEnabled": true,
-    "bypassPermissionsModeEnabled": true
-  },
+    "menuBarEnabled": false,
+    "quickEntryDictationShortcut": "capslock",
+    "quickEntryShortcut": "double-tap-option",
+    "sidebarMode": "chat"
+  }
 }
