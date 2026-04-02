@@ -1,0 +1,42 @@
+# copilot-api - GitHub Copilot OpenAI/Anthropic-compatible API proxy
+# Access: https://copilot-api.<tailnet>.ts.net (tailnet-only)
+
+services:
+  ts-copilot-api:
+    image: tailscale/tailscale:latest
+    container_name: ts-copilot-api
+    hostname: copilot-api
+    environment:
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+    volumes:
+      - ts-copilot-api-state:/var/lib/tailscale
+      - ./ts-config:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
+  copilot-api:
+    image: ghcr.io/ericc-ch/copilot-api:latest
+    container_name: copilot-api
+    depends_on:
+      - ts-copilot-api
+    restart: unless-stopped
+    environment:
+      GH_TOKEN: ${COPILOT_GH_TOKEN}
+    volumes:
+      - ./data:/root/.local/share/copilot-api
+    labels:
+      - homepage.group=Services
+      - homepage.name=Copilot API
+      - homepage.icon=mdi-github
+      - homepage.href=https://copilot-api.${TAILNET_NAME}.ts.net
+      - homepage.description=GitHub Copilot OpenAI/Anthropic-compatible proxy
+
+volumes:
+  ts-copilot-api-state:
