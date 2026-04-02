@@ -1,0 +1,18 @@
+{
+  "preferences": {
+    "menuBarEnabled": false,
+    "quickEntryShortcut": "double-tap-option",
+    "quickEntryDictationShortcut": "capslock",
+    "launchPreviewPersistSession": true,
+    "localAgentModeTrustedFolders": ["~/claude-code"],
+    "coworkScheduledTasksEnabled": true,
+    "ccdScheduledTasksEnabled": true,
+    "sidebarMode": "chat",
+    "dockBounceEnabled": true,
+    "coworkWebSearchEnabled": true,
+    "keepAwakeEnabled": false,
+    "coworkOnboardingResumeStep": null,
+    "chicagoEnabled": true,
+    "bypassPermissionsModeEnabled": true,
+  },
+}
