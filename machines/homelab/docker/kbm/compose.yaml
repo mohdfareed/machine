@@ -24,7 +24,6 @@ services:
   kbm-personal:
     image: ghcr.io/mohdfareed/kbm:latest
     container_name: kbm-personal
-    network_mode: service:ts-kbm
     depends_on:
       - ts-kbm
     restart: unless-stopped
@@ -47,7 +46,6 @@ services:
   kbm-work:
     image: ghcr.io/mohdfareed/kbm:latest
     container_name: kbm-work
-    network_mode: service:ts-kbm
     depends_on:
       - ts-kbm
     restart: unless-stopped

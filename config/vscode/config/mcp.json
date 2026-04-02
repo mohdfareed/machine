@@ -1,21 +1,17 @@
 {
-	"servers": {
-		"mem0": {
-			"type": "http",
-			"url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed"
-		},
-		"personal-memories": {
-			"type": "http",
-			"url": "https://kbm.tail2a477.ts.net/personal"
-		},
-		"work-memories": {
-			"type": "http",
-			"url": "https://kbm.tail2a477.ts.net/work"
-		},
-		"craft-docs": {
-			"url": "https://mcp.craft.do/links/Dwf70HLs61a/mcp",
-			"type": "http"
-		}
-	},
-	"inputs": []
+  "servers": {
+    "mem0": {
+      "type": "http",
+      "url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed"
+    },
+    "kbm": {
+      "type": "http",
+      "url": "https://kbm.tail2a477.ts.net/personal"
+    },
+    "craft-docs": {
+      "url": "https://mcp.craft.do/links/Dwf70HLs61a/mcp",
+      "type": "http"
+    }
+  },
+  "inputs": []
 }

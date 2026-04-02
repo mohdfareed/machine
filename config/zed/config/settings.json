@@ -71,6 +71,11 @@
       "model": "gpt-5-mini",
       "enable_thinking": false,
     },
+    "commit_message_model": {
+      "provider": "copilot_chat",
+      "model": "gpt-5-mini",
+      "enable_thinking": true,
+    },
   },
   "edit_predictions": {
     "provider": "copilot",
@@ -95,8 +100,8 @@
       "enabled": true,
       "remote": false,
       "settings": {
-        "context7_api_key": "CONTEXT7_API_KEY"
-      }
+        "context7_api_key": "CONTEXT7_API_KEY",
+      },
     },
     "mcp-server-github": {
       "enabled": true,
@@ -113,11 +118,11 @@
       "url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed",
       "settings": {},
     },
-    "personal-memories": {
+    "kbm-personal": {
       "url": "https://kbm.tail2a477.ts.net/personal",
       "settings": {},
     },
-    "work-memories": {
+    "kbm-work": {
       "url": "https://kbm.tail2a477.ts.net/work",
       "settings": {},
     },
