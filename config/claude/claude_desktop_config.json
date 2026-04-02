@@ -13,6 +13,6 @@
     "keepAwakeEnabled": false,
     "coworkOnboardingResumeStep": null,
     "chicagoEnabled": true,
-    "bypassPermissionsModeEnabled": true,
+    "bypassPermissionsModeEnabled": true
   },
 }

@@ -38,6 +38,9 @@
     "Markdown": {
       "tab_size": 2,
     },
+    "LOG": {
+      "language_servers": ["log", "comment"],
+    },
     "Plain Text": {
       "language_servers": ["bookmark-language-server"],
     },

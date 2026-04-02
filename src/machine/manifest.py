@@ -41,11 +41,14 @@ class Package(BaseModel):
 
     @model_validator(mode="after")
     def _check_source(self) -> Self:
-        sources = [self.brew, self.cask, self.apt, self.snap, self.winget, self.scoop]
-        if not any(s is not None for s in sources):
+        name_sources = [self.brew, self.cask, self.apt, self.snap, self.winget, self.scoop]
+        all_sources = [*name_sources, self.script]
+
+        if not any(s is not None for s in all_sources) and self.mas is None:
             raise ValueError(f"Package '{self.name}' has no install source")
         if not self.name:
-            self.name = next((s for s in sources if s is not None), str(self.mas))
+            self.name = next((s for s in name_sources if s is not None), str(self.mas))
+
         return self
 
 
