@@ -15,7 +15,6 @@ Read memory/open-loops.md — it's the single source of truth for everything I'm
 
 ## Key files
 - MEMORY.md — long-term curated memory
-- memory/2026-03-04.md — today's session log
 - memory/arch-audit.md — cron/session architecture findings
 
 ## Standing rule
