@@ -1,27 +1,19 @@
 """Windows PC machine manifest."""
 
-from machine.manifest import MachineManifest, winget
+from machine.manifest import MachineManifest, Package
 
 manifest = MachineManifest(
-    modules=[
-        "git",
-        "shell",
-        "ssh",
-        "ssh-server",
-        "vscode",
-        "win-term",
-        "core",
-    ],
+    modules=["git", "shell", "ssh", "ssh-server", "vscode", "win-term", "core"],
     packages=[
         # Dev tools
-        *winget("tailscale.tailscale"),
-        *winget("docker.DockerDesktop"),
-        *winget("microsoft.PowerToys"),
+        Package(name="tailscale", winget="tailscale.tailscale"),
+        Package(name="docker", winget="docker.DockerDesktop"),
+        Package(name="power-toys", winget="microsoft.PowerToys"),
         # Utilities
-        *winget("valve.Steam"),
-        *winget("martiCliment.UniGetUI"),
-        *winget("9PKTQ5699M62"),  # iCloud
-        *winget("9pfhdd62mxs1"),  # Apple Music
-        *winget("9nblggh30xj3"),  # Xbox Accessories
+        Package(name="Steam", winget="valve.Steam"),
+        Package(name="UniGetUI", winget="martiCliment.UniGetUI"),
+        Package(name="iCloud", winget="9PKTQ5699M62"),
+        Package(name="Apple Music", winget="9pfhdd62mxs1"),
+        Package(name="Xbox Accessories", winget="9nblggh30xj3"),
     ],
 )

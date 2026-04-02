@@ -1,0 +1,129 @@
+{
+  // # MARK: Editor ===========================================================
+  "theme": "One Dark Pro",
+  "icon_theme": "Material Icon Theme",
+  "format_on_save": "on",
+  "show_whitespaces": "all",
+  "wrap_guides": [80, 120],
+  "buffer_font_family": "JetBrainsMono Nerd Font",
+  "buffer_font_size": 14,
+  "ui_font_size": 14,
+  "terminal": {
+    "font_family": "JetBrainsMono Nerd Font",
+    "font_size": 14,
+    "option_as_meta": true,
+  },
+  "git_panel": {
+    "tree_view": true,
+  },
+  // # MARK: Languages ========================================================
+  "file_types": {
+    "JSONC": ["**/*.json", "**/*.code-snippets"],
+  },
+  "languages": {
+    "Python": {
+      "code_actions_on_format": {
+        "source.organizeImports.ruff": true,
+      },
+    },
+    "Shell Script": {
+      "tab_size": 2,
+    },
+    "JSONC": {
+      "tab_size": 2,
+    },
+    "YAML": {
+      "tab_size": 2,
+    },
+    "Markdown": {
+      "tab_size": 2,
+    },
+    "LOG": {
+      "language_servers": ["log", "comment"],
+    },
+    "Plain Text": {
+      "language_servers": ["bookmark-language-server"],
+    },
+  },
+  // # MARK: Remote Dev =======================================================
+  "ssh_connections": [
+    {
+      "host": "rpi",
+      "projects": [],
+    },
+    {
+      "host": "pc",
+      "projects": [],
+    },
+    {
+      "host": "homelab",
+      "username": "claudia",
+      "projects": [],
+    },
+  ],
+  // # MARK: Agents ===========================================================
+  "agent": {
+    "default_model": {
+      "provider": "copilot_chat",
+      "model": "gpt-5.4-mini",
+      "enable_thinking": true,
+      "effort": "high",
+    },
+    "inline_assistant_model": {
+      "provider": "copilot_chat",
+      "model": "gpt-5-mini",
+      "enable_thinking": false,
+    },
+    "commit_message_model": {
+      "provider": "copilot_chat",
+      "model": "gpt-5-mini",
+      "enable_thinking": true,
+    },
+  },
+  "edit_predictions": {
+    "provider": "copilot",
+  },
+  "agent_servers": {
+    "github-copilot-cli": {
+      "type": "registry",
+    },
+    "gemini": {
+      "type": "registry",
+    },
+    "codex-acp": {
+      "type": "registry",
+    },
+    "claude-acp": {
+      "type": "registry",
+    },
+  },
+  // # MARK: MCP Servers ======================================================
+  "context_servers": {
+    "mcp-server-context7": {
+      "enabled": true,
+      "remote": false,
+      "settings": {
+        "context7_api_key": "CONTEXT7_API_KEY",
+      },
+    },
+    "mcp-server-github": {
+      "enabled": true,
+      "remote": false,
+      "settings": {
+        "github_personal_access_token": "GITHUB_MCP_TOKEN",
+      },
+    },
+    "craft-docs": {
+      "url": "https://mcp.craft.do/links/Dwf70HLs61a/mcp",
+    },
+    "mem0": {
+      "url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed",
+    },
+    "kbm": {
+      "url": "https://kbm.tail2a477.ts.net/personal",
+    },
+    "kbm-work": {
+      "url": "https://kbm.tail2a477.ts.net/work",
+    },
+  },
+}

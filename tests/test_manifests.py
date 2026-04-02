@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from machine.app import validate
 from machine.manifest import (
     Module,
     list_machines,
@@ -13,11 +12,12 @@ from machine.manifest import (
     load_module,
     resolve_modules,
 )
+from machine.ops.files import validate
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-# MARK: Module Tests
+# # MARK: Module Tests
 
 
 @pytest.fixture(params=list_modules(ROOT), ids=list_modules(ROOT))
@@ -43,7 +43,7 @@ def test_module_scripts_exist(module: Module) -> None:
         assert Path(script).exists(), f"{module.name}: missing {script}"
 
 
-# MARK: Manifest Tests
+# # MARK: Manifest Tests
 
 
 @pytest.fixture(params=list_machines(ROOT), ids=list_machines(ROOT))
@@ -83,7 +83,7 @@ def test_manifest_env_satisfies_modules(machine_id: str) -> None:
     """All module files and scripts exist for this machine."""
     manifest = load_manifest(machine_id, ROOT)
     modules = [load_module(m, ROOT) for m in manifest.modules]
-    errors = validate(modules, machine_id)
+    errors = validate(modules)
     assert not errors, "\n".join(errors)
 
 
@@ -110,7 +110,7 @@ def test_manifest_overrides_included(machine_id: str) -> None:
     assert not missing, f"{machine_id} has unincluded overrides:\n" + "\n".join(missing)
 
 
-# MARK: Validation Edge Cases
+# # MARK: Validation Edge Cases
 
 
 def test_ssh_module_loads_key_provisioning() -> None:

@@ -23,15 +23,7 @@ if command -v brew &>/dev/null; then
 fi
 
 # oh-my-posh theme
-() {
-  local themes
-  if [[ -n "$HOMEBREW_PREFIX" ]]; then
-    themes="$HOMEBREW_PREFIX/opt/oh-my-posh/themes"
-  else
-    themes="$(oh-my-posh cache path)/themes"
-  fi
-  eval "$(oh-my-posh init zsh --config "$themes/pure.omp.json")"
-}
+eval "$(oh-my-posh init zsh --config 'pure')"
 
 # Completions
 # =============================================================================

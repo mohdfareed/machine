@@ -16,7 +16,7 @@ import typer
 from rich.console import Console
 from rich.logging import RichHandler
 
-# MARK: Settings
+# # MARK: Settings
 
 _meta = metadata("machine")
 # __file__ = src/machine/core.py → parents[2] = repo root
@@ -43,7 +43,7 @@ settings = Settings()
 """Runtime settings singleton."""
 
 
-# MARK: Platform
+# # MARK: Platform
 
 
 class Platform(StrEnum):
@@ -83,14 +83,14 @@ is_wsl = PLATFORM == Platform.WSL
 is_unix = not is_windows
 
 
-# MARK: Console
+# # MARK: Console
 
 
 console = Console()
 err_console = Console(stderr=True)
 
 
-# MARK: Logging
+# # MARK: Logging
 
 
 _logger = logging.getLogger(__name__)
@@ -124,7 +124,12 @@ def setup_file_logging() -> None:
     """Configure rotating file logging."""
     log_file = settings.app_dir / "mc.log"
     log_file.parent.mkdir(parents=True, exist_ok=True)
-    handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=3)
+    handler = RotatingFileHandler(
+        log_file,
+        maxBytes=10 * 1024 * 1024,
+        backupCount=3,
+        encoding="utf-8",
+    )
     handler.setFormatter(
         logging.Formatter(
             "%(asctime)s %(levelname)-8s %(name)s: %(message)s",
@@ -141,21 +146,21 @@ def setup_file_logging() -> None:
     _logger.debug("=" * 60)
 
 
-# MARK: Shell
+# # MARK: Shell
 
 
-def run(
+def run_collect(
     cmd: str,
     *,
     env: dict[str, str] | None = None,
     label: str = "",
-) -> int:
-    """Run a shell command, streaming output to terminal and log file."""
+) -> tuple[int, bytearray]:
+    """Run a shell command, streaming output and returning its exit code and output."""
     _logger.debug("$ %s", _short(cmd))
 
     if settings.dry_run:
         _logger.info("[dry-run] %s", _short(cmd))
-        return 0
+        return 0, bytearray()
 
     merged_env = {**os.environ, **(env or {})}
 
@@ -171,6 +176,17 @@ def run(
         if stripped:
             _output_logger.debug("%s| %s", prefix, stripped)
 
+    return rc, collected
+
+
+def run(
+    cmd: str,
+    *,
+    env: dict[str, str] | None = None,
+    label: str = "",
+) -> int:
+    """Run a shell command, streaming output to terminal and log file."""
+    rc, _ = run_collect(cmd, env=env, label=label)
     return rc
 
 

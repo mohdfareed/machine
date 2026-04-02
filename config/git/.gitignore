@@ -12,3 +12,4 @@ $RECYCLE.BIN/
 
 # development
 .env
+**/.zed/bookmarks.txt

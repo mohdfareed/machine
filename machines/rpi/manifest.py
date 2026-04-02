@@ -1,16 +1,12 @@
 """Raspberry Pi machine manifest."""
 
-from machine.manifest import (
-    MachineManifest,
-    Package,
-    snap,
-)
+from machine.manifest import MachineManifest, Package
 
 manifest = MachineManifest(
     modules=["git", "shell", "ssh", "ssh-server", "vscode", "vsc-server", "homelab", "core"],
     files=[],
     packages=[
-        *snap("go --classic"),
+        Package(name="go", snap="go --classic"),
         # Script-installed packages
         Package(
             name="dotnet",

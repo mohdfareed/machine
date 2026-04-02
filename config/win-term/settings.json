@@ -1,9 +1,7 @@
 {
   "$help": "https://aka.ms/terminal-documentation",
   "$schema": "https://aka.ms/terminal-profiles-schema",
-  "import": [
-    "settings.local.json"
-  ],
+  "import": ["settings.local.json"],
   "schemes": [],
   "actions": [],
   "copyFormatting": "none",

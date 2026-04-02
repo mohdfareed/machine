@@ -28,7 +28,7 @@ servers (and itself) via rsync over Tailscale SSH.
 
 Backups land in iCloud:
 
-```
+```txt
 $MC_PRIVATE/backups/<hostname>/<service>/
 ├── data/
 └── .env

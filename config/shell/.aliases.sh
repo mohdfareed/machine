@@ -16,6 +16,7 @@ alias llst='lls -T'
 alias zsh::reload='exec $SHELL'
 alias ssh::gen-key='ssh-keygen -t ed25519 -C'
 
+alias lg='lazygit'
 alias dc='docker compose'
 alias cat='bat --paging=never'
 alias gen-pass='openssl rand -base64 32'

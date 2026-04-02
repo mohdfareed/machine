@@ -1,35 +1,30 @@
 """VS Code configuration module."""
 
+from pathlib import Path
+
 from machine.core import PLATFORM, Platform
 from machine.manifest import FileMapping, Module, Package
 
 match PLATFORM:
     case Platform.MACOS:
-        _base = "~/Library/Application Support/Code/User"
+        _base = Path("~") / "Library" / "Application Support" / "Code" / "User"
     case Platform.WINDOWS:
-        _base = "%APPDATA%/Code/User"
+        _base = Path(r"%APPDATA%") / "Code" / "User"
     case _:
-        _base = "~/.config/Code/User"
+        _base = Path("~/.config/Code/User")
+
 
 module = Module(
     files=[
-        FileMapping(source=f"config/{name}", target=f"{_base}/{name}")
-        for name in (
-            "settings.json",
-            "keybindings.json",
-            "mcp.json",
-            "snippets",
-        )
+        FileMapping(source="snippets", target=str(_base / "snippets")),
+        FileMapping(source="settings.json", target=str(_base / "settings.json")),
+        FileMapping(source="keybindings.json", target=str(_base / "keybindings.json")),
+        FileMapping(source="mcp.json", target=str(_base / "mcp.json")),
     ],
     packages=[
         Package(
-            name="visual-studio-code",
-            brew="visual-studio-code --cask",
-            winget="microsoft.VisualStudioCode",
-        )
-        if PLATFORM == Platform.MACOS
-        else Package(
-            name="visual-studio-code",
+            name="vscode",
+            cask="visual-studio-code",
             apt="code",  # in Raspberry Pi OS repo
             winget="microsoft.VisualStudioCode",
             snap="code --classic",  # fallback: amd64-only,

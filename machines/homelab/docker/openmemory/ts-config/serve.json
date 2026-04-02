@@ -14,26 +14,26 @@
     "${TS_CERT_DOMAIN}:443": {
       "Handlers": {
         "/api/": {
-          "Proxy": "http://127.0.0.1:8765/api/"
+          "Proxy": "http://mem0-api:8765/api/"
         },
         "/docs": {
-          "Proxy": "http://127.0.0.1:8765/docs"
+          "Proxy": "http://mem0-api:8765/docs"
         },
         "/openapi.json": {
-          "Proxy": "http://127.0.0.1:8765/openapi.json"
+          "Proxy": "http://mem0-api:8765/openapi.json"
         },
         "/mcp": {
-          "Proxy": "http://127.0.0.1:8765/mcp"
+          "Proxy": "http://mem0-api:8765/mcp"
         },
         "/": {
-          "Proxy": "http://127.0.0.1:3000"
+          "Proxy": "http://mem0-ui:3000"
         }
       }
     },
     "${TS_CERT_DOMAIN}:8443": {
       "Handlers": {
         "/mcp": {
-          "Proxy": "http://127.0.0.1:8765/mcp"
+          "Proxy": "http://mem0-api:8765/mcp"
         }
       }
     }

@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint & Format
+  check:
+    name: Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -24,33 +24,13 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+      - run: ./scripts/check.sh
 
-      # Sync, format, lint, and type check
-      - run: uv sync --dev --locked
-      - name: Check formatting
-        run: uv run ruff format --check .
-      - name: Run linter
-        run: uv run ruff check .
-      - name: Run type checker
-        run: uv run pyright .
-
-  shellcheck:
+  spellcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: ludeeus/action-shellcheck@master
-        env:
-          SHELLCHECK_OPTS: -e SC1071
-
-  spelling:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: reviewdog/action-misspell@master
+      - uses: streetsidesoftware/cspell-action@v8
         with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-          level: warning
-          locale: "US"
-          exclude: |
-            *.lock
+          config: ./.cspell.json
+          inline: warning

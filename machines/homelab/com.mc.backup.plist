@@ -22,6 +22,6 @@
     <string>/tmp/mc-backup.log</string>
 
     <key>RunAtLoad</key>
-    <false/>
+    <false />
 </dict>
 </plist>

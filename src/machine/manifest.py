@@ -6,10 +6,12 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
+from machine.core import Platform
+
 SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 
 
-# MARK: Models
+# # MARK: Models
 
 
 class FileMapping(BaseModel):
@@ -20,29 +22,33 @@ class FileMapping(BaseModel):
 
 
 class Package(BaseModel):
-    """A package with per-manager install names."""
+    """A package with optional per-manager install names."""
 
-    name: str
+    name: str = ""
     brew: str | None = None
+    cask: str | None = None
     apt: str | None = None
     snap: str | None = None
     winget: str | None = None
     scoop: str | None = None
     mas: int | None = None
     script: str | None = None
+    platforms: list[Platform] | None = None
+
+    def applies_to(self, platform: Platform) -> bool:
+        """Return True when this package should be considered on *platform*."""
+        return self.platforms is None or platform in self.platforms
 
     @model_validator(mode="after")
     def _check_source(self) -> Self:
-        sources = [
-            self.brew,
-            self.apt,
-            self.snap,
-            self.winget,
-            self.scoop,
-            self.script,
-        ]
-        if self.mas is None and not any(s is not None for s in sources):
+        name_sources = [self.brew, self.cask, self.apt, self.snap, self.winget, self.scoop]
+        all_sources = [*name_sources, self.script]
+
+        if not any(s is not None for s in all_sources) and self.mas is None:
             raise ValueError(f"Package '{self.name}' has no install source")
+        if not self.name:
+            self.name = next((s for s in name_sources if s is not None), str(self.mas))
+
         return self
 
 
@@ -66,45 +72,7 @@ class MachineManifest(BaseModel):
     packages: list[Package] = []
 
 
-# MARK: Package Helpers
-
-
-def brew(*names: str) -> list[Package]:
-    """Create brew packages. Include flags in the name: ``'pkg --flag'``."""
-    return [Package(name=n.split()[0], brew=n) for n in names]
-
-
-def cask(*names: str) -> list[Package]:
-    """Create brew cask packages."""
-    return [Package(name=n.split()[0], brew=f"{n} --cask") for n in names]
-
-
-def apt(*names: str) -> list[Package]:
-    """Create apt packages."""
-    return [Package(name=n.split()[0], apt=n) for n in names]
-
-
-def snap(*names: str) -> list[Package]:
-    """Create snap packages."""
-    return [Package(name=n.split()[0], snap=n) for n in names]
-
-
-def winget(*names: str) -> list[Package]:
-    """Create winget packages."""
-    return [Package(name=n.split()[0], winget=n) for n in names]
-
-
-def scoop(*names: str) -> list[Package]:
-    """Create scoop packages."""
-    return [Package(name=n.split()[0], scoop=n) for n in names]
-
-
-def mas(**apps: int) -> list[Package]:
-    """Create Mac App Store packages: ``name=app_id``."""
-    return [Package(name=k, mas=v) for k, v in apps.items()]
-
-
-# MARK: Discovery
+# # MARK: Discovery
 
 
 def list_modules(root: Path) -> list[str]:
@@ -135,7 +103,7 @@ def list_machines(root: Path) -> list[str]:
     return sorted(names)
 
 
-# MARK: Loaders
+# # MARK: Loaders
 
 _module_cache: dict[str, Module] = {}
 
@@ -246,7 +214,7 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
     return result
 
 
-# MARK: Helpers
+# # MARK: Helpers
 
 
 def _resolve_deps(modules: list[str], root: Path) -> list[str]:

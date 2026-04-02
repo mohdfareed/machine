@@ -14,7 +14,7 @@
 
     <!-- Re-inject env vars into launchd on every login. -->
     <key>RunAtLoad</key>
-    <true/>
+    <true />
 
     <key>StandardOutPath</key>
     <string>/tmp/mc-openclaw-env.log</string>

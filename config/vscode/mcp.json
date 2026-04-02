@@ -4,13 +4,17 @@
       "type": "http",
       "url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed"
     },
-    "personal-memories": {
+    "kbm": {
       "type": "http",
       "url": "https://kbm.tail2a477.ts.net/personal"
     },
-    "work-memories": {
+    "kbm-work": {
       "type": "http",
       "url": "https://kbm.tail2a477.ts.net/work"
+    },
+    "craft-docs": {
+      "url": "https://mcp.craft.do/links/Dwf70HLs61a/mcp",
+      "type": "http"
     }
   },
   "inputs": []

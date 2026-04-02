@@ -1,0 +1,23 @@
+providers:
+  - id: chat-mock
+    name: ChatMock
+    base_url: http://127.0.0.1:8000/v1
+    models:
+      - id: gpt-5.4
+        name: GPT-5.4
+        context: 1050000
+        abilities: &chatmock_model_abilities
+          temperature:
+            supported: true
+          vision:
+            supported: true
+          system_message:
+            supported: true
+          tools:
+            supported: true
+          reasoning_effort:
+            supported: true
+      - id: gpt-5.4-mini
+        name: GPT-5.4 Mini
+        context: 400000
+        abilities: *chatmock_model_abilities
