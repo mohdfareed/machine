@@ -18,15 +18,23 @@
     "controlUi": {
       "allowedOrigins": ["https://openclaw.${TAILNET_NAME}.ts.net"],
     },
-    "tailscale": {
-      "mode": "off",
-      "resetOnExit": false,
+    "auth": {
+      "allowTailscale": true,
+      "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 },
     },
   },
 
   // Sessions
   "session": {
     "dmScope": "per-channel-peer",
+  },
+
+  // Agent Control Protocol
+  "acp": {
+    "enabled": true,
+    "dispatch": { "enabled": true },
+    "backend": "acpx",
+    "defaultAgent": "codex",
   },
 
   // Scheduled tasks
