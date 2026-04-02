@@ -27,20 +27,20 @@ manifest = MachineManifest(
     ],
     packages=[
         # OpenClaw (macOS app - node)
-        Package(name="openclaw", cask="openclaw"),
+        Package(cask="openclaw"),
         # OpenClaw (CLI - gateway)
         Package(
             name="openclaw-cli",
             script="curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard",
         ),
         # Dev tools
-        *[Package(name=name, brew=name) for name in ("uv", "python")],
-        Package(name="powershell", cask="powershell"),
+        Package(brew="uv"),
+        Package(brew="python"),
+        Package(cask="powershell"),
         # Utilities
-        *[Package(name=name, brew=name) for name in ("mas", "fastfetch")],
-        *[
-            Package(name=name, cask=name)
-            for name in ("font-computer-modern", "font-jetbrains-mono-nerd-font")
-        ],
+        Package(brew="mas"),
+        Package(brew="fastfetch"),
+        Package(cask="font-computer-modern"),
+        Package(cask="font-jetbrains-mono-nerd-font"),
     ],
 )
