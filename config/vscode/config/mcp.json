@@ -8,6 +8,10 @@
       "type": "http",
       "url": "https://kbm.tail2a477.ts.net/personal"
     },
+    "kbm-work": {
+      "type": "http",
+      "url": "https://kbm.tail2a477.ts.net/work"
+    },
     "craft-docs": {
       "url": "https://mcp.craft.do/links/Dwf70HLs61a/mcp",
       "type": "http"
