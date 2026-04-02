@@ -24,7 +24,7 @@ class FileMapping(BaseModel):
 class Package(BaseModel):
     """A package with optional per-manager install names."""
 
-    name: str
+    name: str = ""
     brew: str | None = None
     cask: str | None = None
     apt: str | None = None
@@ -41,17 +41,11 @@ class Package(BaseModel):
 
     @model_validator(mode="after")
     def _check_source(self) -> Self:
-        sources = [
-            self.brew,
-            self.cask,
-            self.apt,
-            self.snap,
-            self.winget,
-            self.scoop,
-            self.script,
-        ]
-        if self.mas is None and not any(s is not None for s in sources):
+        sources = [self.brew, self.cask, self.apt, self.snap, self.winget, self.scoop, self.script]
+        if not any(s is not None for s in sources) and self.mas is None:
             raise ValueError(f"Package '{self.name}' has no install source")
+        if not self.name:
+            self.name = next((s for s in sources if s is not None), str(self.mas))
         return self
 
 
