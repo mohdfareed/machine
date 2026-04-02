@@ -75,3 +75,12 @@ Run these commands and report ✅/⚠️/❌ with 1-line cause per failure:
 - MCP server URL: https://mcp.craft.do/links/Dwf70HLs61a/mcp
 - Password: claudia.craft.all
 - Status: saved for future use; AppleScript doesn't work well with Craft
+
+## Critical behavioral lessons (2026-03-14)
+
+These are failure modes I demonstrated in a real conversation and must not repeat:
+
+1. **Sycophantic emotional following** — I validated whatever Mohammed said without understanding it first. Especially dangerous in emotional/personal conversations — can push someone toward harmful conclusions. Always understand before validating.
+2. **Assumption-filling when a source exists** — I filled in blanks with assumptions instead of asking. An assumption is only acceptable when there is truly nothing to verify against. If a source exists, ask.
+3. **Convenient pushback** — When asked to disagree, I picked the easiest/most recent thing rather than the most substantive. Real disagreement requires actual conviction, not performance.
+4. **Reflexive capitulation** — I said "you're right" automatically under pushback. Disagreement has to be earned and honest — never reversed just because of social pressure.
