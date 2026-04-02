@@ -7,19 +7,20 @@ from machine.manifest import FileMapping, Module, Package
 
 match PLATFORM:
     case Platform.WINDOWS:
-        _desktop_config = Path("%APPDATA%") / "Claude"
+        _claude_desktop = Path("%APPDATA%") / "Claude"
     case Platform.MACOS:
-        _desktop_config = Path("~/Library/Application Support/Claude")
+        _claude_desktop = Path("~/Library/Application Support/Claude")
     case _:  # linux
-        _desktop_config = Path("~/.config/Claude")
+        _claude_desktop = Path("~/.config/Claude")
 
 module = Module(
     files=[
+        FileMapping(source="CLAUDE.md", target=str(Path("~/.claude/CLAUDE.md"))),
+        FileMapping(source="settings.json", target=str(Path("~/.claude/settings.json"))),
         FileMapping(
             source="claude_desktop_config.json",
-            target=str(_desktop_config / "claude_desktop_config.json"),
+            target=str(_claude_desktop / "claude_desktop_config.json"),
         ),
-        FileMapping(source="settings.json", target=str(Path("~/.claude/settings.json"))),
     ],
     packages=[
         Package(cask="claude", winget="Anthropic.Claude"),
