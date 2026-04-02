@@ -1,7 +1,7 @@
 # OpenMemory - AI Memory Layer (MCP Server + Dashboard)
 # UI/API:  https://<mc_id>-mem0.<tailnet>.ts.net        (tailnet-only, :443)
 # MCP:     https://<mc_id>-mem0.<tailnet>.ts.net:8443   (funnel, public)
-# Qdrant:  mem0.<tailnet>.ts.net:6333                   (tailnet-only)
+# Qdrant:  mem0.<tailnet>.ts.net:6333                   (tailnet-only, reusable)
 #
 # Volume convention:
 #   Named volumes  - disposable state (survives restarts, not backups)
@@ -32,30 +32,30 @@ services:
   mem0-qdrant:
     image: qdrant/qdrant:latest
     container_name: mem0-qdrant
-    network_mode: service:ts-mem0
     depends_on:
       - ts-mem0
     restart: unless-stopped
     volumes:
       - ./data/qdrant:/qdrant/storage
+    networks:
+      default:
+        aliases:
+          - mem0_store
     labels:
       - homepage.group=Infrastructure
       - homepage.name=Qdrant
       - homepage.icon=mdi-database-search
-      - homepage.description=Vector store for mem0
+      - homepage.description=Shared vector store (Qdrant)
 
   mem0-api:
     image: mem0/openmemory-mcp:latest
     container_name: mem0-api
-    network_mode: service:ts-mem0
     depends_on:
       - ts-mem0
       - mem0-qdrant
     restart: unless-stopped
     volumes:
       - ./data/db:/data
-    extra_hosts:
-      - "mem0_store:127.0.0.1"
     environment:
       DATABASE_URL: sqlite:////data/openmemory.db
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -70,7 +70,6 @@ services:
   mem0-ui:
     image: mem0/openmemory-ui:latest
     container_name: mem0-ui
-    network_mode: service:ts-mem0
     depends_on:
       - ts-mem0
       - mem0-api
