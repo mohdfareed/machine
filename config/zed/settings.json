@@ -65,7 +65,7 @@
   "agent": {
     "default_model": {
       "provider": "copilot_chat",
-      "model": "claude-sonnet-4.6",
+      "model": "gpt-5.4-mini",
       "enable_thinking": true,
       "effort": "high",
     },
@@ -115,19 +115,15 @@
     },
     "craft-docs": {
       "url": "https://mcp.craft.do/links/Dwf70HLs61a/mcp",
-      "settings": {},
     },
     "mem0": {
       "url": "https://mem0.tail2a477.ts.net/mcp/openmemory/sse/mohdfareed",
-      "settings": {},
     },
     "kbm": {
       "url": "https://kbm.tail2a477.ts.net/personal",
-      "settings": {},
     },
     "kbm-work": {
       "url": "https://kbm.tail2a477.ts.net/work",
-      "settings": {},
     },
   },
 }
