@@ -15,7 +15,6 @@ match PLATFORM:
 
 module = Module(
     files=[
-        FileMapping(source="CLAUDE.md", target=str(Path("~/.claude/CLAUDE.md"))),
         FileMapping(source="settings.json", target=str(Path("~/.claude/settings.json"))),
         FileMapping(
             source="claude_desktop_config.json",
