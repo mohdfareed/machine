@@ -191,7 +191,7 @@
       "name": "Battery Low Alert",
       "enabled": true,
       "createdAtMs": 1773542706524,
-      "updatedAtMs": 1775187525233,
+      "updatedAtMs": 1775188426177,
       "schedule": {
         "kind": "every",
         "everyMs": 900000,
@@ -209,11 +209,11 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1775188418319,
-        "lastRunAtMs": 1775187518319,
+        "nextRunAtMs": 1775189318326,
+        "lastRunAtMs": 1775188418326,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 6914,
+        "lastDurationMs": 7851,
         "lastDeliveryStatus": "not-delivered",
         "consecutiveErrors": 0,
         "lastDelivered": false
