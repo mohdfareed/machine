@@ -3,11 +3,15 @@
   "version": "0.2",
   "language": "en",
   "useGitignore": true,
-
   // Built-in dictionaries cover most technical terms for these languages.
   // Only add to `words` what they genuinely miss.
-  "dictionaries": ["bash", "powershell", "python", "softwareTerms", "companies"],
-
+  "dictionaries": [
+    "bash",
+    "powershell",
+    "python",
+    "softwareTerms",
+    "companies"
+  ],
   "ignorePaths": [
     "*.lock",
     "machines/**/machine.env",
@@ -17,50 +21,68 @@
     // Runtime state — error messages, command strings, timestamps
     "machines/**/openclaw/cron/**"
   ],
-
   "words": [
-    // People & usernames
-    "Aloxaf", "charliermarsh", "Dobbeleer", "donjayamanne", "Duffield",
-    "fareed", "mohdfareed", "timonwong", "yzhang",
-
-    // Project & system names
-    "acpx", "chatmock", "clawhub", "elevenlabs", "fastmcp", "ghostty",
-    "greptile", "homelab", "lancedb", "macbook", "mcporter", "openclaw",
-    "tailnet", "tailscale", "tskey", "webchat",
-
-    // Zsh / zinit
-    "appendhistory", "atinit", "atload", "blockf", "dups", "fpath", "FPATH",
-    "HISTDUP", "hookify", "SAVEHIST", "sharehistory", "shellenv",
-    "zdharma", "zinit", "zicompinit", "zicdreplay", "zfunc",
-
-    // Homebrew / Unix
-    "bootout", "dscacheutil", "flushcache", "hushlogin", "keygen", "killall",
-    "libexec", "linuxbrew", "nohup", "osascript", "pkill", "wslinfo",
-
-    // macOS system commands & pmset flags
-    "autopoweroff", "autorestart", "capslock", "disablesleep", "displaysleep",
-    "hibernatemode", "mineffect", "MTWRFSU", "networkoversleep", "Nlsv",
-    "screensharing", "setglobalstate", "setremotelogin", "setstealthmode",
-    "socketfilterfw", "softwareupdate", "systemsetup", "tcpkeepalive",
-    "tilesize", "trackpad", "wakeorpoweron", "womp",
-
-    // macOS / UI / dock
-    "autohide", "autogroup", "autoclean", "autofetch", "cowork",
-    "recents", "startfile",
-
-    // Windows / PowerShell
-    "bbwe", "hardlink", "LASTEXITCODE", "mklink", "PROGRAMDATA",
-    "wekyb", "winerror", "winget",
-
-    // Linux / server
-    "devtmpfs", "efivarfs", "journalctl", "tmpfs", "USERSPACE", "vcgencmd",
-
-    // Dev tools not in built-in dicts
-    "btop", "coreclr", "dotenv", "Eeuo", "freethreading", "GHCS",
-    "godotcsharp", "gopls", "gtime", "gsserver", "healthcheck",
-    "llst", "pmset", "worktree", "WORKTREE",
-
-    // Common tech terms the built-in dicts miss
-    "bootstrapper", "distros", "hostnames", "keepalive", "VIRTUALENV"
+    "Eeuo",
+    "cmux",
+    "Dockge",
+    "dotenv",
+    "elevenlabs",
+    "fareed",
+    "fpath",
+    "GHCS",
+    "ghostty",
+    "homelab",
+    "hostnames",
+    "linuxbrew",
+    "macbook",
+    "mohdfareed",
+    "mohds",
+    "openclaw",
+    "pwsh",
+    "pydantic",
+    "pyright",
+    "shellcheck",
+    "tailnet",
+    "tailscale",
+    "typer",
+    "venv",
+    "winget",
+    "wslinfo",
+    "zfunc",
+    "zinit",
+    "keepalive",
+    "chatmock",
+    "distros",
+    "LASTEXITCODE",
+    "distors",
+    "VIRTUALENV",
+    "SAVEHIST",
+    "HISTDUP",
+    "shellenv",
+    "libexec",
+    "freethreading",
+    "dups",
+    "appendhistory",
+    "sharehistory",
+    "atinit",
+    "zicompinit",
+    "zicdreplay",
+    "zdharma",
+    "blockf",
+    "atload",
+    "Aloxaf",
+    "btop",
+    "Dobbeleer",
+    "gsserver",
+    "winerror",
+    "hardlink",
+    "mklink",
+    "pathlib",
+    "pycache",
+    "pytest",
+    "ericc",
+    "openmemory",
+    "qdrant",
+    "gethomepage"
   ]
 }
