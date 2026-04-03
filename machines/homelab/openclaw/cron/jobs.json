@@ -8,7 +8,7 @@
       "name": "Daily OpenClaw recommendations check-in",
       "enabled": true,
       "createdAtMs": 1772296903351,
-      "updatedAtMs": 1775102831422,
+      "updatedAtMs": 1775129402137,
       "schedule": {
         "kind": "cron",
         "expr": "30 7 * * *",
@@ -27,14 +27,15 @@
         "to": "1092659787"
       },
       "state": {
-        "nextRunAtMs": 1775129400000,
-        "lastRunAtMs": 1775102830995,
+        "nextRunAtMs": 1775215800000,
+        "lastRunAtMs": 1775129400042,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 427,
-        "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 1,
-        "lastError": "LiveSessionModelSwitchError: Live session model switch requested: openai-codex/gpt-5.4"
+        "lastDurationMs": 2095,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 2,
+        "lastError": "HTTP 400 invalid_request_error: The requested model is not supported.",
+        "lastDelivered": true
       }
     },
     {
@@ -44,7 +45,7 @@
       "name": "OpenClaw auth monitor",
       "enabled": true,
       "createdAtMs": 1772297188942,
-      "updatedAtMs": 1775102871362,
+      "updatedAtMs": 1775131202405,
       "schedule": {
         "kind": "cron",
         "expr": "0 8 * * *",
@@ -64,15 +65,15 @@
         "to": "1092659787"
       },
       "state": {
-        "nextRunAtMs": 1775131200000,
-        "lastRunAtMs": 1775102831422,
+        "nextRunAtMs": 1775217600000,
+        "lastRunAtMs": 1775131200016,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 39940,
-        "lastDeliveryStatus": "unknown",
-        "consecutiveErrors": 1,
-        "lastError": "FallbackSummaryError: All models failed (3): github-copilot/gpt-5-mini: Live session model switch requested: openai-codex/gpt-5.4 (unknown) | github-copilot/gpt-5.4: Live session model switch requested: openai-codex/gpt-5.4 (unknown) | openai-codex/gpt-5.4: OAuth token refresh failed for openai-codex: Failed to refresh OpenAI Codex token. Please try again or re-authenticate. (auth)",
-        "lastErrorReason": "auth"
+        "lastDurationMs": 2389,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 2,
+        "lastError": "HTTP 400 invalid_request_error: The requested model is not supported.",
+        "lastDelivered": true
       }
     },
     {
@@ -82,7 +83,7 @@
       "name": "Self-improvement loop",
       "enabled": true,
       "createdAtMs": 1772679604177,
-      "updatedAtMs": 1775102871835,
+      "updatedAtMs": 1775152801654,
       "schedule": {
         "kind": "cron",
         "expr": "0 2,14 * * *",
@@ -99,14 +100,16 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1775109600000,
-        "lastRunAtMs": 1775102871362,
+        "nextRunAtMs": 1775196000000,
+        "lastRunAtMs": 1775152800036,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 473,
-        "lastDeliveryStatus": "not-requested",
-        "consecutiveErrors": 1,
-        "lastError": "LiveSessionModelSwitchError: Live session model switch requested: openai-codex/gpt-5.4"
+        "lastDurationMs": 1618,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 3,
+        "lastDelivered": false,
+        "lastDeliveryError": "HTTP 400 invalid_request_error: The requested model is not supported.",
+        "lastError": "HTTP 400 invalid_request_error: The requested model is not supported."
       }
     },
     {
@@ -116,7 +119,7 @@
       "name": "Repo sync — pull upstream changes",
       "enabled": true,
       "createdAtMs": 1772680392604,
-      "updatedAtMs": 1775102875095,
+      "updatedAtMs": 1775187542704,
       "schedule": {
         "kind": "every",
         "everyMs": 1800000,
@@ -134,15 +137,14 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1775104674715,
-        "lastRunAtMs": 1775102874715,
-        "lastRunStatus": "error",
-        "lastStatus": "error",
-        "lastDurationMs": 380,
-        "lastDeliveryStatus": "not-requested",
-        "consecutiveErrors": 1,
-        "lastError": "FallbackSummaryError: All models failed (3): github-copilot/gpt-5-mini: Live session model switch requested: openai-codex/gpt-5.4 (unknown) | github-copilot/gpt-5.4: Live session model switch requested: openai-codex/gpt-5.4 (unknown) | openai-codex/gpt-5.4: OAuth token refresh failed for openai-codex: Failed to refresh OpenAI Codex token. Please try again or re-authenticate. (auth)",
-        "lastErrorReason": "auth"
+        "nextRunAtMs": 1775189330669,
+        "lastRunAtMs": 1775187530669,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 12035,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0,
+        "lastDelivered": false
       }
     },
     {
@@ -152,7 +154,7 @@
       "name": "Repo sync — commit and PR",
       "enabled": true,
       "createdAtMs": 1772680397936,
-      "updatedAtMs": 1775102872192,
+      "updatedAtMs": 1775113201985,
       "schedule": {
         "expr": "0 3 * * *",
         "kind": "cron",
@@ -170,15 +172,16 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1775113200000,
-        "lastRunAtMs": 1775102871835,
+        "nextRunAtMs": 1775199600000,
+        "lastRunAtMs": 1775113200005,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 357,
-        "lastDeliveryStatus": "not-requested",
-        "consecutiveErrors": 1,
-        "lastError": "FallbackSummaryError: All models failed (3): github-copilot/gpt-5-mini: Live session model switch requested: openai-codex/gpt-5.4 (unknown) | github-copilot/gpt-5.4: Live session model switch requested: openai-codex/gpt-5.4 (unknown) | openai-codex/gpt-5.4: OAuth token refresh failed for openai-codex: Failed to refresh OpenAI Codex token. Please try again or re-authenticate. (auth)",
-        "lastErrorReason": "auth"
+        "lastDurationMs": 1980,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 2,
+        "lastError": "HTTP 400 invalid_request_error: The requested model is not supported.",
+        "lastDelivered": false,
+        "lastDeliveryError": "HTTP 400 invalid_request_error: The requested model is not supported."
       }
     },
     {
@@ -188,7 +191,7 @@
       "name": "Battery Low Alert",
       "enabled": true,
       "createdAtMs": 1773542706524,
-      "updatedAtMs": 1775102872624,
+      "updatedAtMs": 1775187525233,
       "schedule": {
         "kind": "every",
         "everyMs": 900000,
@@ -206,15 +209,14 @@
         "mode": "none"
       },
       "state": {
-        "nextRunAtMs": 1775103772192,
-        "lastRunAtMs": 1775102872192,
-        "lastRunStatus": "error",
-        "lastStatus": "error",
-        "lastDurationMs": 432,
-        "lastDeliveryStatus": "not-requested",
-        "consecutiveErrors": 1,
-        "lastError": "FallbackSummaryError: All models failed (3): github-copilot/gpt-5-mini: Live session model switch requested: openai-codex/gpt-5.4 (unknown) | github-copilot/gpt-5.4: Live session model switch requested: openai-codex/gpt-5.4 (unknown) | openai-codex/gpt-5.4: OAuth token refresh failed for openai-codex: Failed to refresh OpenAI Codex token. Please try again or re-authenticate. (auth)",
-        "lastErrorReason": "auth"
+        "nextRunAtMs": 1775188418319,
+        "lastRunAtMs": 1775187518319,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 6914,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0,
+        "lastDelivered": false
       }
     }
   ]

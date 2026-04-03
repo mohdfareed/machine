@@ -15,6 +15,7 @@ manifest = MachineManifest(
         "core",
     ],
     files=[
+        FileMapping(source="CLAUDE.md", target="~/.claude/CLAUDE.md"),
         FileMapping(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
