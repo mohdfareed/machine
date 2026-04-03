@@ -70,6 +70,10 @@
     "mklink",
     "pathlib",
     "pycache",
-    "pytest"
+    "pytest",
+    "ericc",
+    "openmemory",
+    "qdrant",
+    "gethomepage"
   ]
 }
