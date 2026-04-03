@@ -37,7 +37,7 @@ services:
       KBM_PATH: /personal
       KBM_PORT: "3001"
     labels:
-      - homepage.group=Services
+      - homepage.group=MCP Servers
       - homepage.name=KBM Personal
       - homepage.icon=mdi-brain
       - homepage.href=https://kbm.${TAILNET_NAME}.ts.net/personal
@@ -59,7 +59,7 @@ services:
       KBM_PATH: /work
       KBM_PORT: "3002"
     labels:
-      - homepage.group=Services
+      - homepage.group=MCP Servers
       - homepage.name=KBM Work
       - homepage.icon=mdi-brain
       - homepage.href=https://kbm.${TAILNET_NAME}.ts.net/work

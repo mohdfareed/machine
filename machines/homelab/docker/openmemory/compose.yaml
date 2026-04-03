@@ -42,7 +42,7 @@ services:
         aliases:
           - mem0_store
     labels:
-      - homepage.group=Infrastructure
+      - homepage.group=Services
       - homepage.name=Qdrant
       - homepage.icon=mdi-database-search
       - homepage.description=Shared vector store (Qdrant)
@@ -61,7 +61,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       USER: ${MEM0_USER_ID}
     labels:
-      - homepage.group=Services
+      - homepage.group=MCP Servers
       - homepage.name=OpenMemory
       - homepage.icon=mdi-memory
       - homepage.href=https://mem0.${TAILNET_NAME}.ts.net

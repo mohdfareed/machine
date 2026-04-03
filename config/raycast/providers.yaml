@@ -1,4 +1,38 @@
 providers:
+  - id: copilot
+    name: GitHub Copilot
+    base_url: https://copilot-api.tail2a477.ts.net/v1
+    models:
+      - id: gpt-5.4
+        name: GPT-5.4
+        context: 1050000
+        abilities: &copilot_model_abilities
+          temperature:
+            supported: true
+          vision:
+            supported: true
+          system_message:
+            supported: true
+          tools:
+            supported: true
+          reasoning_effort:
+            supported: true
+      - id: gpt-5.4-mini
+        name: GPT-5.4 Mini
+        context: 400000
+        abilities: *copilot_model_abilities
+      - id: claude-opus-4-6
+        name: Claude Opus 4.6
+        context: 1000000
+        abilities: *copilot_model_abilities
+      - id: claude-sonnet-4-6
+        name: Claude Sonnet 4.6
+        context: 1000000
+        abilities: *copilot_model_abilities
+      - id: claude-haiku-4-5
+        name: Claude Haiku 4.5
+        context: 200000
+        abilities: *copilot_model_abilities
   - id: chat-mock
     name: ChatMock
     base_url: http://127.0.0.1:8000/v1
