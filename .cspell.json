@@ -21,12 +21,13 @@
   "words": [
     // People & usernames
     "Aloxaf", "charliermarsh", "Dobbeleer", "donjayamanne", "Duffield",
-    "fareed", "mohdfareed", "timonwong", "yzhang",
+    "ericc", "fareed", "mohdfareed", "mohds", "timonwong", "yzhang",
 
     // Project & system names
-    "acpx", "chatmock", "clawhub", "elevenlabs", "fastmcp", "ghostty",
-    "greptile", "homelab", "lancedb", "macbook", "mcporter", "openclaw",
-    "tailnet", "tailscale", "tskey", "webchat",
+    "acpx", "chatmock", "clawhub", "cmux", "Dockge", "elevenlabs", "fastmcp", 
+    "gethomepage", "ghostty", "greptile", "homelab", "lancedb", "macbook", 
+    "mcporter", "openclaw", "openmemory", "qdrant", "tailnet", "tailscale", 
+    "tskey", "webchat",
 
     // Zsh / zinit
     "appendhistory", "atinit", "atload", "blockf", "dups", "fpath", "FPATH",
@@ -50,17 +51,18 @@
 
     // Windows / PowerShell
     "bbwe", "hardlink", "LASTEXITCODE", "mklink", "PROGRAMDATA",
-    "wekyb", "winerror", "winget",
+    "pwsh", "wekyb", "winerror", "winget",
 
     // Linux / server
     "devtmpfs", "efivarfs", "journalctl", "tmpfs", "USERSPACE", "vcgencmd",
 
     // Dev tools not in built-in dicts
     "btop", "coreclr", "dotenv", "Eeuo", "freethreading", "GHCS",
-    "godotcsharp", "gopls", "gtime", "gsserver", "healthcheck",
-    "llst", "pmset", "worktree", "WORKTREE",
+    "godotcsharp", "gopls", "gsserver", "gtime", "healthcheck",
+    "llst", "pathlib", "pmset", "pycache", "pydantic", "pyright", "pytest",
+    "shellcheck", "typer", "venv", "worktree", "WORKTREE",
 
     // Common tech terms the built-in dicts miss
-    "bootstrapper", "distros", "hostnames", "keepalive", "VIRTUALENV"
+    "bootstrapper", "distros", "distors", "hostnames", "keepalive", "VIRTUALENV"
   ]
 }
