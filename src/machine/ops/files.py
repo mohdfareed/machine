@@ -80,7 +80,7 @@ def _symlink(source: Path, target: Path) -> bool:
         except OSError as exc:
             if is_windows and getattr(exc, "winerror", None) == 1314:
                 raise OSError(
-                    "Symlink creation failed — enable Developer Mode first.\n"
+                    "Symlink creation failed - enable Developer Mode first.\n"
                     "Settings → System → For developers → Developer Mode"
                 ) from exc
             raise

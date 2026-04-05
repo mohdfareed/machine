@@ -1,13 +1,13 @@
 {
   "permissions": {
     "allow": [
+      "WebSearch",
       "Bash(git ls-tree:*)",
       "Bash(git rebase:*)",
       "Bash(git fetch:*)",
-      "Bash(uv run:*)",
-      "Bash(npx cspell:*)",
       "Bash(git grep:*)",
-      "WebSearch"
+      "Bash(uv run:*)",
+      "Bash(npx cspell:*)"
     ]
   }
 }
