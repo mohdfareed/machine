@@ -41,7 +41,7 @@ services:
       - homepage.name=KBM Personal
       - homepage.icon=mdi-brain
       - homepage.href=https://kbm.${TAILNET_NAME}.ts.net/personal
-      - homepage.description=kbm.${TAILNET_NAME}.ts.net/personal
+      - homepage.description=Personal Knowledge Base
 
   kbm-work:
     image: ghcr.io/mohdfareed/kbm:latest
@@ -63,7 +63,7 @@ services:
       - homepage.name=KBM Work
       - homepage.icon=mdi-brain
       - homepage.href=https://kbm.${TAILNET_NAME}.ts.net/work
-      - homepage.description=kbm.${TAILNET_NAME}.ts.net/work
+      - homepage.description=Work Knowledge Base
 
 volumes:
   ts-kbm-state:

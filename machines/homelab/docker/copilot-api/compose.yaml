@@ -36,7 +36,7 @@ services:
       - homepage.name=Copilot API
       - homepage.icon=mdi-github
       - homepage.href=https://copilot-api.${TAILNET_NAME}.ts.net
-      - homepage.description=GitHub Copilot OpenAI/Anthropic-compatible proxy
+      - homepage.description=GitHub Copilot API Proxy
 
 volumes:
   ts-copilot-api-state:

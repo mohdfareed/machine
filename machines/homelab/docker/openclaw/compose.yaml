@@ -35,7 +35,7 @@ services:
       - homepage.name=OpenClaw
       - homepage.icon=https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openclaw.svg
       - homepage.href=https://openclaw.${TAILNET_NAME}.ts.net
-      - homepage.description=Personal AI assistant
+      - homepage.description=Personal AI Assistant
     restart: unless-stopped
 
 volumes:
