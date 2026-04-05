@@ -31,7 +31,7 @@ cd $MC_HOME
 ```sh
 mc apply [modules]   # Deploy configs, packages, and scripts
 mc sync              # Pull and push latest repo changes
-mc update [modules]  # Run update scripts
+mc update [modules]  # Update packages and run update scripts
 ```
 
 Run `mc -h` or `mc <command> -h` for full options.

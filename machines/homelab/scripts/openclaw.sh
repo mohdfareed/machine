@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# Install mem0 plugin
+if ! openclaw plugins list 2>/dev/null | grep -q openclaw-mem0; then
+    openclaw plugins install @mem0/openclaw-mem0 --pin
+fi
+
 # Inject env vars into the macOS GUI domain for OpenClaw.
 #
 # Config files in the repo use ${VAR} placeholders. The CLI resolves
@@ -14,14 +19,7 @@ set -Eeuo pipefail
 
 # Env vars referenced in openclaw config files.
 OPENCLAW_VARS=(
-    GEMINI_API_KEY
-    OPENAI_API_KEY
-    OPENCLAW_CRON_TOKEN
-    OPENCLAW_HOOKS_TOKEN
     TAILNET_NAME
-    TELEGRAM_BOT_TOKEN
-    TELEGRAM_USER_ID
-    TELEGRAM_WEBHOOK_SECRET
 )
 
 changed=false
@@ -34,9 +32,8 @@ for var in "${OPENCLAW_VARS[@]}"; do
     changed=true
 done
 
-echo "openclaw: env vars synced to launchd (${#OPENCLAW_VARS[@]} vars)"
-
 # Restart the gateway only if env vars changed, so it re-runs shellEnv.
+echo "openclaw: env vars synced to launchd (${#OPENCLAW_VARS[@]} vars)"
 if $changed && command -v openclaw &>/dev/null && openclaw gateway status &>/dev/null; then
     echo "openclaw: env vars changed, restarting gateway..."
     openclaw gateway restart

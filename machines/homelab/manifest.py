@@ -28,10 +28,10 @@ manifest = MachineManifest(
     ],
     packages=[
         # OpenClaw (macOS app - node)
-        Package(cask="openclaw"),
+        Package(name="openclaw-app", cask="openclaw"),
         # OpenClaw (CLI - gateway)
         Package(
-            name="openclaw-cli",
+            name="openclaw",
             script="curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard",
         ),
         # Dev tools
