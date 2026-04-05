@@ -74,6 +74,10 @@
     "ericc",
     "openmemory",
     "qdrant",
-    "gethomepage"
+    "gethomepage",
+    "AUTHKEY",
+    "USERSPACE",
+    "healthcheck",
+    "quicklaunch"
   ]
 }
