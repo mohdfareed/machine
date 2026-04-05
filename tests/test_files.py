@@ -37,7 +37,7 @@ def test_symlink_raises_guidance_on_windows_file_privilege_error(
 
     with pytest.raises(
         OSError,
-        match=re.escape("Symlink creation failed — enable Developer Mode first."),
+        match=re.escape("Symlink creation failed - enable Developer Mode first."),
     ):
         machine_files._symlink(source, target)
 
@@ -63,7 +63,7 @@ def test_symlink_raises_guidance_on_windows_directory_privilege_error(
 
     with pytest.raises(
         OSError,
-        match=re.escape("Symlink creation failed — enable Developer Mode first."),
+        match=re.escape("Symlink creation failed - enable Developer Mode first."),
     ):
         machine_files._symlink(source, target)
 

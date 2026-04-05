@@ -14,11 +14,7 @@
   ],
   "ignorePaths": [
     "*.lock",
-    "machines/**/machine.env",
-    "machines/**/manifest.py",
-    // Free-form AI agent content — proper names, jargon, invented words
     "machines/**/openclaw/workspace/**",
-    // Runtime state — error messages, command strings, timestamps
     "machines/**/openclaw/cron/**"
   ],
   "words": [
