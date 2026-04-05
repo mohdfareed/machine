@@ -4,7 +4,10 @@
   "icon_theme": "Material Icon Theme",
   "format_on_save": "on",
   "show_whitespaces": "all",
-  "wrap_guides": [80, 120],
+  "wrap_guides": [
+    80,
+    120
+  ],
   "buffer_font_family": "JetBrainsMono Nerd Font",
   "buffer_font_size": 14,
   "ui_font_size": 14,
@@ -18,7 +21,9 @@
   },
   // # MARK: Languages ========================================================
   "file_types": {
-    "JSONC": ["**/*.code-snippets"],
+    "JSONC": [
+      "**/*.code-snippets"
+    ],
   },
   "languages": {
     "Python": {
@@ -27,6 +32,9 @@
       },
     },
     "Shell Script": {
+      "tab_size": 2,
+    },
+    "JSON": {
       "tab_size": 2,
     },
     "JSONC": {
@@ -39,10 +47,15 @@
       "tab_size": 2,
     },
     "LOG": {
-      "language_servers": ["log", "comment"],
+      "language_servers": [
+        "log",
+        "comment"
+      ],
     },
     "Plain Text": {
-      "language_servers": ["bookmark-language-server"],
+      "language_servers": [
+        "bookmark-language-server"
+      ],
     },
   },
   // # MARK: Remote Dev =======================================================

@@ -92,7 +92,7 @@ Add a Tailscale sidecar container and a `ts-config/serve.json`:
 services:
   ts-myservice:
     image: tailscale/tailscale:latest
-    hostname: myservice                    # ← tailnet hostname
+    hostname: myservice # <- tailnet hostname
     environment:
       TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
       TS_EXTRA_ARGS: --advertise-tags=tag:container
@@ -107,7 +107,7 @@ services:
     restart: unless-stopped
 
   myservice:
-    image: …
+    image: ...
     network_mode: service:ts-myservice
     depends_on: [ts-myservice]
 
