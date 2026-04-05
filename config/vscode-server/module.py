@@ -1,4 +1,4 @@
-"""VS Code Server (code serve-web) module."""
+"""VSCode Server (code serve-web) module."""
 
 from machine.manifest import Module
 
