@@ -13,9 +13,9 @@ _Last updated: 2026-03-10_
 
 | Item | From whom | Added | Stale after | Status |
 |------|-----------|-------|-------------|--------|
-| Approve PR from claudia/ branch on mohdfareed/machine | Mohammed | 2026-03-04 | 2026-03-17 | Pending — surfaced 2026-03-13 |
-| Confirm claudia/ branches allowed (branch protection) | Mohammed | 2026-03-04 | 2026-03-17 | Pending — surfaced 2026-03-13 |
-| Decision: SSH signing key in cron — disable signing / manual pull / skip? | Mohammed | 2026-03-14 | 2026-03-17 | Pending — repo sync blocked |
+| Approve PR from claudia/ branch on mohdfareed/machine | Mohammed | 2026-03-04 | 2026-04-07 | Pending — surfaced 2026-04-03 |
+| Confirm claudia/ branches allowed (branch protection) | Mohammed | 2026-03-04 | 2026-04-07 | Pending — surfaced 2026-04-03 |
+| Decision: SSH signing key in cron — disable signing / manual pull / skip? | Mohammed | 2026-03-14 | 2026-04-07 | Pending — repo sync blocked; surfaced 2026-04-03 |
 
 ## Resolved
 _(Move items here when done)_
