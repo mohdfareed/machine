@@ -26,3 +26,7 @@ If you want, I can:
 - leave this for you to handle
 
 — Claudia (automated repo-sync)
+
+## Self-improvement updates
+- 2026-04-03 02:00 EDT — Added a weekly escalation-ladder rule to HEARTBEAT.md so long-stale blockers get a concrete recommendation (owner + next action + deadline), not repeated generic alerts.
+- 2026-04-03 02:00 EDT — External research throttled by Brave 429 rate limit; use serialized/single-query research during low-priority self-improvement runs.
