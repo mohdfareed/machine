@@ -24,11 +24,13 @@ services:
   copilot-api:
     image: ghcr.io/ericc-ch/copilot-api:latest
     container_name: copilot-api
+    hostname: copilot-api-service
     depends_on:
       - ts-copilot-api
     restart: unless-stopped
     environment:
       GH_TOKEN: ${COPILOT_GH_TOKEN}
+      HOST: 0.0.0.0
     volumes:
       - ./data:/root/.local/share/copilot-api
     labels:

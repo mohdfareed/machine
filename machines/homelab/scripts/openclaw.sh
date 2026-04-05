@@ -5,7 +5,7 @@ set -Eeuo pipefail
 #
 # Config files in the repo use ${VAR} placeholders. The CLI resolves
 # them via the shell environment, but the macOS GUI app (launchd) has
-# no login shell — shellEnv can only find vars visible to launchd.
+# no login shell; shellEnv can only find vars visible to launchd.
 #
 # This script exports every referenced env var into the GUI domain with
 # `launchctl setenv`, so OpenClaw's shellEnv feature resolves them.
