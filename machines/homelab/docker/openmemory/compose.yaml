@@ -45,7 +45,7 @@ services:
       - homepage.group=Services
       - homepage.name=Qdrant
       - homepage.icon=mdi-database-search
-      - homepage.description=Shared vector store (Qdrant)
+      - homepage.description=Shared Vector Store
 
   mem0-api:
     image: mem0/openmemory-mcp:latest
@@ -65,7 +65,7 @@ services:
       - homepage.name=OpenMemory
       - homepage.icon=mdi-memory
       - homepage.href=https://mem0.${TAILNET_NAME}.ts.net
-      - homepage.description=AI memory layer (MCP)
+      - homepage.description=Agent Memory Store
 
   mem0-ui:
     image: mem0/openmemory-ui:latest

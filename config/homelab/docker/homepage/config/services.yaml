@@ -6,7 +6,7 @@
     - HomeLab:
         icon: mdi-home-analytics
         href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/code
-        description: Home Lab
+        description: Home Lab Server
         widget:
           type: tailscale
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_HOMELAB_DEVICE_ID}}"

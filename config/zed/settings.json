@@ -63,6 +63,7 @@
   ],
   // # MARK: Agents ===========================================================
   "agent": {
+    "default_profile": "minimal",
     "default_model": {
       "provider": "copilot_chat",
       "model": "gpt-5.4-mini",
