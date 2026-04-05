@@ -3,3 +3,6 @@
     - Tailscale Admin Console:
         - icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tailscale-light.svg
           href: https://login.tailscale.com/admin
+    - Copilot API Proxy Usage:
+        - icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/github-copilot.svg
+          href: https://ericc-ch.github.io/copilot-api?endpoint=https://copilot-api.tail2a477.ts.net/usage
