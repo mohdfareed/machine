@@ -12,7 +12,7 @@ function mc::deploy {
     did_stash=1
   fi
 
-  git fetch origin main && git merge origin/main
+  git fetch origin main && git merge origin/main && git push
   local rc=$?
 
   (( did_stash )) && git stash pop

@@ -65,6 +65,7 @@ Composes modules and adds machine-specific overrides.
 - Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages, `up_` = run only during `mc update`, `_` = helper (never auto-executed, sourced by other scripts)
 - Execution order: files → `init_*` scripts → packages → remaining scripts
 - `mc apply` only installs missing packages; upgrades belong to `mc update`. If a package exists but is not managed by the requested manager, `mc apply` should still install it with that manager
+- Script-only packages use `Package.name` as the installed-command check during `mc apply`; `mc update` re-runs script-backed packages
 - Machine extras: `extra.zsh` → `~/.zshrc.local`
 - Repo root derived from `Path(__file__).parents[2]` - no env var needed
 - App data: `typer.get_app_dir("mc")` for logs/state
