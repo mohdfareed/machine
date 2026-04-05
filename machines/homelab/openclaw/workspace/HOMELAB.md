@@ -36,7 +36,7 @@ Always-on macOS machine (Mac Mini / MacBook in clamshell) running Docker service
 
 ```
 ~/.machine/
-├── config/<module>/      # shared modules (git, shell, homelab, openclaw, …)
+├── config/<module>/      # shared modules (git, shell, homelab, openclaw, ...)
 └── machines/homelab/     # homelab-specific manifest + docker/ services
 ```
 

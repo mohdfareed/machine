@@ -3,19 +3,58 @@
   "version": "0.2",
   "language": "en",
   "useGitignore": true,
-  // Built-in dictionaries cover most technical terms for these languages.
-  // Only add to `words` what they genuinely miss.
   "dictionaries": [
     "bash",
     "powershell",
     "python",
     "softwareTerms",
-    "companies"
+    "companies",
   ],
   "ignorePaths": [
     "*.lock",
-    "machines/**/openclaw/workspace/**",
-    "machines/**/openclaw/cron/**"
+    "*.json",
+    "compose.yaml",
+    "config/**/scripts/**",
+    "config/**/module.py",
+    "machines/**/scripts/**",
+    "machines/**/openclaw/**",
+    "machines/**/manifest.py",
   ],
-  "words": []
+  "words": [
+    // names
+    "fmohammedrmt",
+    "mfareedrmt",
+    "fareed",
+    "mohdfareed",
+    "mohds",
+    "fareed",
+    "macbook",
+    "homelab",
+    // tools
+    "winget",
+    "tailnet",
+    "ghcs",
+    "openclaw",
+    "cowork",
+    "chatmock",
+    "linuxbrew",
+    "shellenv",
+    "worktree",
+    // terms
+    "Eeuo",
+    "bootstrapper",
+    "autogroup",
+    "keygen",
+    "testpaths",
+    "hardlink",
+    "tskey",
+    "wslinfo",
+    "pkill",
+    "nohup",
+    "startfile",
+    "winerror",
+    "keepalive",
+    "spath",
+    "USERSPACE",
+  ],
 }

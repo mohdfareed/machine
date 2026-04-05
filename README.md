@@ -40,14 +40,14 @@ Run `mc -h` or `mc <command> -h` for full options.
 
 ```txt
 ~/.machine/
-├── config/                  <- shared modules (git, shell, …)
+├── config/                  <- shared modules (git, shell, ...)
 │   └── <name>/
 │       ├── module.py        <- Module(files, packages, scripts)
 │       └── ...
 ├── machines/                <- per-host manifests
 │   └── <id>/
 │       ├── manifest.py      <- MachineManifest(modules, files, packages, scripts)
-│       ├── machine.env      <- committed config vars (paths, hostnames)
+│       ├── machine.env      <- committed config vars (paths, hostname, ...)
 │       └── ...
 └── src/machine/             <- CLI (core.py, app.py, cli.py, manifest.py)
 ```

@@ -37,6 +37,7 @@ uv run ruff format --check .
 uv run ruff check .
 uv run pyright
 uv run pytest -q
+npx --yes cspell@latest lint --no-progress --no-summary "**"
 
 echo
 echo "==> All checks passed!"

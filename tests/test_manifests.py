@@ -107,7 +107,7 @@ def test_manifest_overrides_included(machine_id: str) -> None:
                     f" but target '{override.target}' not in manifest files"
                 )
 
-    assert not missing, f"{machine_id} has unincluded overrides:\n" + "\n".join(missing)
+    assert not missing, f"{machine_id} has un-included overrides:\n" + "\n".join(missing)
 
 
 # # MARK: Validation Edge Cases
