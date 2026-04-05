@@ -1,4 +1,4 @@
-"""VS Code configuration module."""
+"""VSCode configuration module."""
 
 from pathlib import Path
 
