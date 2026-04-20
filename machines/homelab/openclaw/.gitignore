@@ -1,4 +1,4 @@
-# Whitelist approach — ignore everything, track only what we need.
+# Whitelist approach - ignore everything, track only what we need.
 # OpenClaw creates runtime files/dirs everywhere; this is the only
 # robust way to keep the repo clean.
 

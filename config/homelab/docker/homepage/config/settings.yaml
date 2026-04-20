@@ -24,6 +24,6 @@ layout:
   Services:
     style: column
     rows: 1
-  Infrastructure:
+  MCP Servers:
     style: column
     rows: 1
