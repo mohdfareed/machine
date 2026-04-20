@@ -1,70 +1,90 @@
 {
-  "$help": "https://aka.ms/terminal-documentation",
-  "$schema": "https://aka.ms/terminal-profiles-schema",
-  "import": [
-    "settings.local.json"
-  ],
-  "copyFormatting": "none",
-  "copyOnSelect": false,
-  "theme": "system",
-  "useAcrylicInTabRow": true,
-  "defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
-  "schemes": [],
-  "themes": [],
-  "actions": [
+    "$help": "https://aka.ms/terminal-documentation",
+    "$schema": "https://aka.ms/terminal-profiles-schema",
+    "import": [
+        "settings.local.json"
+    ],
+    "actions": 
+    [
+        {
+            "command": 
+            {
+                "action": "sendInput",
+                "input": "\u001b\r"
+            },
+            "id": "User.sendInput.8F63D3A9"
+        }
+    ],
+    "copyFormatting": "none",
+    "copyOnSelect": false,
+    "defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+    "keybindings": 
+    [
+        {
+            "id": "User.sendInput.8F63D3A9",
+            "keys": "shift+enter"
+        },
+        {
+            "id": "Terminal.CopyToClipboard",
+            "keys": "ctrl+c"
+        },
+        {
+            "id": "Terminal.PasteFromClipboard",
+            "keys": "ctrl+v"
+        },
+        {
+            "id": "Terminal.FindText",
+            "keys": "ctrl+f"
+        }
+    ],
+    "newTabMenu": 
+    [
+        {
+            "type": "remainingProfiles"
+        }
+    ],
+    "profiles": 
     {
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b\r"
-      },
-      "id": "User.sendInput.8F63D3A9"
-    }
-  ],
-  "keybindings": [
-    {
-      "id": "User.sendInput.8F63D3A9",
-      "keys": "shift+enter"
+        "defaults": 
+        {
+            "colorScheme": "Dark+",
+            "font": 
+            {
+                "face": "JetBrainsMono Nerd Font Mono",
+                "size": 14
+            },
+            "useAcrylic": true
+        },
+        "list": 
+        [
+            {
+                "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+                "hidden": false,
+                "name": "PowerShell",
+                "source": "Windows.Terminal.PowershellCore",
+                "startingDirectory": "%USERPROFILE%"
+            },
+            {
+                "commandline": "C:\\windows\\system32\\wsl.exe --cd ~",
+                "guid": "{e58dac9b-4df9-4ca3-b1c6-cf49d37f6b33}",
+                "hidden": false,
+                "icon": "C:\\Users\\mfareed\\AppData\\Local\\wsl\\{22b8fb22-7866-4f81-9a46-e0c1d807fcdf}\\shortcut.ico",
+                "name": "WSL",
+                "pathTranslationStyle": "wsl",
+                "suppressApplicationTitle": true
+            },
+            {
+                "commandline": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\"",
+                "guid": "{e2e12c25-a750-40d8-b8c3-b625041590d1}",
+                "hidden": false,
+                "icon": "ms-appx:///ProfileIcons/pwsh.png",
+                "name": "GEMS Machine",
+                "startingDirectory": "C:\\Users\\mfareed\\Dev\\GEMS\\Gems.Machine"
+            }
+        ]
     },
-    {
-      "id": "Terminal.CopyToClipboard",
-      "keys": "ctrl+c"
-    },
-    {
-      "id": "Terminal.PasteFromClipboard",
-      "keys": "ctrl+v"
-    },
-    {
-      "id": "Terminal.FindText",
-      "keys": "ctrl+f"
-    }
-  ],
-  "newTabMenu": [
-    {
-      "type": "remainingProfiles"
-    }
-  ],
-  "profiles": {
-    "defaults": {
-      "colorScheme": "Dark+",
-      "font": {
-        "face": "JetBrainsMono Nerd Font Mono",
-        "size": 14
-      },
-      "useAcrylic": true
-    },
-    "list": [
-      {
-        "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
-        "hidden": false,
-        "name": "PowerShell",
-        "source": "Windows.Terminal.PowershellCore"
-      },
-      {
-        "guid": "{48c4878f-4609-55f2-9767-d410a7784339}",
-        "hidden": false,
-        "name": "WSL",
-        "source": "Microsoft.WSL"
-      }
-    ]
-  }
+    "schemes": [],
+    "theme": "system",
+    "themes": [],
+    "useAcrylicInTabRow": true
 }
