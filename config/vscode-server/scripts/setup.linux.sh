@@ -8,7 +8,7 @@ VSC_PORT=12345
 SERVICE_NAME="mc-vsc-server"
 
 if ! command -v code &>/dev/null; then
-    echo "code not found, skipping vsc-server setup"
+    echo "code not found, skipping vscode-server setup"
     exit 0
 fi
 
@@ -37,11 +37,11 @@ EOF
 
 systemctl --user daemon-reload
 systemctl --user enable --now "$SERVICE_NAME"
-echo "vsc-server: systemd service started on port $VSC_PORT"
+echo "vscode-server: systemd service started on port $VSC_PORT"
 
 # ─── Tailscale serve ─────────────────────────────────────────────────────────
 
 if command -v tailscale &>/dev/null; then
-    echo "configuring tailscale serve for vsc-server..."
+    echo "configuring tailscale serve for vscode-server..."
     sudo tailscale serve --bg --set-path /code http://127.0.0.1:$VSC_PORT
 fi
