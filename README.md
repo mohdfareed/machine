@@ -98,8 +98,9 @@ Run `mc -h` or `mc <command> -h` for full options.
 2. `$MC_HOME/machines/$MC_ID/machine.env` - machine-specific config vars
 3. `$MC_PRIVATE/env/$MC_ID.env` - machine secrets, plain dotenv format
 
-`mc` loads all three tiers into every script subprocess.
-Shell profiles (`.zshenv`, `profile.ps1`) source the same three tiers.
+`mc` loads all three tiers into every script subprocess. Shell profiles load
+the first two tiers; run `secrets` to load the private tier into an interactive
+shell when needed.
 
 **Local overrides:** modules declare which machine-specific files they accept via the `overrides` field.
 Drop matching files in your machine dir and they are auto-discovered and symlinked:

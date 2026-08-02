@@ -7,14 +7,19 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/bin/bash</string>
+        <string>/bin/zsh</string>
         <string>-c</string>
-        <string>source "$HOME/.zshenv" 2>/dev/null; exec "$HOME/.machine/machines/homelab/scripts/backup.sh"</string>
+        <string>source "$HOME/.zshenv" 2>/dev/null; exec "$MC_HOME/machines/$MC_ID/scripts/_backup.sh"</string>
     </array>
 
-    <!-- Run every hour -->
-    <key>StartInterval</key>
-    <integer>3600</integer>
+    <!-- Run daily at 04:30 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>4</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
 
     <key>StandardOutPath</key>
     <string>/tmp/mc-backup.log</string>

@@ -97,7 +97,7 @@ fi
 # # MARK: Scheduled Backups
 # =============================================================================
 
-# Load the hourly backup job.
+# Load the daily backup job.
 PLIST="$HOME/Library/LaunchAgents/com.mc.backup.plist"
 if [[ -f "$PLIST" ]]; then
     echo "loading backup schedule..."

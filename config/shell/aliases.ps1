@@ -11,6 +11,23 @@ if ($env:TERM_PROGRAM -eq 'vscode') {
     }
 }
 
+# Load private values into this shell on demand
+function Secrets {
+    if (-not $env:MC_PRIVATE -or -not $env:MC_ID) {
+        Write-Error "mc environment not configured"
+        return
+    }
+
+    $file = "$env:MC_PRIVATE/env/$env:MC_ID.env"
+    if (-not (Test-Path $file)) {
+        Write-Error "no secrets file found"
+        return
+    }
+
+    Import-DotEnv $file
+    Write-Host "secrets loaded for this shell"
+}
+
 # Clone a git repo
 function GitClone {
     param (

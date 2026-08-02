@@ -64,12 +64,6 @@ if ($env:MC_HOME -and $env:MC_ID) {
     Import-DotEnv "$env:MC_HOME/machines/$env:MC_ID/machine.env"
 }
 
-# private secrets
-if ($env:MC_PRIVATE -and $env:MC_ID) {
-    Import-DotEnv "$env:MC_PRIVATE/env/$env:MC_ID.env"
-    Import-DotEnv "$env:MC_PRIVATE/$env:MC_ID.env"
-}
-
 # Configuration
 # =============================================================================
 

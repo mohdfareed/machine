@@ -60,22 +60,21 @@ zsh::time() {
     for _ in $(seq 1 "${1-1}"); do time $SHELL -i -c exit; done
 }
 
-# load dotenv file as exported variables
-dotenv::load() {
-    usage="usage: $0 [dotenv_file]"
-    if (($# > 1)); then echo "$usage" && return 1; fi
-    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        echo "$usage" && return 0
-    fi
-
-    env=${1-.env}
-    if [[ ! -f "$env" ]]; then
-        echo "no dotenv file found"
+# load private values into this shell on demand
+secrets() {
+    if [[ -z "$MC_PRIVATE" || -z "$MC_ID" ]]; then
+        echo "mc environment not configured"
         return 1
     fi
 
-    # shellcheck source=/dev/null
-    source "$env"
+    local file="$MC_PRIVATE/env/$MC_ID.env"
+    if [[ ! -f "$file" ]]; then
+        echo "no secrets file found"
+        return 1
+    fi
+
+    dotenv::load "$file"
+    echo "secrets loaded for this shell"
 }
 
 # activate python virtual environment

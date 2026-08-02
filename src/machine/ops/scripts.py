@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -14,6 +15,9 @@ from machine.manifest import SCRIPT_SUFFIXES
 logger = logging.getLogger(__name__)
 
 _ENV_FILE = Path.home() / ".env"
+_ENV_REFERENCE = re.compile(
+    r"\$(?:{(?P<braced>[A-Za-z_][A-Za-z0-9_]*)}|(?P<plain>[A-Za-z_][A-Za-z0-9_]*))"
+)
 _STATE_FILE = settings.app_dir / "state.json"
 
 
@@ -132,13 +136,17 @@ def run_scripts(
 
 def _resolve_env(raw: dict[str, str]) -> dict[str, str]:
     """Expand `$VAR` references in env values until stable."""
-    env = {key: os.path.expandvars(value) for key, value in raw.items()}
+    env = dict(raw)
     for _ in range(len(env)):
         changed = False
+        context = {**os.environ, **env}
         for key, value in env.items():
-            new = value
-            for env_key, env_value in env.items():
-                new = new.replace(f"${env_key}", env_value)
+            new = _ENV_REFERENCE.sub(
+                lambda match: context.get(
+                    match.group("braced") or match.group("plain"), match.group(0)
+                ),
+                value,
+            )
             if new != value:
                 env[key] = new
                 changed = True

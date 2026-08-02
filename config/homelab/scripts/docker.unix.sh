@@ -65,11 +65,12 @@ deploy_services() {
     for svc_dir in "$docker_dir"/*/; do
         [[ -f "$svc_dir/compose.yaml" ]] || continue
         echo "deploying $(basename "$svc_dir")..."
-    (
-        cd "$svc_dir"
-        docker compose pull --ignore-pull-failures
-        docker compose up -d --build --remove-orphans
-    )
+
+        ( # subshell for env isolation
+            cd "$svc_dir"
+            docker compose pull --ignore-pull-failures
+            docker compose up -d --build --remove-orphans
+        )
     done
 }
 

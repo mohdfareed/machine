@@ -24,12 +24,11 @@ config/homelab/docker/<svc>/   ─┐
 machines/<id>/docker/<svc>/    ─┘
 ```
 
-Machine-specific services (Homepage, KBM, etc.) go in
-`machines/<id>/docker/`.
+Machine-specific services go in `machines/<id>/docker/`.
 
-Secrets flow through `~/.env` (built by the shell module) and optionally
-`MC_PRIVATE/docker/<service>.env` for service-specific vars. See the
-main README's secrets section for the full concatenation flow.
+Secrets live in `$MC_PRIVATE/env/$MC_ID.env`. Run `secrets` to load them into an
+interactive shell; `mc` independently loads them for deployment scripts.
+Docker Compose substitutes the variables referenced by each service.
 
 ## Networking
 
@@ -69,7 +68,7 @@ Generate at <https://login.tailscale.com/admin/settings/oauth>:
 
 ### 3. Secrets
 
-Add to `MC_PRIVATE/machine.env` (or `<MC_ID>.env`):
+Add to `$MC_PRIVATE/env/$MC_ID.env`:
 
 ```sh
 TS_DOCKER_AUTHKEY=tskey-client-<id>-<secret>?ephemeral=false
@@ -81,12 +80,23 @@ TAILNET_NAME=<your-tailnet>
 | `TS_DOCKER_AUTHKEY` | Tailscale sidecar containers          | OAuth auth key with `?ephemeral=false` for persistent nodes |
 | `TAILNET_NAME`      | Compose files referencing the tailnet | Your tailnet name from admin console                        |
 
-Service-specific secrets go in `MC_PRIVATE/docker/<service>.env`.
-
 ## Adding a Service
 
 1. Create `machines/<id>/docker/<name>/compose.yaml`
 2. Run `mc apply <machine>` - the deploy script syncs and starts it
+
+### Tailnet-only (host port + tailscale serve)
+
+Bind to loopback and add a `tailscale serve` call in `tailscale.unix.sh`:
+
+```yaml
+ports:
+  - 127.0.0.1:<PORT>:<PORT>
+```
+
+```sh
+sudo tailscale serve --bg --set-path /<path> http://127.0.0.1:<PORT>
+```
 
 ### Internet-facing (Tailscale sidecar + funnel)
 
@@ -132,20 +142,3 @@ volumes:
   "AllowFunnel": { "${TS_CERT_DOMAIN}:443": true }
 }
 ```
-
-### Tailnet-only (host port + tailscale serve)
-
-Bind to loopback and add a `tailscale serve` call in `tailscale.unix.sh`:
-
-```yaml
-ports:
-  - 127.0.0.1:<PORT>:<PORT>
-```
-
-```sh
-sudo tailscale serve --bg --set-path /<path> http://127.0.0.1:<PORT>
-```
-
-### Internal only
-
-No ports, no sidecar. Only reachable by containers in the same compose file.
