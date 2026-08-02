@@ -10,7 +10,14 @@ import click
 import typer
 from rich.prompt import Prompt
 
-from machine.core import console, err_console, settings, setup_console_logging, setup_file_logging
+from machine.core import (
+    PLATFORM,
+    console,
+    err_console,
+    settings,
+    setup_console_logging,
+    setup_file_logging,
+)
 from machine.ops.files import deploy_files, validate
 from machine.ops.packages import cache_sudo, install_packages
 from machine.ops.scripts import (
@@ -257,27 +264,39 @@ def update(
             raise SystemExit(1)
         active = [m for m in all_modules if m.name in set(module_names)]
         raw_scripts = [s for m in active for s in m.scripts]
+        all_packages = [p for m in active for p in m.packages]
     else:
         raw_scripts = [s for m in all_modules for s in m.scripts] + manifest.scripts
+        all_packages = [p for m in all_modules for p in m.packages] + manifest.packages
 
     up_scripts = [s for s in filter_scripts(raw_scripts) if Path(s).name.startswith("up_")]
-    if not up_scripts:
-        console.print("[dim]No update scripts found.[/]")
+    script_packages = [p for p in all_packages if p.script and p.applies_to(PLATFORM)]
+    if not up_scripts and not script_packages:
+        console.print("[dim]No update actions found.[/]")
         return
 
     owners: dict[str, str] = {}
     for m in all_modules:
         for s in m.scripts:
             owners[s] = m.name
+        for p in m.packages:
+            owners[p.name] = m.name
     for s in manifest.scripts:
         owners.setdefault(s, machine_id)
+    for p in manifest.packages:
+        owners.setdefault(p.name, machine_id)
 
     script_env = build_script_env(machine_id, root)
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
     console.print(f"{mode}Updating [bold]{machine_id}[/]")
 
     cache_sudo()
-    failures: list[tuple[str, str, str]] = run_scripts(up_scripts, env=script_env, owners=owners)
+    failures = install_packages(
+        script_packages,
+        owners=owners,
+        rerun_script_packages=True,
+    )
+    failures.extend(run_scripts(up_scripts, env=script_env, owners=owners))
     _print_summary(failures, settings.app_dir / "mc.log")
 
 

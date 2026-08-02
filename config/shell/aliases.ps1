@@ -3,6 +3,8 @@
 # Functions and Aliases
 # =============================================================================
 
+Set-Alias -Name lg -Value LazyGit
+
 if ($env:TERM_PROGRAM -eq 'vscode')
 {
     function Clear

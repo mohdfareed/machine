@@ -24,7 +24,6 @@ services:
   kbm-personal:
     image: ghcr.io/mohdfareed/kbm:latest
     container_name: kbm-personal
-    network_mode: service:ts-kbm
     depends_on:
       - ts-kbm
     restart: unless-stopped
@@ -38,16 +37,15 @@ services:
       KBM_PATH: /personal
       KBM_PORT: "3001"
     labels:
-      - homepage.group=Services
+      - homepage.group=MCP Servers
       - homepage.name=KBM Personal
       - homepage.icon=mdi-brain
       - homepage.href=https://kbm.${TAILNET_NAME}.ts.net/personal
-      - homepage.description=kbm.${TAILNET_NAME}.ts.net/personal
+      - homepage.description=Personal Knowledge Base
 
   kbm-work:
     image: ghcr.io/mohdfareed/kbm:latest
     container_name: kbm-work
-    network_mode: service:ts-kbm
     depends_on:
       - ts-kbm
     restart: unless-stopped
@@ -61,11 +59,11 @@ services:
       KBM_PATH: /work
       KBM_PORT: "3002"
     labels:
-      - homepage.group=Services
+      - homepage.group=MCP Servers
       - homepage.name=KBM Work
       - homepage.icon=mdi-brain
       - homepage.href=https://kbm.${TAILNET_NAME}.ts.net/work
-      - homepage.description=kbm.${TAILNET_NAME}.ts.net/work
+      - homepage.description=Work Knowledge Base
 
 volumes:
   ts-kbm-state:

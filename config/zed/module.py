@@ -14,11 +14,11 @@ match PLATFORM:
 
 module = Module(
     files=[
-        FileMapping(source="config/keymap.json", target=str(_base / "keymap.json")),
-        FileMapping(source="config/profiles.json", target=str(_base / "profiles.json")),
-        FileMapping(source="config/settings.json", target=str(_base / "settings.json")),
-        FileMapping(source="config/snippets.json", target=str(_base / "snippets.json")),
-        FileMapping(source="config/tasks.json", target=str(_base / "tasks.json")),
+        FileMapping(source="keymap.json", target=str(_base / "keymap.json")),
+        FileMapping(source="profiles.json", target=str(_base / "profiles.json")),
+        FileMapping(source="settings.json", target=str(_base / "settings.json")),
+        FileMapping(source="snippets.json", target=str(_base / "snippets.json")),
+        FileMapping(source="tasks.json", target=str(_base / "tasks.json")),
         FileMapping(source="bookmark_add.py", target=str(_base / "bookmark_add.py")),
     ],
     packages=[

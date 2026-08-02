@@ -3,7 +3,7 @@
 from machine.manifest import MachineManifest, Package
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "ssh-server", "vscode", "win-term", "core"],
+    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vscode-server", "win-term", "core"],
     packages=[
         # Dev tools
         Package(name="tailscale", winget="tailscale.tailscale"),

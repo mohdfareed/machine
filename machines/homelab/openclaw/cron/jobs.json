@@ -8,7 +8,7 @@
       "name": "Daily OpenClaw recommendations check-in",
       "enabled": true,
       "createdAtMs": 1772296903351,
-      "updatedAtMs": 1772368252688,
+      "updatedAtMs": 1775129402137,
       "schedule": {
         "kind": "cron",
         "expr": "30 7 * * *",
@@ -18,22 +18,24 @@
       "wakeMode": "now",
       "payload": {
         "kind": "agentTurn",
-        "message": "Daily reminder: prepare and send Mohammed a concise morning check-in with OpenClaw improvements (tools/config/workflow), what changed since last check, recommended next action, and any approval-needed items.",
+        "message": "Daily check-in: review OpenClaw improvements (tools/config/workflow), what changed since last check, recommended next action, and any approval-needed items. Reply with a concise morning summary — do not use the message tool.",
         "timeoutSeconds": 0
       },
       "delivery": {
-        "mode": "announce"
+        "mode": "announce",
+        "channel": "telegram",
+        "to": "1092659787"
       },
       "state": {
-        "nextRunAtMs": 1772454600000,
-        "lastRunAtMs": 1772368200032,
+        "nextRunAtMs": 1775215800000,
+        "lastRunAtMs": 1775129400042,
         "lastRunStatus": "error",
         "lastStatus": "error",
-        "lastDurationMs": 52656,
-        "lastError": "⚠️ ✉️ Message failed",
-        "lastDelivered": true,
+        "lastDurationMs": 2095,
         "lastDeliveryStatus": "delivered",
-        "consecutiveErrors": 1
+        "consecutiveErrors": 2,
+        "lastError": "HTTP 400 invalid_request_error: The requested model is not supported.",
+        "lastDelivered": true
       }
     },
     {
@@ -43,7 +45,7 @@
       "name": "OpenClaw auth monitor",
       "enabled": true,
       "createdAtMs": 1772297188942,
-      "updatedAtMs": 1772370011919,
+      "updatedAtMs": 1775131202405,
       "schedule": {
         "kind": "cron",
         "expr": "0 8 * * *",
@@ -53,21 +55,168 @@
       "wakeMode": "now",
       "payload": {
         "kind": "agentTurn",
-        "message": "Run `openclaw models status --check` and send Mohammed a short auth health report. If any provider is near expiry, expired, or needs reauth, clearly label it and provide exact next action.",
-        "timeoutSeconds": 0
+        "message": "Run `openclaw models status --check` and reply with a short auth health report. If any provider is near expiry, expired, or needs reauth, clearly label it and provide the exact next action. Do not use the message tool.",
+        "timeoutSeconds": 0,
+        "model": "github-copilot/gpt-5-mini"
       },
       "delivery": {
-        "mode": "announce"
+        "mode": "announce",
+        "channel": "telegram",
+        "to": "1092659787"
       },
       "state": {
-        "nextRunAtMs": 1772456400000,
-        "lastRunAtMs": 1772370000022,
+        "nextRunAtMs": 1775217600000,
+        "lastRunAtMs": 1775131200016,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 2389,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 2,
+        "lastError": "HTTP 400 invalid_request_error: The requested model is not supported.",
+        "lastDelivered": true
+      }
+    },
+    {
+      "id": "796f4609-f71d-467a-b73e-eb96f19691b4",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:31049",
+      "name": "Self-improvement loop",
+      "enabled": true,
+      "createdAtMs": 1772679604177,
+      "updatedAtMs": 1775152801654,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 2,14 * * *",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "You are Claudia. Read /Users/claudia/.openclaw/workspace/CONTEXT.md and /Users/claudia/.openclaw/workspace/memory/open-loops.md first.\n\nThis is your self-improvement session (runs 2am and 2pm daily).\n\n1. Read what you learned recently (memory/assistant-research.md, ~/self-improving/memory.md if it exists)\n2. Find 1-2 new things to learn or improve: search for OpenClaw patterns, productivity systems, how real assistants operate\n3. Identify one concrete thing you can improve and implement it (update AGENTS.md, HEARTBEAT.md, CONTEXT.md, or config)\n4. Update memory/open-loops.md with anything new or resolved\n5. Append a 3-line summary to memory/YYYY-MM-DD.md — always use the write tool to APPEND (read the file first, then write the full content back with your addition). Never use edit on daily log files.\n\nIMPORTANT: If you hit a real decision point — something that changes direction or requires Mohammed's input — message him on Telegram immediately. Don't just log it. Implementation details are yours to decide; vision-level questions are his.",
+        "timeoutSeconds": 600
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1775196000000,
+        "lastRunAtMs": 1775152800036,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 1618,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 3,
+        "lastDelivered": false,
+        "lastDeliveryError": "HTTP 400 invalid_request_error: The requested model is not supported.",
+        "lastError": "HTTP 400 invalid_request_error: The requested model is not supported."
+      }
+    },
+    {
+      "id": "b432952e-6245-4580-b914-676894e398d8",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:31049",
+      "name": "Repo sync — pull upstream changes",
+      "enabled": true,
+      "createdAtMs": 1772680392604,
+      "updatedAtMs": 1775187542704,
+      "schedule": {
+        "kind": "every",
+        "everyMs": 1800000,
+        "anchorMs": 1772680392604
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run: cd ~/.machine && git fetch origin && git status. If there are upstream changes on the current branch, pull them with git pull --rebase. If there are conflicts, write a note to /Users/claudia/.openclaw/workspace/memory/open-loops.md and notify Mohammed. Stay silent if nothing changed.",
+        "timeoutSeconds": 60,
+        "model": "github-copilot/gpt-5-mini"
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1775189330669,
+        "lastRunAtMs": 1775187530669,
         "lastRunStatus": "ok",
         "lastStatus": "ok",
-        "lastDurationMs": 11897,
-        "lastDelivered": true,
-        "lastDeliveryStatus": "delivered",
-        "consecutiveErrors": 0
+        "lastDurationMs": 12035,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0,
+        "lastDelivered": false
+      }
+    },
+    {
+      "id": "14554749-4c7c-4082-a9c9-5620cc83f4c2",
+      "agentId": "main",
+      "sessionKey": "agent:main:main:thread:31049",
+      "name": "Repo sync — commit and PR",
+      "enabled": true,
+      "createdAtMs": 1772680397936,
+      "updatedAtMs": 1775113201985,
+      "schedule": {
+        "expr": "0 3 * * *",
+        "kind": "cron",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Check for uncommitted changes in ~/.machine: cd ~/.machine && git status --short. If there are changes to workspace files (memory/, MEMORY.md, AGENTS.md, CONTEXT.md, HEARTBEAT.md, USER.md, skills/), do the following:\n\n1. Stage and commit with a concise, descriptive message (no date in the message).\n2. Push to the branch `claudia/workspace-updates` (create if needed, always reuse this same branch).\n3. Check if a PR already exists for that branch: GITHUB_TOKEN=$CLAUDIA_GITHUB_TOKEN gh pr list --repo mohdfareed/machine --head claudia/workspace-updates --json number,title\n   - If no PR exists: open one with title 'claudia: workspace updates' (no date) using GITHUB_TOKEN=$CLAUDIA_GITHUB_TOKEN gh pr create ...\n   - If a PR already exists: leave it open, do nothing extra.\n4. Stay silent if nothing to commit.",
+        "timeoutSeconds": 120,
+        "model": "github-copilot/gpt-5-mini"
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1775199600000,
+        "lastRunAtMs": 1775113200005,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 1980,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 2,
+        "lastError": "HTTP 400 invalid_request_error: The requested model is not supported.",
+        "lastDelivered": false,
+        "lastDeliveryError": "HTTP 400 invalid_request_error: The requested model is not supported."
+      }
+    },
+    {
+      "id": "d7bace5d-843d-4cc5-9c57-fca956c2cbdf",
+      "agentId": "main",
+      "sessionKey": "agent:main:telegram:direct:1092659787:thread:1092659787:31654",
+      "name": "Battery Low Alert",
+      "enabled": true,
+      "createdAtMs": 1773542706524,
+      "updatedAtMs": 1775188426177,
+      "schedule": {
+        "kind": "every",
+        "everyMs": 900000,
+        "anchorMs": 1773542706524
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Check the laptop battery level using: pmset -g batt\n\nIf battery is at or below 20% AND discharging (not plugged in), send a Telegram message to Mohammed (chat_id: telegram:1092659787) warning him the battery is low and telling him the exact percentage. If battery is above 20% or plugged in/charging, do nothing and stay silent.",
+        "timeoutSeconds": 60,
+        "model": "github-copilot/gpt-5-mini"
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1775189318326,
+        "lastRunAtMs": 1775188418326,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 7851,
+        "lastDeliveryStatus": "not-delivered",
+        "consecutiveErrors": 0,
+        "lastDelivered": false
       }
     }
   ]

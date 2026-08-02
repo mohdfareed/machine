@@ -1,14 +1,13 @@
 # Raycast
 
-This module installs Raycast and keeps a repo-owned Script Commands directory in
-`$MC_HOME/config/raycast/config/script-commands`.
+This module installs Raycast and keeps a repo-owned Script Commands.
 
 ## Script Commands
 
 Point Raycast at the repo directory directly:
 
-- macOS: `$MC_HOME/config/raycast/config/script-commands`
-- Windows: `%MC_HOME%\config\raycast\config\script-commands`
+- macOS: `$MC_HOME/config/raycast/commands`
+- Windows: `%MC_HOME%\config\raycast\commands`
 
 Raycast does not expose a stable, text-editable config file for script-directory
 registration, so add that folder once in Raycast:

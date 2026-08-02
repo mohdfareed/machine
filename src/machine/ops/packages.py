@@ -85,6 +85,7 @@ def refresh_path() -> None:
 def install_packages(
     packages: list[Package],
     owners: dict[str, str] | None = None,
+    rerun_script_packages: bool = False,
 ) -> list[tuple[str, str, str]]:
     """Install packages using available managers. Returns list of failures."""
     if not packages:
@@ -103,6 +104,7 @@ def install_packages(
     for pkg in packages:
         applicable_sources = _applicable_sources(pkg)
         can_run_script = bool(pkg.script and pkg.applies_to(PLATFORM))
+        selected_source = _selected_source(applicable_sources, available_sources)
         if not applicable_sources and not can_run_script:
             logger.debug("Skip (not applicable): %s", pkg.name)
             skipped_inapplicable += 1
@@ -110,16 +112,16 @@ def install_packages(
 
         if _installed_with_requested_manager(
             pkg,
-            available_sources,
-            applicable_sources,
+            selected_source,
             installed_sources,
+            rerun_script_packages=rerun_script_packages,
         ):
             logger.debug("Skip (installed): %s", pkg.name)
             skipped_installed += 1
             continue
 
         module = (owners or {}).get(pkg.name, "?")
-        fail = _install(pkg, available_sources, applicable_sources, can_run_script, module)
+        fail = _install(pkg, selected_source, applicable_sources, can_run_script, module)
         if fail:
             failures.append(fail)
 
@@ -132,23 +134,22 @@ def install_packages(
 
 def _install(
     pkg: Package,
-    available_sources: set[PackageSource],
+    selected_source: PackageSource | None,
     applicable_sources: list[PackageSource],
     can_run_script: bool,
     module: str = "?",
 ) -> tuple[str, str, str] | None:
     """Try to install a package. Returns a Failure on error, else None."""
-    source = _selected_source(applicable_sources, available_sources)
-    if source is not None:
-        value = _package_source_value(pkg, source)
+    if selected_source is not None:
+        value = _package_source_value(pkg, selected_source)
         if value is None:
-            raise AssertionError(f"Missing package source '{source}' for {pkg.name}")
+            raise AssertionError(f"Missing package source '{selected_source}' for {pkg.name}")
 
-        cmd = _MANAGER_CONFIGS[source].install_cmd.format(value)
-        logger.info("[%s] %s: %s", module, pkg.name, source)
+        cmd = _MANAGER_CONFIGS[selected_source].install_cmd.format(value)
+        logger.info("[%s] %s: %s", module, pkg.name, selected_source)
         rc, output = run_collect(cmd, label=module)
-        if _install_succeeded(source, rc, output):
-            if source == "winget" and rc != 0:
+        if _install_succeeded(selected_source, rc, output):
+            if selected_source == "winget" and rc != 0:
                 logger.info("[%s] %s already installed; no upgrade available", module, pkg.name)
             return None
         if rc != 0:
@@ -156,11 +157,11 @@ def _install(
                 "[%s] failed to install %s via %s (exit %d): %s",
                 module,
                 pkg.name,
-                source,
+                selected_source,
                 rc,
                 cmd,
             )
-            return (module, pkg.name, f"{source} exit {rc}")
+            return (module, pkg.name, f"{selected_source} exit {rc}")
         return None
 
     if applicable_sources:
@@ -203,20 +204,23 @@ def _install_succeeded(manager: PackageSource, rc: int, output: bytes | bytearra
 
 def _installed_with_requested_manager(
     pkg: Package,
-    available_sources: set[PackageSource],
-    applicable_sources: list[PackageSource],
+    selected_source: PackageSource | None,
     installed_sources: dict[PackageSource, set[str]],
+    rerun_script_packages: bool = False,
 ) -> bool:
     """Return True when the package is already present under its requested manager."""
-    source = _selected_source(applicable_sources, available_sources)
-    if source is None:
+    if selected_source is not None:
+        value = _package_source_value(pkg, selected_source)
+        if value is None:
+            return False
+        if selected_source in installed_sources:
+            return str(value) in installed_sources[selected_source]
+        return _source_installed(selected_source, value)
+
+    if rerun_script_packages or not pkg.script or not pkg.name:
         return False
-    value = _package_source_value(pkg, source)
-    if value is None:
-        return False
-    if source in installed_sources:
-        return str(value) in installed_sources[source]
-    return _source_installed(source, value)
+
+    return shutil.which(pkg.name) is not None
 
 
 def _applicable_sources(pkg: Package) -> list[PackageSource]:

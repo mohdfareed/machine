@@ -3,7 +3,7 @@ set -Eeuo pipefail
 cd "$(dirname "$0")/.."
 
 echo "==> Syncing dependencies..."
-uv sync --dev --locked
+uv sync --dev
 
 echo "==> Fixing script permissions..."
 find . \

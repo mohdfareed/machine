@@ -90,7 +90,7 @@ Invoke-Cached "brew-arm"   { /opt/homebrew/bin/brew shellenv }          # arm ma
 Invoke-Cached "brew-intel" { /usr/local/bin/brew shellenv }             # intel macos
 Invoke-Cached "brew-linux" { /home/linuxbrew/.linuxbrew/bin/brew shellenv } # linux/wsl
 
-# homebrew completions (source files directly — no subprocess needed)
+# homebrew completions
 if (Test-Path ($comp = "$env:HOMEBREW_PREFIX/share/pwsh/completions"))
 {
     foreach ($f in Get-ChildItem -Path $comp -File)

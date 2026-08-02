@@ -3,52 +3,50 @@
 from machine.manifest import MachineManifest, Package
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "vscode", "ghostty", "core", "zed", "raycast"],
+    modules=[
+        "git",
+        "shell",
+        "ssh",
+        "vscode",
+        "ghostty",
+        "core",
+        "zed",
+        "raycast",
+        "claude",
+    ],
     files=[],
     packages=[
         # Dev languages
-        *[
-            Package(name=name, brew=name)
-            for name in (
-                "uv",
-                "python",
-                "python-freethreading",
-                "go",
-                "shellcheck",
-            )
-        ],
+        Package(brew="uv"),
+        Package(brew="python"),
+        Package(brew="python-freethreading"),
+        Package(brew="go"),
+        Package(brew="shellcheck"),
         # NOTE: Docker Desktop cask ("docker") only delivers an Intel binary
         #   via Homebrew as of 2026-02. Install Docker Desktop manually on
         #   Apple Silicon until the cask ships a universal/ARM build.
-        # Package(name="docker", cask="docker"),
-        *[Package(name=name, cask=name) for name in ("powershell", "dotnet-sdk")],
+        # Package(cask="docker"),
+        Package(cask="powershell"),
+        Package(cask="dotnet-sdk"),
         # Utilities
-        *[Package(name=name, brew=name) for name in ("mas", "gnu-time", "fastfetch")],
-        *[
-            Package(name=name, cask=name)
-            for name in (
-                "copilot-cli",
-                "codex",
-                "font-computer-modern",
-                "font-jetbrains-mono-nerd-font",
-            )
-        ],
+        Package(brew="mas"),
+        Package(brew="gnu-time"),
+        Package(brew="fastfetch"),
+        Package(cask="copilot-cli"),
+        Package(cask="codex"),
+        Package(cask="font-computer-modern"),
+        Package(cask="font-jetbrains-mono-nerd-font"),
         # Apps
-        *[
-            Package(name=name, cask=name)
-            for name in (
-                "iina",
-                "mos",
-                "monitorcontrol",
-                "swish",
-                "tailscale",
-                "craft",
-                "chatgpt",
-                "figma",
-                "sf-symbols",
-                "openclaw",
-            )
-        ],
+        Package(cask="iina"),
+        Package(cask="mos"),
+        Package(cask="monitorcontrol"),
+        Package(cask="swish"),
+        Package(cask="tailscale"),
+        Package(cask="craft"),
+        Package(cask="chatgpt"),
+        Package(cask="figma"),
+        Package(cask="sf-symbols"),
+        Package(cask="openclaw"),
         # Mac App Store
         Package(name="Xcode", mas=497799835),
         Package(name="Copilot", mas=1447330651),

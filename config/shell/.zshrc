@@ -55,6 +55,21 @@ _post_compinit() {
   fi
 }
 
+_prune_zinit_completions() {
+  local completion_dir="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/completions"
+  local entry removed=0
+
+  [[ -d "$completion_dir" ]] || return
+
+  for entry in "$completion_dir"/*(N@); do
+    [[ -e "$entry" ]] && continue
+    rm -f -- "$entry"
+    removed=1
+  done
+
+  (( removed )) && rm -f -- "${ZDOTDIR:-$HOME}"/.zcompdump*
+}
+
 # Configuration
 # =============================================================================
 
@@ -89,6 +104,7 @@ ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 [ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
 [ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 source "${ZINIT_HOME}/zinit.zsh"
+_prune_zinit_completions
 
 # fzf (before fzf-tab)
 eval "$(fzf --zsh)"

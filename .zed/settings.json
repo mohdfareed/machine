@@ -6,7 +6,11 @@
     },
   },
   "file_types": {
-    "JSON": ["**/win-term/settings.json"],
+    "JSONC": [
+      "**/zed/settings.json",
+      "**/vscode/settings.json",
+      "**/*.code-snippets",
+    ],
     "JSON5": ["**/openclaw.json"],
     "ini": ["**/ghostty/config", "**/ssh.config"],
     "Git Config": ["**/.gitconfig.*"],

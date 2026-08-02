@@ -6,7 +6,8 @@
     "device-pair",
     "llm-task",
     "lobster",
-    "memory-lancedb"
+    "memory-lancedb",
+    "acpx"
   ],
 
   // Keep ONE memory provider active.
@@ -29,6 +30,8 @@
           "apiKey": "${OPENAI_API_KEY}",
         }
       }
-    }
+    },
+
+    "acpx": { "enabled": true }
   }
 }

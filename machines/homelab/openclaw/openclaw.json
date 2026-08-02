@@ -3,8 +3,15 @@
   "env": {
     "shellEnv": { "enabled": true, },
   },
+
+  // Tools
+  "tools": {
+    "profile": "full",
+  },
+
   // Networking
   "gateway": {
+    "port": 18789,
     "mode": "local",
     "bind": "loopback",
     "trustedProxies": ["127.0.0.1"],
@@ -13,18 +20,34 @@
     },
     "auth": {
       "allowTailscale": true,
-      "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 }
-    }
+      "rateLimit": { "maxAttempts": 10, "windowMs": 60000, "lockoutMs": 300000 },
+    },
   },
+
+  // Sessions
+  "session": {
+    "dmScope": "per-channel-peer",
+  },
+
+  // Agent Control Protocol
+  "acp": {
+    "enabled": true,
+    "dispatch": { "enabled": true },
+    "backend": "acpx",
+    "defaultAgent": "codex",
+  },
+
   // Scheduled tasks
   "cron": {
     "webhookToken": "${OPENCLAW_CRON_TOKEN}",
   },
+
   // Messaging behavior
   "messages": {
     "ackReactionScope": "all",
     "removeAckAfterReply": true,
   },
+
   // Admin commands
   "commands": {
     "native": "auto",
@@ -33,11 +56,13 @@
     "config": true,
     "debug": true,
     "restart": true,
+    "ownerDisplay": "raw",
     "allowFrom": {
       "webchat": ["openclaw-control-ui"],
       "telegram": ["${TELEGRAM_USER_ID}"],
     },
   },
+
   // Included Configurations ==================================================
   "agents": {
     "$include": "./config/agents.json5"

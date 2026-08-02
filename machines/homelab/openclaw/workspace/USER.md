@@ -22,6 +22,7 @@ _Learn about the person you're helping. Update this as you go._
   - Feels frustrated when interaction stalls or appears passive/waiting.
   - Wants me to research and propose better operating patterns (e.g., heartbeat vs cron vs hooks) before making major structural changes.
   - Wants broad life-assistant initiative beyond just email/notes/coding use-cases.
+  - Uses Apple ecosystem: Mail, Calendar, Reminders — all on the homelab Mac, scriptable via AppleScript.
 
 ## Context
 
