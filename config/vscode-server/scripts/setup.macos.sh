@@ -10,7 +10,7 @@ PLIST_DIR="$HOME/Library/LaunchAgents"
 PLIST="$PLIST_DIR/$LABEL.plist"
 
 if ! command -v code &>/dev/null; then
-    echo "code not found, skipping vsc-server setup"
+    echo "code not found, skipping vscode-server setup"
     exit 0
 fi
 
@@ -51,11 +51,11 @@ EOF
 # Load (or reload) the agent.
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
-echo "vsc-server: launchd agent started on port $VSC_PORT"
+echo "vscode-server: launchd agent started on port $VSC_PORT"
 
 # ─── Tailscale serve ─────────────────────────────────────────────────────────
 
 if command -v tailscale &>/dev/null; then
-    echo "configuring tailscale serve for vsc-server..."
+    echo "configuring tailscale serve for vscode-server..."
     sudo tailscale serve --bg --set-path /code http://127.0.0.1:$VSC_PORT
 fi

@@ -3,7 +3,7 @@
 from machine.manifest import MachineManifest, Package
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vsc-server", "homelab", "core"],
+    modules=["git", "shell", "ssh", "ssh-server", "vscode", "vscode-server", "homelab", "core"],
     files=[],
     packages=[
         Package(name="go", snap="go --classic"),
