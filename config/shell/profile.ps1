@@ -1,5 +1,47 @@
 #!/usr/bin/env pwsh
 
+function Import-DotEnv($path) {
+    if (-not (Test-Path $path)) {
+        return
+    }
+
+    Get-Content $path | ForEach-Object {
+        if ($_ -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
+            return
+        }
+
+        $val = $Matches[2] -replace '^["'']|["'']$', ''
+        $val = [regex]::Replace($val, '\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?', {
+                param($m)
+                $expanded = [System.Environment]::GetEnvironmentVariable($m.Groups[1].Value)
+                if ($null -ne $expanded) {
+                    return $expanded
+                }
+                return $m.Value
+            })
+        [System.Environment]::SetEnvironmentVariable($Matches[1], $val)
+    }
+}
+
+function Invoke-Cached($key, [scriptblock]$generate) {
+    $file = "$mcShellCache/$key.ps1"
+    if (-not (Test-Path $file)) {
+        New-Item -ItemType Directory -Force -Path $mcShellCache | Out-Null
+        try {
+            $output = & $generate 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                Set-Content $file ($output -join "`n")
+            }
+        }
+        catch {
+            $output = $null
+        }
+    }
+    if ((Test-Path $file) -and (Get-Item $file).Length -gt 0) {
+        . $file
+    }
+}
+
 # Environment
 # =============================================================================
 
@@ -9,33 +51,8 @@ $env:PIP_REQUIRE_VIRTUALENV = $true  # python
 # Infrastructure
 # =============================================================================
 
-function Import-DotEnv($path)
-{
-    if (-not (Test-Path $path))
-    { return
-    }
-
-    Get-Content $path | ForEach-Object {
-        if ($_ -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$')
-        { return
-        }
-
-        $val = $Matches[2] -replace '^["'']|["'']$', ''
-        $val = [regex]::Replace($val, '\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?', {
-                param($m)
-                $expanded = [System.Environment]::GetEnvironmentVariable($m.Groups[1].Value)
-                if ($null -ne $expanded)
-                { return $expanded
-                }
-                return $m.Value
-            })
-        [System.Environment]::SetEnvironmentVariable($Matches[1], $val)
-    }
-}
-
 # Ensure HOME is available on Windows (used by .env expansions)
-if ([string]::IsNullOrEmpty($env:HOME))
-{
+if ([string]::IsNullOrEmpty($env:HOME)) {
     $env:HOME = $env:USERPROFILE
 }
 
@@ -43,14 +60,12 @@ if ([string]::IsNullOrEmpty($env:HOME))
 Import-DotEnv "$HOME/.env"
 
 # machine config vars
-if ($env:MC_HOME -and $env:MC_ID)
-{
+if ($env:MC_HOME -and $env:MC_ID) {
     Import-DotEnv "$env:MC_HOME/machines/$env:MC_ID/machine.env"
 }
 
 # private secrets
-if ($env:MC_PRIVATE -and $env:MC_ID)
-{
+if ($env:MC_PRIVATE -and $env:MC_ID) {
     Import-DotEnv "$env:MC_PRIVATE/env/$env:MC_ID.env"
     Import-DotEnv "$env:MC_PRIVATE/$env:MC_ID.env"
 }
@@ -58,49 +73,32 @@ if ($env:MC_PRIVATE -and $env:MC_ID)
 # Configuration
 # =============================================================================
 
-$mcAppDir = if ($IsWindows)
-{ "$env:APPDATA/mc"
-} elseif ($IsMacOS)
-{ "$HOME/Library/Application Support/mc"
-} else
-{ "$HOME/.local/share/mc"
+$mcAppDir = if ($IsWindows) {
+    "$env:APPDATA/mc"
+}
+elseif ($IsMacOS) {
+    "$HOME/Library/Application Support/mc"
+}
+else {
+    "$HOME/.local/share/mc"
 }
 $mcShellCache = "$mcAppDir/shell"
 
-function Invoke-Cached($key, [scriptblock]$generate)
-{
-    $file = "$mcShellCache/$key.ps1"
-    if (-not (Test-Path $file))
-    {
-        New-Item -ItemType Directory -Force -Path $mcShellCache | Out-Null
-        try
-        { $output = & $generate 2>$null
-        } catch
-        { $output = $null
-        }
-        Set-Content $file ($output -join "`n")
-    }
-    if ((Get-Item $file).Length -gt 0)
-    { . $file
-    }
-}
-
 # homebrew
-Invoke-Cached "brew-arm"   { /opt/homebrew/bin/brew shellenv }          # arm macos
-Invoke-Cached "brew-intel" { /usr/local/bin/brew shellenv }             # intel macos
+Invoke-Cached "brew-arm" { /opt/homebrew/bin/brew shellenv }                # arm macos
+Invoke-Cached "brew-intel" { /usr/local/bin/brew shellenv }                 # intel macos
 Invoke-Cached "brew-linux" { /home/linuxbrew/.linuxbrew/bin/brew shellenv } # linux/wsl
 
 # homebrew completions
-if (Test-Path ($comp = "$env:HOMEBREW_PREFIX/share/pwsh/completions"))
-{
-    foreach ($f in Get-ChildItem -Path $comp -File)
-    { . $f
+if (Test-Path ($comp = "$env:HOMEBREW_PREFIX/share/pwsh/completions")) {
+    foreach ($f in Get-ChildItem -Path $comp -File) {
+        . $f
     }
 }
 
 # tools completions
-Invoke-Cached "uv"     { uv generate-shell-completion powershell }
-Invoke-Cached "uvx"    { uvx --generate-shell-completion powershell }
+Invoke-Cached "uv" { uv generate-shell-completion powershell }
+Invoke-Cached "uvx" { uvx --generate-shell-completion powershell }
 Invoke-Cached "dotnet" { dotnet completions script pwsh }
 
 # oh-my-posh
@@ -116,7 +114,6 @@ Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 . (Join-Path $PSScriptRoot "aliases.ps1")
 
 # machine-specific extras
-if (Test-Path (Join-Path $PSScriptRoot "profile.local.ps1"))
-{
+if (Test-Path (Join-Path $PSScriptRoot "profile.local.ps1")) {
     . (Join-Path $PSScriptRoot "profile.local.ps1")
 }
