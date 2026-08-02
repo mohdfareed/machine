@@ -16,15 +16,20 @@
     "font_size": 14,
     "option_as_meta": true,
   },
+  "project_panel": {
+    "dock": "left",
+  },
+  "outline_panel": {
+    "dock": "left",
+  },
   "git_panel": {
+    "dock": "left",
     "tree_view": true,
   },
-  // # MARK: Languages ========================================================
-  "file_types": {
-    "JSONC": [
-      "**/*.code-snippets"
-    ],
+  "debugger": {
+    "dock": "left",
   },
+  // # MARK: Languages ========================================================
   "languages": {
     "Python": {
       "code_actions_on_format": {
@@ -76,6 +81,7 @@
   ],
   // # MARK: Agents ===========================================================
   "agent": {
+    "dock": "right",
     "default_profile": "ask",
     "default_model": {
       "provider": "copilot_chat",
