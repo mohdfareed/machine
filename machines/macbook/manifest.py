@@ -12,7 +12,7 @@ manifest = MachineManifest(
         "core",
         "zed",
         "raycast",
-        "claude",
+        "codex",
     ],
     files=[],
     packages=[
@@ -33,7 +33,6 @@ manifest = MachineManifest(
         Package(brew="gnu-time"),
         Package(brew="fastfetch"),
         Package(cask="copilot-cli"),
-        Package(cask="codex"),
         Package(cask="font-computer-modern"),
         Package(cask="font-jetbrains-mono-nerd-font"),
         # Apps
@@ -43,10 +42,8 @@ manifest = MachineManifest(
         Package(cask="swish"),
         Package(cask="tailscale"),
         Package(cask="craft"),
-        Package(cask="chatgpt"),
         Package(cask="figma"),
         Package(cask="sf-symbols"),
-        Package(cask="openclaw"),
         # Mac App Store
         Package(name="Xcode", mas=497799835),
         Package(name="Copilot", mas=1447330651),

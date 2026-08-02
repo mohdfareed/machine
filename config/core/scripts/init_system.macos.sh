@@ -19,14 +19,6 @@ if ! grep -q "pam_tid.so" "$PAM_SUDO_PATH" 2>/dev/null; then
     echo "auth       sufficient     pam_tid.so" | sudo tee "$PAM_SUDO_PATH" >/dev/null
 fi
 
-# enable file/screen sharing
-echo "enabling file sharing..."
-sudo launchctl enable system/com.apple.smbd
-sudo launchctl kickstart -k system/com.apple.smbd 2>/dev/null || true
-echo "enabling screen sharing..."
-sudo launchctl enable system/com.apple.screensharing
-sudo launchctl kickstart -k system/com.apple.screensharing 2>/dev/null || true
-
 # enable hush login
 [ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
 
@@ -60,7 +52,7 @@ defaults write com.apple.dock mineffect -string "scale"
 defaults write com.apple.dock tilesize -int 48
 # enable app expose
 defaults write com.apple.dock showAppExposeGestureEnabled -bool true
-# rearrange spaces based on most recent use
+# disable rearranging spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
 # Finder: default to list view
 defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"

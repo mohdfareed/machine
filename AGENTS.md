@@ -8,12 +8,13 @@ Cross-platform machine bootstrapper and dotfile manager.
 > add it here. When the project changes in a way that contradicts an existing
 > note, update or remove it. Do this proactively - don't wait to be asked.
 >
-> For cross-session memory (context from previous conversations), use the
-> `machine-memories` MCP tool. This file is for durable coding standards, not
-> session notes.
+> Use Codex memories for cross-session context. This file is for durable coding
+> standards, not session notes. Keep repo-specific Codex skills under
+> `.agents/skills/`; keep portable global Codex configuration in
+> `config/codex/` and mutable runtime state machine-local.
 >
-> ALWAYS ensure the README.md, AGENTS.md, and the memories MCP tool are
-> consistent and up-to-date with the latest project conventions and rules.
+> ALWAYS ensure README.md and AGENTS.md are consistent and up-to-date with the
+> latest project conventions and rules.
 
 ## Tech Stack
 
@@ -71,6 +72,8 @@ Composes modules and adds machine-specific overrides.
 - App data: `typer.get_app_dir("mc")` for logs/state
 - State file: `app_dir/state.json` tracks script runs; package presence is determined from the requested package manager at apply time
 - Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/vscode/` and `config/zed/`
+- VS Code Remote Tunnels are owned by the `vscode` module; account authorization remains a one-time manual step on each machine
+- The `codex` module owns the Codex CLI, unified ChatGPT desktop app, and portable `~/.codex/config.toml`; credentials, pairing/enrollments, live databases, histories, caches, downloaded plugins, and generated memories stay machine-local
 - Editor tasks should avoid ad hoc external tool dependencies; prefer shell builtins or repo-managed entrypoints so tasks stay portable across machines
 - Shared repo policy should prefer cross-editor files (`pyproject.toml`, `.editorconfig`, `.shellcheckrc`, `.markdownlint.json`, `.cspell.json`) over editor-specific settings
 - Three-tier env sourcing (`.zshenv` / `profile.ps1` / `build_script_env`):

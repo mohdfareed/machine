@@ -6,6 +6,10 @@ Installs Docker (Linux) and Tailscale, deploys services from both the shared
 module directory and the machine-specific directory, and configures Tailscale
 networking.
 
+## Requirements
+
+- Docker (Apple Silicon)
+
 ## How It Works
 
 The deploy script (`docker.unix.sh`) creates `~/.homelab/<service>/`
@@ -20,7 +24,7 @@ config/homelab/docker/<svc>/   ─┐
 machines/<id>/docker/<svc>/    ─┘
 ```
 
-Machine-specific services (Homepage, OpenClaw, KBM, etc.) go in
+Machine-specific services (Homepage, KBM, etc.) go in
 `machines/<id>/docker/`.
 
 Secrets flow through `~/.env` (built by the shell module) and optionally
@@ -31,14 +35,14 @@ main README's secrets section for the full concatenation flow.
 
 Services are exposed via Tailscale using one of three patterns:
 
-| Pattern               | How                                        | Example   |
-| --------------------- | ------------------------------------------ | --------- |
-| **Internet (funnel)** | Tailscale sidecar with `AllowFunnel: true` | OpenClaw  |
-| **Tailnet only**      | Host loopback port + `tailscale serve`     | Homepage  |
-| **Internal**          | No sidecar, no ports - container-only      | KBM, bots |
+| Pattern               | How                                        | Example    |
+| --------------------- | ------------------------------------------ | ---------- |
+| **Internet (funnel)** | Tailscale sidecar with `AllowFunnel: true` | Public app |
+| **Tailnet only**      | Host loopback port + `tailscale serve`     | Homepage   |
+| **Internal**          | No sidecar, no ports - container-only      | Worker bot |
 
 Internet-facing services each get their own tailnet hostname via a sidecar
-container (e.g. `openclaw.<tailnet>.ts.net`). Tailnet-only services bind to
+container (e.g. `myservice.<tailnet>.ts.net`). Tailnet-only services bind to
 a host loopback port and are proxied by the machine's `tailscale serve`.
 Internal services have no outside access at all.
 

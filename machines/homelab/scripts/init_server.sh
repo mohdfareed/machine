@@ -76,6 +76,14 @@ defaults -currentHost write com.apple.screensaver idleTime -int 0
 echo "disabling bluetooth..."
 sudo defaults write /Library/Preferences/com.apple.Bluetooth ControllerPowerState -int 0
 
+# enable file/screen sharing
+echo "enabling file sharing..."
+sudo launchctl enable system/com.apple.smbd
+sudo launchctl kickstart -k system/com.apple.smbd 2>/dev/null || true
+echo "enabling screen sharing..."
+sudo launchctl enable system/com.apple.screensharing
+sudo launchctl kickstart -k system/com.apple.screensharing 2>/dev/null || true
+
 # # MARK: Docker
 # =============================================================================
 

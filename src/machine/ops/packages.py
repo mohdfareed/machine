@@ -27,7 +27,7 @@ _PLATFORM_SOURCES: dict[Platform, tuple[PackageSource, ...]] = {
     Platform.MACOS: ("cask", "brew", "mas"),
     Platform.LINUX: ("apt", "snap", "brew"),
     Platform.WSL: ("apt", "snap", "brew"),
-    Platform.GHCS: ("apt", "snap", "brew"),
+    Platform.GHCS: ("apt",),
     Platform.WINDOWS: ("winget", "scoop"),
 }
 _MANAGER_CONFIGS: dict[PackageSource, ManagerConfig] = {

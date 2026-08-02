@@ -14,15 +14,6 @@ registration, so add that folder once in Raycast:
 
 - Settings -> Extensions -> Script Commands -> Add Script Directory
 
-## ChatMock
-
-[`chatmock`](https://github.com/RayBytes/ChatMock)
-allows Raycast to use OpenAI Codex for its AI features.
-The module installs `chatmock` with `uv tool install` for Raycast-specific use.
-
-1. Run `chatmock login` once in a terminal.
-2. In Raycast, run the `Start ChatMock` script command.
-
 ## Hotkey
 
 This module does not try to automate macOS shortcut settings. If you want

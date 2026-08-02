@@ -113,11 +113,7 @@
     "https://microsoft.com": true,
     "https://*.microsoft.com": true,
     "https://google.com": true,
-    "https://*.google.com": true,
-    "https://openclaw.ai": true,
-    "https://*.openclaw.ai": true,
-    "https://mem0.ai": true,
-    "https://*.mem0.ai": true
+    "https://*.google.com": true
   },
   // ===========================================================================
   // # MARK: comments

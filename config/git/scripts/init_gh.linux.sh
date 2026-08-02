@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# REVIEW: check if still missing from built-in keyrings
 # source: https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian
 echo "installing github cli keyring..."
 

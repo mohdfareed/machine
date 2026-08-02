@@ -17,13 +17,12 @@
     "config/**/scripts/**",
     "config/**/module.py",
     "machines/**/scripts/**",
-    "machines/**/openclaw/**",
     "machines/**/manifest.py"
   ],
   "words": [
     "autogroup",
     "bootstrapper",
-    "chatmock",
+    "cliproxyapi",
     "cowork",
     "Eeuo",
     "fareed",
@@ -40,8 +39,8 @@
     "mohdfareed",
     "mohds",
     "nohup",
-    "openclaw",
     "pkill",
+    "projectless",
     "shellenv",
     "spath",
     "startfile",
@@ -52,6 +51,7 @@
     "winerror",
     "winget",
     "worktree",
-    "wslinfo"
+    "wslinfo",
+    "xhigh"
   ]
 }

@@ -1,0 +1,48 @@
+# CLIProxyAPI - multi-provider LLM API proxy
+# Access: https://cliproxyapi.<tailnet>.ts.net (tailnet only)
+
+services:
+  ts-cliproxyapi:
+    image: tailscale/tailscale:latest
+    container_name: ts-cliproxyapi
+    hostname: cliproxyapi
+    environment:
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+    volumes:
+      - ts-cliproxyapi-state:/var/lib/tailscale
+      - ./ts-config:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
+  cliproxyapi:
+    image: eceasy/cli-proxy-api:v7.2.113
+    container_name: cliproxyapi
+    network_mode: service:ts-cliproxyapi
+    depends_on:
+      - ts-cliproxyapi
+    environment:
+      # Use at: https://cliproxyapi.<tailnet>.ts.net/management.html
+      MANAGEMENT_PASSWORD: ${CLIPROXYAPI_MANAGEMENT_PASSWORD:?required}
+      TZ: America/New_York
+    volumes:
+      - ./config.yaml:/CLIProxyAPI/config.yaml
+      - ./data/auths:/root/.cli-proxy-api
+      - ./logs:/CLIProxyAPI/logs
+      - ./data/plugins:/CLIProxyAPI/plugins
+    restart: unless-stopped
+    labels:
+      - homepage.group=Services
+      - homepage.name=CLIProxyAPI
+      - homepage.icon=mdi-api
+      - homepage.href=https://cliproxyapi.${TAILNET_NAME}.ts.net/management.html
+      - homepage.description=Multi-provider LLM API proxy
+
+volumes:
+  ts-cliproxyapi-state:

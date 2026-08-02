@@ -9,31 +9,18 @@ manifest = MachineManifest(
         "ssh",
         "ssh-server",
         "vscode",
-        "vscode-server",
         "ghostty",
         "homelab",
         "core",
+        "codex",
     ],
     files=[
-        FileMapping(source="CLAUDE.md", target="~/.claude/CLAUDE.md"),
         FileMapping(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
         ),
-        FileMapping(
-            source="com.mc.openclaw-env.plist",
-            target="~/Library/LaunchAgents/com.mc.openclaw-env.plist",
-        ),
-        FileMapping(source="openclaw", target="~/.openclaw"),
     ],
     packages=[
-        # OpenClaw (macOS app - node)
-        Package(name="openclaw-app", cask="openclaw"),
-        # OpenClaw (CLI - gateway)
-        Package(
-            name="openclaw",
-            script="curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard",
-        ),
         # Dev tools
         Package(brew="uv"),
         Package(brew="python"),

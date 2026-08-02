@@ -1,0 +1,15 @@
+host: ""
+port: 8317
+
+remote-management:
+  # Authenticated by MANAGEMENT_PASSWORD from Compose.
+  allow-remote: true
+
+debug: false
+logging-to-file: true
+logs-max-total-size-mb: 256
+usage-statistics-enabled: false
+request-retry: 3
+
+routing:
+  strategy: round-robin

@@ -1,3 +1,0 @@
-; sign commits
-[user]
-    signingkey = ~/.ssh/rpi.pub

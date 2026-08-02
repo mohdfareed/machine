@@ -7,37 +7,25 @@ set -Eeuo pipefail
 #
 # Add remote servers to the SERVERS array below.
 
+# REVIEW: Update this list when adding new remote homelab machines.
+SERVERS=(rpi)
+
 BACKUP_ROOT="${MC_PRIVATE:-$ICLOUD/.machine}/backups"
-HOMELAB_DIR="${MC_HOMELAB_DIR:-$HOME/.homelab}"
 SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=10"
 RSYNC_EXCLUDE=(--exclude='*.log' --exclude='__pycache__/' --exclude='*.sock' --exclude='.DS_Store')
-
-# NOTE: Update this list when adding new remote homelab machines.
-SERVERS=(rpi)
 
 # ─── Local ────────────────────────────────────────────────────────────────────
 echo "backing up local services..."
 local_dest="$BACKUP_ROOT/$(hostname -s)"
-for dir in "$HOMELAB_DIR"/*/data/; do
+
+for dir in "${MC_HOMELAB_DIR:-$HOME/.homelab}"/*/data/; do
     [[ -d "$dir" ]] || continue
     svc="$(basename "$(dirname "$dir")")"
     echo "  $svc/data"
+
     mkdir -p "$local_dest/$svc/data"
     rsync -a --delete "${RSYNC_EXCLUDE[@]}" "$dir" "$local_dest/$svc/data/"
 done
-
-# ─── OpenClaw ─────────────────────────────────────────────────────────────────
-# Back up OpenClaw runtime state (credentials, devices, sessions, etc.).
-# Config/workspace/cron are tracked in git and don't need backup.
-OPENCLAW_DIR="$HOME/.openclaw"
-if [[ -d "$OPENCLAW_DIR" ]]; then
-    echo "backing up openclaw..."
-    oc_dest="$local_dest/openclaw"
-    mkdir -p "$oc_dest"
-    rsync -a --delete "${RSYNC_EXCLUDE[@]}" \
-        --exclude='config/' --exclude='workspace/' --exclude='cron/' \
-        "$OPENCLAW_DIR/" "$oc_dest/"
-fi
 
 # ─── Remote ───────────────────────────────────────────────────────────────────
 for host in "${SERVERS[@]}"; do
@@ -46,18 +34,21 @@ for host in "${SERVERS[@]}"; do
         echo "  unreachable, skipping"
         continue
     fi
+
     dest="$BACKUP_ROOT/$host"
+    src_dir="${MC_HOMELAB_DIR:-$HOME/.homelab}"
+
     for svc in $(ssh "$SSH_OPTS" "$host" \
-        "for d in ~/.homelab/*/data; do [ -d \"\$d\" ] && basename \"\$(dirname \"\$d\")\"; done" \
+        "for d in ~/$src_dir/*/data; do [ -d \"\$d\" ] && basename \"\$(dirname \"\$d\")\"; done" \
         2>/dev/null); do
+
         echo "  $svc/data"
         mkdir -p "$dest/$svc/data"
         rsync -az --delete -e "ssh $SSH_OPTS" "${RSYNC_EXCLUDE[@]}" \
-            "$host:~/.homelab/$svc/data/" "$dest/$svc/data/"
+            "$host:~/$src_dir/$svc/data/" "$dest/$svc/data/"
     done
 done
 
 echo "backups complete → $BACKUP_ROOT"
 # ──────────────────────────────────────────────────────────────────────────────
-
 echo "all backups complete → $BACKUP_ROOT"
