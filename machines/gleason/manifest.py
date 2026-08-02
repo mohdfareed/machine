@@ -13,6 +13,7 @@ manifest = MachineManifest(
         Package(name="docker", winget="docker.DockerDesktop"),
         Package(name="jetbrains-mono", winget="DEVCOM.JetBrainsMonoNerdFont"),
         Package(name="chatgpt", winget="9NT1R1C2HH7J"),
+        Package(name="codex", winget="openai.codex"),
         Package(name="craft-docs", winget="LukiLabs.Craft"),
         Package(name="go", winget="golang.Go"),
     ],

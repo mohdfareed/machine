@@ -72,7 +72,7 @@ Run these commands and report ✅/⚠️/❌ with 1-line cause per failure:
 
 ## Craft Docs MCP
 
-- MCP server URL: https://mcp.craft.do/links/Dwf70HLs61a/mcp
+- MCP server URL: <https://mcp.craft.do/links/Dwf70HLs61a/mcp>
 - Password: claudia.craft.all
 - Status: saved for future use; AppleScript doesn't work well with Craft
 
