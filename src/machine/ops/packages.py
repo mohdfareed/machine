@@ -304,8 +304,12 @@ def _installed_source_snapshots(
 
 def _command_succeeds(cmd: list[str]) -> bool:
     """Return True when *cmd* exits successfully."""
+    executable = shutil.which(cmd[0])
+    if executable is None:
+        return False
+
     proc = subprocess.run(
-        cmd,
+        [executable, *cmd[1:]],
         capture_output=True,
         text=True,
         timeout=30,

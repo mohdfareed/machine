@@ -16,14 +16,20 @@ if ($hostname -and $env:COMPUTERNAME -ine $hostname) {
 }
 
 # enable developer mode
-$developerMode = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
-New-Item -Path $developerMode -Force | Out-Null
-New-ItemProperty `
-    -Path $developerMode `
-    -Name AllowDevelopmentWithoutDevLicense `
-    -Value 1 `
-    -PropertyType DWord `
-    -Force | Out-Null
+Write-Host "enabling developer mode..."
+try {
+    $developerMode = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+    New-Item -Path $developerMode -Force | Out-Null
+    New-ItemProperty `
+        -Path $developerMode `
+        -Name AllowDevelopmentWithoutDevLicense `
+        -Value 1 `
+        -PropertyType DWord `
+        -Force | Out-Null
+}
+catch {
+    Write-Warning "Failed to enable developer mode, enable it manually: $_"
+}
 
 # install windows features
 Write-Host "enabling windows features..."

@@ -296,3 +296,23 @@ def test_install_packages_reads_mas_list_once_and_skips_installed_apps(monkeypat
 
     assert failures == []
     assert calls == 1
+
+
+def test_command_succeeds_uses_resolved_executable(monkeypatch) -> None:
+    """Windows command shims should be launched through their resolved path."""
+    commands: list[list[str]] = []
+
+    monkeypatch.setattr(
+        machine_packages.shutil,
+        "which",
+        lambda name: r"C:\Users\test\scoop\shims\scoop.CMD" if name == "scoop" else None,
+    )
+
+    def _fake_run(cmd, **kwargs):  # type: ignore[no-untyped-def]
+        commands.append(cmd)
+        return type("Proc", (), {"returncode": 0})()
+
+    monkeypatch.setattr(machine_packages.subprocess, "run", _fake_run)
+
+    assert machine_packages._command_succeeds(["scoop", "list", "7zip"])
+    assert commands == [[r"C:\Users\test\scoop\shims\scoop.CMD", "list", "7zip"]]
