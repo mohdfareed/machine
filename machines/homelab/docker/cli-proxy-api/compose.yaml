@@ -1,14 +1,15 @@
 # CLIProxyAPI - multi-provider LLM API proxy
-# Access: https://cliproxyapi.<tailnet>.ts.net (tailnet only)
+# Access: https://model-gateway.<tailnet>.ts.net (tailnet only)
 
 services:
   ts-cliproxyapi:
     image: tailscale/tailscale:latest
     container_name: ts-cliproxyapi
-    hostname: cliproxyapi
+    hostname: model-gateway
     environment:
       TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
       TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_HOSTNAME: model-gateway
       TS_SERVE_CONFIG: /config/serve.json
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: "false"
@@ -28,7 +29,7 @@ services:
     depends_on:
       - ts-cliproxyapi
     environment:
-      # Use at: https://cliproxyapi.<tailnet>.ts.net/management.html
+      # Use at: https://model-gateway.<tailnet>.ts.net/management.html
       MANAGEMENT_PASSWORD: ${CLIPROXYAPI_MANAGEMENT_PASSWORD:?required}
       TZ: America/New_York
     volumes:
@@ -39,10 +40,10 @@ services:
     restart: unless-stopped
     labels:
       - homepage.group=Services
-      - homepage.name=CLIProxyAPI
-      - homepage.icon=mdi-api
-      - homepage.href=https://cliproxyapi.${TAILNET_NAME}.ts.net/management.html
-      - homepage.description=Multi-provider LLM API proxy
+      - homepage.name=Model Gateway
+      - homepage.icon=mdi-hub
+      - homepage.href=https://model-gateway.${TAILNET_NAME}.ts.net/management.html
+      - homepage.description=Unified API gateway for AI providers
 
 volumes:
   ts-cliproxyapi-state:

@@ -1,7 +1,7 @@
 providers:
   - id: codex
     name: Codex
-    base_url: https://ai-proxy.tail2a477.ts.net/v1
+    base_url: https://model-gateway.tail2a477.ts.net/v1
     models:
       - id: gpt-5.6-sol
         name: GPT-5.6 Sol

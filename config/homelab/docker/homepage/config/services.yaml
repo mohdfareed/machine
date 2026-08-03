@@ -21,7 +21,7 @@
           fields: ["address", "last_seen", "expires"]
     - TV:
         icon: mdi-television
-        description: Smart TV
+        description: Apple TV
         widget:
           type: tailscale
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_TV_DEVICE_ID}}"
