@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SSH key provisioning from MC_PRIVATE."""
+"""Provision machine-specific SSH files from MC_PRIVATE."""
 
 import os
 import shutil
@@ -11,78 +11,107 @@ SSH_DIR = Path.home() / ".ssh"
 
 
 def main() -> None:
-    private_root = Path(os.environ["MC_PRIVATE"]).expanduser()
-    if not private_root.is_dir():
-        print(f"ssh: {private_root} does not exist, skipping key provisioning")
-        return
-
-    # Locate the keys directory: prefer ssh/ or .ssh/ subdirectory
-    keys_dir = private_root
-    for subdir in ("ssh", ".ssh"):
-        candidate = private_root / subdir
-        if candidate.is_dir():
-            keys_dir = candidate
-            break
-
-    # Look for a key named after the machine ID
     machine_id = os.environ.get("MC_ID", "").strip()
     if not machine_id:
         print("ssh: MC_ID is not set, skipping key provisioning", file=sys.stderr)
         sys.exit(1)
 
-    key_file = keys_dir / machine_id
-    if not key_file.is_file():
-        print(
-            f"ssh: key '{machine_id}' not found in {keys_dir}\n"
-            f"  Create {key_file} before running setup again.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+    source_dir = Path(os.environ["MC_PRIVATE"]).expanduser() / "ssh" / machine_id
+    if not source_dir.is_dir():
+        print(f"ssh: {source_dir} does not exist, skipping key provisioning")
+        return
 
-    # Ensure ~/.ssh exists with correct permissions
     SSH_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
-    dest = SSH_DIR / key_file.name
+    _install_files(source_dir)
+    _load_keys(source_dir)
 
-    if not dest.exists():
-        shutil.copy2(key_file, dest)
-        dest.chmod(0o600)
-        print(f"ssh: installed {key_file.name}")
 
-        # Copy matching public key if present and missing in ~/.ssh
-        pub = key_file.with_suffix(".pub")
-        if pub.exists():
-            dest_pub = SSH_DIR / pub.name
-            if not dest_pub.exists():
-                shutil.copy2(pub, dest_pub)
-                dest_pub.chmod(0o644)
+def _install_files(source_dir: Path) -> None:
+    for source in sorted(source_dir.iterdir()):
+        if not source.is_file() or source.name == "config" or source.name.startswith("known_hosts"):
+            continue
 
-    public_key = dest.with_suffix(".pub")
-    if not public_key.exists():
-        public_key = key_file.with_suffix(".pub")
+        destination = SSH_DIR / source.name
+        if destination.is_symlink():
+            destination.unlink()
 
-    # Check if the key is already loaded in the ssh agent
-    if public_key.exists():
-        key_fields = public_key.read_text(encoding="utf-8").split()
-        loaded_keys = subprocess.run(
-            ["ssh-add", "-L"],
-            capture_output=True,
-            check=False,
-            text=True,
-        )
+        if not destination.exists() or source.read_bytes() != destination.read_bytes():
+            shutil.copy2(source, destination)
+            print(f"ssh: installed {source.name}")
 
-        if len(key_fields) >= 2 and any(
-            line.split()[:2] == key_fields[:2]
-            for line in loaded_keys.stdout.splitlines()
-        ):
-            print(f"ssh: {key_file.name} already loaded")
+        _set_permissions(source, destination)
+
+
+def _set_permissions(source: Path, destination: Path) -> None:
+    if os.name != "nt":
+        destination.chmod(0o644 if source.suffix == ".pub" else 0o600)
+        return
+
+    user = f"{os.environ['USERDOMAIN']}\\{os.environ['USERNAME']}"
+    commands = [
+        ["icacls", destination, "/inheritance:r"],
+        [
+            "icacls",
+            destination,
+            "/grant:r",
+            f"{user}:(F)",
+            "*S-1-5-18:(F)",
+        ],
+    ]
+
+    for attempt in range(2):
+        try:
+            for command in commands:
+                subprocess.run(
+                    command,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
             return
+        except subprocess.CalledProcessError:
+            if attempt == 1:
+                raise
 
-    # Register with ssh agent
-    add_cmd = ["ssh-add"]
-    if sys.platform.startswith("darwin"):
-        add_cmd += ["--apple-use-keychain"]
-    add_cmd.append(str(dest))
-    subprocess.run(add_cmd, check=False)
+            destination.unlink()
+            shutil.copy2(source, destination)
+            print(f"ssh: replaced inaccessible {source.name}")
+
+
+def _load_keys(source_dir: Path) -> None:
+    # Track loaded keys to avoid reloading them.
+    loaded_keys = subprocess.run(
+        ["ssh-add", "-L"],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    loaded_blobs = {
+        fields[1] for line in loaded_keys.stdout.splitlines() if len(fields := line.split()) >= 2
+    }
+
+    for public_key in sorted(source_dir.glob("*.pub")):
+        private_key = SSH_DIR / public_key.stem
+        if not private_key.is_file():
+            continue
+
+        key_fields = public_key.read_text(encoding="utf-8").split()
+        if len(key_fields) < 2:
+            print(f"ssh: invalid public key: {public_key.name}", file=sys.stderr)
+            continue
+
+        if key_fields[1] in loaded_blobs:
+            print(f"ssh: {private_key.name} already loaded")
+            continue
+
+        command = ["ssh-add"]
+        if sys.platform.startswith("darwin"):
+            command.append("--apple-use-keychain")
+        command.append(str(private_key))
+
+        result = subprocess.run(command, check=False)
+        if result.returncode == 0:
+            loaded_blobs.add(key_fields[1])
 
 
 if __name__ == "__main__":

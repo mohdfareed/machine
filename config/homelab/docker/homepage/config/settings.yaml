@@ -4,7 +4,6 @@ favicon: "{{HOMEPAGE_VAR_FAVICON}}"
 
 headerStyle:
 hideVersion: true
-bookmarksStyle: icons
 statusStyle: dot
 showStats: true
 
