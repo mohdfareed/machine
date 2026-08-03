@@ -27,7 +27,6 @@ manifest = MachineManifest(
         Package(cask="powershell"),
         # Utilities
         Package(brew="mas"),
-        Package(brew="fastfetch"),
         Package(cask="font-computer-modern"),
         Package(cask="font-jetbrains-mono-nerd-font"),
     ],

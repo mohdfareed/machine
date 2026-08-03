@@ -28,18 +28,19 @@ module = Module(
         FileMapping(source="aliases.ps1", target=str(_pwsh_base / "aliases.ps1")),
     ],
     packages=[
-        Package(brew="zsh"),
+        Package(brew="zsh", apt="zsh"),
         Package(brew="fzf"),
         Package(brew="bat"),
         Package(brew="eza"),
-        Package(brew="btop"),
         Package(apt="unzip"),
+        Package(brew="oh-my-posh", winget="JanDeDobbeleer.OhMyPosh"),
+        Package(brew="btop", snap="btop", scoop="btop-lhm"),
+        Package(brew="fastfetch", winget="fastfetch", apt="fastfetch"),
         Package(
             cask="powershell",
             snap="powershell --classic",
             winget="microsoft.powershell",
         ),
-        Package(brew="oh-my-posh", winget="JanDeDobbeleer.OhMyPosh"),
     ],
     overrides=[
         # zsh

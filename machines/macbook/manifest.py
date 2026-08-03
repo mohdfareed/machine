@@ -31,7 +31,6 @@ manifest = MachineManifest(
         # Utilities
         Package(brew="mas"),
         Package(brew="gnu-time"),
-        Package(brew="fastfetch"),
         Package(cask="copilot-cli"),
         Package(cask="font-computer-modern"),
         Package(cask="font-jetbrains-mono-nerd-font"),
