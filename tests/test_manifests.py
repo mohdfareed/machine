@@ -120,6 +120,13 @@ def test_ssh_module_loads_key_provisioning() -> None:
     assert "init_keys.py" in script_names
 
 
+def test_ssh_override_preserves_private_mode() -> None:
+    manifest = load_manifest("pc", ROOT)
+    ssh_config = next(fm for fm in manifest.files if fm.target == "~/.ssh/config")
+
+    assert ssh_config.mode == 0o600
+
+
 def test_module_dependencies_auto_included() -> None:
     """Modules with depends= auto-include their dependencies."""
     ssh_server = load_module("ssh-server", ROOT)

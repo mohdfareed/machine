@@ -60,6 +60,7 @@ Composes modules and adds machine-specific overrides.
 - Before writing new code, check the codebase for existing patterns and follow them
 - `~/.env` is the only generated file - written by `mc apply` with just `MC_HOME` and `MC_ID`
 - Define packages with `Package(...)` directly; package helper constructors (`brew(...)`, `apt(...)`, etc.) are removed
+- `FileMapping(mode=...)` owns mapped-file permissions; owner-only modes use a current-user and SYSTEM ACL on Windows
 - Use `cask=` for Homebrew casks; package source selection is platform-aware and should replace package-level `if PLATFORM ...` conditionals in manifests/modules
 - Use `platforms=` only when a package is intentionally restricted or script-only; normal multi-manager package selection should not need manifest-level platform conditionals
 - Platform tags on scripts: `name.macos.sh`, `name.unix.sh`, `name.win.ps1`

@@ -19,6 +19,7 @@ class FileMapping(BaseModel):
 
     source: str
     target: str
+    mode: int | None = None
 
 
 class Package(BaseModel):
@@ -199,7 +200,13 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
             if local_file.exists():
                 already = any(f.target == override.target for f in result.files)
                 if not already:
-                    result.files.append(FileMapping(source=str(local_file), target=override.target))
+                    result.files.append(
+                        FileMapping(
+                            source=str(local_file),
+                            target=override.target,
+                            mode=override.mode,
+                        )
+                    )
 
     # Auto-discover scripts/ directory
     scripts_dir = machine_dir / "scripts"

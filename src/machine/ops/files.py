@@ -2,6 +2,8 @@
 
 import logging
 import os
+import stat
+import subprocess
 from pathlib import Path
 
 from machine.core import is_windows, settings
@@ -41,7 +43,7 @@ def deploy_files(
             failures.append((module, str(src), "source not found"))
             continue
         try:
-            if _symlink(src, tgt):
+            if _symlink(src, tgt, fm.mode):
                 created += 1
         except OSError as exc:
             logger.error("[%s] failed to link %s → %s: %s", module, tgt, src, exc)
@@ -49,7 +51,7 @@ def deploy_files(
     return created, failures
 
 
-def _symlink(source: Path, target: Path) -> bool:
+def _symlink(source: Path, target: Path, mode: int | None = None) -> bool:
     """Create or update a link. Returns True if changed."""
 
     def _norm(path: Path) -> str:
@@ -85,6 +87,61 @@ def _symlink(source: Path, target: Path) -> bool:
                 ) from exc
             raise
 
+    def _set_permissions() -> bool:
+        if mode is None:
+            return False
+
+        changed = not is_windows and stat.S_IMODE(source.stat().st_mode) != mode
+        source.chmod(mode)
+
+        if not is_windows or mode & 0o077:
+            return changed
+
+        user = subprocess.run(
+            ["whoami"],
+            capture_output=True,
+            check=True,
+            text=True,
+        ).stdout.strip()
+
+        def _restrict(path: Path, link: bool = False) -> None:
+            suffix = ["/L"] if link else []
+            try:
+                subprocess.run(
+                    ["icacls", path, "/setowner", user, *suffix],
+                    capture_output=True,
+                    check=True,
+                    text=True,
+                )
+                subprocess.run(
+                    [
+                        "icacls",
+                        path,
+                        "/inheritance:r",
+                        "/grant:r",
+                        f"{user}:(F)",
+                        "*S-1-5-18:(F)",
+                        *suffix,
+                    ],
+                    capture_output=True,
+                    check=True,
+                    text=True,
+                )
+            except subprocess.CalledProcessError as exc:
+                raise OSError(exc.stderr.strip() or f"failed to set permissions on {path}") from exc
+
+        _restrict(source)
+        if target.is_symlink():
+            try:
+                _restrict(target, link=True)
+            except OSError:
+                target.unlink()
+                _create_link(source, target)
+                _restrict(target, link=True)
+                changed = True
+
+        return changed
+
     def _backup_path(path: Path) -> Path:
         backup = path.with_suffix(path.suffix + ".backup")
         if not backup.exists() and not backup.is_symlink():
@@ -106,8 +163,9 @@ def _symlink(source: Path, target: Path) -> bool:
     target.parent.mkdir(parents=True, exist_ok=True)
 
     if (target.exists() or target.is_symlink()) and _points_to_source(target, source):
+        changed = _set_permissions()
         logger.debug("OK: %s", target)
-        return False
+        return changed
 
     if target.is_symlink():
         logger.info("Update: %s → %s", target, source)
@@ -120,4 +178,5 @@ def _symlink(source: Path, target: Path) -> bool:
         logger.info("Link: %s → %s", target, source)
 
     _create_link(source, target)
+    _set_permissions()
     return True

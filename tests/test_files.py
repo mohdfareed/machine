@@ -2,6 +2,8 @@
 
 import os
 import re
+import stat
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -81,6 +83,50 @@ def test_symlink_skips_existing_hardlink(tmp_path: Path) -> None:
 
     assert changed is False
     assert not (tmp_path / "target.txt.backup").exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Windows uses ACLs instead of POSIX modes")
+def test_symlink_applies_mode_to_existing_link(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.txt"
+    target = tmp_path / "target.txt"
+    source.write_text("ssh config", encoding="utf-8")
+    target.symlink_to(source)
+    source.chmod(0o644)
+
+    monkeypatch.setattr(machine_files, "is_windows", False)
+
+    changed = machine_files._symlink(source, target, 0o600)
+
+    assert changed is True
+    assert stat.S_IMODE(source.stat().st_mode) == 0o600
+
+
+def test_symlink_applies_private_windows_acl_to_source_and_link(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.txt"
+    target = tmp_path / "target.txt"
+    source.write_text("ssh config", encoding="utf-8")
+    target.symlink_to(source)
+    commands: list[list[object]] = []
+
+    def _run(command: list[object], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        return subprocess.CompletedProcess("command", 0, stdout="user", stderr="")
+
+    monkeypatch.setattr(machine_files, "is_windows", True)
+    monkeypatch.setattr(machine_files.subprocess, "run", _run)
+
+    machine_files._symlink(source, target, 0o600)
+
+    assert any(command[0] == "icacls" and command[1] == source for command in commands)
+    assert any(
+        command[0] == "icacls" and command[1] == target and "/L" in command for command in commands
+    )
 
 
 def test_symlink_uses_next_backup_name_when_backup_exists(tmp_path: Path) -> None:
