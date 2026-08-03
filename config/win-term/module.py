@@ -6,7 +6,7 @@ from machine.core import PLATFORM, Platform
 from machine.manifest import FileMapping, Module, Package
 
 CONFIG_DIR = Path(r"%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState")
-FRAGMENT_DIR = Path(r"%LOCALAPPDATA%\Microsoft\Windows Terminal\Fragments")
+FRAGMENT_DIR = Path(r"%LOCALAPPDATA%\Microsoft\Windows Terminal\Fragments\machine")
 
 module = Module(
     files=(

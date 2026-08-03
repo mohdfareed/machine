@@ -5,7 +5,6 @@
 - Machines:
     - HomeLab:
         icon: mdi-home-analytics
-        href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/code
         description: Home Lab Server
         widget:
           type: tailscale
@@ -14,10 +13,17 @@
           fields: ["address", "last_seen", "expires"]
     - PC:
         icon: mdi-desktop-tower
-        href: https://pc.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/code
         description: Desktop PC
         widget:
           type: tailscale
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_PC_DEVICE_ID}}"
+          key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
+          fields: ["address", "last_seen", "expires"]
+    - TV:
+        icon: mdi-television
+        description: Smart TV
+        widget:
+          type: tailscale
+          deviceid: "{{HOMEPAGE_VAR_TAILSCALE_TV_DEVICE_ID}}"
           key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
           fields: ["address", "last_seen", "expires"]

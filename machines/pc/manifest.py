@@ -11,7 +11,7 @@ manifest = MachineManifest(
         Package(name="power-toys", winget="microsoft.PowerToys"),
         # Utilities
         Package(name="Steam", winget="valve.Steam"),
-        Package(name="UniGetUI", winget="martiCliment.UniGetUI"),
+        Package(name="UniGetUI", winget="Devolutions.UniGetUI"),
         Package(name="iCloud", winget="9PKTQ5699M62"),
         Package(name="Apple Music", winget="9pfhdd62mxs1"),
         Package(name="Xbox Accessories", winget="9nblggh30xj3"),

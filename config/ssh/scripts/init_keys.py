@@ -48,7 +48,7 @@ def main() -> None:
         dest.chmod(0o600)
         print(f"ssh: installed {key_file.name}")
 
-        # Copy matching public key if present
+        # Copy matching public key if present and missing in ~/.ssh
         pub = key_file.with_suffix(".pub")
         if pub.exists():
             dest_pub = SSH_DIR / pub.name
@@ -56,7 +56,28 @@ def main() -> None:
                 shutil.copy2(pub, dest_pub)
                 dest_pub.chmod(0o644)
 
-    # Always register with agent
+    public_key = dest.with_suffix(".pub")
+    if not public_key.exists():
+        public_key = key_file.with_suffix(".pub")
+
+    # Check if the key is already loaded in the ssh agent
+    if public_key.exists():
+        key_fields = public_key.read_text(encoding="utf-8").split()
+        loaded_keys = subprocess.run(
+            ["ssh-add", "-L"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+
+        if len(key_fields) >= 2 and any(
+            line.split()[:2] == key_fields[:2]
+            for line in loaded_keys.stdout.splitlines()
+        ):
+            print(f"ssh: {key_file.name} already loaded")
+            return
+
+    # Register with ssh agent
     add_cmd = ["ssh-add"]
     if sys.platform.startswith("darwin"):
         add_cmd += ["--apple-use-keychain"]
