@@ -14,6 +14,8 @@ SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 # # MARK: Models
 
 
+# TODO: Add platform filtering to FileMapping such that files are only mapped on
+# certain platforms. Then fix all current platform checks in modules.
 class FileMapping(BaseModel):
     """A config file or directory to symlink."""
 
