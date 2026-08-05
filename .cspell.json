@@ -42,6 +42,7 @@
     "nohup",
     "pkill",
     "projectless",
+    "setowner",
     "shellenv",
     "spath",
     "startfile",
