@@ -26,7 +26,6 @@ manifest = MachineManifest(
         #   via Homebrew as of 2026-02. Install Docker Desktop manually on
         #   Apple Silicon until the cask ships a universal/ARM build.
         # Package(cask="docker"),
-        Package(cask="powershell"),
         Package(cask="dotnet-sdk"),
         # Utilities
         Package(brew="mas"),

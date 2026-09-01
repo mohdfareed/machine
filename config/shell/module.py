@@ -37,7 +37,7 @@ module = Module(
         Package(brew="btop", snap="btop", scoop="btop-lhm"),
         Package(brew="fastfetch", winget="fastfetch", apt="fastfetch"),
         Package(
-            cask="powershell",
+            cask="powershell@preview",
             snap="powershell --classic",
             winget="microsoft.powershell",
         ),

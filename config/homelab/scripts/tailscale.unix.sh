@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 if ! command -v tailscale &>/dev/null; then
     echo "tailscale not found, skipping"
-    exit 0
+    exit 1
 fi
 
 # Connect if not already connected (interactive auth on first run).

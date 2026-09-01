@@ -24,7 +24,6 @@ manifest = MachineManifest(
         # Dev tools
         Package(brew="uv"),
         Package(brew="python"),
-        Package(cask="powershell"),
         # Utilities
         Package(brew="mas"),
         Package(cask="font-computer-modern"),

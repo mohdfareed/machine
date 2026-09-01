@@ -115,6 +115,7 @@
     "https://google.com": true,
     "https://*.google.com": true
   },
+  "chat.titleBar.openInAgentsWindow.enabled": false,
   // ===========================================================================
   // # MARK: comments
   "commentAnchors.scrollPosition": "center",
