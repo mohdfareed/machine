@@ -71,7 +71,9 @@ services:
     restart: unless-stopped
 
   qbittorrent:
-    image: qbittorrentofficial/qbittorrent-nox:latest
+    build:
+      context: ./qbittorrent
+      pull: true
     container_name: qbittorrent
     network_mode: service:ts-qbittorrent
     depends_on:
@@ -82,6 +84,7 @@ services:
       QBT_VERSION: latest
       QBT_TORRENTING_PORT: "6881"
       QBT_WEBUI_PORT: "8080"
+      QBT_SERVER_DOMAIN: qbittorrent.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net
       TZ: America/New_York
     read_only: true
     stop_grace_period: 30m
@@ -97,10 +100,10 @@ services:
           create_host_path: false
     labels:
       - homepage.group=Services
-      - homepage.name=qBittorrent
+      - homepage.name=Torrents
       - homepage.icon=mdi-download-box
       - homepage.href=https://qbittorrent.${TAILNET_NAME}.ts.net
-      - homepage.description=Torrent download client
+      - homepage.description=VueTorrent interface
 
   ts-plex:
     image: tailscale/tailscale:latest
