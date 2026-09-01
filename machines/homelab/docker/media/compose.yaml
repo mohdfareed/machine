@@ -1,0 +1,156 @@
+# Media - acquisition, organization, and playback
+# Access: private Tailscale hostnames only
+
+services:
+  ts-scryer:
+    image: tailscale/tailscale:latest
+    container_name: ts-scryer
+    hostname: scryer
+    environment:
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_HOSTNAME: scryer
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+    volumes:
+      - ts-scryer-state:/var/lib/tailscale
+      - ./ts-config/scryer:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
+  scryer:
+    image: ghcr.io/scryer-media/scryer:latest
+    container_name: scryer
+    network_mode: service:ts-scryer
+    depends_on:
+      - ts-scryer
+    restart: unless-stopped
+    environment:
+      TZ: America/New_York
+    volumes:
+      - ./data/scryer:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      - homepage.group=Services
+      - homepage.name=Scryer
+      - homepage.icon=mdi-movie-search-outline
+      - homepage.href=https://scryer.${TAILNET_NAME}.ts.net
+      - homepage.description=Media requests and library management
+
+  ts-qbittorrent:
+    image: tailscale/tailscale:latest
+    container_name: ts-qbittorrent
+    hostname: qbittorrent
+    environment:
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_HOSTNAME: qbittorrent
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+    ports:
+      - "6881:6881/tcp"
+      - "6881:6881/udp"
+    volumes:
+      - ts-qbittorrent-state:/var/lib/tailscale
+      - ./ts-config/qbittorrent:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
+  qbittorrent:
+    image: qbittorrentofficial/qbittorrent-nox:latest
+    container_name: qbittorrent
+    network_mode: service:ts-qbittorrent
+    depends_on:
+      - ts-qbittorrent
+    restart: unless-stopped
+    environment:
+      QBT_LEGAL_NOTICE: confirm
+      QBT_VERSION: latest
+      QBT_TORRENTING_PORT: "6881"
+      QBT_WEBUI_PORT: "8080"
+      TZ: America/New_York
+    read_only: true
+    stop_grace_period: 30m
+    tmpfs:
+      - /tmp
+    tty: true
+    volumes:
+      - ./data/qbittorrent:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      - homepage.group=Services
+      - homepage.name=qBittorrent
+      - homepage.icon=qbittorrent.png
+      - homepage.href=https://qbittorrent.${TAILNET_NAME}.ts.net
+      - homepage.description=Torrent download client
+
+  ts-plex:
+    image: tailscale/tailscale:latest
+    container_name: ts-plex
+    hostname: plex
+    environment:
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_HOSTNAME: plex
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+    volumes:
+      - ts-plex-state:/var/lib/tailscale
+      - ./ts-config/plex:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    network_mode: service:ts-plex
+    depends_on:
+      - ts-plex
+    restart: unless-stopped
+    environment:
+      ADVERTISE_IP: https://plex.${TAILNET_NAME}.ts.net/
+      TZ: America/New_York
+    volumes:
+      - ./data/plex:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}/transcode
+        target: /transcode
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        read_only: true
+        bind:
+          create_host_path: false
+    labels:
+      - homepage.group=Services
+      - homepage.name=Plex
+      - homepage.icon=plex.png
+      - homepage.href=https://plex.${TAILNET_NAME}.ts.net/web
+      - homepage.description=Media server
+
+volumes:
+  ts-scryer-state:
+  ts-qbittorrent-state:
+  ts-plex-state:

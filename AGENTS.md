@@ -58,6 +58,7 @@ Composes modules and adds machine-specific overrides.
 ### Key Conventions
 
 - Before writing new code, check the codebase for existing patterns and follow them
+- Before sending, remove every bullet whose deletion would not change the reader's understanding or next action
 - `~/.env` is the only generated file - written by `mc apply` with just `MC_HOME` and `MC_ID`
 - Define packages with `Package(...)` directly; package helper constructors (`brew(...)`, `apt(...)`, etc.) are removed
 - `FileMapping(mode=...)` owns mapped-file permissions; owner-only modes use a current-user and SYSTEM ACL on Windows

@@ -22,6 +22,7 @@
   "words": [
     "autogroup",
     "bootstrapper",
+    "clickjacking",
     "cliproxyapi",
     "cowork",
     "dotenv",
@@ -42,6 +43,8 @@
     "nohup",
     "pkill",
     "projectless",
+    "qbittorrent",
+    "scryer",
     "setowner",
     "shellenv",
     "spath",

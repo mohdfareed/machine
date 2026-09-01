@@ -8,6 +8,9 @@ etc.
 See [config/homelab/README.md](../../config/homelab/README.md) for the
 module documentation and how to add or expose services.
 
+The [media services](docker/media/README.md) run Scryer, qBittorrent, and Plex
+for local media acquisition, organization, and playback.
+
 ## Backups
 
 A launchd job (`com.mc.backup.plist`) runs daily at 04:30. It creates a separate
