@@ -3,7 +3,7 @@
 # homepage.* labels in their compose files.
 
 - Machines:
-    - HomeLab:
+    - Homelab:
         icon: mdi-home-analytics
         description: Home Lab Server
         widget:

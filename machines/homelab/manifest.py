@@ -1,4 +1,4 @@
-"""HomeLab (macOS) machine manifest."""
+"""Homelab (macOS) machine manifest."""
 
 from machine.manifest import FileMapping, MachineManifest, Package
 
