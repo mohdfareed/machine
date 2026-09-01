@@ -134,6 +134,7 @@ services:
       - ts-plex
     restart: unless-stopped
     environment:
+      PLEX_CLAIM: ${PLEX_CLAIM}
       ADVERTISE_IP: https://plex.${TAILNET_NAME}.ts.net/
       TZ: America/New_York
     volumes:
