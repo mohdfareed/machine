@@ -30,6 +30,8 @@ services:
       - ts-scryer
     restart: unless-stopped
     environment:
+      SCRYER_AUTH_ENABLED: "true"
+      SCRYER_PUBLIC_URL: "https://scryer.${TAILNET_NAME}.ts.net"
       TZ: America/New_York
     volumes:
       - ./data/scryer:/config
@@ -96,7 +98,7 @@ services:
     labels:
       - homepage.group=Services
       - homepage.name=qBittorrent
-      - homepage.icon=qbittorrent.png
+      - homepage.icon=mdi-download-box
       - homepage.href=https://qbittorrent.${TAILNET_NAME}.ts.net
       - homepage.description=Torrent download client
 
@@ -146,7 +148,7 @@ services:
     labels:
       - homepage.group=Services
       - homepage.name=Plex
-      - homepage.icon=plex.png
+      - homepage.icon=mdi-plex
       - homepage.href=https://plex.${TAILNET_NAME}.ts.net/web
       - homepage.description=Media server
 
