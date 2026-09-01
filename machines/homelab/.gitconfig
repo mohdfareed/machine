@@ -1,5 +1,3 @@
 ; sign commits
 [user]
-    name = Claudia
-    email = claudia.mohdfareed@icloud.com
     signingkey = ~/.ssh/homelab.pub
