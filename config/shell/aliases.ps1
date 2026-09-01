@@ -31,29 +31,49 @@ function Secrets {
 # Clone a git repo
 function GitClone {
     param (
+        [Switch]$Help,
         [Parameter(Mandatory = $true)][string]$RepoName,
         [string[]]$AdditionalArgs
     )
+
+    if ($Help) {
+        Write-Host "Usage: GitClone -RepoName <repo-name> [-AdditionalArgs <arg1> <arg2> ...]"
+        return
+    }
+
     git clone "git@github.com:mohdfareed/$RepoName.git" $AdditionalArgs
 }
 
 # Generate a new SSH key pair
 function GenKey {
     param (
+        [Switch]$Help,
         [Parameter(Mandatory = $true)][string]$KeyName,
         [Parameter(Mandatory = $true)][string]$Email,
         [Parameter(Mandatory = $true)][SecureString]$Passphrase
     )
+
+    if ($Help) {
+        Write-Host "Usage: GenKey -KeyName <key-name> -Email <email> -Passphrase <passphrase>"
+        return
+    }
+
     ssh-keygen -t ed25519 -f "$HOME/.ssh/$KeyName" -C "$Email" -N "$Passphrase"
 }
 
 # Register an SSH key to authorized_keys on a host
 function RegKey {
     param (
+        [Switch]$Help,
         [Parameter(Mandatory = $true)][string]$HostName,
         [Parameter(Mandatory = $true)][string]$KeyName,
-        [string]$User = $env:USER
+        [string]$User = $env:USERNAME
     )
+
+    if ($Help) {
+        Write-Host "Usage: RegKey -HostName <host-name> -KeyName <key-name> [-User <username>]"
+        return
+    }
 
     $pubKeyPath = "$HOME/.ssh/$KeyName.pub"
     if (-Not (Test-Path $pubKeyPath)) {
