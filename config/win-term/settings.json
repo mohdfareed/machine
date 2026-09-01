@@ -1,75 +1,83 @@
 {
-    "$help": "https://aka.ms/terminal-documentation",
-    "$schema": "https://aka.ms/terminal-profiles-schema",
-    "actions": [
-        {
-            "command": {
-                "action": "sendInput",
-                "input": "\u001b\r"
-            },
-            "id": "User.sendInput.8F63D3A9"
-        }
-    ],
-    "copyFormatting": "none",
-    "copyOnSelect": false,
-    "defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
-    "keybindings": [
-        {
-            "id": "User.sendInput.8F63D3A9",
-            "keys": "shift+enter"
-        },
-        {
-            "id": "Terminal.CopyToClipboard",
-            "keys": "ctrl+c"
-        },
-        {
-            "id": "Terminal.PasteFromClipboard",
-            "keys": "ctrl+v"
-        },
-        {
-            "id": "Terminal.FindText",
-            "keys": "ctrl+f"
-        }
-    ],
-    "newTabMenu": [
-        {
-            "type": "remainingProfiles"
-        }
-    ],
-    "profiles": {
-        "defaults": {
-            "colorScheme": "Dark+",
-            "font": {
-                "face": "JetBrainsMono Nerd Font Mono",
-                "size": 14
-            },
-            "useAcrylic": true
-        },
-        "list": [
-            {
-                "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
-                "hidden": false,
-                "name": "PowerShell",
-                "source": "Windows.Terminal.PowershellCore",
-                "startingDirectory": "%USERPROFILE%"
-            },
-            {
-                "guid": "{48c4878f-4609-55f2-9767-d410a7784339}",
-                "hidden": false,
-                "name": "WSL",
-                "source": "Microsoft.WSL"
-            },
-            {
-                "commandline": "\"C:\\Users\\mohdfareed\\AppData\\Local\\Microsoft\\WindowsApps\\Microsoft.PowerShell_8wekyb3d8bbwe\\pwsh.exe\"",
-                "guid": "{9bdd1377-33cf-4e83-a2f1-7010443e7e0b}",
-                "hidden": false,
-                "name": "GEMS Machine",
-                "startingDirectory": "%USERPROFILE%\\Dev\\GEMS\\Gems.Machine"
-            }
-        ]
+  "$help": "https://aka.ms/terminal-documentation",
+  "$schema": "https://aka.ms/terminal-profiles-schema",
+  "actions": [
+    {
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b\r"
+      },
+      "id": "User.sendInput.8F63D3A9"
+    }
+  ],
+  "copyFormatting": "none",
+  "copyOnSelect": false,
+  "defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+  "keybindings": [
+    {
+      "id": "User.sendInput.8F63D3A9",
+      "keys": "shift+enter"
     },
-    "schemes": [],
-    "theme": "system",
-    "themes": [],
-    "useAcrylicInTabRow": true
+    {
+      "id": "Terminal.CopyToClipboard",
+      "keys": "ctrl+c"
+    },
+    {
+      "id": "Terminal.PasteFromClipboard",
+      "keys": "ctrl+v"
+    },
+    {
+      "id": "Terminal.FindText",
+      "keys": "ctrl+f"
+    }
+  ],
+  "newTabMenu": [
+    {
+      "type": "remainingProfiles"
+    }
+  ],
+  "profiles": {
+    "defaults": {
+      "colorScheme": "Dark+",
+      "font": {
+        "face": "JetBrainsMono Nerd Font Mono",
+        "size": 14
+      },
+      "useAcrylic": true
+    },
+    "list": [
+      {
+        "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+        "hidden": false,
+        "name": "PowerShell",
+        "source": "Windows.Terminal.PowershellCore",
+        "startingDirectory": "%USERPROFILE%"
+      },
+      {
+        "guid": "{48c4878f-4609-55f2-9767-d410a7784339}",
+        "hidden": false,
+        "name": "WSL",
+        "source": "Microsoft.WSL"
+      },
+      {
+        "commandline": "pwsh.exe -NoExit -Command \"ssh homelab\"",
+        "guid": "{35b7b1c4-9680-4279-aaf3-a177fd826273}",
+        "hidden": false,
+        "icon": "\ue80f",
+        "name": "Homelab",
+        "startingDirectory": "%USERPROFILE%"
+      },
+      {
+        "commandline": "\"C:\\Users\\mohdfareed\\AppData\\Local\\Microsoft\\WindowsApps\\Microsoft.PowerShell_8wekyb3d8bbwe\\pwsh.exe\"",
+        "guid": "{9bdd1377-33cf-4e83-a2f1-7010443e7e0b}",
+        "hidden": false,
+        "name": "GEMS Machine",
+        "startingDirectory": "%USERPROFILE%\\Dev\\GEMS\\Gems.Machine"
+      }
+    ]
+  },
+  "schemes": [],
+  "theme": "system",
+  "themes": [],
+  "useAcrylicInTabRow": true
 }
