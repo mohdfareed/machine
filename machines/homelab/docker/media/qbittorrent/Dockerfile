@@ -19,6 +19,6 @@ FROM qbittorrentofficial/qbittorrent-nox:latest
 RUN mv /entrypoint.sh /usr/local/bin/qbittorrent-entrypoint.sh
 
 COPY --from=vuetorrent /tmp/vuetorrent /vuetorrent
-COPY entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh configure.py /
 
 RUN chmod 0755 /entrypoint.sh

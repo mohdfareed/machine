@@ -30,7 +30,8 @@ services:
       - ts-scryer
     restart: unless-stopped
     environment:
-      SCRYER_AUTH_ENABLED: "true"
+      SCRYER_AUTH_ENABLED: "false"
+      SCRYER_BIND: 127.0.0.1:8080
       SCRYER_PUBLIC_URL: "https://scryer.${TAILNET_NAME}.ts.net"
       TZ: America/New_York
     volumes:

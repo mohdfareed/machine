@@ -54,18 +54,24 @@ bulk data to an external drive.
 1. Open Torrents. VueTorrent is already enabled, the save path is
    `/data/downloads`, and Tailscale Serve's loopback connection bypasses the
    qBittorrent login.
-2. Open Scryer, create the administrator, and configure `/data/downloads`,
-   `/data/movies`, `/data/series`, and `/data/anime`. Add qBittorrent as
-   `https://qbittorrent.<tailnet>.ts.net`; no qBittorrent credentials are
-   required.
+2. Open Scryer. It starts loginless as its built-in full administrator; no
+   recovery password or first-run account is required. Configure
+   `/data/downloads`, `/data/movies`, `/data/series`, and `/data/anime`. Add
+   qBittorrent as `https://qbittorrent.<tailnet>.ts.net`; no qBittorrent
+   credentials are required.
 3. Open Plex, claim the server, and add `/data/movies`, `/data/series`, and
    `/data/anime` as libraries.
 
-The login bypass applies only to loopback requests from Tailscale Serve. Host
-header, CSRF, and clickjacking protections remain enabled, and the allowed
-server domain is limited to `qbittorrent.<tailnet>.ts.net`. Tailnet policy is
-therefore the access boundary: only trusted users should be allowed to reach
-the qBittorrent node.
+The login bypasses apply only to loopback requests from Tailscale Serve.
+Scryer's Serve endpoint terminates TLS and forwards the connection without HTTP
+proxy headers because Scryer intentionally rejects loginless requests carrying
+a Tailscale `100.64.0.0/10` client address. Host header, CSRF, and clickjacking
+protections remain enabled for qBittorrent, and its allowed server domain is
+limited to `qbittorrent.<tailnet>.ts.net`.
+
+Tailnet policy is the access boundary: every identity allowed to reach Scryer
+is a full administrator, so only trusted users should be allowed to reach the
+Scryer and qBittorrent nodes.
 
 qBittorrent remains the download engine and WebAPI used by Scryer; VueTorrent
 only replaces its browser interface. The derived image pins VueTorrent 2.35.0
