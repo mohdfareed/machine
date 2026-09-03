@@ -19,7 +19,9 @@ case "$HOMELAB_MEDIA_DIR" in
 esac
 
 mkdir -p \
-    "$HOMELAB_MEDIA_DIR/downloads" \
+    "$HOMELAB_MEDIA_DIR/downloads/torrents/incomplete" \
+    "$HOMELAB_MEDIA_DIR/downloads/usenet/incomplete" \
+    "$HOMELAB_MEDIA_DIR/downloads/usenet/complete" \
     "$HOMELAB_MEDIA_DIR/movies" \
     "$HOMELAB_MEDIA_DIR/series" \
     "$HOMELAB_MEDIA_DIR/anime" \

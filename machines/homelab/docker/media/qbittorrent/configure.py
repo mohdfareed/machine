@@ -36,7 +36,7 @@ def upsert_section(lines, section, settings):
 
 
 path = Path(sys.argv[1])
-server_domain = sys.argv[2]
+server_domains = sys.argv[2]
 original = path.read_text(encoding="utf-8") if path.exists() else ""
 newline = "\r\n" if "\r\n" in original else "\n"
 lines = original.splitlines()
@@ -55,8 +55,8 @@ upsert_section(
     lines,
     "BitTorrent",
     {
-        r"Session\DefaultSavePath": "/data/downloads",
-        r"Session\TempPath": "/data/downloads/temp",
+        r"Session\DefaultSavePath": "/data/downloads/torrents",
+        r"Session\TempPath": "/data/downloads/torrents/incomplete",
         r"Session\TempPathEnabled": "true",
     },
 )
@@ -64,14 +64,16 @@ upsert_section(
     lines,
     "Preferences",
     {
-        r"WebUI\Address": "127.0.0.1",
+        r"WebUI\Address": "*",
         r"WebUI\AlternativeUIEnabled": "true",
+        r"WebUI\AuthSubnetWhitelist": "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16",
+        r"WebUI\AuthSubnetWhitelistEnabled": "true",
         r"WebUI\ClickjackingProtection": "true",
         r"WebUI\CSRFProtection": "true",
         r"WebUI\HostHeaderValidation": "true",
         r"WebUI\LocalHostAuth": "false",
         r"WebUI\RootFolder": "/vuetorrent",
-        r"WebUI\ServerDomains": server_domain,
+        r"WebUI\ServerDomains": server_domains,
     },
 )
 

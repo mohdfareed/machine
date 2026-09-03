@@ -8,8 +8,9 @@ etc.
 See [config/homelab/README.md](../../config/homelab/README.md) for the
 module documentation and how to add or expose services.
 
-The [media services](docker/media/README.md) run Scryer, qBittorrent with
-VueTorrent, and Plex for local media acquisition, organization, and playback.
+The [media services](docker/media/README.md) run Seerr, the standard Arr
+automation stack, SABnzbd, qBittorrent with VueTorrent, and Plex for local
+media acquisition, organization, subtitles, and playback.
 
 ## Backups
 

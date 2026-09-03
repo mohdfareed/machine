@@ -31,7 +31,7 @@ services:
     environment:
       # Use at: https://model-gateway.<tailnet>.ts.net/management.html
       MANAGEMENT_PASSWORD: ${CLIPROXYAPI_MANAGEMENT_PASSWORD:?required}
-      TZ: America/New_York
+      TZ: ${HOMELAB_TIMEZONE:?HOMELAB_TIMEZONE must be set}
     volumes:
       - ./config.yaml:/CLIProxyAPI/config.yaml
       - ./data/auths:/root/.cli-proxy-api

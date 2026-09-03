@@ -58,6 +58,7 @@ Composes modules and adds machine-specific overrides.
 ### Key Conventions
 
 - Before writing new code, check the codebase for existing patterns and follow them
+- In Docker Compose files, keep reusable extension anchors first, group sidecars before application services, and leave named volumes last; preserve established section markers and ordering when editing
 - Before sending, remove every bullet whose deletion would not change the reader's understanding or next action
 - Keep substantive Python out of shell strings; put it in a normal `.py` file and have the shell entrypoint invoke it
 - Do not SSH to, deploy to, or otherwise mutate the homelab until the user has

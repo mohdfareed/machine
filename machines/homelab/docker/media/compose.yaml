@@ -1,41 +1,156 @@
-# Media - acquisition, organization, and playback
+# Media - requests, acquisition, organization, subtitles, and playback
 # Access: private Tailscale hostnames only
 
-services:
-  ts-scryer:
-    image: tailscale/tailscale:latest
-    container_name: ts-scryer
-    hostname: scryer
-    environment:
-      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
-      TS_EXTRA_ARGS: --advertise-tags=tag:container
-      TS_HOSTNAME: scryer
-      TS_SERVE_CONFIG: /config/serve.json
-      TS_STATE_DIR: /var/lib/tailscale
-      TS_USERSPACE: "false"
-    volumes:
-      - ts-scryer-state:/var/lib/tailscale
-      - ./ts-config/scryer:/config
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-    restart: unless-stopped
+x-tailscale-environment: &tailscale-environment
+  TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+  TS_EXTRA_ARGS: --advertise-tags=tag:container
+  TS_SERVE_CONFIG: /config/serve.json
+  TS_STATE_DIR: /var/lib/tailscale
+  TS_USERSPACE: "false"
 
-  scryer:
-    image: ghcr.io/scryer-media/scryer:latest
-    container_name: scryer
-    network_mode: service:ts-scryer
-    depends_on:
-      - ts-scryer
-    restart: unless-stopped
+x-service-environment: &service-environment
+  TZ: ${HOMELAB_TIMEZONE:?HOMELAB_TIMEZONE must be set}
+
+x-tailscale-service: &tailscale-service
+  image: tailscale/tailscale:latest
+  environment: *tailscale-environment
+  devices:
+    - /dev/net/tun:/dev/net/tun
+  cap_add:
+    - net_admin
+  restart: unless-stopped
+
+services:
+
+  # MARK: Tailscale
+
+  ts-seerr:
+    <<: *tailscale-service
+    container_name: ts-seerr
+    hostname: seerr
     environment:
-      SCRYER_AUTH_ENABLED: "false"
-      SCRYER_BIND: 127.0.0.1:8080
-      SCRYER_PUBLIC_URL: "https://scryer.${TAILNET_NAME}.ts.net"
-      TZ: America/New_York
+      <<: *tailscale-environment
+      TS_HOSTNAME: seerr
     volumes:
-      - ./data/scryer:/config
+      - ts-seerr-state:/var/lib/tailscale
+      - ./ts-config/seerr:/config
+
+  ts-radarr:
+    <<: *tailscale-service
+    container_name: ts-radarr
+    hostname: radarr
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: radarr
+    volumes:
+      - ts-radarr-state:/var/lib/tailscale
+      - ./ts-config/radarr:/config
+
+  ts-sonarr:
+    <<: *tailscale-service
+    container_name: ts-sonarr
+    hostname: sonarr
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: sonarr
+    volumes:
+      - ts-sonarr-state:/var/lib/tailscale
+      - ./ts-config/sonarr:/config
+
+  ts-bazarr:
+    <<: *tailscale-service
+    container_name: ts-bazarr
+    hostname: bazarr
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: bazarr
+    volumes:
+      - ts-bazarr-state:/var/lib/tailscale
+      - ./ts-config/bazarr:/config
+
+  ts-prowlarr:
+    <<: *tailscale-service
+    container_name: ts-prowlarr
+    hostname: prowlarr
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: prowlarr
+    volumes:
+      - ts-prowlarr-state:/var/lib/tailscale
+      - ./ts-config/prowlarr:/config
+
+  ts-sabnzbd:
+    <<: *tailscale-service
+    container_name: ts-sabnzbd
+    hostname: sabnzbd
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: sabnzbd
+    volumes:
+      - ts-sabnzbd-state:/var/lib/tailscale
+      - ./ts-config/sabnzbd:/config
+
+  ts-qbittorrent:
+    <<: *tailscale-service
+    container_name: ts-qbittorrent
+    hostname: qbittorrent
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: qbittorrent
+    ports:
+      - "6881:6881/tcp"
+      - "6881:6881/udp"
+    volumes:
+      - ts-qbittorrent-state:/var/lib/tailscale
+      - ./ts-config/qbittorrent:/config
+
+  ts-plex:
+    <<: *tailscale-service
+    container_name: ts-plex
+    hostname: plex
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: plex
+    volumes:
+      - ts-plex-state:/var/lib/tailscale
+      - ./ts-config/plex:/config
+
+  # MARK: Services
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
+    network_mode: service:ts-seerr
+    depends_on:
+      - ts-seerr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/seerr:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    labels:
+      - homepage.group=Services
+      - homepage.name=Seerr
+      - homepage.icon=mdi-movie-search-outline
+      - homepage.href=https://seerr.${TAILNET_NAME}.ts.net
+      - homepage.description=Discover and request media
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: service:ts-radarr
+    depends_on:
+      - ts-radarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/radarr:/config
       - type: bind
         source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
         target: /data
@@ -43,33 +158,93 @@ services:
           create_host_path: false
     labels:
       - homepage.group=Services
-      - homepage.name=Scryer
-      - homepage.icon=mdi-movie-search-outline
-      - homepage.href=https://scryer.${TAILNET_NAME}.ts.net
-      - homepage.description=Media requests and library management
+      - homepage.name=Radarr
+      - homepage.icon=mdi-movie-open-cog-outline
+      - homepage.href=https://radarr.${TAILNET_NAME}.ts.net
+      - homepage.description=Movie library automation
 
-  ts-qbittorrent:
-    image: tailscale/tailscale:latest
-    container_name: ts-qbittorrent
-    hostname: qbittorrent
-    environment:
-      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
-      TS_EXTRA_ARGS: --advertise-tags=tag:container
-      TS_HOSTNAME: qbittorrent
-      TS_SERVE_CONFIG: /config/serve.json
-      TS_STATE_DIR: /var/lib/tailscale
-      TS_USERSPACE: "false"
-    ports:
-      - "6881:6881/tcp"
-      - "6881:6881/udp"
-    volumes:
-      - ts-qbittorrent-state:/var/lib/tailscale
-      - ./ts-config/qbittorrent:/config
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    network_mode: service:ts-sonarr
+    depends_on:
+      - ts-sonarr
     restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/sonarr:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      - homepage.group=Services
+      - homepage.name=Sonarr
+      - homepage.icon=mdi-television-classic
+      - homepage.href=https://sonarr.${TAILNET_NAME}.ts.net
+      - homepage.description=Series and anime automation
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    network_mode: service:ts-bazarr
+    depends_on:
+      - ts-bazarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/bazarr:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      - homepage.group=Services
+      - homepage.name=Bazarr
+      - homepage.icon=mdi-subtitles-outline
+      - homepage.href=https://bazarr.${TAILNET_NAME}.ts.net
+      - homepage.description=Subtitle automation
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: service:ts-prowlarr
+    depends_on:
+      - ts-prowlarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/prowlarr:/config
+    labels:
+      - homepage.group=Services
+      - homepage.name=Prowlarr
+      - homepage.icon=mdi-magnify-scan
+      - homepage.href=https://prowlarr.${TAILNET_NAME}.ts.net
+      - homepage.description=Indexer management
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    network_mode: service:ts-sabnzbd
+    depends_on:
+      - ts-sabnzbd
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/sabnzbd:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      - homepage.group=Services
+      - homepage.name=SABnzbd
+      - homepage.icon=mdi-newspaper-variant-multiple-outline
+      - homepage.href=https://sabnzbd.${TAILNET_NAME}.ts.net
+      - homepage.description=Usenet downloads
 
   qbittorrent:
     build:
@@ -81,12 +256,12 @@ services:
       - ts-qbittorrent
     restart: unless-stopped
     environment:
+      <<: *service-environment
       QBT_LEGAL_NOTICE: confirm
       QBT_VERSION: latest
       QBT_TORRENTING_PORT: "6881"
       QBT_WEBUI_PORT: "8080"
-      QBT_SERVER_DOMAIN: qbittorrent.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net
-      TZ: America/New_York
+      QBT_SERVER_DOMAINS: "qbittorrent.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net;ts-qbittorrent"
     read_only: true
     stop_grace_period: 30m
     tmpfs:
@@ -106,26 +281,6 @@ services:
       - homepage.href=https://qbittorrent.${TAILNET_NAME}.ts.net
       - homepage.description=VueTorrent interface
 
-  ts-plex:
-    image: tailscale/tailscale:latest
-    container_name: ts-plex
-    hostname: plex
-    environment:
-      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
-      TS_EXTRA_ARGS: --advertise-tags=tag:container
-      TS_HOSTNAME: plex
-      TS_SERVE_CONFIG: /config/serve.json
-      TS_STATE_DIR: /var/lib/tailscale
-      TS_USERSPACE: "false"
-    volumes:
-      - ts-plex-state:/var/lib/tailscale
-      - ./ts-config/plex:/config
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-    restart: unless-stopped
-
   plex:
     image: plexinc/pms-docker:latest
     container_name: plex
@@ -134,9 +289,9 @@ services:
       - ts-plex
     restart: unless-stopped
     environment:
+      <<: *service-environment
       PLEX_CLAIM: ${PLEX_CLAIM}
       ADVERTISE_IP: https://plex.${TAILNET_NAME}.ts.net/
-      TZ: America/New_York
     volumes:
       - ./data/plex:/config
       - type: bind
@@ -158,6 +313,11 @@ services:
       - homepage.description=Media server
 
 volumes:
-  ts-scryer-state:
+  ts-seerr-state:
+  ts-radarr-state:
+  ts-sonarr-state:
+  ts-bazarr-state:
+  ts-prowlarr-state:
+  ts-sabnzbd-state:
   ts-qbittorrent-state:
   ts-plex-state:
