@@ -192,6 +192,9 @@ def run(
 
 def _tee_pty(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
     """Run *cmd* inside a pty, teeing output to stdout. Unix only."""
+    if sys.platform == "win32":
+        raise RuntimeError("_tee_pty is unavailable on Windows")
+
     import pty
     import select
 
