@@ -59,6 +59,7 @@ Composes modules and adds machine-specific overrides.
 
 - Before writing new code, check the codebase for existing patterns and follow them
 - In Docker Compose files, keep reusable extension anchors first, group sidecars before application services, and leave named volumes last; preserve established section markers and ordering when editing
+- In homelab discussions, "dashboard" means the Homepage service
 - Before sending, remove every bullet whose deletion would not change the reader's understanding or next action
 - Keep substantive Python out of shell strings; put it in a normal `.py` file and have the shell entrypoint invoke it
 - Do not SSH to, deploy to, or otherwise mutate the homelab until the user has
@@ -99,6 +100,7 @@ Composes modules and adds machine-specific overrides.
 - Scripts skip gracefully when `MC_PRIVATE` directory doesn't exist
 - `README.md` is high-level only: purpose, setup, top-level usage, broad layout, and links to deeper docs
 - Do NOT put low-level conventions, override mechanics, env layering, editor wiring, file inventories, or edge-case behavior in `README.md`; put those in `AGENTS.md`, command help, code comments, or focused subdirectory docs
+- Keep focused READMEs concise and stable; omit vendor recommendations, temporary migration notes, optional tuning, and troubleshooting unless the file is explicitly dedicated to them
 
 ## Commands
 

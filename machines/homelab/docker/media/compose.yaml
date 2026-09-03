@@ -11,6 +11,9 @@ x-tailscale-environment: &tailscale-environment
 x-service-environment: &service-environment
   TZ: ${HOMELAB_TIMEZONE:?HOMELAB_TIMEZONE must be set}
 
+x-media-labels: &media-labels
+  homepage.group: Media
+
 x-tailscale-service: &tailscale-service
   image: tailscale/tailscale:latest
   environment: *tailscale-environment
@@ -135,11 +138,11 @@ services:
       interval: 15s
       retries: 3
     labels:
-      - homepage.group=Services
-      - homepage.name=Seerr
-      - homepage.icon=mdi-movie-search-outline
-      - homepage.href=https://seerr.${TAILNET_NAME}.ts.net
-      - homepage.description=Discover and request media
+      <<: *media-labels
+      homepage.name: Seerr
+      homepage.icon: mdi-movie-search-outline
+      homepage.href: https://seerr.${TAILNET_NAME}.ts.net
+      homepage.description: Discover and request media
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -157,11 +160,11 @@ services:
         bind:
           create_host_path: false
     labels:
-      - homepage.group=Services
-      - homepage.name=Radarr
-      - homepage.icon=mdi-movie-open-cog-outline
-      - homepage.href=https://radarr.${TAILNET_NAME}.ts.net
-      - homepage.description=Movie library automation
+      <<: *media-labels
+      homepage.name: Radarr
+      homepage.icon: mdi-movie-open-cog-outline
+      homepage.href: https://radarr.${TAILNET_NAME}.ts.net
+      homepage.description: Movie library automation
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -179,11 +182,11 @@ services:
         bind:
           create_host_path: false
     labels:
-      - homepage.group=Services
-      - homepage.name=Sonarr
-      - homepage.icon=mdi-television-classic
-      - homepage.href=https://sonarr.${TAILNET_NAME}.ts.net
-      - homepage.description=Series and anime automation
+      <<: *media-labels
+      homepage.name: Sonarr
+      homepage.icon: mdi-television-classic
+      homepage.href: https://sonarr.${TAILNET_NAME}.ts.net
+      homepage.description: Series and anime automation
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
@@ -201,11 +204,11 @@ services:
         bind:
           create_host_path: false
     labels:
-      - homepage.group=Services
-      - homepage.name=Bazarr
-      - homepage.icon=mdi-subtitles-outline
-      - homepage.href=https://bazarr.${TAILNET_NAME}.ts.net
-      - homepage.description=Subtitle automation
+      <<: *media-labels
+      homepage.name: Bazarr
+      homepage.icon: mdi-subtitles-outline
+      homepage.href: https://bazarr.${TAILNET_NAME}.ts.net
+      homepage.description: Subtitle automation
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -218,15 +221,16 @@ services:
     volumes:
       - ./data/prowlarr:/config
     labels:
-      - homepage.group=Services
-      - homepage.name=Prowlarr
-      - homepage.icon=mdi-magnify-scan
-      - homepage.href=https://prowlarr.${TAILNET_NAME}.ts.net
-      - homepage.description=Indexer management
+      <<: *media-labels
+      homepage.name: Prowlarr
+      homepage.icon: mdi-magnify-scan
+      homepage.href: https://prowlarr.${TAILNET_NAME}.ts.net
+      homepage.description: Indexer management
 
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
+    hostname: "sabnzbd.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net"
     network_mode: service:ts-sabnzbd
     depends_on:
       - ts-sabnzbd
@@ -240,11 +244,11 @@ services:
         bind:
           create_host_path: false
     labels:
-      - homepage.group=Services
-      - homepage.name=SABnzbd
-      - homepage.icon=mdi-newspaper-variant-multiple-outline
-      - homepage.href=https://sabnzbd.${TAILNET_NAME}.ts.net
-      - homepage.description=Usenet downloads
+      <<: *media-labels
+      homepage.name: SABnzbd
+      homepage.icon: mdi-newspaper-variant-multiple-outline
+      homepage.href: https://sabnzbd.${TAILNET_NAME}.ts.net
+      homepage.description: Usenet downloads
 
   qbittorrent:
     build:
@@ -261,7 +265,6 @@ services:
       QBT_VERSION: latest
       QBT_TORRENTING_PORT: "6881"
       QBT_WEBUI_PORT: "8080"
-      QBT_SERVER_DOMAINS: "qbittorrent.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net;ts-qbittorrent"
     read_only: true
     stop_grace_period: 30m
     tmpfs:
@@ -275,11 +278,11 @@ services:
         bind:
           create_host_path: false
     labels:
-      - homepage.group=Services
-      - homepage.name=Torrents
-      - homepage.icon=mdi-download-box
-      - homepage.href=https://qbittorrent.${TAILNET_NAME}.ts.net
-      - homepage.description=VueTorrent interface
+      <<: *media-labels
+      homepage.name: Torrents
+      homepage.icon: mdi-download-box
+      homepage.href: https://qbittorrent.${TAILNET_NAME}.ts.net
+      homepage.description: VueTorrent interface
 
   plex:
     image: plexinc/pms-docker:latest
@@ -290,7 +293,7 @@ services:
     restart: unless-stopped
     environment:
       <<: *service-environment
-      PLEX_CLAIM: ${PLEX_CLAIM}
+      PLEX_CLAIM: "${PLEX_CLAIM:-}"
       ADVERTISE_IP: https://plex.${TAILNET_NAME}.ts.net/
     volumes:
       - ./data/plex:/config
@@ -306,11 +309,11 @@ services:
         bind:
           create_host_path: false
     labels:
-      - homepage.group=Services
-      - homepage.name=Plex
-      - homepage.icon=mdi-plex
-      - homepage.href=https://plex.${TAILNET_NAME}.ts.net/web
-      - homepage.description=Media server
+      <<: *media-labels
+      homepage.name: Plex
+      homepage.icon: mdi-plex
+      homepage.href: https://plex.${TAILNET_NAME}.ts.net/web
+      homepage.description: Media server
 
 volumes:
   ts-seerr-state:
