@@ -9,6 +9,8 @@ See [config/homelab/README.md](../../config/homelab/README.md) for the
 module documentation and how to add or expose services.
 
 See [media services](docker/media/README.md) for the media stack.
+Whisper.cpp runs natively through launchd for Metal-accelerated speech
+recognition at the model gateway's `/v1/audio/` path.
 
 ## Backups
 

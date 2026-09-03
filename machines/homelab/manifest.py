@@ -19,13 +19,19 @@ manifest = MachineManifest(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
         ),
+        FileMapping(
+            source="com.mc.whisper.plist",
+            target="~/Library/LaunchAgents/com.mc.whisper.plist",
+        ),
     ],
     packages=[
         # Dev tools
         Package(brew="uv"),
         Package(brew="python"),
         # Utilities
+        Package(brew="ffmpeg"),
         Package(brew="mas"),
+        Package(brew="whisper-cpp"),
         Package(cask="font-computer-modern"),
         Package(cask="font-jetbrains-mono-nerd-font"),
     ],

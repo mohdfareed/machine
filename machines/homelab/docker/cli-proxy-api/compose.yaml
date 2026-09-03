@@ -8,6 +8,7 @@ services:
     hostname: model-gateway
     environment:
       TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+      TS_ACCEPT_DNS: "true"
       TS_EXTRA_ARGS: --advertise-tags=tag:container
       TS_HOSTNAME: model-gateway
       TS_SERVE_CONFIG: /config/serve.json
@@ -44,6 +45,20 @@ services:
       - homepage.icon=mdi-hub
       - homepage.href=https://model-gateway.${TAILNET_NAME}.ts.net/management.html
       - homepage.description=Unified API gateway for AI providers
+
+  whisper-router:
+    image: caddy:2-alpine
+    container_name: cliproxyapi-whisper-router
+    network_mode: service:ts-cliproxyapi
+    depends_on:
+      - ts-cliproxyapi
+    command:
+      - reverse-proxy
+      - --from
+      - http://127.0.0.1:8080
+      - --to
+      - http://homelab.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net:8081
+    restart: unless-stopped
 
 volumes:
   ts-cliproxyapi-state:
