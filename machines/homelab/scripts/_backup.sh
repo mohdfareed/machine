@@ -2,6 +2,8 @@
 set -Eeuo pipefail
 shopt -s nullglob
 
+: "${MC_HOMELAB_DIR:?MC_HOMELAB_DIR must be set}"
+
 # Configuration
 # -----------------------------------------------------------------------------
 
@@ -71,9 +73,9 @@ archive_host() {
 # Current host
 # -----------------------------------------------------------------------------
 
-# Resolve the path here, using this host's MC_HOMELAB_DIR and HOME.
+# Resolve the path here using this host's required MC_HOMELAB_DIR.
 local_host="${MC_ID:-$(hostname -s)}"
-local_homelab_dir="${MC_HOMELAB_DIR:-$HOME/.homelab}"
+local_homelab_dir="$MC_HOMELAB_DIR"
 
 echo "backing up $local_host..."
 for data_dir in "$local_homelab_dir"/*/data/; do
@@ -95,14 +97,10 @@ for host in "${REMOTE_HOSTS[@]}"; do
     echo "backing up $host..."
 
     # The single quotes are intentional: this expression runs on the remote
-    # host, so its MC_HOMELAB_DIR and HOME determine the source path.
+    # host, so its required MC_HOMELAB_DIR determines the source path.
     if ! remote_homelab_dir="$(ssh "${SSH_OPTIONS[@]}" "$host" \
-        'printf "%s" "${MC_HOMELAB_DIR:-$HOME/.homelab}"' 2>/dev/null)"; then
-        echo "  unreachable, skipping"
-        continue
-    fi
-    if [[ -z "$remote_homelab_dir" ]]; then
-        echo "  homelab directory is not configured, skipping"
+        'printf "%s" "${MC_HOMELAB_DIR:?MC_HOMELAB_DIR must be set}"' 2>/dev/null)"; then
+        echo "  unreachable or MC_HOMELAB_DIR is not configured, skipping"
         continue
     fi
 
@@ -111,7 +109,7 @@ for host in "${REMOTE_HOSTS[@]}"; do
     # other shells ignore setopt and the directory check rejects the bare glob.
     if ! remote_services="$(ssh "${SSH_OPTIONS[@]}" "$host" \
         'setopt NULL_GLOB 2>/dev/null || true
-        root="${MC_HOMELAB_DIR:-$HOME/.homelab}"
+        root="${MC_HOMELAB_DIR:?MC_HOMELAB_DIR must be set}"
         for data_dir in "$root"/*/data; do
             [ -d "$data_dir" ] && basename "$(dirname "$data_dir")"
         done' 2>/dev/null)"; then

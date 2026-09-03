@@ -15,9 +15,8 @@ recognition at the model gateway's `/v1/audio/` path.
 ## Backups
 
 A launchd job (`com.mc.backup.plist`) runs daily at 04:30. It creates a separate
-compressed snapshot for each configured host. Every host uses its own
-`MC_HOMELAB_DIR`, falling back to `~/.homelab`, and retains its newest 14
-snapshots.
+compressed snapshot for each configured host from its required
+`MC_HOMELAB_DIR` and retains its newest 14 snapshots.
 
 Backups land in iCloud:
 

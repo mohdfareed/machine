@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+: "${MC_HOMELAB_DIR:?MC_HOMELAB_DIR must be set}"
+
 # constants
 # REVIEW: Pick transcription model
 model_name="ggml-large-v3-turbo-q5_0.bin"

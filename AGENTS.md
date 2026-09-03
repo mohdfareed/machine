@@ -91,6 +91,8 @@ Composes modules and adds machine-specific overrides.
 - `mc` loads all three tiers into every script subprocess - scripts should NOT re-source them
 - Shell profiles load the first two tiers; `secrets` explicitly loads the private tier on demand
 - `machine.env` uses plain `KEY=VALUE` (no `export`); values may reference earlier vars
+- `MC_HOMELAB_DIR` is required for homelab scripts and is declared in the
+  machine's committed `machine.env`; never silently fall back to `~/.homelab`
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - Use brief comments to separate operational script phases and explain non-obvious quoting, environment, or control flow
 - Keep `AGENTS.md` lean: only record durable, project-wide conventions, not one-off notes for a single helper or cleanup

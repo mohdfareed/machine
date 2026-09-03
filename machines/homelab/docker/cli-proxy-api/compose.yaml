@@ -53,6 +53,7 @@ services:
     depends_on:
       - ts-cliproxyapi
     command:
+      - caddy
       - reverse-proxy
       - --from
       - http://127.0.0.1:8080
