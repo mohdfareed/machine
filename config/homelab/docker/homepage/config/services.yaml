@@ -27,3 +27,9 @@
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_TV_DEVICE_ID}}"
           key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
           fields: ["address", "last_seen", "expires"]
+
+- Services:
+    - Whisper:
+        icon: mdi-microphone
+        href: https://homelab.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net/v1/audio/
+        description: Speech-to-text API

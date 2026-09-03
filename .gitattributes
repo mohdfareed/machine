@@ -1,1 +1,5 @@
+# Files consumed by Unix shells must retain Unix line endings.
 *.sh text eol=lf
+.shellcheckrc text eol=lf
+.zshenv text eol=lf
+.zshrc text eol=lf

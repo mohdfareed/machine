@@ -23,6 +23,9 @@ layout:
   Services:
     style: column
     rows: 1
+  Media:
+    style: row
+    columns: 2
   MCP Servers:
     style: column
     rows: 1

@@ -40,7 +40,7 @@ Bulk data stays outside `data/` and is not included in that backup:
 
 ```txt
 downloads/
-  torrents/
+  torrents/ # completed torrents
     incomplete/
   usenet/
     incomplete/
@@ -48,29 +48,18 @@ downloads/
 movies/
 series/
 anime/
-transcode/
 ```
 
-`init_media.unix.sh` creates these directories during `mc apply`. Every media
-container sees the same tree at `/data`, which allows hard-link imports; Plex
-mounts it read-only. Change `HOMELAB_MEDIA_DIR` in
+Every media container sees the same tree at `/data`, which allows hard-link imports;
+Plex mounts it read-only. On macOS, the script also exposes the tree as the
+authenticated, read-only SMB share `Media`. Change `HOMELAB_MEDIA_DIR` in
 `machines/homelab/machine.env` to move the tree to an external drive.
 
 ## First Run
 
-| Service     | Required setup |
-| ----------- | -------------- |
-| Plex        | Claim the server and add `/data/movies`, `/data/series`, and `/data/anime`. |
-| qBittorrent | Use the temporary password from `docker logs qbittorrent`, set a permanent password, use `/data/downloads/torrents` with `/data/downloads/torrents/incomplete`, and select `/vuetorrent` as the alternative WebUI. |
-| SABnzbd     | Add the Usenet provider, use `/data/downloads/usenet/incomplete` and `/data/downloads/usenet/complete`, and add `movies` and `series` categories. |
-| Radarr      | Add `/data/movies` and configure the download clients. |
-| Sonarr      | Add `/data/series` and `/data/anime` and configure the download clients. |
-| Prowlarr    | Add the chosen indexers, then connect and fully sync Radarr and Sonarr. |
-| Bazarr      | Connect Radarr and Sonarr, then configure subtitle languages and providers. |
-| Seerr       | Connect Plex, Radarr, and Sonarr, then select the default roots and quality profiles. |
-
-Use these Docker-network addresses between containers; `localhost` refers to
-the container making the request:
+Configure the services in this order. When one container asks for another
+service, use these internal addresses; `localhost` refers to the container
+making the request:
 
 | Service     | Internal address              |
 | ----------- | ----------------------------- |
@@ -81,5 +70,35 @@ the container making the request:
 | SABnzbd     | `http://ts-sabnzbd:8080`       |
 | qBittorrent | `http://ts-qbittorrent:8080`   |
 
-Use the download clients only for content you are authorized to download and
-share.
+1. **Set up Plex.** Claim the server and add libraries for `/data/movies`,
+   `/data/series`, and `/data/anime`.
+
+2. **Set up the download clients you intend to use.** For qBittorrent, use the
+   temporary password from `docker logs qbittorrent`, set a permanent password,
+   set `/data/downloads/torrents` as the save path and
+   `/data/downloads/torrents/incomplete` as the incomplete path, then select
+   `/vuetorrent` as the alternative WebUI. For SABnzbd, add the Usenet provider,
+   set the incomplete and complete folders under `/data/downloads/usenet`, and
+   add `movies` and `series` categories.
+
+3. **Set up Radarr and Sonarr.** Add `/data/movies` as Radarr's root. Add
+   `/data/series` and `/data/anime` as Sonarr roots. Connect each app to the
+   download clients above, using category `movies` in Radarr and `series` in
+   Sonarr.
+
+4. **Set up Prowlarr.** Add the chosen indexers, then add Radarr and Sonarr
+   under **Settings > Apps** with full synchronization.
+
+5. **Set up Bazarr.** Enable its Sonarr and Radarr integrations using the
+   internal addresses above and the API key from each app. Leave path mappings
+   empty because all three containers see the same `/data` paths. Create an
+   English and Arabic language profile, make it the default for series and
+   movies, add the subtitle providers, and store subtitles alongside the media.
+
+6. **Set up Seerr last.** Connect Plex, Radarr, and Sonarr using their internal
+   addresses and API keys, then select the default roots and quality profiles.
+
+After initial setup, normal use is Seerr for requests and Plex or Infuse for
+watching. Open the other services only for administration or troubleshooting.
+
+> Use the download clients only for content you are authorized to download and share.

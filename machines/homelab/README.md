@@ -3,7 +3,7 @@
 Always-on Mac used as a headless server. Works on MacBook (clamshell), Mac Mini,
 etc.
 
-## Docker Services
+## Services
 
 See [config/homelab/README.md](../../config/homelab/README.md) for the
 module documentation and how to add or expose services.

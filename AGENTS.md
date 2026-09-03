@@ -52,6 +52,7 @@ Composes modules and adds machine-specific overrides.
 
 - Always verify Windows compatibility when touching files, paths, or scripts
 - Windows SSH client is OpenSSH (built into Windows 10+): supports `~`, `IgnoreUnknown`
+- Unix shell files and ShellCheck configuration use LF line endings
 - Shell scripts need platform tags (`.unix.sh` / `.win.ps1`) - never assume Unix-only
 - Path separators: use `pathlib.Path` in Python; avoid hardcoded `/` in target strings
 

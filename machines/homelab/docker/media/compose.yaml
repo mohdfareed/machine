@@ -230,7 +230,6 @@ services:
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
-    hostname: "sabnzbd.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net"
     network_mode: service:ts-sabnzbd
     depends_on:
       - ts-sabnzbd
@@ -298,10 +297,10 @@ services:
     volumes:
       - ./data/plex:/config
       - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}/transcode
+        source: ./cache/plex-transcode
         target: /transcode
         bind:
-          create_host_path: false
+          create_host_path: true
       - type: bind
         source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
         target: /data

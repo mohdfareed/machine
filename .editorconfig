@@ -18,10 +18,14 @@ indent_size = 2
 
 [*.sh]
 indent_size = 2
-end_of_line = lf # force unix scripts to use LF on windows
+end_of_line = lf
 
 [.{zshenv,zshrc}*]
 indent_size = 2
+end_of_line = lf
+
+[.shellcheckrc]
+end_of_line = lf
 
 [*.{code-snippets,code-workspace}]
 indent_size = 2
