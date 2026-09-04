@@ -8,13 +8,7 @@
     "${TS_CERT_DOMAIN}:443": {
       "Handlers": {
         "/": {
-          "Proxy": "http://127.0.0.1:8317"
-        },
-        "/v1/audio/": {
-          "Proxy": "http://127.0.0.1:8080/v1/audio/"
-        },
-        "/v1/audio/transcriptions": {
-          "Proxy": "http://127.0.0.1:8080/v1/audio/transcriptions"
+          "Proxy": "http://127.0.0.1:8080"
         }
       }
     }

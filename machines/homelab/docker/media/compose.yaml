@@ -166,93 +166,6 @@ services:
       homepage.href: https://seerr.${TAILNET_NAME}.ts.net
       homepage.description: Discover and request media
 
-  radarr:
-    image: lscr.io/linuxserver/radarr:latest
-    container_name: radarr
-    network_mode: service:ts-radarr
-    depends_on:
-      - ts-radarr
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/radarr:/config
-      - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
-    labels:
-      <<: *media-automation-labels
-      homepage.name: Radarr
-      homepage.icon: mdi-movie-open
-      homepage.href: https://radarr.${TAILNET_NAME}.ts.net
-      homepage.description: Movie management and automation
-      homepage.showStats: "false"
-
-  sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
-    container_name: sonarr
-    network_mode: service:ts-sonarr
-    depends_on:
-      - ts-sonarr
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/sonarr:/config
-      - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
-    labels:
-      <<: *media-automation-labels
-      homepage.name: Sonarr
-      homepage.icon: mdi-television-classic
-      homepage.href: https://sonarr.${TAILNET_NAME}.ts.net
-      homepage.description: TV show management and automation
-      homepage.showStats: "false"
-
-  bazarr:
-      image: lscr.io/linuxserver/bazarr:latest
-      container_name: bazarr
-      network_mode: service:ts-bazarr
-      depends_on:
-        - ts-bazarr
-      restart: unless-stopped
-      environment: *service-environment
-      volumes:
-        - ./data/bazarr:/config
-        - type: bind
-          source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
-          target: /data
-          bind:
-            create_host_path: false
-      labels:
-        <<: *media-automation-labels
-        homepage.name: Bazarr
-        homepage.icon: mdi-subtitles
-        homepage.href: https://bazarr.${TAILNET_NAME}.ts.net
-        homepage.description: Subtitle management and automation
-        homepage.showStats: "false"
-
-  prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
-    network_mode: service:ts-prowlarr
-    depends_on:
-      - ts-prowlarr
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/prowlarr:/config
-    labels:
-      <<: *media-automation-labels
-      homepage.name: Prowlarr
-      homepage.icon: mdi-magnify-scan
-      homepage.href: https://prowlarr.${TAILNET_NAME}.ts.net
-      homepage.description: Indexer management and automation
-      homepage.showStats: "false"
-
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
@@ -280,8 +193,96 @@ services:
       <<: *media-labels
       homepage.name: SABnzbd
       homepage.icon: mdi-cloud-download
-      homepage.description: NZB client and download management
+      homepage.description: Download and manage NZB files
       homepage.href: https://sabnzbd.${TAILNET_NAME}.ts.net
+
+  # MARK: Infrastructure
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: service:ts-radarr
+    depends_on:
+      - ts-radarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/radarr:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      <<: *media-automation-labels
+      homepage.name: Radarr
+      homepage.icon: mdi-movie-open
+      homepage.href: https://radarr.${TAILNET_NAME}.ts.net
+      homepage.description: Movies
+      homepage.showStats: "false"
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    network_mode: service:ts-sonarr
+    depends_on:
+      - ts-sonarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/sonarr:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      <<: *media-automation-labels
+      homepage.name: Sonarr
+      homepage.icon: mdi-television-classic
+      homepage.href: https://sonarr.${TAILNET_NAME}.ts.net
+      homepage.description: TV shows
+      homepage.showStats: "false"
+
+  bazarr:
+      image: lscr.io/linuxserver/bazarr:latest
+      container_name: bazarr
+      network_mode: service:ts-bazarr
+      depends_on:
+        - ts-bazarr
+      restart: unless-stopped
+      environment: *service-environment
+      volumes:
+        - ./data/bazarr:/config
+        - type: bind
+          source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+          target: /data
+          bind:
+            create_host_path: false
+      labels:
+        <<: *media-automation-labels
+        homepage.name: Bazarr
+        homepage.icon: mdi-subtitles
+        homepage.href: https://bazarr.${TAILNET_NAME}.ts.net
+        homepage.description: Subtitles
+        homepage.showStats: "false"
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: service:ts-prowlarr
+    depends_on:
+      - ts-prowlarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/prowlarr:/config
+    labels:
+      <<: *media-automation-labels
+      homepage.name: Prowlarr
+      homepage.icon: mdi-magnify-scan
+      homepage.href: https://prowlarr.${TAILNET_NAME}.ts.net
+      homepage.description: Indexers
       homepage.showStats: "false"
 
 volumes:
