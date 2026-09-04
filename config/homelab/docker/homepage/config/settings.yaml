@@ -24,8 +24,11 @@ layout:
     style: column
     rows: 1
   Media:
+    style: column
+    rows: 1
+  Media Automation:
     style: row
-    columns: 2
+    columns: 4
   MCP Servers:
     style: column
     rows: 1

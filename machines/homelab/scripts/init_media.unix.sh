@@ -20,9 +20,8 @@ esac
 
 # Create the media tree and subdirectories for downloads and media.
 mkdir -p \
-    "$HOMELAB_MEDIA_DIR/downloads/torrents/incomplete" \
-    "$HOMELAB_MEDIA_DIR/downloads/usenet/incomplete" \
-    "$HOMELAB_MEDIA_DIR/downloads/usenet/complete" \
+    "$HOMELAB_MEDIA_DIR/downloads/incomplete" \
+    "$HOMELAB_MEDIA_DIR/downloads/complete" \
     "$HOMELAB_MEDIA_DIR/movies" \
     "$HOMELAB_MEDIA_DIR/series" \
     "$HOMELAB_MEDIA_DIR/anime"
@@ -52,9 +51,7 @@ if [ "$(uname -s)" = "Darwin" ]; then
         current_path=
     fi
 
-    if [ -n "$share_record" ]; then
-        sudo /usr/sbin/sharing -e "$share_record" -S "$share_name" -s 001 -g 000 -R 1
-    else
+    if [ -z "$share_record" ]; then
         sudo /usr/sbin/sharing -a "$HOMELAB_MEDIA_DIR" \
             -n "$share_name" \
             -S "$share_name" \

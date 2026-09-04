@@ -14,6 +14,9 @@ x-service-environment: &service-environment
 x-media-labels: &media-labels
   homepage.group: Media
 
+x-media-automation-labels: &media-automation-labels
+  homepage.group: Media Automation
+
 x-tailscale-service: &tailscale-service
   image: tailscale/tailscale:latest
   environment: *tailscale-environment
@@ -26,6 +29,17 @@ x-tailscale-service: &tailscale-service
 services:
 
   # MARK: Tailscale
+
+  ts-plex:
+    <<: *tailscale-service
+    container_name: ts-plex
+    hostname: plex
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: plex
+    volumes:
+      - ts-plex-state:/var/lib/tailscale
+      - ./ts-config/plex:/config
 
   ts-seerr:
     <<: *tailscale-service
@@ -93,195 +107,7 @@ services:
       - ts-sabnzbd-state:/var/lib/tailscale
       - ./ts-config/sabnzbd:/config
 
-  ts-qbittorrent:
-    <<: *tailscale-service
-    container_name: ts-qbittorrent
-    hostname: qbittorrent
-    environment:
-      <<: *tailscale-environment
-      TS_HOSTNAME: qbittorrent
-    ports:
-      - "6881:6881/tcp"
-      - "6881:6881/udp"
-    volumes:
-      - ts-qbittorrent-state:/var/lib/tailscale
-      - ./ts-config/qbittorrent:/config
-
-  ts-plex:
-    <<: *tailscale-service
-    container_name: ts-plex
-    hostname: plex
-    environment:
-      <<: *tailscale-environment
-      TS_HOSTNAME: plex
-    volumes:
-      - ts-plex-state:/var/lib/tailscale
-      - ./ts-config/plex:/config
-
   # MARK: Services
-
-  seerr:
-    image: ghcr.io/seerr-team/seerr:latest
-    init: true
-    container_name: seerr
-    network_mode: service:ts-seerr
-    depends_on:
-      - ts-seerr
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/seerr:/app/config
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
-      start_period: 20s
-      timeout: 3s
-      interval: 15s
-      retries: 3
-    labels:
-      <<: *media-labels
-      homepage.name: Seerr
-      homepage.icon: mdi-movie-search-outline
-      homepage.href: https://seerr.${TAILNET_NAME}.ts.net
-      homepage.description: Discover and request media
-
-  radarr:
-    image: lscr.io/linuxserver/radarr:latest
-    container_name: radarr
-    network_mode: service:ts-radarr
-    depends_on:
-      - ts-radarr
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/radarr:/config
-      - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
-    labels:
-      <<: *media-labels
-      homepage.name: Radarr
-      homepage.icon: mdi-movie-open-cog-outline
-      homepage.href: https://radarr.${TAILNET_NAME}.ts.net
-      homepage.description: Movie library automation
-
-  sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
-    container_name: sonarr
-    network_mode: service:ts-sonarr
-    depends_on:
-      - ts-sonarr
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/sonarr:/config
-      - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
-    labels:
-      <<: *media-labels
-      homepage.name: Sonarr
-      homepage.icon: mdi-television-classic
-      homepage.href: https://sonarr.${TAILNET_NAME}.ts.net
-      homepage.description: Series and anime automation
-
-  bazarr:
-    image: lscr.io/linuxserver/bazarr:latest
-    container_name: bazarr
-    network_mode: service:ts-bazarr
-    depends_on:
-      - ts-bazarr
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/bazarr:/config
-      - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
-    labels:
-      <<: *media-labels
-      homepage.name: Bazarr
-      homepage.icon: mdi-subtitles-outline
-      homepage.href: https://bazarr.${TAILNET_NAME}.ts.net
-      homepage.description: Subtitle automation
-
-  prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
-    network_mode: service:ts-prowlarr
-    depends_on:
-      - ts-prowlarr
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/prowlarr:/config
-    labels:
-      <<: *media-labels
-      homepage.name: Prowlarr
-      homepage.icon: mdi-magnify-scan
-      homepage.href: https://prowlarr.${TAILNET_NAME}.ts.net
-      homepage.description: Indexer management
-
-  sabnzbd:
-    image: lscr.io/linuxserver/sabnzbd:latest
-    container_name: sabnzbd
-    network_mode: service:ts-sabnzbd
-    depends_on:
-      - ts-sabnzbd
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/sabnzbd:/config
-      - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
-    labels:
-      <<: *media-labels
-      homepage.name: SABnzbd
-      homepage.icon: mdi-newspaper-variant-multiple-outline
-      homepage.href: https://sabnzbd.${TAILNET_NAME}.ts.net
-      homepage.description: Usenet downloads
-
-  qbittorrent:
-    build:
-      context: ./qbittorrent
-      pull: true
-    container_name: qbittorrent
-    network_mode: service:ts-qbittorrent
-    depends_on:
-      - ts-qbittorrent
-    restart: unless-stopped
-    environment:
-      <<: *service-environment
-      QBT_LEGAL_NOTICE: confirm
-      QBT_VERSION: latest
-      QBT_TORRENTING_PORT: "6881"
-      QBT_WEBUI_PORT: "8080"
-    read_only: true
-    stop_grace_period: 30m
-    tmpfs:
-      - /tmp
-    tty: true
-    volumes:
-      - ./data/qbittorrent:/config
-      - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
-    labels:
-      <<: *media-labels
-      homepage.name: Torrents
-      homepage.icon: mdi-download-box
-      homepage.href: https://qbittorrent.${TAILNET_NAME}.ts.net
-      homepage.description: VueTorrent interface
 
   plex:
     image: plexinc/pms-docker:latest
@@ -310,16 +136,153 @@ services:
     labels:
       <<: *media-labels
       homepage.name: Plex
+      homepage.id: media-plex
       homepage.icon: mdi-plex
-      homepage.href: https://plex.${TAILNET_NAME}.ts.net/web
+      homepage.href: https://plex.${TAILNET_NAME}.ts.net/desktop
       homepage.description: Media server
 
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
+    network_mode: service:ts-seerr
+    depends_on:
+      - ts-seerr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/seerr:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    labels:
+      <<: *media-labels
+      homepage.name: Seerr
+      homepage.id: media-seerr
+      homepage.icon: mdi-movie-search-outline
+      homepage.href: https://seerr.${TAILNET_NAME}.ts.net
+      homepage.description: Discover and request media
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: service:ts-radarr
+    depends_on:
+      - ts-radarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/radarr:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      <<: *media-automation-labels
+      homepage.name: Radarr
+      homepage.icon: mdi-movie-open-cog-outline
+      homepage.href: https://radarr.${TAILNET_NAME}.ts.net
+      homepage.showStats: "false"
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    network_mode: service:ts-sonarr
+    depends_on:
+      - ts-sonarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/sonarr:/config
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      <<: *media-automation-labels
+      homepage.name: Sonarr
+      homepage.icon: mdi-television-classic
+      homepage.href: https://sonarr.${TAILNET_NAME}.ts.net
+      homepage.showStats: "false"
+
+  bazarr:
+      image: lscr.io/linuxserver/bazarr:latest
+      container_name: bazarr
+      network_mode: service:ts-bazarr
+      depends_on:
+        - ts-bazarr
+      restart: unless-stopped
+      environment: *service-environment
+      volumes:
+        - ./data/bazarr:/config
+        - type: bind
+          source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+          target: /data
+          bind:
+            create_host_path: false
+      labels:
+        <<: *media-automation-labels
+        homepage.name: Bazarr
+        homepage.icon: mdi-subtitles-outline
+        homepage.href: https://bazarr.${TAILNET_NAME}.ts.net
+        homepage.showStats: "false"
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: service:ts-prowlarr
+    depends_on:
+      - ts-prowlarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/prowlarr:/config
+    labels:
+      <<: *media-automation-labels
+      homepage.name: Prowlarr
+      homepage.icon: mdi-magnify-scan
+      homepage.href: https://prowlarr.${TAILNET_NAME}.ts.net
+      homepage.showStats: "false"
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    network_mode: service:ts-sabnzbd
+    depends_on:
+      - ts-sabnzbd
+    restart: unless-stopped
+    environment:
+      <<: *service-environment
+      SABNZBD_HOST_WHITELIST: "sabnzbd.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net, ts-sabnzbd"
+    volumes:
+      - ./data/sabnzbd:/config
+      - type: bind
+        source: ./sabnzbd/10-host-whitelist.sh
+        target: /custom-cont-init.d/10-host-whitelist.sh
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      <<: *media-automation-labels
+      homepage.name: SABnzbd
+      homepage.icon: mdi-newspaper-variant-multiple-outline
+      homepage.href: https://sabnzbd.${TAILNET_NAME}.ts.net
+      homepage.showStats: "false"
+
 volumes:
+  ts-plex-state:
   ts-seerr-state:
+  ts-prowlarr-state:
   ts-radarr-state:
   ts-sonarr-state:
-  ts-bazarr-state:
-  ts-prowlarr-state:
   ts-sabnzbd-state:
-  ts-qbittorrent-state:
-  ts-plex-state:
