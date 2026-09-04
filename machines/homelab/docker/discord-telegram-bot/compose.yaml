@@ -10,7 +10,7 @@ services:
       - homepage.name=Discord-Telegram Bot
       - homepage.icon=mdi-robot
       - homepage.href=https://github.com/mohdfareed/discord-telegram-bot
-      - homepage.description=Discord Telegram Bot
+      - homepage.description=Forward Discord messages to Telegram
     environment:
       DISCORD_BOT_TOKEN: ${DTB_DISCORD_BOT_TOKEN}
       TELEGRAM_BOT_TOKEN: ${DTB_TELEGRAM_BOT_TOKEN}

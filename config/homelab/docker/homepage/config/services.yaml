@@ -5,7 +5,7 @@
 - Machines:
     - Homelab:
         icon: mdi-home-analytics
-        description: Home Lab Server
+        description: MacBook Air
         widget:
           type: tailscale
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_HOMELAB_DEVICE_ID}}"

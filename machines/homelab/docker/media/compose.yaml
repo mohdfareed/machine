@@ -164,7 +164,7 @@ services:
       homepage.id: media-seerr
       homepage.icon: mdi-movie-search
       homepage.href: https://seerr.${TAILNET_NAME}.ts.net
-      homepage.description: Discover and request media
+      homepage.description: Media management
 
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
@@ -193,7 +193,7 @@ services:
       <<: *media-labels
       homepage.name: SABnzbd
       homepage.icon: mdi-cloud-download
-      homepage.description: Download and manage NZB files
+      homepage.description: Media downloader
       homepage.href: https://sabnzbd.${TAILNET_NAME}.ts.net
 
   # MARK: Infrastructure
