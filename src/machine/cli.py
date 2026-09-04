@@ -323,7 +323,12 @@ def sync(
     stashed = False
 
     if is_dirty:
-        if _prompt_force(stash=stash, force=force):
+        discard = _prompt_force(stash=stash, force=force)
+        if discard is None:
+            console.print("[dim]Aborted.[/]")
+            return
+
+        if discard:
             subprocess.run([*git, "fetch", "--all"], capture_output=True)
             subprocess.run([*git, "reset", "--hard", "origin/HEAD"])
             console.print("[yellow]Local changes discarded.[/]")
@@ -362,7 +367,7 @@ def sync(
             console.print("[dim]No machine set - skipping apply.[/]")
 
 
-def _prompt_force(stash: bool, force: bool) -> bool:
+def _prompt_force(stash: bool, force: bool) -> bool | None:
     if force:
         choice = "discard"
     elif stash:
@@ -375,12 +380,10 @@ def _prompt_force(stash: bool, force: bool) -> bool:
         )
 
     if choice == "abort":
-        console.print("[dim]Aborted.[/]")
-        raise SystemExit(0)
+        return None
     if choice == "discard":
         if not typer.confirm("This cannot be undone. Are you sure?"):
-            console.print("[dim]Aborted.[/]")
-            raise SystemExit(0)
+            return None
         return True
     return False
 
