@@ -58,7 +58,7 @@ services:
       - --from
       - http://127.0.0.1:8080
       - --to
-      - http://homelab.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net:8081
+      - http://host.docker.internal:8081
     restart: unless-stopped
 
 volumes:

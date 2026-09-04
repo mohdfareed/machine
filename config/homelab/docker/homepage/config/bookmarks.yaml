@@ -1,5 +1,8 @@
 ---
 - Bookmarks:
     - Tailscale Admin Console:
-        - icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/tailscale-light.svg
+        - icon: mdi-router-network
           href: https://login.tailscale.com/admin
+    - Machine Repository:
+        - icon: mdi-source-repository
+          href: https://github.com/mohdfareed/machine

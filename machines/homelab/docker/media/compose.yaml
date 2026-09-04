@@ -15,7 +15,7 @@ x-media-labels: &media-labels
   homepage.group: Media
 
 x-media-automation-labels: &media-automation-labels
-  homepage.group: Media Automation
+  homepage.group: Media Infrastructure
 
 x-tailscale-service: &tailscale-service
   image: tailscale/tailscale:latest
@@ -162,7 +162,7 @@ services:
       <<: *media-labels
       homepage.name: Seerr
       homepage.id: media-seerr
-      homepage.icon: mdi-movie-search-outline
+      homepage.icon: mdi-movie-search
       homepage.href: https://seerr.${TAILNET_NAME}.ts.net
       homepage.description: Discover and request media
 
@@ -184,8 +184,9 @@ services:
     labels:
       <<: *media-automation-labels
       homepage.name: Radarr
-      homepage.icon: mdi-movie-open-cog-outline
+      homepage.icon: mdi-movie-open
       homepage.href: https://radarr.${TAILNET_NAME}.ts.net
+      homepage.description: Movie management and automation
       homepage.showStats: "false"
 
   sonarr:
@@ -208,6 +209,7 @@ services:
       homepage.name: Sonarr
       homepage.icon: mdi-television-classic
       homepage.href: https://sonarr.${TAILNET_NAME}.ts.net
+      homepage.description: TV show management and automation
       homepage.showStats: "false"
 
   bazarr:
@@ -228,8 +230,9 @@ services:
       labels:
         <<: *media-automation-labels
         homepage.name: Bazarr
-        homepage.icon: mdi-subtitles-outline
+        homepage.icon: mdi-subtitles
         homepage.href: https://bazarr.${TAILNET_NAME}.ts.net
+        homepage.description: Subtitle management and automation
         homepage.showStats: "false"
 
   prowlarr:
@@ -247,6 +250,7 @@ services:
       homepage.name: Prowlarr
       homepage.icon: mdi-magnify-scan
       homepage.href: https://prowlarr.${TAILNET_NAME}.ts.net
+      homepage.description: Indexer management and automation
       homepage.showStats: "false"
 
   sabnzbd:
@@ -273,15 +277,17 @@ services:
         bind:
           create_host_path: false
     labels:
-      <<: *media-automation-labels
+      <<: *media-labels
       homepage.name: SABnzbd
-      homepage.icon: mdi-newspaper-variant-multiple-outline
+      homepage.icon: mdi-cloud-download
+      homepage.description: NZB client and download management
       homepage.href: https://sabnzbd.${TAILNET_NAME}.ts.net
       homepage.showStats: "false"
 
 volumes:
   ts-plex-state:
   ts-seerr-state:
+  ts-bazarr-state:
   ts-prowlarr-state:
   ts-radarr-state:
   ts-sonarr-state:

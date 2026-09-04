@@ -9,7 +9,7 @@
     <array>
         <string>/bin/zsh</string>
         <string>-c</string>
-        <string>export PATH="/opt/homebrew/bin:$PATH"; source "$HOME/.zshenv" 2>/dev/null; : "$MC_HOMELAB_DIR"; tailscale_ip="$(/Applications/Tailscale.app/Contents/MacOS/Tailscale ip -4)"; exec /opt/homebrew/bin/whisper-server --model "$MC_HOMELAB_DIR/whisper/models/ggml-large-v3-turbo-q5_0.bin" --host "$tailscale_ip" --port 8081 --language auto --convert --request-path /v1/audio --inference-path /transcriptions</string>
+        <string>export PATH="/opt/homebrew/bin:$PATH"; source "$HOME/.zshenv" 2>/dev/null; : "${MC_HOMELAB_DIR}"; cd "$MC_HOMELAB_DIR/whisper"; exec /opt/homebrew/bin/whisper-server --model "$MC_HOMELAB_DIR/whisper/models/ggml-large-v3-turbo-q5_0.bin" --host 127.0.0.1 --port 8081 --language auto --convert --request-path /v1/audio --inference-path /transcriptions</string>
     </array>
 
     <key>RunAtLoad</key>

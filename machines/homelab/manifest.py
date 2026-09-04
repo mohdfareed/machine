@@ -19,10 +19,6 @@ manifest = MachineManifest(
             source="com.mc.backup.plist",
             target="~/Library/LaunchAgents/com.mc.backup.plist",
         ),
-        FileMapping(
-            source="com.mc.whisper.plist",
-            target="~/Library/LaunchAgents/com.mc.whisper.plist",
-        ),
     ],
     packages=[
         # Dev tools

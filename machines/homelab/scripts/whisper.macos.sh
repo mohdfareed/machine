@@ -2,6 +2,8 @@
 set -Eeuo pipefail
 
 : "${MC_HOMELAB_DIR:?MC_HOMELAB_DIR must be set}"
+: "${MC_HOME:?MC_HOME must be set}"
+: "${MC_ID:?MC_ID must be set}"
 
 # constants
 # REVIEW: Pick transcription model
@@ -34,8 +36,21 @@ fi
 
 label="com.mc.whisper"
 domain="gui/$(id -u)"
+plist_source="$MC_HOME/machines/$MC_ID/$label.plist"
 plist="$HOME/Library/LaunchAgents/$label.plist"
 
-# run the Whisper server
-launchctl bootout "$domain/$label" 2>/dev/null || true
-launchctl bootstrap "$domain" "$plist"
+# launchd requires a regular, user-owned plist rather than mc's usual symlink.
+mkdir -p "$HOME/Library/LaunchAgents"
+rm -f "$plist"
+install -m 600 "$plist_source" "$plist"
+
+if launchctl print "$domain/$label" &>/dev/null; then
+    launchctl bootout "$domain/$label"
+fi
+
+for _ in {1..10}; do
+    if launchctl bootstrap "$domain" "$plist" 2>/dev/null; then
+        exit 0
+    fi
+    sleep 0.5
+done
