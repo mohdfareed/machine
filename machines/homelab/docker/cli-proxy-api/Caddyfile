@@ -1,4 +1,9 @@
 :8080 {
+    @bazarrWhisper path /status /asr /detect-language
+    handle @bazarrWhisper {
+        reverse_proxy 127.0.0.1:9000
+    }
+
     handle /v1/audio/* {
         reverse_proxy host.docker.internal:8081
     }

@@ -46,12 +46,24 @@ services:
       - homepage.href=https://model-gateway.${TAILNET_NAME}.ts.net/management.html
       - homepage.description=Unified API gateway for AI providers
 
+  bazarr-whisper-adapter:
+    build:
+      context: ./bazarr-whisper-adapter
+    container_name: cliproxyapi-bazarr-whisper-adapter
+    network_mode: service:ts-cliproxyapi
+    depends_on:
+      - ts-cliproxyapi
+    environment:
+      WHISPER_URL: http://host.docker.internal:8081/v1/audio/transcriptions
+    restart: unless-stopped
+
   whisper-router:
     image: caddy:2-alpine
     container_name: cliproxyapi-whisper-router
     network_mode: service:ts-cliproxyapi
     depends_on:
       - ts-cliproxyapi
+      - bazarr-whisper-adapter
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     restart: unless-stopped
