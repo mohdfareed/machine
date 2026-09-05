@@ -27,3 +27,4 @@
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_TV_DEVICE_ID}}"
           key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
           fields: ["address", "last_seen", "expires"]
+          href: http://apple-tv.${TAILNET_NAME}.ts.net:5252 # tailscale remote management

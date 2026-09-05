@@ -138,7 +138,7 @@ services:
       homepage.name: Plex
       homepage.id: media-plex
       homepage.icon: mdi-plex
-      homepage.href: https://plex.${TAILNET_NAME}.ts.net/desktop
+      homepage.href: https://plex.${TAILNET_NAME}.ts.net
       homepage.description: Media server
 
   seerr:
