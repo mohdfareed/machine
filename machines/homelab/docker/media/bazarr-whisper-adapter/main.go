@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	listenAddress  = ":9000"
+	listenAddress  = "127.0.0.1:9000"
 	maxUploadBytes = int64(1 << 30)
 	sampleRate     = 16000
 	bytesPerSample = 2

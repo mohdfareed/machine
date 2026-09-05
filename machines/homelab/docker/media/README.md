@@ -85,6 +85,7 @@ making the request:
    empty because all three containers see the same `/data` paths. Create an
    English and Arabic language profile, make it the default for series and
    movies, add the subtitle providers, and store subtitles alongside the media.
+   Use `http://127.0.0.1:9000` for the Whisper endpoint.
 
 6. **Set up Seerr last.** Connect Plex, Radarr, and Sonarr using their internal
    addresses and API keys, then select the default roots and quality profiles.

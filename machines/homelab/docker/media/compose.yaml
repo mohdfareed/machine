@@ -267,6 +267,17 @@ services:
         homepage.description: Subtitles
         homepage.showStats: "false"
 
+  bazarr-whisper-adapter:
+    build:
+      context: ./bazarr-whisper-adapter
+    container_name: bazarr-whisper-adapter
+    network_mode: service:ts-bazarr
+    depends_on:
+      - ts-bazarr
+    environment:
+      WHISPER_URL: http://host.docker.internal:8081/v1/audio/transcriptions
+    restart: unless-stopped
+
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
