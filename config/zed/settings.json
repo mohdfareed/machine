@@ -12,7 +12,6 @@
   // Panels
   "project_panel": {
     "dock": "left",
-    "hide_root": true,
     "git_status_indicator": true,
     "diagnostic_badges": true,
   },
@@ -161,10 +160,35 @@
     // Permissions
     "tool_permissions": {
       "tools": {
+        "terminal": {
+          "always_allow": [
+            {
+              "pattern": "^curl\\b",
+            },
+            {
+              "pattern": "^grep\\b",
+            },
+            {
+              "pattern": "^sort\\b",
+            },
+            {
+              "pattern": "^sed\\b",
+            },
+            {
+              "pattern": "^printf\\s+n---(\\s|$)",
+            },
+            {
+              "pattern": "^uv\\b",
+            },
+          ],
+        },
         "fetch": {
           "always_allow": [
             {
               "pattern": "^https?://zed\\.dev",
+            },
+            {
+              "pattern": "^https?://github\\.com",
             },
             {
               "pattern": "^https?://api\\.github\\.com",
