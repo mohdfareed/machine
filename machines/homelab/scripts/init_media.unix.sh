@@ -22,6 +22,8 @@ esac
 mkdir -p \
     "$MC_HOMELAB_MEDIA_DIR/downloads/incomplete" \
     "$MC_HOMELAB_MEDIA_DIR/downloads/complete" \
+    "$MC_HOMELAB_MEDIA_DIR/downloads/complete/movies" \
+    "$MC_HOMELAB_MEDIA_DIR/downloads/complete/tv" \
     "$MC_HOMELAB_MEDIA_DIR/movies" \
     "$MC_HOMELAB_MEDIA_DIR/series"
 

@@ -9,7 +9,7 @@ x-tailscale-environment: &tailscale-environment
   TS_USERSPACE: "false"
 
 x-service-environment: &service-environment
-  TZ: ${HOMELAB_TIMEZONE:?HOMELAB_TIMEZONE must be set}
+  TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
 
 x-media-labels: &media-labels
   homepage.group: Media
@@ -27,8 +27,18 @@ x-tailscale-service: &tailscale-service
   restart: unless-stopped
 
 services:
-
   # MARK: Tailscale
+
+  ts-arr-dashboard:
+    <<: *tailscale-service
+    container_name: ts-arr-dashboard
+    hostname: arr-dashboard
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: arr-dashboard
+    volumes:
+      - ts-arr-dashboard-state:/var/lib/tailscale
+      - ./ts-config/arr-dashboard:/config
 
   ts-plex:
     <<: *tailscale-service
@@ -51,6 +61,17 @@ services:
     volumes:
       - ts-seerr-state:/var/lib/tailscale
       - ./ts-config/seerr:/config
+
+  ts-prowlarr:
+    <<: *tailscale-service
+    container_name: ts-prowlarr
+    hostname: prowlarr
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: prowlarr
+    volumes:
+      - ts-prowlarr-state:/var/lib/tailscale
+      - ./ts-config/prowlarr:/config
 
   ts-radarr:
     <<: *tailscale-service
@@ -85,29 +106,44 @@ services:
       - ts-bazarr-state:/var/lib/tailscale
       - ./ts-config/bazarr:/config
 
-  ts-prowlarr:
+  ts-weaver:
     <<: *tailscale-service
-    container_name: ts-prowlarr
-    hostname: prowlarr
+    container_name: ts-weaver
+    hostname: weaver
     environment:
       <<: *tailscale-environment
-      TS_HOSTNAME: prowlarr
+      TS_HOSTNAME: weaver
     volumes:
-      - ts-prowlarr-state:/var/lib/tailscale
-      - ./ts-config/prowlarr:/config
-
-  ts-sabnzbd:
-    <<: *tailscale-service
-    container_name: ts-sabnzbd
-    hostname: sabnzbd
-    environment:
-      <<: *tailscale-environment
-      TS_HOSTNAME: sabnzbd
-    volumes:
-      - ts-sabnzbd-state:/var/lib/tailscale
-      - ./ts-config/sabnzbd:/config
+      - ts-weaver-state:/var/lib/tailscale
+      - ./ts-config/weaver:/config
 
   # MARK: Services
+
+  arr-dashboard:
+    image: khak1s/arr-dashboard:latest
+    container_name: arr-dashboard
+    network_mode: service:ts-arr-dashboard
+    depends_on:
+      - ts-arr-dashboard
+    restart: unless-stopped
+    mem_limit: 3g
+    environment:
+      <<: *service-environment
+      PUID: "${PUID:-501}"
+      PGID: "${PGID:-20}"
+      APP_URL: https://arr-dashboard.${TAILNET_NAME}.ts.net
+      TRUST_PROXY: "true"
+      COOKIE_SECURE: "true"
+      WEBAUTHN_RP_ID: arr-dashboard.${TAILNET_NAME}.ts.net
+      WEBAUTHN_ORIGIN: https://arr-dashboard.${TAILNET_NAME}.ts.net
+    volumes:
+      - ./data/arr-dashboard:/config
+    labels:
+      <<: *media-labels
+      homepage.name: Arr Dashboard
+      homepage.icon: mdi-view-dashboard
+      homepage.href: https://arr-dashboard.${TAILNET_NAME}.ts.net
+      homepage.description: Media automation dashboard
 
   plex:
     image: plexinc/pms-docker:latest
@@ -130,7 +166,6 @@ services:
       - type: bind
         source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
         target: /data
-        read_only: true
         bind:
           create_host_path: false
     labels:
@@ -166,37 +201,61 @@ services:
       homepage.href: https://seerr.${TAILNET_NAME}.ts.net
       homepage.description: Media management
 
-  sabnzbd:
-    image: lscr.io/linuxserver/sabnzbd:latest
-    container_name: sabnzbd
-    network_mode: service:ts-sabnzbd
+  weaver:
+    image: ghcr.io/scryer-media/weaver:latest
+    container_name: weaver
+    network_mode: service:ts-weaver
     depends_on:
-      - ts-sabnzbd
+      - ts-weaver
     restart: unless-stopped
     environment:
       <<: *service-environment
-      SABNZBD_HOST_WHITELIST: "sabnzbd.${TAILNET_NAME:?TAILNET_NAME must be set}.ts.net, ts-sabnzbd"
+      PUID: "${PUID:-501}"
+      PGID: "${PGID:-20}"
+      UMASK: "022"
+      WEAVER_HTTP_BIND_ADDRESS: 0.0.0.0
+      WEAVER_HTTP_ALLOWED_HOSTS: "weaver,ts-weaver,weaver.${TAILNET_NAME}.ts.net"
+      WEAVER_INTERMEDIATE_DIR: /data/downloads/incomplete
+      WEAVER_COMPLETE_DIR: /data/downloads/complete
     volumes:
-      - ./data/sabnzbd:/config
-      - type: bind
-        source: ./sabnzbd/10-host-whitelist.sh
-        target: /custom-cont-init.d/10-host-whitelist.sh
-        read_only: true
-        bind:
-          create_host_path: false
+      - ./data/weaver:/config
       - type: bind
         source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
         target: /data
         bind:
           create_host_path: false
+    healthcheck:
+      test: wget -q -T 3 -O /dev/null http://127.0.0.1:9090/readyz || exit 1
+      start_period: 20s
+      timeout: 5s
+      interval: 30s
+      retries: 3
     labels:
       <<: *media-labels
-      homepage.name: SABnzbd
-      homepage.icon: mdi-cloud-download
-      homepage.description: Media downloader
-      homepage.href: https://sabnzbd.${TAILNET_NAME}.ts.net
+      homepage.name: Weaver
+      homepage.icon: mdi-download-network
+      homepage.href: https://weaver.${TAILNET_NAME}.ts.net
+      homepage.description: Usenet downloader trial
 
   # MARK: Infrastructure
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: service:ts-prowlarr
+    depends_on:
+      - ts-prowlarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/prowlarr:/config
+    labels:
+      <<: *media-automation-labels
+      homepage.name: Prowlarr
+      homepage.icon: mdi-magnify-scan
+      homepage.href: https://prowlarr.${TAILNET_NAME}.ts.net
+      homepage.description: Indexers
+      homepage.showStats: "false"
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -245,27 +304,27 @@ services:
       homepage.showStats: "false"
 
   bazarr:
-      image: lscr.io/linuxserver/bazarr:latest
-      container_name: bazarr
-      network_mode: service:ts-bazarr
-      depends_on:
-        - ts-bazarr
-      restart: unless-stopped
-      environment: *service-environment
-      volumes:
-        - ./data/bazarr:/config
-        - type: bind
-          source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
-          target: /data
-          bind:
-            create_host_path: false
-      labels:
-        <<: *media-automation-labels
-        homepage.name: Bazarr
-        homepage.icon: mdi-subtitles
-        homepage.href: https://bazarr.${TAILNET_NAME}.ts.net
-        homepage.description: Subtitles
-        homepage.showStats: "false"
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    network_mode: service:ts-bazarr
+    depends_on:
+      - ts-bazarr
+    restart: unless-stopped
+    environment: *service-environment
+    volumes:
+      - ./data/bazarr:/config
+      - type: bind
+        source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
+        target: /data
+        bind:
+          create_host_path: false
+    labels:
+      <<: *media-automation-labels
+      homepage.name: Bazarr
+      homepage.icon: mdi-subtitles
+      homepage.href: https://bazarr.${TAILNET_NAME}.ts.net
+      homepage.description: Subtitles
+      homepage.showStats: "false"
 
   bazarr-whisper-adapter:
     build:
@@ -278,29 +337,12 @@ services:
       WHISPER_URL: http://host.docker.internal:8081/v1/audio/transcriptions
     restart: unless-stopped
 
-  prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
-    network_mode: service:ts-prowlarr
-    depends_on:
-      - ts-prowlarr
-    restart: unless-stopped
-    environment: *service-environment
-    volumes:
-      - ./data/prowlarr:/config
-    labels:
-      <<: *media-automation-labels
-      homepage.name: Prowlarr
-      homepage.icon: mdi-magnify-scan
-      homepage.href: https://prowlarr.${TAILNET_NAME}.ts.net
-      homepage.description: Indexers
-      homepage.showStats: "false"
-
 volumes:
+  ts-arr-dashboard-state:
   ts-plex-state:
   ts-seerr-state:
-  ts-bazarr-state:
   ts-prowlarr-state:
   ts-radarr-state:
   ts-sonarr-state:
-  ts-sabnzbd-state:
+  ts-bazarr-state:
+  ts-weaver-state:

@@ -1,15 +1,41 @@
 host: ""
 port: 8317
-
 remote-management:
-  # Authenticated by MANAGEMENT_PASSWORD from Compose.
+# Authenticated by MANAGEMENT_PASSWORD from Compose.
   allow-remote: true
-
 debug: false
 logging-to-file: true
 logs-max-total-size-mb: 256
 usage-statistics-enabled: false
 request-retry: 3
-
 routing:
   strategy: round-robin
+api-keys:
+  - sk-Py0jnDqnLW2uBx2Qlm6T1DcjDWK4cisp3PxySnGcs3SPsRzD
+credential-concurrency:
+  cpa-heartbeat-timeout: 3s
+  cpa-cancel-bound: 5s
+  reclaim-grace: 5s
+  cleanup-interval: 5s
+  release-flush-interval: 250ms
+  release-max-backoff: 2s
+  busy-retry-min: 250ms
+  busy-retry-max: 1s
+  max-limit: 1000000
+credential-in-flight:
+  snapshot-interval: 2s
+  stale-after: 10s
+  max-part-bytes: 262144
+  max-part-count: 64
+  max-revision-bytes: 16777216
+  max-aggregate-groups: 100000
+  max-details: 10000
+  max-string-bytes: 256
+  staging-retention: 1m
+auth-dir: /root/.cli-proxy-api
+redis-usage-queue-retention-seconds: 60
+ws-auth: true
+oauth-excluded-models:
+  codex:
+    - gpt-5.3-codex-spark
+    - gpt-5.5
