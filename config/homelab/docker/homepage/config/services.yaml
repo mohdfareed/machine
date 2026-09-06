@@ -22,7 +22,7 @@
     - TV:
         icon: mdi-television
         description: Apple TV
-        href: http://apple-tv.${TAILNET_NAME}.ts.net:5252 # tailscale remote management
+        href: http://apple-tv.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net:5252 # tailscale remote management
         widget:
           type: tailscale
           deviceid: "{{HOMEPAGE_VAR_TAILSCALE_TV_DEVICE_ID}}"

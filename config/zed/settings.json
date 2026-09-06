@@ -124,11 +124,21 @@
   "ssh_connections": [
     {
       "host": "homelab",
-      "projects": [],
+      "args": [],
+      "projects": [
+        {
+          "paths": ["/Users/mohdfareed"],
+        },
+      ],
     },
     {
       "host": "pc",
-      "projects": [],
+      "args": [],
+      "projects": [
+        {
+          "paths": ["/Users/mohdfareed"],
+        },
+      ],
     },
   ],
   "calls": {
