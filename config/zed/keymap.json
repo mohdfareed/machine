@@ -1,13 +1,6 @@
 [
   {
     "context": "Editor",
-    "bindings": {
-      "alt-m": [
-        "task::Spawn",
-        {
-          "task_name": "Bookmark: Toggle bookmark",
-        },
-      ],
-    },
+    "bindings": {},
   },
 ]

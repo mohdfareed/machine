@@ -1,33 +1,86 @@
 {
-  // # MARK: Editor ===========================================================
-  "theme": "One Dark Pro",
-  "icon_theme": "Material Icon Theme",
-  "format_on_save": "on",
-  "show_whitespaces": "all",
-  "wrap_guides": [
-    80,
-    120
-  ],
-  "buffer_font_family": "JetBrainsMono Nerd Font",
-  "buffer_font_size": 14,
-  "ui_font_size": 14,
-  "terminal": {
-    "font_family": "JetBrainsMono Nerd Font",
-    "font_size": 14,
-    "option_as_meta": true,
+  // # MARK: Workspace ========================================================
+  "cli_default_open_behavior": "new_window",
+  "title_bar": {
+    "show_menus": true,
+    "show_branch_status_icon": true,
   },
+  "tabs": {
+    "file_icons": true,
+    "git_status": true,
+  },
+  // Panels
   "project_panel": {
     "dock": "left",
+    "hide_root": true,
+    "git_status_indicator": true,
+    "diagnostic_badges": true,
   },
   "outline_panel": {
     "dock": "left",
   },
   "git_panel": {
     "dock": "left",
+    "group_by": "staging",
     "tree_view": true,
+    "file_icons": true,
   },
   "debugger": {
     "dock": "left",
+  },
+  // # MARK: Appearance =======================================================
+  "colorize_brackets": true,
+  "indent_guides": {
+    "coloring": "indent_aware",
+  },
+  // Theme
+  "icon_theme": "Material Icon Theme",
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "One Dark Pro",
+  },
+  // Font
+  "buffer_font_family": "JetBrainsMono Nerd Font",
+  "buffer_font_size": 14,
+  "ui_font_size": 14,
+  // # MARK: Editor ===========================================================
+  "relative_line_numbers": "enabled",
+  "show_whitespaces": "trailing",
+  "redact_private_values": true,
+
+  "minimap": {
+    "max_width_columns": 120,
+    "show": "auto",
+  },
+  "which_key": {
+    "enabled": true,
+  },
+  // Line Wrapping
+  "soft_wrap": "editor_width",
+  "preferred_line_length": 120,
+  "wrap_guides": [80, 120],
+  // Formatting
+  "formatter": "auto",
+  "format_on_save": "on",
+  "prettier": {
+    "allowed": true,
+  },
+  // # MARK: Intellisense =====================================================
+  "semantic_tokens": "combined",
+  "document_folding_ranges": "on",
+  "document_symbols": "on",
+  "completion_menu_item_kind": "symbol",
+  "code_lens": "menu",
+  "inlay_hints": {
+    "toggle_on_modifiers_press": {
+      "control": true,
+    },
+  },
+  "diagnostics": {
+    "inline": {
+      "enabled": true,
+    },
   },
   // # MARK: Languages ========================================================
   "languages": {
@@ -36,104 +89,117 @@
         "source.organizeImports.ruff": true,
       },
     },
-    "Shell Script": {
-      "tab_size": 2,
-    },
     "JSON": {
       "tab_size": 2,
     },
     "JSONC": {
       "tab_size": 2,
     },
-    "YAML": {
-      "tab_size": 2,
-    },
     "Markdown": {
       "tab_size": 2,
     },
-    "LOG": {
-      "language_servers": [
-        "log",
-        "comment"
-      ],
+    "Shell Script": {
+      "tab_size": 2,
     },
-    "Plain Text": {
-      "language_servers": [
-        "bookmark-language-server"
-      ],
+    "YAML": {
+      "tab_size": 2,
+    },
+  },
+  // # MARK: Terminal =========================================================
+  "terminal": {
+    "font_family": "JetBrainsMono Nerd Font",
+    "font_size": 14,
+    "cursor_shape": "bar",
+    "option_as_meta": true,
+  },
+  // # MARK: Version Control ==================================================
+  "diff_view_style": "unified",
+  "git": {
+    "inline_blame": {
+      "location": "status_bar",
+      "show_commit_summary": true,
     },
   },
   // # MARK: Remote Dev =======================================================
   "ssh_connections": [
     {
-      "host": "rpi",
+      "host": "homelab",
       "projects": [],
     },
     {
       "host": "pc",
       "projects": [],
     },
-    {
-      "host": "homelab",
-      "projects": [],
-    },
   ],
+  "calls": {
+    "mute_on_join": true,
+  },
   // # MARK: Agents ===========================================================
   "agent": {
     "dock": "right",
-    "default_profile": "ask",
+    "show_turn_stats": true,
+    "play_sound_when_agent_done": "when_hidden",
+    "commit_message_instructions": "",
+    "default_profile": "write",
     "default_model": {
-      "provider": "copilot_chat",
-      "model": "gpt-5.4-mini",
+      "provider": "openai-subscribed",
+      "model": "gpt-5.6-sol",
       "enable_thinking": true,
-      "effort": "high",
+      "effort": "medium",
+      "speed": "standard",
     },
-    "inline_assistant_model": {
-      "provider": "copilot_chat",
-      "model": "gpt-5-mini",
-      "enable_thinking": false,
+    // Permissions
+    "tool_permissions": {
+      "tools": {
+        "fetch": {
+          "always_allow": [
+            {
+              "pattern": "^https?://zed\\.dev",
+            },
+            {
+              "pattern": "^https?://api\\.github\\.com",
+            },
+            {
+              "pattern": "^https?://raw\\.githubusercontent\\.com",
+            },
+          ],
+        },
+      },
     },
-    "commit_message_model": {
-      "provider": "copilot_chat",
-      "model": "gpt-5-mini",
-      "enable_thinking": true,
+    "sandbox_permissions": {
+      "network_hosts": ["zed.dev", "api.github.com", "raw.githubusercontent.com", "developers.openai.com"],
+      "write_paths": [],
     },
   },
   "edit_predictions": {
     "provider": "copilot",
+    // "provider": "open_ai_compatible_api",
+    "open_ai_compatible_api": {
+      "model": "gpt-5.6-luna",
+      "api_url": "https://model-gateway.tail2a477.ts.net/v1/completions",
+    },
   },
   "agent_servers": {
     "github-copilot-cli": {
       "type": "registry",
     },
-    "gemini": {
-      "type": "registry",
-    },
     "codex-acp": {
-      "type": "registry",
-    },
-    "claude-acp": {
       "type": "registry",
     },
   },
   // # MARK: MCP Servers ======================================================
   "context_servers": {
-    "mcp-server-context7": {
-      "enabled": true,
-      "remote": false,
-      "settings": {
-        "context7_api_key": "CONTEXT7_API_KEY",
-      },
+    "craft-docs": {
+      "url": "https://mcp.craft.do/links/Ll1BPMqendN/mcp",
+    },
+    "craft-docs-all": {
+      "url": "https://mcp.craft.do/links/jbeCfIXlpx/mcp",
     },
     "mcp-server-github": {
       "enabled": true,
-      "remote": false,
       "settings": {
         "github_personal_access_token": "GITHUB_MCP_TOKEN",
       },
-    },
-    "craft-docs": {
-      "url": "https://mcp.craft.do/links/Dwf70HLs61a/mcp",
     },
   },
 }

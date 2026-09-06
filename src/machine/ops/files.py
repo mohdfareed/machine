@@ -6,7 +6,7 @@ import stat
 import subprocess
 from pathlib import Path
 
-from machine.core import is_windows, settings
+from machine.core import PLATFORM, is_windows, settings
 from machine.manifest import FileMapping, Module
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,10 @@ def deploy_files(
     created = 0
     failures: list[tuple[str, str, str]] = []
     for fm in files:
+        if not fm.applies_to(PLATFORM):
+            logger.debug("Skip (not applicable): %s", fm.target)
+            continue
+
         src = Path(fm.source)
         tgt = Path(os.path.expandvars(fm.target)).expanduser()
         module = (owners or {}).get(fm.source, "?")

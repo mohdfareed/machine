@@ -123,12 +123,12 @@ services:
     volumes:
       - ./data/plex:/config
       - type: bind
-        source: ./cache/plex-transcode
+        source: ${MC_HOMELAB_STORAGE_DIR:?MC_HOMELAB_STORAGE_DIR must be set}/plex-transcode
         target: /transcode
         bind:
           create_host_path: true
       - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
         target: /data
         read_only: true
         bind:
@@ -185,7 +185,7 @@ services:
         bind:
           create_host_path: false
       - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
         target: /data
         bind:
           create_host_path: false
@@ -209,7 +209,7 @@ services:
     volumes:
       - ./data/radarr:/config
       - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
         target: /data
         bind:
           create_host_path: false
@@ -232,7 +232,7 @@ services:
     volumes:
       - ./data/sonarr:/config
       - type: bind
-        source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+        source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
         target: /data
         bind:
           create_host_path: false
@@ -255,7 +255,7 @@ services:
       volumes:
         - ./data/bazarr:/config
         - type: bind
-          source: ${HOMELAB_MEDIA_DIR:?HOMELAB_MEDIA_DIR must be set}
+          source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
           target: /data
           bind:
             create_host_path: false

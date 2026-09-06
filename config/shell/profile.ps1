@@ -1,5 +1,14 @@
 #!/usr/bin/env pwsh
 
+# Environment
+# =============================================================================
+
+$env:PATH += "$([IO.Path]::PathSeparator)$HOME/.local/bin" # user local bin
+$env:PIP_REQUIRE_VIRTUALENV = $true  # python
+
+# Helpers
+# =============================================================================
+
 function Import-DotEnv($path) {
     if (-not (Test-Path $path)) {
         return
@@ -41,12 +50,6 @@ function Invoke-Cached($key, [scriptblock]$generate) {
         . $file
     }
 }
-
-# Environment
-# =============================================================================
-
-$env:PATH += "$([IO.Path]::PathSeparator)$HOME/.local/bin" # user local bin
-$env:PIP_REQUIRE_VIRTUALENV = $true  # python
 
 # Infrastructure
 # =============================================================================

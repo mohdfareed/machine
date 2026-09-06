@@ -10,12 +10,15 @@ module = Module(
             cask="tailscale",
             script="curl -fsSL https://tailscale.com/install.sh | sh",
         ),
-        # REVIEW: Docker Desktop cask only delivers an Intel binary via Homebrew.
-        #   Install Docker Desktop manually on Apple Silicon.
         Package(
             name="docker",
             script="curl -fsSL https://get.docker.com | sh",
             platforms=[Platform.LINUX, Platform.WSL],
+        ),
+        Package(
+            name="docker",
+            cask="docker-desktop",
+            platforms=[Platform.MACOS],
         ),
     ],
 )

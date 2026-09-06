@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from machine.core import Platform
 from machine.manifest import (
     Module,
     list_machines,
@@ -125,6 +126,18 @@ def test_ssh_override_preserves_private_mode() -> None:
     ssh_config = next(fm for fm in manifest.files if fm.target == "~/.ssh/config")
 
     assert ssh_config.mode == 0o600
+
+
+def test_shell_override_preserves_platforms() -> None:
+    manifest = load_manifest("macbook", ROOT)
+    zsh_config = next(fm for fm in manifest.files if fm.target == "~/.zshrc.local")
+
+    assert zsh_config.platforms == [
+        Platform.MACOS,
+        Platform.LINUX,
+        Platform.WSL,
+        Platform.GHCS,
+    ]
 
 
 def test_module_dependencies_auto_included() -> None:

@@ -31,6 +31,8 @@ catch {
     Write-Warning "Failed to enable developer mode, enable it manually: $_"
 }
 
+# REVIEW: Separate features and wsl setup from core windows setup.
+
 # install windows features
 Write-Host "enabling windows features..."
 try {

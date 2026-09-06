@@ -14,14 +14,20 @@ match PLATFORM:
 
 module = Module(
     files=[
-        *(
-            []
-            if PLATFORM == Platform.WINDOWS
-            else [
-                FileMapping(source=".zshenv", target="~/.zshenv"),
-                FileMapping(source=".zshrc", target="~/.zshrc"),
-                FileMapping(source=".aliases.sh", target="~/.aliases"),
-            ]
+        FileMapping(
+            source=".zshenv",
+            target="~/.zshenv",
+            platforms=[Platform.MACOS, Platform.LINUX, Platform.WSL, Platform.GHCS],
+        ),
+        FileMapping(
+            source=".zshrc",
+            target="~/.zshrc",
+            platforms=[Platform.MACOS, Platform.LINUX, Platform.WSL, Platform.GHCS],
+        ),
+        FileMapping(
+            source=".aliases.sh",
+            target="~/.aliases",
+            platforms=[Platform.MACOS, Platform.LINUX, Platform.WSL, Platform.GHCS],
         ),
         # powershell (windows and unix)
         FileMapping(source="profile.ps1", target=str(_pwsh_base / "profile.ps1")),
@@ -44,8 +50,16 @@ module = Module(
     ],
     overrides=[
         # zsh
-        FileMapping(source=".zshrc", target="~/.zshrc.local"),
-        FileMapping(source=".zshenv", target="~/.zshenv.local"),
+        FileMapping(
+            source=".zshrc",
+            target="~/.zshrc.local",
+            platforms=[Platform.MACOS, Platform.LINUX, Platform.WSL, Platform.GHCS],
+        ),
+        FileMapping(
+            source=".zshenv",
+            target="~/.zshenv.local",
+            platforms=[Platform.MACOS, Platform.LINUX, Platform.WSL, Platform.GHCS],
+        ),
         # powershell
         FileMapping(source="profile.ps1", target=str(_pwsh_base / "profile.local.ps1")),
     ],

@@ -1,15 +1,15 @@
 #!/bin/sh
 set -eu
 
-if [ -z "${HOMELAB_MEDIA_DIR:-}" ]; then
-    echo "HOMELAB_MEDIA_DIR is required" >&2
+if [ -z "${MC_HOMELAB_MEDIA_DIR:-}" ]; then
+    echo "MC_HOMELAB_MEDIA_DIR is required" >&2
     exit 1
 fi
 
 # Do not create a fake volume directory on the internal disk when a drive is absent.
-case "$HOMELAB_MEDIA_DIR" in
+case "$MC_HOMELAB_MEDIA_DIR" in
     /Volumes/*)
-        volume_name=${HOMELAB_MEDIA_DIR#/Volumes/}
+        volume_name=${MC_HOMELAB_MEDIA_DIR#/Volumes/}
         volume_name=${volume_name%%/*}
         if [ ! -d "/Volumes/$volume_name" ]; then
             echo "Media volume is not mounted: /Volumes/$volume_name" >&2
@@ -20,11 +20,10 @@ esac
 
 # Create the media tree and subdirectories for downloads and media.
 mkdir -p \
-    "$HOMELAB_MEDIA_DIR/downloads/incomplete" \
-    "$HOMELAB_MEDIA_DIR/downloads/complete" \
-    "$HOMELAB_MEDIA_DIR/movies" \
-    "$HOMELAB_MEDIA_DIR/series" \
-    "$HOMELAB_MEDIA_DIR/anime"
+    "$MC_HOMELAB_MEDIA_DIR/downloads/incomplete" \
+    "$MC_HOMELAB_MEDIA_DIR/downloads/complete" \
+    "$MC_HOMELAB_MEDIA_DIR/movies" \
+    "$MC_HOMELAB_MEDIA_DIR/series"
 
 # On macOS, create a read-only SMB share for the media tree.
 if [ "$(uname -s)" = "Darwin" ]; then
@@ -45,14 +44,14 @@ if [ "$(uname -s)" = "Darwin" ]; then
     done
 
     # If the share exists but points to a different path, remove it.
-    if [ -n "$current_path" ] && [ "$current_path" != "$HOMELAB_MEDIA_DIR" ]; then
+    if [ -n "$current_path" ] && [ "$current_path" != "$MC_HOMELAB_MEDIA_DIR" ]; then
         sudo /usr/sbin/sharing -r "$share_record"
         share_record=
         current_path=
     fi
 
     if [ -z "$share_record" ]; then
-        sudo /usr/sbin/sharing -a "$HOMELAB_MEDIA_DIR" \
+        sudo /usr/sbin/sharing -a "$MC_HOMELAB_MEDIA_DIR" \
             -n "$share_name" \
             -S "$share_name" \
             -s 001 \

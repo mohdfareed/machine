@@ -2,7 +2,7 @@
 
 # Media
 
-Seerr sends movies to Radarr and series or anime to Sonarr. Prowlarr manages
+Seerr sends movies to Radarr and series to Sonarr. Prowlarr manages
 their indexers, SABnzbd downloads files, Bazarr adds subtitles,
 and Plex serves the library to Plex clients or Infuse.
 
@@ -39,17 +39,15 @@ Bulk data stays outside `data/` and is not included in that backup:
 
 ```txt
 downloads/
-  usenet/
-    incomplete/
-    complete/
+   incomplete/
+   complete/
 movies/
 series/
-anime/
 ```
 
 Every media container sees the same tree at `/data`, which allows hard-link imports;
 Plex mounts it read-only. On macOS, the script also exposes the tree as the
-authenticated, read-only SMB share `Media`. Change `HOMELAB_MEDIA_DIR` in
+authenticated, read-only SMB share `Media`. Change `MC_HOMELAB_MEDIA_DIR` in
 `machines/homelab/machine.env` to move the tree to an external drive.
 
 ## First Run
@@ -66,16 +64,14 @@ making the request:
 | Prowlarr    | `http://ts-prowlarr:9696`      |
 | SABnzbd     | `http://ts-sabnzbd:8080`       |
 
-1. **Set up Plex.** Claim the server and add libraries for `/data/movies`,
-   `/data/series`, and `/data/anime`.
+1. **Set up Plex.** Claim the server and add libraries for `/data/movies` and `/data/series`.
 
 2. **Set up SABnzbd.** Add the Usenet provider, set the incomplete and complete
    folders under `/data/downloads/usenet`, and add `movies` and `series` categories.
 
 3. **Set up Radarr and Sonarr.** Add `/data/movies` as Radarr's root. Add
-   `/data/series` and `/data/anime` as Sonarr roots. Connect each app to the
-   download client above, using category `movies` in Radarr and `series` in
-   Sonarr.
+   `/data/series` as Sonarr roots. Connect each app to the download client
+   above, using category `movies` in Radarr and `series` in Sonarr.
 
 4. **Set up Prowlarr.** Add the chosen indexers, then add Radarr and Sonarr
    under **Settings > Apps** with full synchronization.

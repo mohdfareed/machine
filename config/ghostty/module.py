@@ -1,14 +1,16 @@
-"""Ghostty terminal configuration module (macOS/Linux only)."""
+"""Ghostty terminal configuration module (Unix only)."""
 
-from machine.core import PLATFORM, Platform
+from machine.core import Platform
 from machine.manifest import FileMapping, Module, Package
 
 module = Module(
-    files=(
-        []
-        if PLATFORM == Platform.WINDOWS
-        else [FileMapping(source="config", target="~/.config/ghostty/config")]
-    ),
+    files=[
+        FileMapping(
+            source="config",
+            target="~/.config/ghostty/config",
+            platforms=[Platform.MACOS, Platform.LINUX],
+        )
+    ],
     packages=[
         Package(name="ghostty", cask="ghostty", snap="ghostty --classic"),
     ],

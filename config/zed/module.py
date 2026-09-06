@@ -19,14 +19,19 @@ module = Module(
         FileMapping(source="settings.json", target=str(_base / "settings.json")),
         FileMapping(source="snippets.json", target=str(_base / "snippets.json")),
         FileMapping(source="tasks.json", target=str(_base / "tasks.json")),
-        FileMapping(source="bookmark_add.py", target=str(_base / "bookmark_add.py")),
     ],
     packages=[
         Package(
             name="zed",
             cask="zed",
-            script="curl -f https://zed.dev/install.sh | sh",  # linux only
+            script="curl -f https://zed.dev/install.sh | sh",
             winget="ZedIndustries.Zed",
+            platforms=[Platform.MACOS, Platform.WINDOWS],
+        ),
+        Package(
+            name="zed",
+            script="curl -f https://zed.dev/install.sh | sh",
+            platforms=[Platform.LINUX],
         ),
     ],
 )

@@ -68,8 +68,9 @@ Composes modules and adds machine-specific overrides.
 - `~/.env` is the only generated file - written by `mc apply` with just `MC_HOME` and `MC_ID`
 - Define packages with `Package(...)` directly; package helper constructors (`brew(...)`, `apt(...)`, etc.) are removed
 - `FileMapping(mode=...)` owns mapped-file permissions; owner-only modes use a current-user and SYSTEM ACL on Windows
+- Use `FileMapping(platforms=...)` for intentionally platform-specific files instead of conditionally constructing file lists
 - Use `cask=` for Homebrew casks; package source selection is platform-aware and should replace package-level `if PLATFORM ...` conditionals in manifests/modules
-- Use `platforms=` only when a package is intentionally restricted or script-only; normal multi-manager package selection should not need manifest-level platform conditionals
+- Use package `platforms=` only when a package is intentionally restricted or script-only; normal multi-manager package selection should not need manifest-level platform conditionals
 - Platform tags on scripts: `name.macos.sh`, `name.unix.sh`, `name.win.ps1`
 - Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages, `up_` = run only during `mc update`, `_` = helper (never auto-executed, sourced by other scripts)
 - Execution order: files → `init_*` scripts → packages → remaining scripts

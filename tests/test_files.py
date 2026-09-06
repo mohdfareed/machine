@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from machine.core import Platform
+from machine.manifest import FileMapping
 from machine.ops import files as machine_files
 
 
@@ -19,6 +21,60 @@ class _WindowsPrivilegeError(OSError):
     def __init__(self) -> None:
         super().__init__("symlink requires privilege")
         self.winerror = 1314
+
+
+def test_file_mapping_platform_filter() -> None:
+    universal = FileMapping(source="source", target="target")
+    mac_only = FileMapping(
+        source="source",
+        target="target",
+        platforms=[Platform.MACOS],
+    )
+
+    assert universal.applies_to(Platform.MACOS)
+    assert universal.applies_to(Platform.WINDOWS)
+    assert mac_only.applies_to(Platform.MACOS)
+    assert not mac_only.applies_to(Platform.WINDOWS)
+
+
+def test_deploy_files_skips_non_applicable_platforms(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    universal_source = tmp_path / "universal"
+    windows_source = tmp_path / "windows"
+    macos_source = tmp_path / "macos"
+    for source in (universal_source, windows_source, macos_source):
+        source.write_text(source.name, encoding="utf-8")
+
+    mappings = [
+        FileMapping(source=str(universal_source), target="universal-target"),
+        FileMapping(
+            source=str(windows_source),
+            target="windows-target",
+            platforms=[Platform.WINDOWS],
+        ),
+        FileMapping(
+            source=str(macos_source),
+            target="macos-target",
+            platforms=[Platform.MACOS],
+        ),
+    ]
+    linked: list[tuple[Path, Path]] = []
+
+    def _record_link(source: Path, target: Path, _mode: int | None = None) -> bool:
+        linked.append((source, target))
+        return True
+
+    monkeypatch.setattr(machine_files, "PLATFORM", Platform.WINDOWS)
+    monkeypatch.setattr(machine_files, "_symlink", _record_link)
+
+    created, failures = machine_files.deploy_files(mappings)
+
+    assert created == 2
+    assert failures == []
+    assert [source for source, _target in linked] == [universal_source, windows_source]
+    assert [str(target) for _source, target in linked] == ["universal-target", "windows-target"]
 
 
 def test_symlink_raises_guidance_on_windows_file_privilege_error(

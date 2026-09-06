@@ -466,15 +466,17 @@ def show(
         console.print(f"  Modules: {', '.join(m.name for m in mods)}")
 
     # Files
-    files = [(m.name, f) for m in mods for f in m.files] + [(machine, f) for f in manifest.files]
+    files = [(m.name, f) for m in mods for f in m.files if f.applies_to(PLATFORM)] + [
+        (machine, f) for f in manifest.files if f.applies_to(PLATFORM)
+    ]
     if files:
         console.print("\n[bold]Files:[/]")
         for mod, f in files:
             console.print(f"  [cyan]{mod:<12}[/] {_short(f.source)} → {f.target}")
 
     # Packages
-    pkgs = [(m.name, p) for m in mods for p in m.packages] + [
-        (machine, p) for p in manifest.packages
+    pkgs = [(m.name, p) for m in mods for p in m.packages if p.applies_to(PLATFORM)] + [
+        (machine, p) for p in manifest.packages if p.applies_to(PLATFORM)
     ]
     if pkgs:
         console.print("\n[bold]Packages:[/]")

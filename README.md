@@ -56,10 +56,10 @@ Run `mc -h` or `mc <command> -h` for full options.
 
 | Field       | Description                                                         |
 | ----------- | ------------------------------------------------------------------- |
-| `files`     | `FileMapping(source, target)` → symlinked to `~`                    |
+| `files`     | `FileMapping(source, target, platforms=)` → symlinked to `~`        |
 | `packages`  | `Package(name, brew=, apt=, snap=, winget=, scoop=, mas=, script=)` |
 | `scripts`   | Platform-tagged scripts to run                                      |
-| `overrides` | `FileMapping(source, target)` → machine-local override symlinks     |
+| `overrides` | `FileMapping(source, target, platforms=)` → machine-local overrides |
 | `depends`   | Module names that must be included before this                      |
 
 **Manifests** (`machines/<id>/manifest.py`) export a `MachineManifest`:

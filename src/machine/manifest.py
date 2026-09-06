@@ -14,20 +14,26 @@ SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 # # MARK: Models
 
 
-# TODO: Add platform filtering to FileMapping such that files are only mapped on
-# certain platforms. Then fix all current platform checks in modules.
 class FileMapping(BaseModel):
     """A config file or directory to symlink."""
 
     source: str
     target: str
     mode: int | None = None
+    platforms: list[Platform] | None = None
+
+    def applies_to(self, platform: Platform) -> bool:
+        """Return True when this file mapping should be considered on *platform*."""
+        return self.platforms is None or platform in self.platforms
 
 
 class Package(BaseModel):
     """A package with optional per-manager install names."""
 
     name: str = ""
+    platforms: list[Platform] | None = None
+
+    script: str | None = None
     brew: str | None = None
     cask: str | None = None
     apt: str | None = None
@@ -35,8 +41,6 @@ class Package(BaseModel):
     winget: str | None = None
     scoop: str | None = None
     mas: int | None = None
-    script: str | None = None
-    platforms: list[Platform] | None = None
 
     def applies_to(self, platform: Platform) -> bool:
         """Return True when this package should be considered on *platform*."""
@@ -44,13 +48,20 @@ class Package(BaseModel):
 
     @model_validator(mode="after")
     def _check_source(self) -> Self:
-        name_sources = [self.brew, self.cask, self.apt, self.snap, self.winget, self.scoop]
-        all_sources = [*name_sources, self.script]
+        name_sources: list[str | None] = [
+            self.brew,
+            self.cask,
+            self.apt,
+            self.snap,
+            self.winget,
+            self.scoop,
+            str(self.mas),
+        ]
 
-        if not any(s is not None for s in all_sources) and self.mas is None:
+        if not any(s is not None for s in [*name_sources, self.script]):
             raise ValueError(f"Package '{self.name}' has no install source")
         if not self.name:
-            self.name = next((s for s in name_sources if s is not None), str(self.mas))
+            self.name = next(s for s in name_sources if s is not None)
 
         return self
 
@@ -83,12 +94,14 @@ def list_modules(root: Path) -> list[str]:
     modules_dir = root / "config"
     if not modules_dir.exists():
         return []
+
     names: set[str] = set()
     for entry in modules_dir.iterdir():
         if entry.is_dir() and (entry / "module.py").exists():
             names.add(entry.name)
         elif entry.is_file() and entry.suffix == ".py":
             names.add(entry.stem)
+
     return sorted(names)
 
 
@@ -97,12 +110,14 @@ def list_machines(root: Path) -> list[str]:
     machines_dir = root / "machines"
     if not machines_dir.exists():
         return []
+
     names: set[str] = set()
     for entry in machines_dir.iterdir():
         if entry.is_dir() and (entry / "manifest.py").exists():
             names.add(entry.name)
         elif entry.is_file() and entry.suffix == ".py":
             names.add(entry.stem)
+
     return sorted(names)
 
 
@@ -207,6 +222,7 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
                             source=str(local_file),
                             target=override.target,
                             mode=override.mode,
+                            platforms=override.platforms,
                         )
                     )
 
@@ -221,6 +237,11 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
                     result.scripts.append(path)
 
     return result
+
+
+def resolve_modules(modules: list[str], root: Path) -> list[Module]:
+    """Load full Module objects from module name strings."""
+    return [load_module(name, root) for name in modules]
 
 
 # # MARK: Helpers
@@ -260,8 +281,3 @@ def _import_py(path: Path, module_name: str) -> object:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
-def resolve_modules(modules: list[str], root: Path) -> list[Module]:
-    """Load full Module objects from module name strings."""
-    return [load_module(name, root) for name in modules]

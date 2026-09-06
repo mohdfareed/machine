@@ -11,8 +11,8 @@ model_name="ggml-large-v3-turbo-q5_0.bin"
 model_url="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/$model_name"
 model_sha1="e050f7970618a659205450ad97eb95a18d69c9ee"
 
-# ~/.homelab/whisper/models/model.bin
-model_dir="$MC_HOMELAB_DIR/whisper/models"
+# ~/.homelab/storage/whisper/models/model.bin
+model_dir="$MC_HOMELAB_STORAGE_DIR/whisper/models"
 model_path="$model_dir/$model_name"
 mkdir -p "$model_dir"
 
