@@ -18,14 +18,8 @@ case "$MC_HOMELAB_MEDIA_DIR" in
         ;;
 esac
 
-# Create the media tree and subdirectories for downloads and media.
-mkdir -p \
-    "$MC_HOMELAB_MEDIA_DIR/downloads/incomplete" \
-    "$MC_HOMELAB_MEDIA_DIR/downloads/complete" \
-    "$MC_HOMELAB_MEDIA_DIR/downloads/complete/movies" \
-    "$MC_HOMELAB_MEDIA_DIR/downloads/complete/tv" \
-    "$MC_HOMELAB_MEDIA_DIR/movies" \
-    "$MC_HOMELAB_MEDIA_DIR/series"
+# Provision the host mount point; applications own their internal directories.
+mkdir -p "$MC_HOMELAB_MEDIA_DIR"
 
 # On macOS, create a read-only SMB share for the media tree.
 if [ "$(uname -s)" = "Darwin" ]; then

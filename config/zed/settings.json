@@ -3,41 +3,41 @@
   "cli_default_open_behavior": "new_window",
   "title_bar": {
     "show_menus": true,
-    "show_branch_status_icon": true,
+    "show_branch_status_icon": true
   },
   "tabs": {
     "file_icons": true,
-    "git_status": true,
+    "git_status": true
   },
   // Panels
   "project_panel": {
     "dock": "left",
     "git_status_indicator": true,
-    "diagnostic_badges": true,
+    "diagnostic_badges": true
   },
   "outline_panel": {
-    "dock": "left",
+    "dock": "left"
   },
   "git_panel": {
     "dock": "left",
     "group_by": "staging",
     "tree_view": true,
-    "file_icons": true,
+    "file_icons": true
   },
   "debugger": {
-    "dock": "left",
+    "dock": "left"
   },
   // # MARK: Appearance =======================================================
   "colorize_brackets": true,
   "indent_guides": {
-    "coloring": "indent_aware",
+    "coloring": "indent_aware"
   },
   // Theme
   "icon_theme": "Material Icon Theme",
   "theme": {
     "mode": "system",
     "light": "One Light",
-    "dark": "One Dark Pro",
+    "dark": "One Dark Pro"
   },
   // Font
   "buffer_font_family": "JetBrainsMono Nerd Font",
@@ -50,10 +50,10 @@
 
   "minimap": {
     "max_width_columns": 120,
-    "show": "auto",
+    "show": "auto"
   },
   "which_key": {
-    "enabled": true,
+    "enabled": true
   },
   // Line Wrapping
   "soft_wrap": "editor_width",
@@ -63,7 +63,7 @@
   "formatter": "auto",
   "format_on_save": "on",
   "prettier": {
-    "allowed": true,
+    "allowed": true
   },
   // # MARK: Intellisense =====================================================
   "semantic_tokens": "combined",
@@ -73,51 +73,51 @@
   "code_lens": "menu",
   "inlay_hints": {
     "toggle_on_modifiers_press": {
-      "control": true,
-    },
+      "control": true
+    }
   },
   "diagnostics": {
     "inline": {
-      "enabled": true,
-    },
+      "enabled": true
+    }
   },
   // # MARK: Languages ========================================================
   "languages": {
     "Python": {
       "code_actions_on_format": {
-        "source.organizeImports.ruff": true,
-      },
+        "source.organizeImports.ruff": true
+      }
     },
     "JSON": {
-      "tab_size": 2,
+      "tab_size": 2
     },
     "JSONC": {
-      "tab_size": 2,
+      "tab_size": 2
     },
     "Markdown": {
-      "tab_size": 2,
+      "tab_size": 2
     },
     "Shell Script": {
-      "tab_size": 2,
+      "tab_size": 2
     },
     "YAML": {
-      "tab_size": 2,
-    },
+      "tab_size": 2
+    }
   },
   // # MARK: Terminal =========================================================
   "terminal": {
     "font_family": "JetBrainsMono Nerd Font",
     "font_size": 14,
     "cursor_shape": "bar",
-    "option_as_meta": true,
+    "option_as_meta": true
   },
   // # MARK: Version Control ==================================================
   "diff_view_style": "unified",
   "git": {
     "inline_blame": {
       "location": "status_bar",
-      "show_commit_summary": true,
-    },
+      "show_commit_summary": true
+    }
   },
   // # MARK: Remote Dev =======================================================
   "ssh_connections": [
@@ -126,22 +126,22 @@
       "args": [],
       "projects": [
         {
-          "paths": ["/Users/mohdfareed"],
-        },
-      ],
+          "paths": ["/Users/mohdfareed"]
+        }
+      ]
     },
     {
       "host": "pc",
       "args": [],
       "projects": [
         {
-          "paths": ["/Users/mohdfareed"],
-        },
-      ],
-    },
+          "paths": ["/Users/mohdfareed"]
+        }
+      ]
+    }
   ],
   "calls": {
-    "mute_on_join": true,
+    "mute_on_join": true
   },
   // # MARK: Agents ===========================================================
   "agent": {
@@ -155,7 +155,7 @@
       "model": "gpt-5.6-sol",
       "enable_thinking": true,
       "effort": "medium",
-      "speed": "standard",
+      "speed": "standard"
     },
     // Permissions
     "tool_permissions": {
@@ -163,77 +163,71 @@
         "terminal": {
           "always_allow": [
             {
-              "pattern": "^curl\\b",
+              "pattern": "^curl\\b"
             },
             {
-              "pattern": "^grep\\b",
+              "pattern": "^grep\\b"
             },
             {
-              "pattern": "^sort\\b",
+              "pattern": "^sort\\b"
             },
             {
-              "pattern": "^sed\\b",
+              "pattern": "^sed\\b"
             },
             {
-              "pattern": "^printf\\s+n---(\\s|$)",
+              "pattern": "^printf\\s+n---(\\s|$)"
             },
             {
-              "pattern": "^uv\\b",
-            },
-          ],
+              "pattern": "^uv\\b"
+            }
+          ]
         },
         "fetch": {
           "always_allow": [
             {
-              "pattern": "^https?://zed\\.dev",
+              "pattern": "^https?://zed\\.dev"
             },
             {
-              "pattern": "^https?://github\\.com",
+              "pattern": "^https?://github\\.com"
             },
             {
-              "pattern": "^https?://api\\.github\\.com",
+              "pattern": "^https?://api\\.github\\.com"
             },
             {
-              "pattern": "^https?://raw\\.githubusercontent\\.com",
-            },
-          ],
-        },
-      },
+              "pattern": "^https?://raw\\.githubusercontent\\.com"
+            }
+          ]
+        }
+      }
     },
     "sandbox_permissions": {
-      "network_hosts": ["zed.dev", "api.github.com", "raw.githubusercontent.com", "developers.openai.com"],
-      "write_paths": [],
-    },
+      "network_hosts": ["zed.dev", "github.com", "raw.githubusercontent.com", "openai.com"],
+      "write_paths": []
+    }
   },
   "edit_predictions": {
     "provider": "copilot",
     // "provider": "open_ai_compatible_api",
     "open_ai_compatible_api": {
       "model": "gpt-5.6-luna",
-      "api_url": "https://model-gateway.tail2a477.ts.net/v1/completions",
-    },
+      "api_url": "https://model-gateway.tail2a477.ts.net/v1/completions"
+    }
   },
   "agent_servers": {
     "github-copilot-cli": {
-      "type": "registry",
+      "type": "registry"
     },
     "codex-acp": {
-      "type": "registry",
-    },
+      "type": "registry"
+    }
   },
   // # MARK: MCP Servers ======================================================
   "context_servers": {
     "craft-docs": {
-      "url": "https://mcp.craft.do/links/Ll1BPMqendN/mcp",
+      "url": "https://mcp.craft.do/links/Ll1BPMqendN/mcp"
     },
     "craft-docs-all": {
-      "url": "https://mcp.craft.do/links/jbeCfIXlpx/mcp",
-    },
-    "mcp-server-github": {
-      "enabled": true,
-      "settings": {
-        "github_personal_access_token": "GITHUB_MCP_TOKEN",
-      },
-    },
-  },
+      "url": "https://mcp.craft.do/links/jbeCfIXlpx/mcp"
+    }
+  }
 }

@@ -24,6 +24,7 @@ manifest = MachineManifest(
         # Dev tools
         Package(brew="uv"),
         Package(brew="python"),
+        Package(brew="go"),
         # Utilities
         Package(brew="ffmpeg"),
         Package(brew="mas"),

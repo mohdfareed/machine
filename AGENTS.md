@@ -95,6 +95,9 @@ Composes modules and adds machine-specific overrides.
 - `MC_HOMELAB_DIR` is required for homelab scripts and is declared in the
   machine's committed `machine.env`; never silently fall back to `~/.homelab`
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
+- Homelab is a single-user, Tailscale-private system: prefer minimal application login friction; never enable public exposure to achieve it
+- Homelab migrations preserve existing runtime data and downloaded media for rollback; avoid extra backup trees, rollout modes, or new folder layouts unless actually required
+- Standalone services own their code, tests, dependencies, documentation, and internal directory setup; this repo owns only deployment wiring and host prerequisites
 - Use brief comments to separate operational script phases and explain non-obvious quoting, environment, or control flow
 - Keep `AGENTS.md` lean: only record durable, project-wide conventions, not one-off notes for a single helper or cleanup
 - Avoid trivial helper wrappers like `def _target(name): return str(base / name)`; use `str(base / path)` directly unless the helper adds real behavior

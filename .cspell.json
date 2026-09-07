@@ -3,13 +3,7 @@
   "version": "0.2",
   "language": "en",
   "useGitignore": true,
-  "dictionaries": [
-    "bash",
-    "powershell",
-    "python",
-    "softwareTerms",
-    "companies"
-  ],
+  "dictionaries": ["bash", "powershell", "python", "softwareTerms", "companies"],
   "ignorePaths": [
     "*.lock",
     "*.json",
