@@ -8,9 +8,21 @@ x-tailscale-environment: &tailscale-environment
   TS_STATE_DIR: /var/lib/tailscale
   TS_USERSPACE: "false"
 
+x-service-environment: &service-environment
+  TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
+  PUID: "${PUID:-501}"
+  PGID: "${PGID:-20}"
+
+x-service-data-volume: &service-data-volume
+  - ./data/qbittorrent:/config
+  - type: bind
+    source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
+    target: /data
+    bind:
+      create_host_path: false
+
 x-tailscale-service: &tailscale-service
   image: tailscale/tailscale:latest
-  environment: *tailscale-environment
   devices:
     - /dev/net/tun:/dev/net/tun
   cap_add:
@@ -19,7 +31,6 @@ x-tailscale-service: &tailscale-service
 
 services:
   # MARK: Tailscale
-
   ts-plex:
     <<: *tailscale-service
     container_name: ts-plex
@@ -53,6 +64,17 @@ services:
       - ts-weaver-state:/var/lib/tailscale
       - ./ts-config/weaver:/config
 
+  ts-qbittorrent:
+    <<: *tailscale-service
+    container_name: ts-qbittorrent
+    hostname: qbittorrent
+    environment:
+      <<: *tailscale-environment
+      TS_HOSTNAME: qbittorrent
+    volumes:
+      - ts-qbittorrent-state:/var/lib/tailscale
+      - ./ts-config/qbittorrent:/config
+
   # MARK: Services
 
   plex:
@@ -63,17 +85,13 @@ services:
       - ts-plex
     restart: unless-stopped
     environment:
-      TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
+      <<: *service-environment
       PLEX_CLAIM: "${PLEX_CLAIM:-}"
-      ADVERTISE_IP: https://plex.${TAILNET_NAME}.ts.net/
+      ADVERTISE_IP: https://plex.${TAILNET_NAME}.ts.net
     volumes:
+      - <<: *service-data-volume
       - ./data/plex:/config
       - ${MC_HOMELAB_STORAGE_DIR:?MC_HOMELAB_STORAGE_DIR must be set}/plex-transcode:/transcode
-      - type: bind
-        source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
     labels:
       homepage.group: Media
       homepage.name: Plex
@@ -90,21 +108,11 @@ services:
       - ts-scryer
     restart: unless-stopped
     environment:
-      TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
-      PUID: "${PUID:-501}"
-      PGID: "${PGID:-20}"
-      # Passwordless access requires loopback plus TLS-terminated TCP Serve.
-      SCRYER_BIND: 127.0.0.1:8080
-      SCRYER_AUTH_ENABLED: "false"
+      <<: *service-environment
       SCRYER_PUBLIC_URL: https://scryer.${TAILNET_NAME}.ts.net
-
     volumes:
+      - <<: *service-data-volume
       - ./data/scryer:/config
-      - type: bind
-        source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
     labels:
       homepage.group: Media
       homepage.name: Scryer
@@ -114,27 +122,17 @@ services:
 
   weaver:
     image: ghcr.io/scryer-media/weaver:latest
-    container_name: weaver
     network_mode: service:ts-weaver
     depends_on:
       - ts-weaver
     restart: unless-stopped
     environment:
-      TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
-      PUID: "${PUID:-501}"
-      PGID: "${PGID:-20}"
+      <<: *service-environment
       UMASK: "022"
-
-      WEAVER_HTTP_ALLOWED_HOSTS: "weaver,ts-weaver,weaver.${TAILNET_NAME}.ts.net"
-      WEAVER_INTERMEDIATE_DIR: /data/downloads/incomplete
-      WEAVER_COMPLETE_DIR: /data/downloads/complete
+      WEAVER_HTTP_ALLOWED_HOSTS: "ts-weaver,weaver.${TAILNET_NAME}.ts.net"
     volumes:
+      - <<: *service-data-volume
       - ./data/weaver:/config
-      - type: bind
-        source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
-        target: /data
-        bind:
-          create_host_path: false
     healthcheck:
       test: wget -q -T 3 -O /dev/null http://127.0.0.1:9090/readyz || exit 1
       start_period: 20s
@@ -144,9 +142,28 @@ services:
     labels:
       homepage.group: Media
       homepage.name: Weaver
-      homepage.icon: mdi-download-network
+      homepage.icon: mdi-cloud-download
       homepage.href: https://weaver.${TAILNET_NAME}.ts.net
       homepage.description: Usenet downloader
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    network_mode: service:ts-qbittorrent
+    depends_on:
+      - ts-qbittorrent
+    restart: unless-stopped
+    environment:
+      <<: *service-environment
+      WEBUI_PORT: "8080"
+    volumes:
+      - <<: *service-data-volume
+      - ./data/qbittorrent:/config
+    labels:
+      homepage.group: Media
+      homepage.name: qBittorrent
+      homepage.icon: mdi-download-network
+      homepage.href: https://qbittorrent.${TAILNET_NAME}.ts.net
+      homepage.description: Torrent downloader
 
   # MARK: Infrastructure
 
@@ -156,8 +173,14 @@ services:
       dockerfile: docker/Dockerfile
     restart: unless-stopped
     stop_grace_period: 1m
+    environment:
+      TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
+      PLEX_SERVER_URL: https://plex.${TAILNET_NAME}.ts.net
+      SCRYER_URL: https://plex.${TAILNET_NAME}.ts.net
+      SCRYER_API_KEY: "${SCRYER_API_KEY:?SCRYER_API_KEY must be set}"
     volumes:
       - watchlist-sync-state:/config
+    # Log to file.
     logging:
       driver: json-file
       options:
@@ -168,4 +191,5 @@ volumes:
   ts-plex-state:
   ts-scryer-state:
   ts-weaver-state:
+  ts-qbittorrent-state:
   watchlist-sync-state:

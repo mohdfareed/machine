@@ -96,6 +96,7 @@ Composes modules and adds machine-specific overrides.
   machine's committed `machine.env`; never silently fall back to `~/.homelab`
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - Homelab is a single-user, Tailscale-private system: prefer minimal application login friction; never enable public exposure to achieve it
+- Keep qBittorrent on its stock Web UI without replacement UIs or container mods
 - Homelab migrations preserve existing runtime data and downloaded media for rollback; avoid extra backup trees, rollout modes, or new folder layouts unless actually required
 - Standalone services own their code, tests, dependencies, documentation, and internal directory setup; this repo owns only deployment wiring and host prerequisites
 - Use brief comments to separate operational script phases and explain non-obvious quoting, environment, or control flow
@@ -108,6 +109,7 @@ Composes modules and adds machine-specific overrides.
 - `README.md` is high-level only: purpose, setup, top-level usage, broad layout, and links to deeper docs
 - Do NOT put low-level conventions, override mechanics, env layering, editor wiring, file inventories, or edge-case behavior in `README.md`; put those in `AGENTS.md`, command help, code comments, or focused subdirectory docs
 - Keep focused READMEs concise and stable; omit vendor recommendations, temporary migration notes, optional tuning, and troubleshooting unless the file is explicitly dedicated to them
+- Never add inline spellchecker directives to Markdown; keep spelling exceptions in `.cspell.json`
 
 ## Commands
 

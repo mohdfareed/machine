@@ -57,6 +57,11 @@
     "winget",
     "worktree",
     "wslinfo",
-    "xhigh"
+    "xhigh",
+    "watchlist",
+    "newznab",
+    "qbittorrent",
+    "downloaders",
+    "hostnames"
   ]
 }
