@@ -14,12 +14,11 @@ x-service-environment: &service-environment
   PGID: "${PGID:-20}"
 
 x-service-data-volume: &service-data-volume
-  - ./data/qbittorrent:/config
-  - type: bind
-    source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
-    target: /data
-    bind:
-      create_host_path: false
+  type: bind
+  source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
+  target: /data
+  bind:
+    create_host_path: false
 
 x-tailscale-service: &tailscale-service
   image: tailscale/tailscale:latest
@@ -176,7 +175,7 @@ services:
     environment:
       TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
       PLEX_SERVER_URL: https://plex.${TAILNET_NAME}.ts.net
-      SCRYER_URL: https://plex.${TAILNET_NAME}.ts.net
+      SCRYER_URL: https://scryer.${TAILNET_NAME}.ts.net
       SCRYER_API_KEY: "${SCRYER_API_KEY:?SCRYER_API_KEY must be set}"
     volumes:
       - watchlist-sync-state:/config
