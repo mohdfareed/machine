@@ -1,0 +1,51 @@
+// Example/default ACLs for unrestricted connections.
+{
+    "grants": [
+        // Owner can access everything on the tailnet.
+        {
+            "src": ["autogroup:owner"],
+            "dst": ["*"],
+            "ip": ["*"],
+        },
+        // Shared users can access any port on devices shared with them.
+        {
+            "src": ["autogroup:shared"],
+            "dst": ["*"],
+            "ip": ["*"],
+        },
+        // Allow secure cross-container communication.
+        {
+            "src": ["tag:container"],
+            "dst": ["tag:container"],
+            "ip": ["tcp:443"],
+        },
+    ],
+
+    // Define users and devices that can use Tailscale SSH.
+    "ssh": [
+        // Allow all users to SSH into their own devices in check mode.
+        // Comment this section out if you want to define specific restrictions.
+        {
+            "action": "check",
+            "src": ["autogroup:member"],
+            "dst": ["autogroup:self"],
+            "users": ["autogroup:nonroot", "root"],
+        },
+    ],
+
+    // Define device tags and assign to users.
+    "tagOwners": { "tag:container": ["autogroup:admin"] },
+
+    "nodeAttrs": [
+        // Allow admin users to enable Tailscale Funnel.
+        {
+            "target": ["autogroup:admin"],
+            "attr": ["funnel"],
+        },
+        // Allow Home Lab containers to enable Tailscale Funnel.
+        {
+            "target": ["tag:container"],
+            "attr": ["funnel"],
+        },
+    ],
+}

@@ -1,81 +1,26 @@
 # Media - acquisition, organization, subtitles, and playback
-# Access: private Tailscale hostnames only
 
-x-tailscale-environment: &tailscale-environment
-  TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
-  TS_EXTRA_ARGS: --advertise-tags=tag:container
-  TS_SERVE_CONFIG: /config/serve.json
-  TS_STATE_DIR: /var/lib/tailscale
-  TS_USERSPACE: "false"
+include:
+  - compose.tailscale.yaml
 
-x-service-environment: &service-environment
-  TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
+x-app-env: &app-env
+  TZ: ${MC_HOMELAB_TIMEZONE:?}
   PUID: "${PUID:-501}"
   PGID: "${PGID:-20}"
+  # plex only
+  PLEX_UID: "${PUID:-501}"
+  PLEX_GID: "${PGID:-20}"
 
-x-service-data-volume: &service-data-volume
+x-media-volume: &media-volume
   type: bind
-  source: ${MC_HOMELAB_MEDIA_DIR:?MC_HOMELAB_MEDIA_DIR must be set}
+  source: ${MC_HOMELAB_MEDIA_DIR:?}
   target: /data
   bind:
     create_host_path: false
 
-x-tailscale-service: &tailscale-service
-  image: tailscale/tailscale:latest
-  devices:
-    - /dev/net/tun:/dev/net/tun
-  cap_add:
-    - net_admin
-  restart: unless-stopped
+# MARK : Services
 
 services:
-  # MARK: Tailscale
-  ts-plex:
-    <<: *tailscale-service
-    container_name: ts-plex
-    hostname: plex
-    environment:
-      <<: *tailscale-environment
-      TS_HOSTNAME: plex
-    volumes:
-      - ts-plex-state:/var/lib/tailscale
-      - ./ts-config/plex:/config
-
-  ts-scryer:
-    <<: *tailscale-service
-    container_name: ts-scryer
-    hostname: scryer
-    environment:
-      <<: *tailscale-environment
-      TS_HOSTNAME: scryer
-    volumes:
-      - ts-scryer-state:/var/lib/tailscale
-      - ./ts-config/scryer:/config
-
-  ts-weaver:
-    <<: *tailscale-service
-    container_name: ts-weaver
-    hostname: weaver
-    environment:
-      <<: *tailscale-environment
-      TS_HOSTNAME: weaver
-    volumes:
-      - ts-weaver-state:/var/lib/tailscale
-      - ./ts-config/weaver:/config
-
-  ts-qbittorrent:
-    <<: *tailscale-service
-    container_name: ts-qbittorrent
-    hostname: qbittorrent
-    environment:
-      <<: *tailscale-environment
-      TS_HOSTNAME: qbittorrent
-    volumes:
-      - ts-qbittorrent-state:/var/lib/tailscale
-      - ./ts-config/qbittorrent:/config
-
-  # MARK: Services
-
   plex:
     image: plexinc/pms-docker:latest
     container_name: plex
@@ -84,13 +29,12 @@ services:
       - ts-plex
     restart: unless-stopped
     environment:
-      <<: *service-environment
-      PLEX_CLAIM: "${PLEX_CLAIM:-}"
+      <<: *app-env
       ADVERTISE_IP: https://plex.${TAILNET_NAME}.ts.net
     volumes:
-      - <<: *service-data-volume
+      - <<: *media-volume
       - ./data/plex:/config
-      - ${MC_HOMELAB_STORAGE_DIR:?MC_HOMELAB_STORAGE_DIR must be set}/plex-transcode:/transcode
+      - ${MC_HOMELAB_STORAGE_DIR}/plex-transcode:/transcode
     labels:
       homepage.group: Media
       homepage.name: Plex
@@ -107,10 +51,10 @@ services:
       - ts-scryer
     restart: unless-stopped
     environment:
-      <<: *service-environment
+      <<: *app-env
       SCRYER_PUBLIC_URL: https://scryer.${TAILNET_NAME}.ts.net
     volumes:
-      - <<: *service-data-volume
+      - <<: *media-volume
       - ./data/scryer:/config
     labels:
       homepage.group: Media
@@ -121,23 +65,19 @@ services:
 
   weaver:
     image: ghcr.io/scryer-media/weaver:latest
+    container_name: weaver
     network_mode: service:ts-weaver
     depends_on:
       - ts-weaver
     restart: unless-stopped
     environment:
-      <<: *service-environment
-      UMASK: "022"
+      <<: *app-env
       WEAVER_HTTP_ALLOWED_HOSTS: "ts-weaver,weaver.${TAILNET_NAME}.ts.net"
     volumes:
-      - <<: *service-data-volume
+      - <<: *media-volume
       - ./data/weaver:/config
     healthcheck:
       test: wget -q -T 3 -O /dev/null http://127.0.0.1:9090/readyz || exit 1
-      start_period: 20s
-      timeout: 5s
-      interval: 30s
-      retries: 3
     labels:
       homepage.group: Media
       homepage.name: Weaver
@@ -147,48 +87,43 @@ services:
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
     network_mode: service:ts-qbittorrent
     depends_on:
       - ts-qbittorrent
     restart: unless-stopped
     environment:
-      <<: *service-environment
-      WEBUI_PORT: "8080"
+      <<: *app-env
     volumes:
-      - <<: *service-data-volume
+      - <<: *media-volume
       - ./data/qbittorrent:/config
     labels:
       homepage.group: Media
       homepage.name: qBittorrent
       homepage.icon: mdi-download-network
-      homepage.href: https://qbittorrent.${TAILNET_NAME}.ts.net
+      homepage.href: https://qbittorrent.${TAILNET_NAME:?}.ts.net
       homepage.description: Torrent downloader
 
   # MARK: Infrastructure
 
-  plex-watchlist-sync:
+  watchlist-sync:
     build:
-      context: https://github.com/mohdfareed/plex-watchlist-sync.git
+      context: https://github.com/mohdfareed/watchlist-sync.git
       dockerfile: docker/Dockerfile
+    container_name: watchlist-sync
     restart: unless-stopped
-    stop_grace_period: 1m
+    stop_grace_period: 1m # allow for graceful syncing
+    user: "${PUID:-501}:${PGID:-20}"
     environment:
-      TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
-      PLEX_SERVER_URL: https://plex.${TAILNET_NAME}.ts.net
-      SCRYER_URL: https://scryer.${TAILNET_NAME}.ts.net
-      SCRYER_API_KEY: "${SCRYER_API_KEY:?SCRYER_API_KEY must be set}"
+      <<: *app-env
+      PLEX_SERVER_URL: https://plex.${TAILNET_NAME:?}.ts.net
+      SCRYER_URL: https://scryer.${TAILNET_NAME:?}.ts.net
+      # Allow core-only bootstrap before creating this key; set it before starting sync.
+      SCRYER_API_KEY: "${SCRYER_API_KEY:-}"
     volumes:
-      - watchlist-sync-state:/config
-    # Log to file.
+      - ./data/watchlist-sync:/config
     logging:
       driver: json-file
       options:
-        max-size: "5m"
-        max-file: "2"
-
-volumes:
-  ts-plex-state:
-  ts-scryer-state:
-  ts-weaver-state:
-  ts-qbittorrent-state:
-  watchlist-sync-state:
+        max-size: "10m"
+        max-file: "5"

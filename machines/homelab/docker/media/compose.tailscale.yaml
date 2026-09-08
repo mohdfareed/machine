@@ -1,0 +1,69 @@
+x-tailscale-service: &tailscale-service
+  image: tailscale/tailscale:latest
+  devices:
+    - /dev/net/tun:/dev/net/tun
+  cap_add:
+    - net_admin
+  restart: unless-stopped
+
+x-tailscale-env: &tailscale-env
+  TS_AUTHKEY: ${TS_DOCKER_AUTHKEY:?}
+  TS_EXTRA_ARGS: --advertise-tags=tag:container
+  TS_SERVE_CONFIG: /config/serve.json
+  TS_STATE_DIR: /var/lib/tailscale
+  TS_USERSPACE: "false"
+
+# MARK : Services
+
+services:
+  ts-plex:
+    <<: *tailscale-service
+    container_name: ts-plex
+    hostname: plex
+    environment:
+      <<: *tailscale-env
+      TS_HOSTNAME: plex
+    volumes:
+      - ts-plex-state:/var/lib/tailscale
+      - ./ts-config/plex:/config
+
+  ts-scryer:
+    <<: *tailscale-service
+    container_name: ts-scryer
+    hostname: scryer
+    environment:
+      <<: *tailscale-env
+      TS_HOSTNAME: scryer
+    volumes:
+      - ts-scryer-state:/var/lib/tailscale
+      - ./ts-config/scryer:/config
+
+  ts-weaver:
+    <<: *tailscale-service
+    container_name: ts-weaver
+    hostname: weaver
+    environment:
+      <<: *tailscale-env
+      TS_HOSTNAME: weaver
+    volumes:
+      - ts-weaver-state:/var/lib/tailscale
+      - ./ts-config/weaver:/config
+
+  ts-qbittorrent:
+    <<: *tailscale-service
+    container_name: ts-qbittorrent
+    hostname: qbittorrent
+    environment:
+      <<: *tailscale-env
+      TS_HOSTNAME: qbittorrent
+    volumes:
+      - ts-qbittorrent-state:/var/lib/tailscale
+      - ./ts-config/qbittorrent:/config
+
+# MARK : Volumes
+
+volumes:
+  ts-plex-state:
+  ts-scryer-state:
+  ts-weaver-state:
+  ts-qbittorrent-state:

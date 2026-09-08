@@ -1,7 +1,6 @@
 """File deployment tests."""
 
 import os
-import re
 import stat
 import subprocess
 from pathlib import Path
@@ -77,55 +76,43 @@ def test_deploy_files_skips_non_applicable_platforms(
     assert [str(target) for _source, target in linked] == ["universal-target", "windows-target"]
 
 
-def test_symlink_raises_guidance_on_windows_file_privilege_error(
-    monkeypatch,
+@pytest.mark.parametrize("is_directory", [False, True], ids=["file", "directory"])
+def test_symlink_preserves_data_on_windows_privilege_error(
+    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
+    is_directory: bool,
 ) -> None:
-    """Windows file links should explain how to enable symlink privileges."""
-    source = tmp_path / "source.txt"
-    target = tmp_path / "target.txt"
-    source.write_text("git config", encoding="utf-8")
-
-    def _deny_symlink(self: Path, link_target: Path, target_is_directory: bool = False) -> None:
-        raise _WindowsPrivilegeError()
-
-    monkeypatch.setattr(machine_files, "is_windows", True)
-    monkeypatch.setattr(machine_files.settings, "dry_run", False)
-    monkeypatch.setattr(Path, "symlink_to", _deny_symlink)
-
-    with pytest.raises(
-        OSError,
-        match=re.escape("Symlink creation failed - enable Developer Mode first."),
-    ):
-        machine_files._symlink(source, target)
-
-    assert not target.exists()
-
-
-def test_symlink_raises_guidance_on_windows_directory_privilege_error(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    """Windows directory links should explain how to enable symlink privileges."""
     source = tmp_path / "source"
     target = tmp_path / "target"
-    source.mkdir()
-    (source / "config.txt").write_text("ssh", encoding="utf-8")
+    backup = tmp_path / "target.backup"
+    if is_directory:
+        source.mkdir()
+        target.mkdir()
+    source_data = source / "config.txt" if is_directory else source
+    target_data = target / "config.txt" if is_directory else target
+    backup_data = backup / "config.txt" if is_directory else backup
+    source_data.write_text("new settings", encoding="utf-8")
+    target_data.write_text("existing settings", encoding="utf-8")
+    failure = _WindowsPrivilegeError()
 
     def _deny_symlink(self: Path, link_target: Path, target_is_directory: bool = False) -> None:
-        raise _WindowsPrivilegeError()
+        assert self == target
+        assert link_target == source
+        assert target_is_directory == is_directory
+        raise failure
 
     monkeypatch.setattr(machine_files, "is_windows", True)
     monkeypatch.setattr(machine_files.settings, "dry_run", False)
     monkeypatch.setattr(Path, "symlink_to", _deny_symlink)
 
-    with pytest.raises(
-        OSError,
-        match=re.escape("Symlink creation failed - enable Developer Mode first."),
-    ):
+    with pytest.raises(OSError) as error:
         machine_files._symlink(source, target)
 
+    assert error.value.__cause__ is failure
+    assert source_data.read_text(encoding="utf-8") == "new settings"
+    assert backup_data.read_text(encoding="utf-8") == "existing settings"
     assert not target.exists()
+    assert not target.is_symlink()
 
 
 def test_symlink_skips_existing_hardlink(tmp_path: Path) -> None:

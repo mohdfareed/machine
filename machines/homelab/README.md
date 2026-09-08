@@ -3,29 +3,31 @@
 Always-on Mac used as a headless server. Works on MacBook (clamshell), Mac Mini,
 etc.
 
-## Services
+## Set up
 
-See [config/homelab/README.md](../../config/homelab/README.md) for the
-module documentation and how to add or expose services.
+- Download the private env from iCloud (or any cloud service),
+  and mount the [media](./docker/media/README.md) storage before deploying.
+- Restore any service `data/` backups before starting the apps; otherwise they
+  start with fresh configuration.
+- Finish Docker Desktop's first launch and Tailscale sign-in. After a reboot,
+  check both are running in the logged-in user session; power-on alone isn't enough.
+- Select this machine with `mc apply -m homelab`. On a fresh media install, do the
+  [first-start steps](docker/media/README.md#first-start) before the full deployment.
 
-See [media services](docker/media/README.md) for the media stack.
-Whisper.cpp runs natively through launchd for Metal-accelerated speech
-recognition at the model gateway's `/v1/audio/` path.
+Power/sleep and sharing settings are in [init_server.sh](scripts/init_server.sh).
 
-## Backups
+## Backup
 
-A launchd job (`com.mc.backup.plist`) runs daily at 04:30. It creates a separate
-compressed snapshot for each configured host from its required
-`MC_HOMELAB_DIR` and retains its newest 14 snapshots.
+Daily at **04:30**, keeping **14 snapshots per host**:
 
-Backups land in iCloud:
+`$MC_PRIVATE/backups/<host>/<timestamp>.tar.gz`
 
-```txt
-$MC_PRIVATE/backups/<host>/<timestamp>.tar.gz
-```
-
-Trigger manually:
+Includes service `data/` directories on this device and a list of SSH-accessible
+devices. Does **not** include media files, Docker named volumes, or
+the private env file. Hosts are listed in [_backup.sh](scripts/_backup.sh).
 
 ```sh
-launchctl kickstart gui/$(id -u)/com.mc.backup
+mc::backup --start # start backup
+mc::backup         # check status
+# log: `/tmp/mc-backup.log`
 ```

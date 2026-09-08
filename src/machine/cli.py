@@ -117,17 +117,17 @@ modules = click.Choice(get_modules(), case_sensitive=False)
 @app.command(rich_help_panel="Lifecycle")
 def apply(
     machine: Annotated[
-        str,
+        str | None,
         typer.Option(
             "-m",
             "--machine",
             metavar="MACHINE",
-            help="The machine to set up.",
+            help=f"The machine to set up. <{'|'.join(machines.choices)}>",
             autocompletion=_complete_machines,
             click_type=machines,
             prompt=True,
         ),
-    ] = get_current_machine() or "",
+    ] = get_current_machine() or None,
     module_names: Annotated[
         list[str],
         typer.Argument(
@@ -142,7 +142,7 @@ def apply(
 
     root = settings.home
     if not machine:
-        err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
+        err_console.print("[red]No machine set. Run: mc apply[/]")
         raise SystemExit(1)
 
     save_current_machine(machine)
@@ -251,7 +251,7 @@ def update(
     root = settings.home
     machine_id = get_current_machine()
     if not machine_id:
-        err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
+        err_console.print("[red]No machine set. Run: mc apply[/]")
         raise SystemExit(1)
 
     manifest = load_manifest(machine_id, root)
@@ -402,7 +402,7 @@ def private() -> None:
     """Print the resolved MC_PRIVATE path for the current machine."""
     machine_id = get_current_machine()
     if not machine_id:
-        err_console.print("[red]No machine set. Run: mc apply <machine>[/]")
+        err_console.print("[red]No machine set. Run: mc apply[/]")
         raise SystemExit(1)
 
     env = build_script_env(machine_id, settings.home)

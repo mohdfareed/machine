@@ -39,7 +39,10 @@
     "mohdfareed",
     "mohds",
     "nohup",
+    "nonroot",
     "pkill",
+    "PGID",
+    "PUID",
     "projectless",
     "scryer",
     "setowner",
@@ -62,6 +65,8 @@
     "newznab",
     "qbittorrent",
     "downloaders",
-    "hostnames"
+    "hostnames",
+    "newsdemon",
+    "nzbgeek"
   ]
 }

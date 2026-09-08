@@ -1,38 +1,60 @@
-# Homelab Module
+# Homelab deployment
 
-Docker Compose service deployment with Tailscale networking.
+A homelab is a personal server setup for self-hosting Docker services.
+The dashboard uses the host's Tailscale HTTPS address;
+`tailscale serve status` shows it.
 
-Installs Docker (Linux) and Tailscale, deploys services from both the shared
-module directory and the machine-specific directory, and configures Tailscale
-networking.
+Installs Docker (Linux) and Tailscale, deploys services, and configures
+Tailscale networking.
 
-## Requirements
+[macOS setup](../../machines/homelab/README.md) ·
+[Media setup](../../machines/homelab/docker/media/README.md)
 
-- Docker (Apple Silicon)
+## Tailscale
 
-## How It Works
+- Create Auth and API keys at
+  [Tailscale Console](https://console.tailscale.com/admin/settings/keys)
+  and store them in `$MC_PRIVATE/env/$MC_ID.env` below.
+- Auth key properties:
+  - Reusable,
+  - ephemeral (optional),
+  - pre-approved (optional),
+  - tags (`tag:container`)
 
-The deploy script (`docker.unix.sh`) creates `~/.homelab/<service>/`
-directories on the host, symlinks compose files from the repo, and runs
-`docker compose up`. Runtime data (volumes, logs) stays in `~/.homelab/`
-and is never committed to git.
-
-```txt
-Sources                              Deployed to
-config/homelab/docker/<svc>/   ─┐
-                                ├──▸  ~/.homelab/<svc>/  (symlinks)
-machines/<id>/docker/<svc>/    ─┘
+```env
+# `$MC_PRIVATE/env/$MC_ID.env`
+TAILNET_NAME=<tailnet-name-without-.ts.net>
+TAILSCALE_API_KEY=tskey-api-<id>-<secret>
+TS_DOCKER_AUTHKEY=tskey-client-<id>-<secret>
 ```
 
-Machine-specific services go in `machines/<id>/docker/`.
+After starting containers, approve their devices in
+[Tailscale Machines](https://login.tailscale.com/admin/machines) if not pre-
+approved to allow cross-container communication.
 
-Secrets live in `$MC_PRIVATE/env/$MC_ID.env`. Run `secrets` to load them into an
-interactive shell; `mc` independently loads them for deployment scripts.
-Docker Compose substitutes the variables referenced by each service.
+Add to the [tailnet policy](https://login.tailscale.com/admin/acls):
 
-## Networking
+```jsonc
+"tagOwners": { "tag:container": ["autogroup:admin"] },
+"nodeAttrs": [{ "target": ["tag:container"], "attr": ["funnel"] }]
+"grants": [
+    {
+        "src": ["tag:container"],
+        "dst": ["tag:container"],
+        "ip": ["tcp:443"],
+    },
+],
+```
 
-Services are exposed via Tailscale using one of three patterns:
+**Note:** Funnel is enabled per container/service. each service's
+`AllowFunnel` in `serve.json` decides whether to use it.
+
+> Example ACLs configuration at [`tailscale.acl.jsonc`](./tailscale.acl.jsonc).
+
+### Networking
+
+Services are exposed via Tailscale at `service-name.<tailnet>.ts.net`
+using one of three patterns:
 
 | Pattern               | How                                        | Example    |
 | --------------------- | ------------------------------------------ | ---------- |
@@ -40,105 +62,45 @@ Services are exposed via Tailscale using one of three patterns:
 | **Tailnet only**      | Host loopback port + `tailscale serve`     | Homepage   |
 | **Internal**          | No sidecar, no ports - container-only      | Worker bot |
 
-Internet-facing services each get their own tailnet hostname via a sidecar
-container (e.g. `myservice.<tailnet>.ts.net`). Tailnet-only services bind to
-a host loopback port and are proxied by the machine's `tailscale serve`.
-Internal services have no outside access at all.
+## Docker
 
-## Setup
+Docker is automatically installed, but should be started for the first time and
+configured to run on boot.
 
-### 1. Tailscale ACL
+The deploy script (`docker.unix.sh`) creates `~/.homelab/<service>/`
+directories on the host, symlinks compose files from the repo, and runs
+`docker compose up`. Runtime data (volumes, logs) stays in `~/.homelab/` for
+manual backup and migration. Example backup script at
+[`_backup.sh`](../../machines/homelab/scripts/_backup.sh).
 
-Add to your [tailnet policy](https://login.tailscale.com/admin/acls):
+### Add a service
 
-```jsonc
-"tagOwners": { "tag:container": ["autogroup:admin"] },
-"nodeAttrs": [{ "target": ["tag:container"], "attr": ["funnel"] }]
+Create a `<service>/compose.yaml` file per service at:
+
+- `machines/<id>/docker/`; or
+- `config/homelab/docker/` for shared services (for multiple deployments).
+
+```mermaid
+flowchart TD
+    Shared["config/homelab/docker/service"] --> Deploy["mc apply homelab"]
+    Machine["machines/id/docker/service"] --> Deploy
+    Deploy --> Link["~/.homelab/service → repo"]
+    Link --> Compose["Docker Compose"]
 ```
 
-The `funnel` attribute grants the **capability** - each service's
-`AllowFunnel` in `serve.json` decides whether to use it.
+### Deploy or update
 
-### 2. OAuth Client
-
-Generate at <https://login.tailscale.com/admin/settings/oauth>:
-
-- Scope: **Auth Keys: Write**
-- Tag: `tag:container`
-
-### 3. Secrets
-
-Add to `$MC_PRIVATE/env/$MC_ID.env`:
+Run on the target machine, with `homelab` included in its manifest:
 
 ```sh
-TS_DOCKER_AUTHKEY=tskey-client-<id>-<secret>?ephemeral=false
-TAILNET_NAME=<your-tailnet>
+mc apply homelab
 ```
 
-| Variable            | Used by                               | Purpose                                                     |
-| ------------------- | ------------------------------------- | ----------------------------------------------------------- |
-| `TS_DOCKER_AUTHKEY` | Tailscale sidecar containers          | OAuth auth key with `?ephemeral=false` for persistent nodes |
-| `TAILNET_NAME`      | Compose files referencing the tailnet | Your tailnet name from admin console                        |
-
-## Adding a Service
-
-1. Create `machines/<id>/docker/<name>/compose.yaml`
-2. Run `mc apply <machine>` - the deploy script syncs and starts it
-
-### Tailnet-only (host port + tailscale serve)
-
-Bind to loopback and add a `tailscale serve` call in `tailscale.unix.sh`:
-
-```yaml
-ports:
-  - 127.0.0.1:<PORT>:<PORT>
-```
+This pulls/builds and starts **all** its Compose stacks.
+For an individual service, open its directory under `~/.homelab/`:
 
 ```sh
-sudo tailscale serve --bg --set-path /<path> http://127.0.0.1:<PORT>
-```
-
-### Internet-facing (Tailscale sidecar + funnel)
-
-Add a Tailscale sidecar container and a `ts-config/serve.json`:
-
-```yaml
-services:
-  ts-myservice:
-    image: tailscale/tailscale:latest
-    hostname: myservice # <- tailnet hostname
-    environment:
-      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
-      TS_EXTRA_ARGS: --advertise-tags=tag:container
-      TS_SERVE_CONFIG: /config/serve.json
-      TS_STATE_DIR: /var/lib/tailscale
-      TS_USERSPACE: "false"
-    volumes:
-      - ts-state:/var/lib/tailscale
-      - ./ts-config:/config
-    devices: [/dev/net/tun:/dev/net/tun]
-    cap_add: [net_admin]
-    restart: unless-stopped
-
-  myservice:
-    image: ...
-    network_mode: service:ts-myservice
-    depends_on: [ts-myservice]
-
-volumes:
-  ts-state:
-```
-
-`ts-config/serve.json` (set `AllowFunnel` to `false` for tailnet-only):
-
-```json
-{
-  "TCP": { "443": { "HTTPS": true } },
-  "Web": {
-    "${TS_CERT_DOMAIN}:443": {
-      "Handlers": { "/": { "Proxy": "http://127.0.0.1:<PORT>" } }
-    }
-  },
-  "AllowFunnel": { "${TS_CERT_DOMAIN}:443": true }
-}
+secrets # alias to load private env vars
+docker compose up -d --build
+docker compose logs --follow
 ```

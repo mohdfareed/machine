@@ -60,6 +60,7 @@ Composes modules and adds machine-specific overrides.
 
 - Before writing new code, check the codebase for existing patterns and follow them
 - In Docker Compose files, keep reusable extension anchors first, group sidecars before application services, and leave named volumes last; preserve established section markers and ordering when editing
+- Keep the media stack to two Compose files: app services and shared app settings in `compose.yaml`, sidecars and their state volumes in `compose.tailscale.yaml`
 - In homelab discussions, "dashboard" means the Homepage service
 - Before sending, remove every bullet whose deletion would not change the reader's understanding or next action
 - Keep substantive Python out of shell strings; put it in a normal `.py` file and have the shell entrypoint invoke it
@@ -95,6 +96,7 @@ Composes modules and adds machine-specific overrides.
 - `MC_HOMELAB_DIR` is required for homelab scripts and is declared in the
   machine's committed `machine.env`; never silently fall back to `~/.homelab`
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
+- Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration
 - Homelab is a single-user, Tailscale-private system: prefer minimal application login friction; never enable public exposure to achieve it
 - Keep qBittorrent on its stock Web UI without replacement UIs or container mods
 - Homelab migrations preserve existing runtime data and downloaded media for rollback; avoid extra backup trees, rollout modes, or new folder layouts unless actually required
@@ -106,9 +108,10 @@ Composes modules and adds machine-specific overrides.
 - Do not add scripts whose only job is printing setup reminders; put that guidance in docs unless the script performs real work
 - `MC_PRIVATE` defaults to `app_dir/private`; `machine.env` may override (e.g. `$ICLOUD/.machine`)
 - Scripts skip gracefully when `MC_PRIVATE` directory doesn't exist
-- `README.md` is high-level only: purpose, setup, top-level usage, broad layout, and links to deeper docs
-- Do NOT put low-level conventions, override mechanics, env layering, editor wiring, file inventories, or edge-case behavior in `README.md`; put those in `AGENTS.md`, command help, code comments, or focused subdirectory docs
-- Keep focused READMEs concise and stable; omit vendor recommendations, temporary migration notes, optional tuning, and troubleshooting unless the file is explicitly dedicated to them
+- All READMEs are personal working notes, not public-facing manuals: write for the task that brings the owner back, what they need to remember, and what information is already available at that point
+- Give the minimum starting point for new tasks (where to create a manifest, its minimal contents, how to apply it); keep hard-to-discover conventions and manual setup reminders, but leave configurable fields to code completion and inline documentation and link existing configs instead of duplicating examples
+- Use Mermaid for useful diagrams, not ASCII art; avoid introductions, exhaustive inventories, generic tutorials, and repeated guidance across READMEs
+- Do not turn discussion questions into documentation changes; edit docs when requested or when implementation changes invalidate existing instructions
 - Never add inline spellchecker directives to Markdown; keep spelling exceptions in `.cspell.json`
 
 ## Commands

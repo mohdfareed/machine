@@ -28,7 +28,6 @@ manifest = MachineManifest(
         # Utilities
         Package(brew="ffmpeg"),
         Package(brew="mas"),
-        Package(brew="whisper-cpp"),
         Package(cask="font-computer-modern"),
         Package(cask="font-jetbrains-mono-nerd-font"),
     ],

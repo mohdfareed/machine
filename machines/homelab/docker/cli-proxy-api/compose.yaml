@@ -7,7 +7,7 @@ services:
     container_name: ts-cliproxyapi
     hostname: model-gateway
     environment:
-      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY}
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY:?}
       TS_ACCEPT_DNS: "true"
       TS_EXTRA_ARGS: --advertise-tags=tag:container
       TS_HOSTNAME: model-gateway
@@ -30,9 +30,9 @@ services:
     depends_on:
       - ts-cliproxyapi
     environment:
-      # Use at: https://model-gateway.<tailnet>.ts.net/management.html
-      MANAGEMENT_PASSWORD: ${CLIPROXYAPI_MANAGEMENT_PASSWORD:?required}
-      TZ: ${MC_HOMELAB_TIMEZONE:?MC_HOMELAB_TIMEZONE must be set}
+      # Login at: https://model-gateway.<tailnet>.ts.net/management.html
+      MANAGEMENT_PASSWORD: ${CLIPROXYAPI_PASSWORD:?}
+      TZ: ${MC_HOMELAB_TIMEZONE:?}
     volumes:
       - ./config.yaml:/CLIProxyAPI/config.yaml
       - ./data/auths:/root/.cli-proxy-api
@@ -43,18 +43,8 @@ services:
       - homepage.group=Services
       - homepage.name=Model Gateway
       - homepage.icon=mdi-hub
-      - homepage.href=https://model-gateway.${TAILNET_NAME}.ts.net/management.html
+      - homepage.href=https://model-gateway.${TAILNET_NAME:?}.ts.net/management.html
       - homepage.description=Unified API gateway for AI providers
-
-  whisper-router:
-    image: caddy:2-alpine
-    container_name: cliproxyapi-whisper-router
-    network_mode: service:ts-cliproxyapi
-    depends_on:
-      - ts-cliproxyapi
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-    restart: unless-stopped
 
 volumes:
   ts-cliproxyapi-state:
