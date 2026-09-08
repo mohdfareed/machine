@@ -20,38 +20,3 @@ esac
 
 # Provision the host mount point; applications own their internal directories.
 mkdir -p "$MC_HOMELAB_MEDIA_DIR"
-
-# On macOS, create a read-only SMB share for the media tree.
-if [ "$(uname -s)" = "Darwin" ]; then
-    share_name=Media
-    share_record=
-    current_path=
-
-    # The record name and SMB-visible name are separate and may differ by case.
-    for candidate in "$share_name" media; do
-        current_path=$(
-            /usr/sbin/sharing -l -f json |
-                /usr/bin/plutil -extract "${candidate}.path" raw -o - - 2>/dev/null
-        ) || current_path=
-        if [ -n "$current_path" ]; then
-            share_record=$candidate
-            break
-        fi
-    done
-
-    # If the share exists but points to a different path, remove it.
-    if [ -n "$current_path" ] && [ "$current_path" != "$MC_HOMELAB_MEDIA_DIR" ]; then
-        sudo /usr/sbin/sharing -r "$share_record"
-        share_record=
-        current_path=
-    fi
-
-    if [ -z "$share_record" ]; then
-        sudo /usr/sbin/sharing -a "$MC_HOMELAB_MEDIA_DIR" \
-            -n "$share_name" \
-            -S "$share_name" \
-            -s 001 \
-            -g 000 \
-            -R 1
-    fi
-fi
