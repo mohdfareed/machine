@@ -131,7 +131,7 @@ runtime state, caches, and machine-generated application data local.
 - `MC_HOMELAB_DIR` is required for homelab scripts and is declared in the
   machine's committed `machine.env`; never silently fall back to `~/.homelab`
 - Homelab is a single-user, Tailscale-private system: prefer minimal application login friction; never enable public exposure to achieve it
-- Keep qBittorrent on its stock Web UI without replacement UIs or container mods
+- Media acquisition uses Usenet through Weaver only
 - Homelab migrations preserve existing runtime data and downloaded media for rollback; avoid extra backup trees, rollout modes, or new folder layouts unless actually required
 - In Docker Compose files, keep reusable extension anchors first, group sidecars before application services, and leave named volumes last; preserve established section markers and ordering when editing
 - Keep the media stack to two Compose files: app services and shared app settings in `compose.yaml`, sidecars and their state volumes in `compose.tailscale.yaml`

@@ -34,7 +34,7 @@ services:
     volumes:
       - <<: *media-volume
       - ./data/plex:/config
-      - ${MC_HOMELAB_STORAGE_DIR}/plex-transcode:/transcode
+      - ${MC_HOMELAB_CACHE_DIR}/plex-transcode:/transcode
     labels:
       homepage.group: Media
       homepage.name: Plex
@@ -84,25 +84,6 @@ services:
       homepage.icon: mdi-cloud-download
       homepage.href: https://weaver.${TAILNET_NAME}.ts.net
       homepage.description: Usenet downloader
-
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    network_mode: service:ts-qbittorrent
-    depends_on:
-      - ts-qbittorrent
-    restart: unless-stopped
-    environment:
-      <<: *app-env
-    volumes:
-      - <<: *media-volume
-      - ./data/qbittorrent:/config
-    labels:
-      homepage.group: Media
-      homepage.name: qBittorrent
-      homepage.icon: mdi-download-network
-      homepage.href: https://qbittorrent.${TAILNET_NAME:?}.ts.net
-      homepage.description: Torrent downloader
 
   # MARK: Infrastructure
 

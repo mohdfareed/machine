@@ -49,21 +49,9 @@ services:
       - ts-weaver-state:/var/lib/tailscale
       - ./ts-config/weaver:/config
 
-  ts-qbittorrent:
-    <<: *tailscale-service
-    container_name: ts-qbittorrent
-    hostname: qbittorrent
-    environment:
-      <<: *tailscale-env
-      TS_HOSTNAME: qbittorrent
-    volumes:
-      - ts-qbittorrent-state:/var/lib/tailscale
-      - ./ts-config/qbittorrent:/config
-
 # MARK : Volumes
 
 volumes:
   ts-plex-state:
   ts-scryer-state:
   ts-weaver-state:
-  ts-qbittorrent-state:
