@@ -3,8 +3,6 @@
     email = mfareed@gleason.com
 
 ; disable commit signing
-[user]
-    signingkey = ~/.ssh/wks.pub
 [commit]
     gpgsign = false
 
