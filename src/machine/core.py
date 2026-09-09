@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from enum import StrEnum
 from importlib.metadata import metadata
 from logging.handlers import RotatingFileHandler
@@ -263,28 +264,36 @@ def _tee_pty(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
 
 def _tee_pipe(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
     """Fallback tee using pipes (no color preservation). Windows."""
-    exe = shutil.which("powershell.exe") if is_windows else None
-    proc = subprocess.Popen(
-        cmd,
-        shell=True,
-        executable=exe,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    assert proc.stdout is not None
+    exe = shutil.which("powershell.exe")
+    if exe is None:
+        raise FileNotFoundError("Windows PowerShell is required to run commands")
 
-    collected = bytearray()
-    while True:
-        chunk = os.read(proc.stdout.fileno(), 4096)
-        if not chunk:
-            break
-        sys.stdout.buffer.write(chunk)
-        sys.stdout.buffer.flush()
-        collected.extend(chunk)
+    # -File preserves quoting and emits plain text instead of EncodedCommand's CLIXML.
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".ps1", encoding="utf-8-sig", delete_on_close=False
+    ) as script:
+        script.write(cmd + "\nif (-not $?) { exit 1 }\n")
+        script.close()
 
-    proc.wait()
-    return proc.returncode, collected
+        proc = subprocess.Popen(
+            [exe, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script.name],
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        assert proc.stdout is not None
+
+        collected = bytearray()
+        while True:
+            chunk = os.read(proc.stdout.fileno(), 4096)
+            if not chunk:
+                break
+            sys.stdout.buffer.write(chunk)
+            sys.stdout.buffer.flush()
+            collected.extend(chunk)
+
+        proc.wait()
+        return proc.returncode, collected
 
 
 def _short(cmd: str) -> str:

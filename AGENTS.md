@@ -103,7 +103,8 @@ Composes modules and adds machine-specific overrides.
 before execution. When PowerShell is available, it extends `PSModulePath` with the bundled
 `MachineAdmin` module while preserving existing module paths and `-File` execution.
 Elevation is explicit through `Invoke-Admin { ... }`; pass outside values using
-`param(...)` and `-ArgumentList` because elevated blocks run in a separate process.
+`param(...)` and `-ArgumentList` because elevated blocks run in a separate process. Elevated text output and errors
+are relayed to the caller for terminal display and logging.
 
 ### Configuration Ownership and State
 

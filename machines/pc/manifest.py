@@ -2,7 +2,7 @@
 
 from machine.manifest import MachineManifest, Package, PkgManager
 
-sib_script_install_path = '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\SteamInputBridge"'
+sib_script_install_path = '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\steam-input-bridge"'
 sib_script_url = (
     "https://raw.githubusercontent.com/mohdfareed/steam-input-bridge/main/Scripts/Bootstrap-App.ps1"
 )

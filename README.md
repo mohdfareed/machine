@@ -33,6 +33,7 @@ mc sync              # Pull --rebase, then apply the selected machine
 mc sync --push       # Also push local commits
 mc sync --no-apply   # Pull without applying
 mc status            # Current machine and local paths
+mc show              # List files, packages, and scripts in apply order
 ```
 
 ### Machines
@@ -101,6 +102,9 @@ No tag means all platforms, so tag shell-specific scripts.
 | `up_`    | Only during `mc update`                                 |
 | `_`      | Helper; never auto-executed                             |
 | None     | Every apply, after packages                             |
+
+Configuration validation errors or a failed `init_` script stop the entire apply.
+Unhandled errors also stop the run. Dependencies control ordering, not failure isolation.
 
 Before execution, `mc` prepares each script's environment: shared variables such
 as `MC_HOME` and `MC_ID`, machine config and secrets, then shell-specific additions.

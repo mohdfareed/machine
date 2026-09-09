@@ -31,18 +31,6 @@ Invoke-Admin {
         -Force | Out-Null
 }
 
-# install windows features
-Write-Host "enabling windows features..."
-Invoke-Admin {
-    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-Windows-Subsystem-Linux
-    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-RemoteDesktopConnection
-    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName HypervisorPlatform
-    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName VirtualMachinePlatform
-    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-Hyper-V-All
-    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Containers
-    Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Containers-DisposableClientVM
-}
-
 # wsl
 Write-Host "setting up wsl..."
 $distros = @(wsl -l -q 2>$null | ForEach-Object { $_.Trim() } | Where-Object { $_ })

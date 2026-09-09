@@ -61,8 +61,8 @@ def test_install_only_when_selected_manager_lacks_package(
         assert commands == []
     else:
         assert commands and all(cmd == expected for cmd in commands)
-    assert len(queries) == 2
-    assert len(commands) == (0 if installed else 2)
+    assert len(queries) == 1
+    assert len(commands) == (0 if installed else 1)
     if source in {"brew", "cask"}:
         assert queries[0] == [
             "brew",
@@ -71,7 +71,7 @@ def test_install_only_when_selected_manager_lacks_package(
             "example",
         ]
     if source == "winget":
-        assert queries[0] == ["winget", "list", "--exact", "--id", "example"]
+        assert queries[0] == ["winget", "list", "--id", "example"]
 
 
 @pytest.mark.parametrize(
@@ -222,3 +222,55 @@ def test_manager_validation_checks_platform_and_dependencies(monkeypatch) -> Non
         else:
             with pytest.raises(ValueError):
                 machine_packages.validate_managers(managers)
+
+
+def test_package_preview_uses_declared_platform_preference(monkeypatch):
+    package = Package(
+        name="example", brew="example", cask="example", winget="Example.App", scoop="example"
+    )
+    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
+    managers = [PkgManager.WINGET, PkgManager.SCOOP]
+    assert machine_packages.select_package_source(package, managers) == "winget"
+    assert machine_packages.select_package_source(package, managers, {PkgManager.SCOOP}) == "scoop"
+    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.MACOS)
+    assert machine_packages.select_package_source(package, [PkgManager.BREW]) == "cask"
+
+
+@pytest.mark.parametrize(
+    "listed_id,installed", [("Microsoft.App", True), ("Microsoft.App.Preview", False)]
+)
+def test_winget_presence_matches_full_id_case_insensitively(monkeypatch, listed_id, installed):
+    monkeypatch.setattr(
+        machine_packages,
+        "_query",
+        lambda cmd: subprocess.CompletedProcess(
+            cmd, 0, stdout=f"Name Id Version Source\nApp {listed_id} 1.0 winget\n"
+        ),
+    )
+    assert machine_packages._source_installed("winget", "microsoft.app") is installed
+
+
+def test_presence_cache_is_local_to_each_install_run(monkeypatch, commands):
+    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
+    queries = []
+    monkeypatch.setattr(
+        machine_packages, "_source_installed", lambda *args: queries.append(args) or False
+    )
+    package = Package(winget="Example.App")
+    for _ in range(2):
+        assert machine_packages.install_packages([package, package], [PkgManager.WINGET]) == []
+    assert len(queries) == 2
+    assert len(commands) == 2
+
+
+def test_failed_install_does_not_mark_package_installed(monkeypatch, commands):
+    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
+    queries = []
+    monkeypatch.setattr(
+        machine_packages, "_source_installed", lambda *args: queries.append(args) or False
+    )
+    monkeypatch.setattr(machine_packages, "run_collect", lambda *args, **kwargs: (1, b"failed"))
+    package = Package(winget="Example.App")
+    failures = machine_packages.install_packages([package, package], [PkgManager.WINGET])
+    assert len(queries) == 1
+    assert len(failures) == 2

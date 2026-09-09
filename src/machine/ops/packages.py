@@ -87,7 +87,13 @@ def refresh_path() -> None:
             except OSError:
                 pass
 
-        os.environ["PATH"] = os.pathsep.join(dict.fromkeys(filter(None, paths)))
+        # Deduplicate directories, not whole PATH strings, so repeated refreshes cannot grow PATH.
+        entries = (entry for path in paths for entry in path.split(os.pathsep) if entry)
+        unique: dict[str, str] = {}
+        for entry in entries:
+            unique.setdefault(os.path.normcase(os.path.normpath(entry)), entry)
+
+        os.environ["PATH"] = os.pathsep.join(unique.values())
         return
 
     try:
@@ -136,42 +142,30 @@ def install_packages(
     """Resolve, check, and install packages using only declared managers."""
     if not packages:
         return []
+
     refresh_path()
     available = {manager for manager in managers if shutil.which(manager)}
+    installed: dict[tuple[PackageSource, str], bool] = {}
     failures: list[tuple[str, str, str]] = []
 
     for pkg in packages:
         if not pkg.applies_to(PLATFORM):
             continue
         module = (owners or {}).get(pkg.name, "?")
-        sources = _applicable_sources(pkg)
-        source: PackageSource | None = None
+
         try:
-            if sources:
-                declared: list[PackageSource] = [
-                    s for s in sources if _MANAGER_CONFIGS[s].binary in managers
-                ]
-                if not declared:
-                    raise ValueError(
-                        "manager not declared: "
-                        + ", ".join(dict.fromkeys(_MANAGER_CONFIGS[s].binary for s in sources))
-                    )
-                source = next(
-                    (
-                        s
-                        for s in declared
-                        if settings.dry_run or _MANAGER_CONFIGS[s].binary in available
-                    ),
-                    None,
-                )
-                if source is None:
-                    raise ValueError("no manager available")
+            source = select_package_source(pkg, managers, None if settings.dry_run else available)
+            if source is not None:
                 # A dry run can plan installs before manager setup has run.
-                if _MANAGER_CONFIGS[source].binary in available and _source_installed(
-                    source, getattr(pkg, source)
-                ):
-                    logger.debug("Skip (installed): %s", pkg.name)
-                    continue
+                key = (source, str(getattr(pkg, source)))
+
+                if _MANAGER_CONFIGS[source].binary in available:
+                    if key not in installed:
+                        installed[key] = _source_installed(source, getattr(pkg, source))
+                    if installed[key]:
+                        logger.debug("Skip (installed): %s", pkg.name)
+                        continue
+
             elif not pkg.script:
                 continue
             elif not rerun_script_packages and shutil.which(pkg.name):
@@ -181,10 +175,39 @@ def install_packages(
             failure = _install(pkg, source, module)
             if failure:
                 failures.append(failure)
+            elif source is not None and not settings.dry_run:
+                installed[(source, str(getattr(pkg, source)))] = True
+
         except (ValueError, OSError, subprocess.SubprocessError) as exc:
             logger.error("[%s] %s: %s", module, pkg.name, exc)
             failures.append((module, pkg.name, str(exc)))
     return failures
+
+
+def select_package_source(
+    pkg: Package,
+    managers: list[PkgManager],
+    available: set[PkgManager] | None = None,
+) -> PackageSource | None:
+    """Select a declared source; omit availability when previewing manager setup."""
+    sources = _applicable_sources(pkg)
+    if not sources:
+        return None
+
+    declared: list[PackageSource] = [
+        source for source in sources if _MANAGER_CONFIGS[source].binary in managers
+    ]
+
+    if not declared:
+        raise ValueError(
+            "manager not declared: "
+            + ", ".join(dict.fromkeys(_MANAGER_CONFIGS[source].binary for source in sources))
+        )
+
+    for source in declared:
+        if available is None or _MANAGER_CONFIGS[source].binary in available:
+            return source
+    raise ValueError("no manager available")
 
 
 def _install(
@@ -256,7 +279,11 @@ def _source_installed(source: PackageSource, value: str | int) -> bool:
             cmd = [source, "list", str(value)]
 
         case "winget":
-            cmd = ["winget", "list", "--exact", "--id", str(value)]
+            # --exact is case-sensitive; compare the full ID ourselves after the ID-filtered query.
+            result = _query(["winget", "list", "--id", str(value)])
+            return result.returncode == 0 and str(value).casefold() in {
+                field.casefold() for field in result.stdout.split()
+            }
 
         case _:
             raise AssertionError(f"Unhandled package source: {source}")

@@ -19,18 +19,22 @@ from machine.core import (
     setup_file_logging,
 )
 from machine.ops.files import deploy_files, validate
-from machine.ops.packages import cache_sudo, install_packages, validate_managers
+from machine.ops.packages import (
+    cache_sudo,
+    install_packages,
+    select_package_source,
+    validate_managers,
+)
 from machine.ops.scripts import (
     build_script_env,
     filter_scripts,
-    matches_platform,
     run_scripts,
     write_env_file,
 )
 from machine.persistence import get_current_machine, save_current_machine
 
 if TYPE_CHECKING:
-    from machine.manifest import MachineManifest, Module, Package
+    from machine.manifest import MachineManifest, Module, Package, PkgManager
 
 _logger = logging.getLogger(__name__)
 
@@ -528,46 +532,67 @@ def show(
         for mod, f in files:
             console.print(f"  [cyan]{mod:<12}[/] {_short(f.source)} → {f.target}")
 
-    # Packages
+    # Preserve module and declaration order, using the same script filtering as apply.
+    all_scripts = [(m.name, script) for m in mods for script in filter_scripts(m.scripts)] + [
+        (machine, script) for script in filter_scripts(manifest.scripts)
+    ]
     pkgs = [(m.name, p) for m in mods for p in m.packages if p.applies_to(PLATFORM)] + [
         (machine, p) for p in manifest.packages if p.applies_to(PLATFORM)
     ]
-    if pkgs:
-        console.print("\n[bold]Packages:[/]")
-        for mod, p in pkgs:
-            console.print(f"  [cyan]{mod:<12}[/] {p.name} [dim]({_pkg_sources(p)})[/]")
-
-    # Scripts (grouped by phase)
-    all_scripts = [(m.name, s) for m in mods for s in m.scripts] + [
-        (machine, s) for s in manifest.scripts
+    sections = [
+        (
+            "Init Scripts",
+            [
+                f"  [cyan]{mod:<12}[/] {_short(script)}"
+                for mod, script in all_scripts
+                if Path(script).name.startswith("init_")
+            ],
+        ),
+        (
+            "Packages",
+            [
+                f"  [cyan]{mod:<12}[/] {p.name} [dim]({_pkg_source(p, manifest.pkg_managers)})[/]"
+                for mod, p in pkgs
+            ],
+        ),
+        (
+            "Scripts",
+            [
+                f"  [cyan]{mod:<12}[/] {_short(script)}"
+                for mod, script in all_scripts
+                if not Path(script).name.startswith(("init_", "up_"))
+            ],
+        ),
+        (
+            "Update Packages (mc update only)",
+            [
+                f"  [cyan]{mod:<12}[/] {p.name} [dim]({_pkg_source(p, manifest.pkg_managers)})[/]"
+                for mod, p in pkgs
+                if p.script
+            ],
+        ),
+        (
+            "Update Scripts (mc update only)",
+            [
+                f"  [cyan]{mod:<12}[/] {_short(script)}"
+                for mod, script in all_scripts
+                if Path(script).name.startswith("up_")
+            ],
+        ),
     ]
-    for title, prefix_test in [
-        ("Init Scripts", lambda n: n.startswith("init_")),
-        ("Scripts", lambda n: not n.startswith(("init_", "up_", "_"))),
-        ("Update Scripts", lambda n: n.startswith("up_")),
-    ]:
-        group = [
-            (mod, s)
-            for mod, s in all_scripts
-            if matches_platform(Path(s))
-            and not Path(s).stem.startswith("_")
-            and prefix_test(Path(s).name)
-        ]
-        if group:
+    for title, rows in sections:
+        if rows:
             console.print(f"\n[bold]{title}:[/]")
-            for mod, s in group:
-                console.print(f"  [cyan]{mod:<12}[/] {_short(s)}")
+            for row in rows:
+                console.print(row)
 
 
-def _pkg_sources(p: "Package") -> str:
-    """Format package install sources as a short string."""
-    sources: list[str] = []
-    for attr in ("brew", "cask", "apt", "snap", "winget", "scoop"):
-        val = getattr(p, attr, None)
-        if val:
-            sources.append(f"{attr}: {val}")
-    if p.mas is not None:
-        sources.append(f"mas: {p.mas}")
-    if p.script:
-        sources.append("script")
-    return ", ".join(sources)
+def _pkg_source(p: "Package", managers: list["PkgManager"]) -> str:
+    """Describe the package source selected for the current platform."""
+    try:
+        source = select_package_source(p, managers)
+    except ValueError as exc:
+        return str(exc)
+    if source is not None:
+        return f"{source}: {getattr(p, source)}"
+    return "script" if p.script else "not applicable"
