@@ -27,8 +27,9 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 else {
     try {
         # update uv if already installed
-        uv self update 2>$ull
+        uv self update 2>$null
     }
+    # Self-update only available on standalone version.
     catch {
     }
 }

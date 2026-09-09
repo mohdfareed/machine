@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import re
+import shutil
+import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -23,30 +25,23 @@ _STATE_FILE = settings.app_dir / "state.json"
 
 def build_script_env(machine_id: str, root: Path) -> dict[str, str]:
     """Build the env dict injected into every script subprocess."""
-    raw: dict[str, str] = {
+    env: dict[str, str] = {
         "MC_HOME": str(root),
         "MC_ID": machine_id,
         "MC_PRIVATE": str(settings.app_dir / "private"),
     }
 
-    def _parse_env(path: Path) -> None:
-        if not path.is_file():
-            return
-        for line in path.read_text().splitlines():
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            key, _, value = line.partition("=")
-            if key and _:
-                raw[key.strip()] = value.strip().strip('"').strip("'")
+    # Resolve machine and private env files.
+    env = _resolve_env(root / "machines" / machine_id / "machine.env", env)
+    if mc_private := env.get("MC_PRIVATE", ""):
+        env = _resolve_env(Path(mc_private) / "env" / f"{machine_id}.env", env)
 
-    _parse_env(root / "machines" / machine_id / "machine.env")
-    env = _resolve_env(raw)
-
-    mc_private = env.get("MC_PRIVATE", "")
-    if mc_private:
-        _parse_env(Path(mc_private) / "env" / f"{machine_id}.env")
-        env = _resolve_env(raw)
+    # Shell-specific additions share the same environment as the machine variables.
+    shell = "powershell" if PLATFORM == Platform.WINDOWS else "pwsh"
+    if shutil.which(shell):
+        module_root = str(Path(__file__).parents[1] / "powershell")
+        module_path = _get_pwsh_module_path(shell, env)
+        env["PSModulePath"] = os.pathsep.join(filter(None, [module_root, module_path]))
 
     return env
 
@@ -56,6 +51,7 @@ def write_env_file(machine_id: str, root: Path) -> None:
     if settings.dry_run:
         logger.info("[dry-run] write %s", _ENV_FILE)
         return
+
     _ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
     _ENV_FILE.write_text(f"MC_HOME={root}\nMC_ID={machine_id}\n")
     logger.info("Wrote %s", _ENV_FILE)
@@ -134,12 +130,14 @@ def run_scripts(
     return failures
 
 
-def _resolve_env(raw: dict[str, str]) -> dict[str, str]:
-    """Expand `$VAR` references in env values until stable."""
+def _resolve_env(path: Path, raw: dict[str, str]) -> dict[str, str]:
     env = dict(raw)
+
+    # Expand env references in values until no changes occur.
     for _ in range(len(env)):
         changed = False
         context = {**os.environ, **env}
+
         for key, value in env.items():
             new = _ENV_REFERENCE.sub(
                 lambda match: context.get(
@@ -147,12 +145,48 @@ def _resolve_env(raw: dict[str, str]) -> dict[str, str]:
                 ),
                 value,
             )
+
             if new != value:
                 env[key] = new
                 changed = True
+
         if not changed:
             break
+
+    # No env file to load, return the resolved env.
+    if not path.is_file():
+        return env
+
+    # Load env file. Values are resolved against the current env.
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        key, _, value = line.partition("=")
+        if key and _:
+            env[key.strip()] = value.strip().strip('"').strip("'")
+
     return env
+
+
+def _get_pwsh_module_path(shell: str, env: dict[str, str]) -> str:
+    """Return the PSModulePath as resolved by PowerShell."""
+    module_path = env.get("PSModulePath", os.environ.get("PSModulePath"))
+    if module_path is not None:
+        return module_path
+
+    # Let PowerShell resolve its defaults before adding our module directory.
+    return subprocess.check_output(
+        [
+            shell,
+            "-NoProfile",
+            "-Command",
+            "[Console]::OutputEncoding = [Text.UTF8Encoding]::new(); $env:PSModulePath",
+        ],
+        env={**os.environ, **env},
+        encoding="utf-8",
+    ).strip()
 
 
 def _execute(

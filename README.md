@@ -92,6 +92,11 @@ No tag means all platforms, so tag shell-specific scripts.
 | `_`      | Helper; never auto-executed                             |
 | None     | Every apply, after packages                             |
 
+Before execution, `mc` prepares each script's environment: shared variables such
+as `MC_HOME` and `MC_ID`, machine config and secrets, then shell-specific additions.
+For PowerShell, it extends `PSModulePath` with the bundled `MachineAdmin` module,
+making `Invoke-Admin` available without changing how the script is launched.
+
 ### Secrets
 
 Keep secrets out of Git: `$MC_PRIVATE/env/$MC_ID.env`, plain `KEY=VALUE`.

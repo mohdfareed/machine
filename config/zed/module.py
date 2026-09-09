@@ -24,7 +24,6 @@ module = Module(
         Package(
             name="zed",
             cask="zed",
-            script="curl -f https://zed.dev/install.sh | sh",
             winget="ZedIndustries.Zed",
             platforms=[Platform.MACOS, Platform.WINDOWS],
         ),

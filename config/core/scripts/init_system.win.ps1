@@ -12,12 +12,15 @@ else {
 # set hostname
 if ($hostname -and $env:COMPUTERNAME -ine $hostname) {
     Write-Host "setting hostname..."
-    Rename-Computer -NewName $hostname -Force
+    Invoke-Admin {
+        param($hostname)
+        Rename-Computer -NewName $hostname -Force
+    } -ArgumentList $hostname
 }
 
 # enable developer mode
 Write-Host "enabling developer mode..."
-try {
+Invoke-Admin {
     $developerMode = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
     New-Item -Path $developerMode -Force | Out-Null
     New-ItemProperty `
@@ -27,15 +30,12 @@ try {
         -PropertyType DWord `
         -Force | Out-Null
 }
-catch {
-    Write-Warning "Failed to enable developer mode, enable it manually: $_"
-}
 
 # REVIEW: Separate features and wsl setup from core windows setup.
 
 # install windows features
 Write-Host "enabling windows features..."
-try {
+Invoke-Admin {
     Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-Windows-Subsystem-Linux
     Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-RemoteDesktopConnection
     Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName HypervisorPlatform
@@ -44,14 +44,11 @@ try {
     Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Containers
     Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Containers-DisposableClientVM
 }
-catch {
-    Write-Warning "Failed to enable optional windows features, enable them manually: $_"
-}
 
 # wsl
 Write-Host "setting up wsl..."
 $distros = @(wsl -l -q 2>$null | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 if ($LASTEXITCODE -ne 0 -or $distros.Count -eq 0) {
     # failed or no distros found
-    wsl --install --no-launch
+    Invoke-Admin { wsl --install --no-launch }
 }
