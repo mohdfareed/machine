@@ -58,3 +58,9 @@ defaults write com.apple.dock mru-spaces -bool false
 defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 # Finder: sort folders first
 defaults write com.apple.finder _FXSortFoldersFirst -bool true
+
+# time machine excluded paths
+sudo /usr/bin/tmutil addexclusion -p \
+  "$HOME/Downloads" \
+  "$HOME/Library/Developer/Xcode/DerivedData" \
+  "$HOME/Library/Containers/com.docker.docker/Data/vms"

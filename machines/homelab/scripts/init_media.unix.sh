@@ -1,22 +1,23 @@
 #!/bin/sh
 set -eu
 
-if [ -z "${MC_HOMELAB_MEDIA_DIR:-}" ]; then
-    echo "MC_HOMELAB_MEDIA_DIR is required" >&2
-    exit 1
-fi
+: "${MC_HOMELAB_STORAGE_DIR:?}"
+: "${MC_HOMELAB_MEDIA_DIR:?}"
+: "${MC_HOMELAB_CACHE_DIR:?}"
 
-# Do not create a fake volume directory on the internal disk when a drive is absent.
-case "$MC_HOMELAB_MEDIA_DIR" in
-    /Volumes/*)
-        volume_name=${MC_HOMELAB_MEDIA_DIR#/Volumes/}
-        volume_name=${volume_name%%/*}
-        if [ ! -d "/Volumes/$volume_name" ]; then
-            echo "Media volume is not mounted: /Volumes/$volume_name" >&2
-            exit 1
-        fi
-        ;;
-esac
+func create_directory() {
+  local directory="$1"
+  local parent=$(dirname "$directory")
 
-# Provision the host mount point; applications own their internal directories.
-mkdir -p "$MC_HOMELAB_MEDIA_DIR"
+  if [ ! -d "$parent" ]; then
+      echo "Directory not found: $parent" >&2
+      exit 1
+  fi
+
+  echo "Creating homelab directory: $directory"
+  mkdir -p "$directory"
+}
+
+create_directory "$MC_HOMELAB_STORAGE_DIR"
+create_directory "$MC_HOMELAB_MEDIA_DIR"
+create_directory "$MC_HOMELAB_CACHE_DIR"

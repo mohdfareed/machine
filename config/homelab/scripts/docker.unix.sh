@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-: "${MC_HOMELAB_DIR:?MC_HOMELAB_DIR must be set}"
+: "${MC_HOMELAB_DIR:?}"
 
 HOMELAB_DIR="$MC_HOMELAB_DIR"
 MODULE_DOCKER="$MC_HOME/config/homelab/docker"

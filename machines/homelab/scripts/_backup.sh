@@ -2,7 +2,8 @@
 set -Eeuo pipefail
 shopt -s nullglob
 
-: "${MC_HOMELAB_DIR:?MC_HOMELAB_DIR must be set}"
+: "${MC_HOMELAB_DIR:?}"
+: "${MC_HOMELAB_STORAGE_DIR:?}"
 
 # Configuration
 # -----------------------------------------------------------------------------
@@ -11,9 +12,9 @@ shopt -s nullglob
 REMOTE_HOSTS=(rpi)
 
 # Output: <backup root>/<host>/<UTC timestamp>.tar.gz
-# Each host keeps its own newest 14 daily archives in iCloud.
+# Each host keeps its own newest 14 daily archives on homelab storage.
 SNAPSHOTS_TO_KEEP=14
-BACKUP_ROOT="${MC_PRIVATE:-$ICLOUD/.machine}/backups"
+BACKUP_ROOT="$MC_HOMELAB_STORAGE_DIR/backups"
 TIMESTAMP="$(date -u +%Y-%m-%dT%H%M%SZ)"
 
 SSH_OPTIONS=(-o BatchMode=yes -o ConnectTimeout=10)
@@ -29,10 +30,15 @@ if [[ "$BACKUP_ROOT" != /* || "$BACKUP_ROOT" == "/" ]]; then
     exit 1
 fi
 
+parent=$(dirname "$MC_HOMELAB_STORAGE_DIR")
+if [[ ! -d "$parent" ]]; then
+    echo "Directory not found: $parent" >&2
+    exit 1
+fi
+
 # Temporary workspace
 # -----------------------------------------------------------------------------
 
-# Build archives outside iCloud. Only completed archives are moved into place.
 staging_root="$(mktemp -d "${TMPDIR:-/tmp}/mc-backup.XXXXXX")"
 trap 'rm -rf -- "$staging_root"' EXIT
 
@@ -99,7 +105,7 @@ for host in "${REMOTE_HOSTS[@]}"; do
     # The single quotes are intentional: this expression runs on the remote
     # host, so its required MC_HOMELAB_DIR determines the source path.
     if ! remote_homelab_dir="$(ssh "${SSH_OPTIONS[@]}" "$host" \
-        'printf "%s" "${MC_HOMELAB_DIR:?MC_HOMELAB_DIR must be set}"' 2>/dev/null)"; then
+        'printf "%s" "${MC_HOMELAB_DIR:?}"' 2>/dev/null)"; then
         echo "  unreachable or MC_HOMELAB_DIR is not configured, skipping"
         continue
     fi
@@ -109,7 +115,7 @@ for host in "${REMOTE_HOSTS[@]}"; do
     # other shells ignore setopt and the directory check rejects the bare glob.
     if ! remote_services="$(ssh "${SSH_OPTIONS[@]}" "$host" \
         'setopt NULL_GLOB 2>/dev/null || true
-        root="${MC_HOMELAB_DIR:?MC_HOMELAB_DIR must be set}"
+        root="${MC_HOMELAB_DIR:?}"
         for data_dir in "$root"/*/data; do
             [ -d "$data_dir" ] && basename "$(dirname "$data_dir")"
         done' 2>/dev/null)"; then

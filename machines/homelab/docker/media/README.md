@@ -18,9 +18,6 @@
 
 ---
 
-[Tailscale / deployment](../../../../config/homelab/README.md) ·
-[Backups](../../README.md#backups)
-
 ```mermaid
 flowchart TD
     Plex["Plex Account"] -->|Watchlist| Sync["watchlist-sync"]

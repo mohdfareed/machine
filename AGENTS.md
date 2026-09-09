@@ -130,6 +130,10 @@ runtime state, caches, and machine-generated application data local.
   reviewed the repository changes and explicitly approved deployment
 - `MC_HOMELAB_DIR` is required for homelab scripts and is declared in the
   machine's committed `machine.env`; never silently fall back to `~/.homelab`
+- Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
+- Keep path/configuration changes minimal: no new tests or storage machinery; simple parent-directory checks are sufficient for interactive setup
+- Use `${VAR:?}` for required shell/Compose variables, without custom error messages
+- Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration
 - Homelab is a single-user, Tailscale-private system: prefer minimal application login friction; never enable public exposure to achieve it
 - Media acquisition uses Usenet through Weaver only
 - Homelab migrations preserve existing runtime data and downloaded media for rollback; avoid extra backup trees, rollout modes, or new folder layouts unless actually required
@@ -146,6 +150,7 @@ add a new convention for every fix or feature, or record completed work here.
 - All READMEs are personal working notes, not public-facing manuals: write for the task that brings the owner back, what they need to remember, and what information is already available at that point
 - Give the minimum starting point for new tasks (where to create a manifest, its minimal contents, how to apply it); keep hard-to-discover conventions and manual setup reminders, but leave configurable fields to code completion and inline documentation and link existing configs instead of duplicating examples
 - Use Mermaid for useful diagrams, not ASCII art; avoid introductions, exhaustive inventories, generic tutorials, and repeated guidance across READMEs
+- Do not add README navigation blocks or section-anchor cross-links; keep notes about using the system, not implementation details
 - Do not turn discussion questions into documentation changes; edit docs when requested or when implementation changes invalidate existing instructions
 - Never add inline spellchecker directives to Markdown; keep spelling exceptions in `.cspell.json`
 - Before sending, remove every bullet whose deletion would not change the reader's understanding or next action

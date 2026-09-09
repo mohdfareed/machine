@@ -20,11 +20,7 @@ Power/sleep and sharing settings are in [init_server.sh](scripts/init_server.sh)
 
 Daily at **04:30**, keeping **14 snapshots per host**:
 
-`$MC_PRIVATE/backups/<host>/<timestamp>.tar.gz`
-
-Includes service `data/` directories on this device and a list of SSH-accessible
-devices. Does **not** include media files, Docker named volumes, or
-the private env file. Hosts are listed in [_backup.sh](scripts/_backup.sh).
+`$MC_HOMELAB_STORAGE_DIR/Backups/<host>/<timestamp>.tar.gz`
 
 ```sh
 mc::backup --start # start backup
