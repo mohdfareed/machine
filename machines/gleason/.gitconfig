@@ -1,8 +1,13 @@
 [user]
     name = Mohammed Fareed
     email = mfareed@gleason.com
-    signingkey = ~/.ssh/wks.pub
 
 ; disable commit signing
+[user]
+    signingkey = ~/.ssh/wks.pub
 [commit]
     gpgsign = false
+
+; azure authentication
+[url "https://<PAT>:x-oauth-basic@dev.azure.com/"]
+	insteadOf = https://dev.azure.com/
