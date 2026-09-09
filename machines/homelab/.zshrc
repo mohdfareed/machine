@@ -2,16 +2,11 @@
 
 # backup machine or check status of last backup
 function mc::backup {
-  usage="usage: $0 -s|--start"
-  if (($# > 1)); then echo "$usage" && return 1; fi
+  usage="usage: $0"
+  if (($# > 0)); then echo "$usage" && return 1; fi
 
-  if [[ "$1" == "-s" || "$1" == "--start" ]]; then
-    # start backup now
-    launchctl kickstart gui/$(id -u)/com.mc.backup
-  else
-    # check backup status
-    launchctl print gui/$(id -u)/com.mc.backup
-  fi
+  local job="gui/$(id -u)/com.mc.backup"
+  launchctl kickstart "$job" && tail -f /tmp/mc-backup.log
 }
 
 # pull machine by stashing -> pulling main -> back-merging

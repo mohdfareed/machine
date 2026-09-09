@@ -19,11 +19,13 @@ Power/sleep and sharing settings are in [init_server.sh](scripts/init_server.sh)
 ## Backup
 
 Daily at **04:30**, keeping **14 snapshots per host**:
-
 `$MC_HOMELAB_STORAGE_DIR/Backups/<host>/<timestamp>.tar.gz`
 
 ```sh
-mc::backup --start # start backup
-mc::backup         # check status
+mc::backup # start backup
 # log: `/tmp/mc-backup.log`
 ```
+
+For backups to the external drive, enable `/bin/zsh` in **System Settings →
+Privacy & Security → Full Disk Access**. Without this, scheduled backups can
+fail with `Operation not permitted`.

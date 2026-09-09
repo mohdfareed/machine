@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
-# Functions and Aliases
+# Aliases
 # =============================================================================
 
 if [ "$TERM_PROGRAM" = "vscode" ]; then
@@ -22,13 +22,48 @@ alias cat='bat --paging=never'
 alias gen-pass='openssl rand -base64 32'
 alias gen-token='openssl rand -hex 32'
 
+# Platform-Specific
+# =============================================================================
+
 # Linux: show disk usage for real filesystems
 if [[ "$OSTYPE" == linux* ]]; then
+
     alias disk='df -h -x tmpfs -x devtmpfs -x squashfs -x overlay -x efivarfs'
+
 fi
 
 # macOS: re-add all ssh keys to keychain
 if [[ "$OSTYPE" == darwin* ]]; then
+
+    # remove hidden flag from files and directories
+    function unhide {
+        local usage="usage: unhide [-r|--recursive] path"
+        local recursive=false
+
+        if [[ "${1-}" == "-h" || "${1-}" == "--help" ]]; then
+            printf '%s\n' "$usage"
+            return 0
+        fi
+
+        if [[ "${1-}" == "-r" || "${1-}" == "--recursive" ]]; then
+            recursive=true
+            shift
+        fi
+
+        if (( $# != 1 )); then
+            printf '%s\n' "$usage" >&2
+            return 1
+        fi
+
+        local target="$1"
+        if [[ "$recursive" == true ]]; then
+            chflags -R nohidden "$target"
+        else
+            chflags nohidden "$target"
+        fi
+    }
+
+    # fix ssh issues by re-adding keys to keychain
     function ssh::fix-keychain {
         for file in ~/.ssh/*; do
             [[ ! -f "$file" ]] && continue
@@ -38,7 +73,28 @@ if [[ "$OSTYPE" == darwin* ]]; then
             ssh-add --apple-use-keychain "$file"
         done
     }
+
 fi
+
+# Functions
+# =============================================================================
+
+# load private values into this shell on demand
+secrets() {
+    if [[ -z "$MC_PRIVATE" || -z "$MC_ID" ]]; then
+        echo "mc environment not configured"
+        return 1
+    fi
+
+    local file="$MC_PRIVATE/env/$MC_ID.env"
+    if [[ ! -f "$file" ]]; then
+        echo "no secrets file found"
+        return 1
+    fi
+
+    dotenv::load "$file"
+    echo "secrets loaded for this shell"
+}
 
 # clone a git repo
 git::clone() {
@@ -58,23 +114,6 @@ zsh::time() {
         echo "$usage" && return 0
     fi
     for _ in $(seq 1 "${1-1}"); do time $SHELL -i -c exit; done
-}
-
-# load private values into this shell on demand
-secrets() {
-    if [[ -z "$MC_PRIVATE" || -z "$MC_ID" ]]; then
-        echo "mc environment not configured"
-        return 1
-    fi
-
-    local file="$MC_PRIVATE/env/$MC_ID.env"
-    if [[ ! -f "$file" ]]; then
-        echo "no secrets file found"
-        return 1
-    fi
-
-    dotenv::load "$file"
-    echo "secrets loaded for this shell"
 }
 
 # activate python virtual environment

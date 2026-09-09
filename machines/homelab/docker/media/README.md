@@ -52,23 +52,41 @@ Use this order on a fresh install; restored `data/` keeps the existing setup.
 
 - Set server `news.newsdemon.com:563` (enable TLS and set connections=50).
 - In **Settings → Security**, create an **integration** API key for Scryer.
+- Set download path in settings to `/data/downloads`.
 
 ### Scryer
 
 Create the admin account, then configure:
 
 - Libraries: `/data/movies`, `/data/series`, and `/data/anime` if used.
+- Connect Weaver with the API key created above. Set NZBGet type to Weaver.
 - Usenet indexer (`api.nzbgeek.info`) to Weaver.
-- OpenSubtitles: account and wanted languages.
-
-Weaver is built in. Use the **Weaver** type, not NZBGet.
-**SSL off**, **URL base empty**, then test.
+- OpenSubtitles: wanted languages.
+  - Enable timing correction and set thresholds to 100% with 180s max offset.
+  - Ensure Docker is using gRPC FUSE.
+  - # WARNING: This is due to a delay in the default engine of ~100-150 ms
+    in file metadata causing Scryer's subtitles time correction to fail to
+    find the subtitles on the server.
+- Set `Import Behavior` of all catalogs to `Move`.
+- Connect Plex. Set base URL to: `https://plex.<tailnet>.ts.net`
+- Enable Telegram and Plex notifications.
+  - Telegram:
+    - Download Failed
+    - Import Completed
+    - Import Blocked
+    - Upgrade Imported
+    - Subtitle Search Failed
+    - Media Request Submitted
+  - Plex:
+    - Import Completed
+    - Upgrade Imported
+    - File Renamed
+    - File Deleted
 
 ### Plex
 
 - Add the same library folders as Scryer, scan, and connect
   [Infuse](https://firecore.com/infuse).
-- Enable Plex notifications.
 
 Plex's watchlist is synced to Scryer, which will download new items automatically.
 This is done via [watchlist-sync](https://github.com/mohdfareed/watchlist-sync).

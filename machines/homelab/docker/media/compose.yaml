@@ -30,6 +30,7 @@ services:
     restart: unless-stopped
     environment:
       <<: *app-env
+      PLEX_CLAIM: ${PLEX_CLAIM:-}
       ADVERTISE_IP: https://plex.${TAILNET_NAME}.ts.net
     volumes:
       - <<: *media-volume
