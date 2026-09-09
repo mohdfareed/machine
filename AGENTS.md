@@ -105,7 +105,7 @@ runtime state, caches, and machine-generated application data local.
 
 - Machine extras: `extra.zsh` → `~/.zshrc.local`
 - Repo root derived from `Path(__file__).parents[2]` - no env var needed
-- App data: `typer.get_app_dir("mc")` for logs/state
+- App data: `typer.get_app_dir("mc")` for logs/state; define runtime file paths once in `Settings` and reuse them in readers, writers, and CLI commands
 - Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/vscode/` and `config/zed/`
 - VS Code Remote Tunnels are owned by the `vscode` module; account authorization remains a one-time manual step on each machine
 - The `codex` module owns the Codex CLI, unified ChatGPT desktop app, and portable `~/.codex/config.toml`; credentials, pairing/enrollments, live databases, histories, caches, downloaded plugins, and generated memories stay machine-local

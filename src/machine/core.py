@@ -38,6 +38,18 @@ class Settings:
     dry_run: bool = False
     home: Path = _REPO_ROOT
 
+    @property
+    def log_file(self) -> Path:
+        return self.app_dir / "mc.log"
+
+    @property
+    def state_file(self) -> Path:
+        return self.app_dir / "state.json"
+
+    @property
+    def machine_file(self) -> Path:
+        return self.app_dir / "machine.txt"
+
 
 settings = Settings()
 """Runtime settings singleton."""
@@ -122,7 +134,7 @@ def setup_console_logging() -> None:
 
 def setup_file_logging() -> None:
     """Configure rotating file logging."""
-    log_file = settings.app_dir / "mc.log"
+    log_file = settings.log_file
     log_file.parent.mkdir(parents=True, exist_ok=True)
     handler = RotatingFileHandler(
         log_file,

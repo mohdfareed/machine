@@ -32,7 +32,7 @@ mc update            # Run up_* scripts and rerun script-backed packages
 mc sync              # Pull --rebase, then apply the selected machine
 mc sync --push       # Also push local commits
 mc sync --no-apply   # Pull without applying
-mc info              # Current machine and local paths
+mc status            # Current machine and local paths
 ```
 
 ### Machines

@@ -20,7 +20,6 @@ _ENV_FILE = Path.home() / ".env"
 _ENV_REFERENCE = re.compile(
     r"\$(?:{(?P<braced>[A-Za-z_][A-Za-z0-9_]*)}|(?P<plain>[A-Za-z_][A-Za-z0-9_]*))"
 )
-_STATE_FILE = settings.app_dir / "state.json"
 
 
 def build_script_env(machine_id: str, root: Path) -> dict[str, str]:
@@ -230,9 +229,9 @@ def _execute(
 
 
 def _load_state() -> dict:
-    if _STATE_FILE.exists():
+    if settings.state_file.exists():
         try:
-            return json.loads(_STATE_FILE.read_text())
+            return json.loads(settings.state_file.read_text())
         except json.JSONDecodeError, KeyError:
             logger.warning("Corrupted state, resetting")
     return {}
@@ -241,5 +240,5 @@ def _load_state() -> dict:
 def _save_state(state: dict) -> None:
     if settings.dry_run:
         return
-    _STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    _STATE_FILE.write_text(json.dumps(state, indent=2))
+    settings.state_file.parent.mkdir(parents=True, exist_ok=True)
+    settings.state_file.write_text(json.dumps(state, indent=2))

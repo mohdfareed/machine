@@ -43,6 +43,9 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
+status_app = typer.Typer(help="Show machine information and local data.")
+app.add_typer(status_app, name="status", rich_help_panel="Info")
+
 
 def main(prog_name: str | None = None) -> None:
     """Entry point."""
@@ -56,7 +59,7 @@ def main(prog_name: str | None = None) -> None:
     except Exception as e:
         _logger.debug("Unhandled exception", exc_info=True)
         err_console.print(f"[bold red]Error:[/] {e}")
-        err_console.print(f"[dim]See {settings.app_dir / 'mc.log'}[/]")
+        err_console.print(f"[dim]See {settings.log_file}[/]")
         sys.exit(1)
 
 
@@ -197,7 +200,7 @@ def apply(
     failures.extend(install_packages(all_packages, owners=owners))
     failures.extend(run_scripts(post_scripts, env=script_env, owners=owners))
 
-    _print_summary(failures, settings.app_dir / "mc.log")
+    _print_summary(failures, settings.log_file)
 
 
 def _print_summary(failures: list[tuple[str, str, str]], log_file: Path) -> None:
@@ -297,7 +300,7 @@ def update(
         rerun_script_packages=True,
     )
     failures.extend(run_scripts(up_scripts, env=script_env, owners=owners))
-    _print_summary(failures, settings.app_dir / "mc.log")
+    _print_summary(failures, settings.log_file)
 
 
 @app.command(rich_help_panel="Lifecycle")
@@ -409,15 +412,48 @@ def private() -> None:
     print(env["MC_PRIVATE"])
 
 
-@app.command(rich_help_panel="Info")
-def info() -> None:
+@status_app.callback(invoke_without_command=True)
+def status(ctx: typer.Context) -> None:
     """Show machine home, app directory, and version."""
+    if ctx.invoked_subcommand is not None:
+        return
+
     console.print(f"[bold]{settings.name}[/] {settings.version}")
     machine = get_current_machine()
     if machine:
         console.print(f"  Machine: {machine}")
     console.print(f"  Home:    {settings.home}")
     console.print(f"  Data:    {settings.app_dir}")
+
+
+@status_app.command("id")
+def status_id() -> None:
+    """Print the current machine ID."""
+    machine = get_current_machine()
+    if not machine:
+        err_console.print("No machine selected. Run mc apply -m <id> first.")
+        raise typer.Exit(1)
+    typer.echo(machine)
+
+
+@status_app.command("state")
+def status_state() -> None:
+    """Print the saved script state."""
+    path = settings.state_file
+    if not path.exists():
+        err_console.print("No saved script state found.")
+        raise typer.Exit(1)
+    typer.echo(path.read_text(encoding="utf-8"), nl=False)
+
+
+@status_app.command("log")
+def status_log() -> None:
+    """Print the current log."""
+    path = settings.log_file
+    if not path.exists():
+        err_console.print("No log file found.")
+        raise typer.Exit(1)
+    typer.echo(path.read_text(encoding="utf-8"), nl=False)
 
 
 @app.command("list", rich_help_panel="Info")
