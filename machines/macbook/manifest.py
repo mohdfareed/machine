@@ -1,15 +1,16 @@
 """Personal laptop (macOS) machine manifest."""
 
-from machine.manifest import MachineManifest, Package
+from machine.manifest import MachineManifest, Package, PkgManager
 
 manifest = MachineManifest(
+    pkg_managers=[PkgManager.BREW, PkgManager.MAS],
     modules=[
         "git",
         "shell",
         "ssh",
         "vscode",
         "ghostty",
-        "core",
+        "system",
         "zed",
         "raycast",
         "codex",
@@ -17,22 +18,14 @@ manifest = MachineManifest(
     files=[],
     packages=[
         # Dev languages
-        Package(brew="uv"),
-        Package(brew="python"),
-        Package(brew="python-freethreading"),
         Package(brew="go"),
         Package(brew="shellcheck"),
-        # NOTE: Docker Desktop cask ("docker") only delivers an Intel binary
-        #   via Homebrew as of 2026-02. Install Docker Desktop manually on
-        #   Apple Silicon until the cask ships a universal/ARM build.
-        # Package(cask="docker"),
+        Package(cask="docker-desktop"),
         Package(cask="dotnet-sdk"),
         # Utilities
-        Package(brew="mas"),
         Package(brew="gnu-time"),
         Package(cask="copilot-cli"),
         Package(cask="font-computer-modern"),
-        Package(cask="font-jetbrains-mono-nerd-font"),
         # Apps
         Package(cask="iina"),
         Package(cask="mos"),

@@ -22,20 +22,6 @@ class _WindowsPrivilegeError(OSError):
         self.winerror = 1314
 
 
-def test_file_mapping_platform_filter() -> None:
-    universal = FileMapping(source="source", target="target")
-    mac_only = FileMapping(
-        source="source",
-        target="target",
-        platforms=[Platform.MACOS],
-    )
-
-    assert universal.applies_to(Platform.MACOS)
-    assert universal.applies_to(Platform.WINDOWS)
-    assert mac_only.applies_to(Platform.MACOS)
-    assert not mac_only.applies_to(Platform.WINDOWS)
-
-
 def test_deploy_files_skips_non_applicable_platforms(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

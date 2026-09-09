@@ -1,6 +1,7 @@
 """Machine manifest models and loaders."""
 
 import importlib.util
+from enum import StrEnum
 from pathlib import Path
 from typing import Self
 
@@ -24,7 +25,7 @@ class FileMapping(BaseModel):
 
     def applies_to(self, platform: Platform) -> bool:
         """Return True when this file mapping should be considered on *platform*."""
-        return self.platforms is None or platform in self.platforms
+        return self.platforms is None or any(platform.is_a(target) for target in self.platforms)
 
 
 class Package(BaseModel):
@@ -32,19 +33,22 @@ class Package(BaseModel):
 
     name: str = ""
     platforms: list[Platform] | None = None
-
     script: str | None = None
+
+    # macos
     brew: str | None = None
     cask: str | None = None
+    mas: int | None = None
+    # linux
     apt: str | None = None
     snap: str | None = None
+    # windows
     winget: str | None = None
     scoop: str | None = None
-    mas: int | None = None
 
     def applies_to(self, platform: Platform) -> bool:
         """Return True when this package should be considered on *platform*."""
-        return self.platforms is None or platform in self.platforms
+        return self.platforms is None or any(platform.is_a(target) for target in self.platforms)
 
     @model_validator(mode="after")
     def _check_source(self) -> Self:
@@ -77,9 +81,21 @@ class Module(BaseModel):
     packages: list[Package] = []
 
 
+class PkgManager(StrEnum):
+    """Package managers explicitly enabled by a machine manifest."""
+
+    BREW = "brew"
+    MAS = "mas"
+    APT = "apt"
+    SNAP = "snap"
+    WINGET = "winget"
+    SCOOP = "scoop"
+
+
 class MachineManifest(BaseModel):
     """Complete machine declaration."""
 
+    pkg_managers: list[PkgManager] = []
     modules: list[str] = []
     scripts: list[str] = []
     files: list[FileMapping] = []
@@ -96,11 +112,19 @@ def list_modules(root: Path) -> list[str]:
         return []
 
     names: set[str] = set()
-    for entry in modules_dir.iterdir():
-        if entry.is_dir() and (entry / "module.py").exists():
-            names.add(entry.name)
-        elif entry.is_file() and entry.suffix == ".py":
-            names.add(entry.stem)
+    for directory, dirs, files in modules_dir.walk():
+        if directory != modules_dir and "module.py" in files:
+            parts = directory.relative_to(modules_dir).parts
+            if any("." in part for part in parts):
+                raise ValueError(f"Module directory names cannot contain dots: {directory}")
+
+            names.add(".".join(parts))
+            dirs.clear()
+            continue
+
+        dirs[:] = [name for name in dirs if not name.startswith(".") and name != "__pycache__"]
+        if directory == modules_dir:
+            names.update(Path(name).stem for name in files if name.endswith(".py"))
 
     return sorted(names)
 
@@ -127,14 +151,17 @@ _module_cache: dict[str, Module] = {}
 
 
 def load_module(name: str, root: Path) -> Module:
-    """Load a module from ``config/<name>/module.py`` or ``config/<name>.py``."""
-    module_dir = root / "config" / name
+    """Load a dotted module name, with legacy top-level flat module support."""
+    parts = name.split(".")
+    if any(not part or any(char in part for char in "/\\:") for part in parts):
+        raise ValueError(f"Invalid module name: {name}")
+    module_dir = root / "config" / Path(*parts)
     dir_path = module_dir / "module.py"
     flat_path = root / "config" / f"{name}.py"
 
     if dir_path.exists():
         path = dir_path
-    elif flat_path.exists():
+    elif "." not in name and flat_path.exists():
         path = flat_path
     else:
         raise FileNotFoundError(f"No module: {dir_path} or {flat_path}")
@@ -195,6 +222,9 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
     if not isinstance(result, MachineManifest):
         raise TypeError(f"'manifest' must be MachineManifest, got {type(result)}")
 
+    # Core is the shared baseline for every machine.
+    result.modules = ["core", *(name for name in result.modules if name != "core")]
+
     # Flat manifests have no directory - skip path/script resolution
     if not is_dir_manifest:
         result.modules = _resolve_deps(result.modules, root)
@@ -248,7 +278,7 @@ def resolve_modules(modules: list[str], root: Path) -> list[Module]:
 
 
 def _resolve_deps(modules: list[str], root: Path) -> list[str]:
-    """Resolve module dependencies recursively and auto-include ``pkgs``."""
+    """Resolve module dependencies recursively."""
     resolved: list[str] = []
     seen: set[str] = set()
 
@@ -263,12 +293,6 @@ def _resolve_deps(modules: list[str], root: Path) -> list[str]:
 
     for name in modules:
         _add(name)
-
-    # Auto-include 'pkgs' when any module declares packages
-    if "pkgs" not in seen:
-        has_pkgs = any(load_module(m, root).packages for m in resolved)
-        if has_pkgs:
-            resolved.insert(0, "pkgs")
 
     return resolved
 

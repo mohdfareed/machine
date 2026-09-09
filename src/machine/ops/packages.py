@@ -7,10 +7,11 @@ import subprocess
 import sys
 import threading
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
-from machine.core import PLATFORM, Platform, is_unix, run, run_collect, settings
-from machine.manifest import Package
+from machine.core import PLATFORM, Platform, is_windows, run_collect, settings
+from machine.manifest import Package, PkgManager
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,6 @@ class ManagerConfig:
 _PLATFORM_SOURCES: dict[Platform, tuple[PackageSource, ...]] = {
     Platform.MACOS: ("cask", "brew", "mas"),
     Platform.LINUX: ("apt", "snap", "brew"),
-    Platform.WSL: ("apt", "snap", "brew"),
-    Platform.GHCS: ("apt",),
     Platform.WINDOWS: ("winget", "scoop"),
 }
 _MANAGER_CONFIGS: dict[PackageSource, ManagerConfig] = {
@@ -50,7 +49,7 @@ def cache_sudo() -> None:
     """Prompt for sudo once and keep credentials alive in the background."""
     global _sudo_keepalive
 
-    if not is_unix or settings.dry_run or _sudo_keepalive is not None:
+    if is_windows or settings.dry_run or _sudo_keepalive is not None:
         return
 
     rc = subprocess.call(["sudo", "-v"], stdin=sys.stdin)
@@ -70,128 +69,151 @@ def cache_sudo() -> None:
 
 def refresh_path() -> None:
     """Re-read PATH from a login shell so installed managers are visible."""
-    if not is_unix:
+    if is_windows:
+        import winreg
+
+        paths = [os.environ.get("PATH", "")]
+        for hive, key in (
+            (
+                winreg.HKEY_LOCAL_MACHINE,
+                r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+            ),
+            (winreg.HKEY_CURRENT_USER, "Environment"),
+        ):
+            try:
+                with winreg.OpenKey(hive, key) as handle:
+                    value, _ = winreg.QueryValueEx(handle, "Path")
+                    paths.append(os.path.expandvars(value))
+            except OSError:
+                pass
+
+        os.environ["PATH"] = os.pathsep.join(dict.fromkeys(filter(None, paths)))
         return
+
     try:
         shell = os.environ.get("SHELL", "/bin/sh")
         out = subprocess.check_output([shell, "-lc", "echo $PATH"], text=True, timeout=5).strip()
+
         if out:
             os.environ["PATH"] = out
             logger.debug("Refreshed PATH: %s", out)
     except Exception as exc:
         logger.debug("PATH refresh failed: %s", exc)
 
+    for directory in ("/opt/homebrew/bin", "/usr/local/bin", "/home/linuxbrew/.linuxbrew/bin"):
+        if (Path(directory) / "brew").is_file():
+            os.environ["PATH"] = directory + os.pathsep + os.environ.get("PATH", "")
+            break
+
+
+def validate_managers(managers: list[PkgManager]) -> None:
+    """Validate explicit manager declarations before running setup scripts."""
+    supported = {
+        _MANAGER_CONFIGS[source].binary
+        for platform, sources in _PLATFORM_SOURCES.items()
+        if PLATFORM.is_a(platform)
+        for source in sources
+    }
+
+    for manager in managers:
+        if manager not in supported:
+            raise ValueError(f"{manager} is not supported on {PLATFORM}")
+
+    if PkgManager.MAS in managers and PkgManager.BREW not in managers:
+        raise ValueError("mas requires brew in pkg_managers")
+    if PkgManager.APT in managers and not shutil.which("apt"):
+        raise ValueError("apt must already be installed")
+    if PkgManager.SNAP in managers and not shutil.which("snap") and PkgManager.APT not in managers:
+        raise ValueError("Installing snap requires apt in pkg_managers")
+
 
 def install_packages(
     packages: list[Package],
+    managers: list[PkgManager],
     owners: dict[str, str] | None = None,
     rerun_script_packages: bool = False,
 ) -> list[tuple[str, str, str]]:
-    """Install packages using available managers. Returns list of failures."""
+    """Resolve, check, and install packages using only declared managers."""
     if not packages:
         return []
-
     refresh_path()
-
-    manager_bins = _available_manager_bins()
-    available_sources = _available_sources(manager_bins)
-    installed_sources = _installed_source_snapshots(available_sources)
-    logger.info("Managers: %s", ", ".join(sorted(manager_bins)) or "none")
-
+    available = {manager for manager in managers if shutil.which(manager)}
     failures: list[tuple[str, str, str]] = []
-    skipped_installed = 0
-    skipped_inapplicable = 0
+
     for pkg in packages:
-        applicable_sources = _applicable_sources(pkg)
-        can_run_script = bool(pkg.script and pkg.applies_to(PLATFORM))
-        selected_source = _selected_source(applicable_sources, available_sources)
-        if not applicable_sources and not can_run_script:
-            logger.debug("Skip (not applicable): %s", pkg.name)
-            skipped_inapplicable += 1
+        if not pkg.applies_to(PLATFORM):
             continue
-
-        if _installed_with_requested_manager(
-            pkg,
-            selected_source,
-            installed_sources,
-            rerun_script_packages=rerun_script_packages,
-        ):
-            logger.debug("Skip (installed): %s", pkg.name)
-            skipped_installed += 1
-            continue
-
         module = (owners or {}).get(pkg.name, "?")
-        fail = _install(pkg, selected_source, applicable_sources, can_run_script, module)
-        if fail:
-            failures.append(fail)
+        sources = _applicable_sources(pkg)
+        source: PackageSource | None = None
+        try:
+            if sources:
+                declared: list[PackageSource] = [
+                    s for s in sources if _MANAGER_CONFIGS[s].binary in managers
+                ]
+                if not declared:
+                    raise ValueError(
+                        "manager not declared: "
+                        + ", ".join(dict.fromkeys(_MANAGER_CONFIGS[s].binary for s in sources))
+                    )
+                source = next(
+                    (
+                        s
+                        for s in declared
+                        if settings.dry_run or _MANAGER_CONFIGS[s].binary in available
+                    ),
+                    None,
+                )
+                if source is None:
+                    raise ValueError("no manager available")
+                # A dry run can plan installs before manager setup has run.
+                if _MANAGER_CONFIGS[source].binary in available and _source_installed(
+                    source, getattr(pkg, source)
+                ):
+                    logger.debug("Skip (installed): %s", pkg.name)
+                    continue
+            elif not pkg.script:
+                continue
+            elif not rerun_script_packages and shutil.which(pkg.name):
+                logger.debug("Skip (installed): %s", pkg.name)
+                continue
 
-    if skipped_installed:
-        logger.info("Skipped %d already-installed package(s)", skipped_installed)
-    if skipped_inapplicable:
-        logger.info("Skipped %d package(s) that do not apply on %s", skipped_inapplicable, PLATFORM)
+            failure = _install(pkg, source, module)
+            if failure:
+                failures.append(failure)
+        except (ValueError, OSError, subprocess.SubprocessError) as exc:
+            logger.error("[%s] %s: %s", module, pkg.name, exc)
+            failures.append((module, pkg.name, str(exc)))
     return failures
 
 
 def _install(
-    pkg: Package,
-    selected_source: PackageSource | None,
-    applicable_sources: list[PackageSource],
-    can_run_script: bool,
-    module: str = "?",
+    pkg: Package, source: PackageSource | None, module: str = "?"
 ) -> tuple[str, str, str] | None:
-    """Try to install a package. Returns a Failure on error, else None."""
-    if selected_source is not None:
-        value = _package_source_value(pkg, selected_source)
-        if value is None:
-            raise AssertionError(f"Missing package source '{selected_source}' for {pkg.name}")
+    """Execute an already-resolved manager or script installation."""
+    cmd = (
+        _MANAGER_CONFIGS[source].install_cmd.format(getattr(pkg, source))
+        if source is not None
+        else pkg.script
+    )
+    assert cmd is not None
 
-        cmd = _MANAGER_CONFIGS[selected_source].install_cmd.format(value)
-        logger.info("[%s] %s: %s", module, pkg.name, selected_source)
-        rc, output = run_collect(cmd, label=module)
-        if _install_succeeded(selected_source, rc, output):
-            if selected_source == "winget" and rc != 0:
-                logger.info("[%s] %s already installed; no upgrade available", module, pkg.name)
-            return None
-        if rc != 0:
-            logger.error(
-                "[%s] failed to install %s via %s (exit %d): %s",
-                module,
-                pkg.name,
-                selected_source,
-                rc,
-                cmd,
-            )
-            return (module, pkg.name, f"{selected_source} exit {rc}")
+    logger.info("[%s] %s: %s", module, pkg.name, source or "script")
+    rc, output = run_collect(cmd, label=module)
+    if _install_succeeded(source, rc, output):
         return None
 
-    if applicable_sources:
-        logger.warning("[%s] no manager for: %s", module, pkg.name)
-        return (module, pkg.name, "no manager available")
-
-    if can_run_script and pkg.script:
-        logger.info("[%s] %s: script", module, pkg.name)
-        rc = run(pkg.script, label=module)
-        if rc != 0:
-            logger.error(
-                "[%s] failed to install %s via script (exit %d): %s",
-                module,
-                pkg.name,
-                rc,
-                pkg.script,
-            )
-            return (module, pkg.name, f"script exit {rc}")
-        return None
-
-    logger.debug("[%s] skip %s: no applicable package source on %s", module, pkg.name, PLATFORM)
-    return None
+    logger.error("[%s] failed to install %s (exit %d): %s", module, pkg.name, rc, cmd)
+    return (module, pkg.name, f"{source or 'script'} exit {rc}")
 
 
-def _install_succeeded(manager: PackageSource, rc: int, output: bytes | bytearray) -> bool:
+def _install_succeeded(manager: PackageSource | None, rc: int, output: bytes | bytearray) -> bool:
     """Classify manager exit codes that should count as a successful no-op."""
     if rc == 0:
         return True
     if manager != "winget":
         return False
+
     text = output.decode(errors="replace").lower()
     return "found an existing package already installed" in text and any(
         msg in text
@@ -202,162 +224,50 @@ def _install_succeeded(manager: PackageSource, rc: int, output: bytes | bytearra
     )
 
 
-def _installed_with_requested_manager(
-    pkg: Package,
-    selected_source: PackageSource | None,
-    installed_sources: dict[PackageSource, set[str]],
-    rerun_script_packages: bool = False,
-) -> bool:
-    """Return True when the package is already present under its requested manager."""
-    if selected_source is not None:
-        value = _package_source_value(pkg, selected_source)
-        if value is None:
-            return False
-        if selected_source in installed_sources:
-            return str(value) in installed_sources[selected_source]
-        return _source_installed(selected_source, value)
-
-    if rerun_script_packages or not pkg.script or not pkg.name:
-        return False
-
-    return shutil.which(pkg.name) is not None
-
-
 def _applicable_sources(pkg: Package) -> list[PackageSource]:
-    """Return package sources that make sense on the current platform."""
+    """Return platform-compatible sources in preference order."""
     if not pkg.applies_to(PLATFORM):
         return []
+
     return [
         source
-        for source in _PLATFORM_SOURCES[PLATFORM]
-        if _package_source_value(pkg, source) is not None
+        for platform, sources in _PLATFORM_SOURCES.items()
+        if PLATFORM.is_a(platform)
+        for source in sources
+        if getattr(pkg, source) is not None
     ]
 
 
-def _available_manager_bins() -> set[str]:
-    """Return installed package-manager executables."""
-    return {config.binary for config in _MANAGER_CONFIGS.values() if shutil.which(config.binary)}
-
-
-def _available_sources(manager_bins: set[str]) -> set[PackageSource]:
-    """Return package sources whose backing managers are installed."""
-    return {source for source, config in _MANAGER_CONFIGS.items() if config.binary in manager_bins}
-
-
-def _selected_source(
-    applicable_sources: list[PackageSource],
-    available_sources: set[PackageSource],
-) -> PackageSource | None:
-    """Return the first applicable source whose manager is installed."""
-    for source in applicable_sources:
-        if source in available_sources:
-            return source
-    return None
-
-
-def _package_source_value(pkg: Package, source: PackageSource) -> str | int | None:
-    """Return the package value for a specific install source."""
-    return getattr(pkg, source)
-
-
 def _source_installed(source: PackageSource, value: str | int) -> bool:
-    """Return True when the requested manager already has the package installed."""
+    """Query the selected manager for this package's installed status."""
     match source:
-        case "brew":
-            return _command_succeeds(["brew", "list", "--formula", str(value)])
-        case "cask":
-            return _command_succeeds(["brew", "list", "--cask", str(value)])
-        case "apt":
-            proc = subprocess.run(
-                ["dpkg-query", "-W", "-f=${Status}", str(value)],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
-            return proc.returncode == 0 and "install ok installed" in proc.stdout.lower()
-        case "snap":
-            return _command_succeeds(["snap", "list", str(value)])
-        case "winget":
-            return _winget_installed(str(value))
-        case "scoop":
-            return _command_succeeds(["scoop", "list", str(value)])
+        case "brew" | "cask":
+            cmd = ["brew", "list", "--formula" if source == "brew" else "--cask", str(value)]
+
         case "mas":
-            return _mas_installed(int(value))
+            lines = _query(["mas", "list"], check=True).stdout.splitlines()
+            return any(line.split()[0] == str(value) for line in lines if line.strip())
 
-    raise AssertionError(f"Unhandled package source: {source}")
+        case "apt":
+            result = _query(["dpkg-query", "-W", "-f=${Status}", str(value)])
+            return result.returncode == 0 and "install ok installed" in result.stdout.lower()
+
+        case "snap" | "scoop":
+            cmd = [source, "list", str(value)]
+
+        case "winget":
+            cmd = ["winget", "list", "--exact", "--id", str(value)]
+
+        case _:
+            raise AssertionError(f"Unhandled package source: {source}")
+    return _query(cmd).returncode == 0
 
 
-def _installed_source_snapshots(
-    available_sources: set[PackageSource],
-) -> dict[PackageSource, set[str]]:
-    """Return bulk-installed package snapshots for managers with cheap list commands."""
-    snapshots: dict[PackageSource, set[str]] = {}
-    if "brew" in available_sources:
-        snapshots["brew"] = _command_output_lines(["brew", "list", "--formula"])
-    if "cask" in available_sources:
-        snapshots["cask"] = _command_output_lines(["brew", "list", "--cask"])
-    if "mas" in available_sources:
-        snapshots["mas"] = _mas_installed_ids()
-    return snapshots
-
-
-def _command_succeeds(cmd: list[str]) -> bool:
-    """Return True when *cmd* exits successfully."""
+def _query(cmd: list[str], *, check: bool = False) -> subprocess.CompletedProcess[str]:
+    """Run a presence query, resolving Windows shims and bounding execution time."""
     executable = shutil.which(cmd[0])
     if executable is None:
-        return False
-
-    proc = subprocess.run(
-        [executable, *cmd[1:]],
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
+        raise FileNotFoundError(f"Manager query executable not found: {cmd[0]}")
+    return subprocess.run(
+        [executable, *cmd[1:]], capture_output=True, text=True, timeout=30, check=check
     )
-    return proc.returncode == 0
-
-
-def _command_output_lines(cmd: list[str]) -> set[str]:
-    """Return non-empty output lines from *cmd*, or an empty set on failure."""
-    proc = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
-    if proc.returncode != 0:
-        return set()
-    return {line.strip() for line in proc.stdout.splitlines() if line.strip()}
-
-
-def _winget_installed(package_id: str) -> bool:
-    """Return True when winget already manages the exact package id."""
-    proc = subprocess.run(
-        ["winget", "list", "--exact", "--id", package_id],
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
-    return proc.returncode == 0
-
-
-def _mas_installed(app_id: int) -> bool:
-    """Return True when the Mac App Store app id is already installed."""
-    return str(app_id) in _mas_installed_ids()
-
-
-def _mas_installed_ids() -> set[str]:
-    """Return installed Mac App Store app ids from `mas list`."""
-    proc = subprocess.run(
-        ["mas", "list"],
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
-    if proc.returncode != 0:
-        return set()
-    return {parts[0] for line in proc.stdout.splitlines() if (parts := line.split())}

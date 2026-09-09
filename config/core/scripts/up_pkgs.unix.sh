@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-if command -v brew &>/dev/null; then
+managers=" ${MC_PACKAGE_MANAGERS-} "
+
+if [[ "$managers" == *" brew "* ]]; then
     echo "upgrading brew packages..."
     brew update
     brew upgrade || true
@@ -11,19 +13,19 @@ if command -v brew &>/dev/null; then
     brew services cleanup
 fi
 
-if command -v mas &>/dev/null; then
+if [[ "$managers" == *" mas "* ]]; then
     echo "upgrading App Store apps..."
     mas upgrade
 fi
 
-if command -v apt &>/dev/null; then
+if [[ "$managers" == *" apt "* ]]; then
     echo "upgrading apt packages..."
     sudo apt update -y
     sudo apt upgrade -y
     sudo apt autoremove -y
 fi
 
-if command -v snap &>/dev/null; then
+if [[ "$managers" == *" snap "* ]]; then
     echo "upgrading snap packages..."
     sudo snap refresh
 fi

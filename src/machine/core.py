@@ -65,12 +65,18 @@ class Platform(StrEnum):
     LINUX = "linux"
     WINDOWS = "windows"
     WSL = "wsl"
-    GHCS = "ghcs"
+    UNIX = "unix"  # macos, linux, or wsl
+
+    def is_a(self, other: "Platform") -> bool:
+        """Match this platform to itself or a broader family, never the reverse."""
+        return (
+            self == other
+            or (other == Platform.UNIX and self in {Platform.MACOS, Platform.LINUX, Platform.WSL})
+            or (self == Platform.WSL and other == Platform.LINUX)
+        )
 
 
 def _detect_platform() -> Platform:
-    if os.environ.get("CODESPACES"):
-        return Platform.GHCS
     if shutil.which("wslinfo"):
         return Platform.WSL
 
@@ -88,11 +94,11 @@ def _detect_platform() -> Platform:
 PLATFORM = _detect_platform()
 """Current platform, detected at import time."""
 
-is_macos = PLATFORM == Platform.MACOS
-is_linux = PLATFORM in {Platform.LINUX, Platform.WSL, Platform.GHCS}
-is_windows = PLATFORM == Platform.WINDOWS
-is_wsl = PLATFORM == Platform.WSL
-is_unix = not is_windows
+is_macos = PLATFORM.is_a(Platform.MACOS)
+is_linux = PLATFORM.is_a(Platform.LINUX)
+is_windows = PLATFORM.is_a(Platform.WINDOWS)
+is_wsl = PLATFORM.is_a(Platform.WSL)
+is_unix = PLATFORM.is_a(Platform.UNIX)
 
 
 # # MARK: Console

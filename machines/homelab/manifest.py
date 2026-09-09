@@ -1,8 +1,9 @@
 """Homelab (macOS) machine manifest."""
 
-from machine.manifest import FileMapping, MachineManifest, Package
+from machine.manifest import FileMapping, MachineManifest, Package, PkgManager
 
 manifest = MachineManifest(
+    pkg_managers=[PkgManager.BREW, PkgManager.MAS],
     modules=[
         "git",
         "shell",
@@ -11,7 +12,7 @@ manifest = MachineManifest(
         "vscode",
         "ghostty",
         "homelab",
-        "core",
+        "system",
         "codex",
     ],
     files=[
@@ -21,14 +22,7 @@ manifest = MachineManifest(
         ),
     ],
     packages=[
-        # Dev tools
-        Package(brew="uv"),
-        Package(brew="python"),
         Package(brew="go"),
-        # Utilities
         Package(brew="ffmpeg"),
-        Package(brew="mas"),
-        Package(cask="font-computer-modern"),
-        Package(cask="font-jetbrains-mono-nerd-font"),
     ],
 )

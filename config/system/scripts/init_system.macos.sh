@@ -60,6 +60,7 @@ defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 defaults write com.apple.finder _FXSortFoldersFirst -bool true
 
 # time machine excluded paths
+# NOTE: Requires full disk access.
 sudo /usr/bin/tmutil addexclusion -p \
   "$HOME/Downloads" \
   "$HOME/Library/Developer/Xcode/DerivedData" \

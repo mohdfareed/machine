@@ -40,7 +40,12 @@ Cross-platform machine bootstrapper and dotfile manager.
 
 ## Architecture
 
-### Module (`config/<name>/module.py`)
+### Module (`config/<path>/module.py`)
+
+Module names are dotted paths relative to `config/`: `tools/docker/module.py`
+is `tools.docker`. Discovery recurses through grouping folders, stopping at
+module directories; folder names cannot contain dots. Files and scripts resolve
+relative to the module directory.
 
 Exports a `Module(files, packages, scripts, depends)`. All fields use simple
 types - `depends` and manifest `modules` are `list[str]` (module names).
@@ -51,18 +56,21 @@ the dependent).
 
 ### Manifest (`machines/<id>/manifest.py`)
 
-Exports a `MachineManifest(modules, files, packages, scripts)`.
+Exports a `MachineManifest(pkg_managers, modules, files, packages, scripts)`.
 Composes modules and adds machine-specific overrides.
 
 ### Cross-Platform Requirements
 
 - Always verify Windows compatibility when touching files, paths, or scripts
+- Use `Platform.is_a()` for platform-family matching: WSL matches Linux and Unix; macOS and Linux match Unix. Keep these relationships in the enum.
 - Windows SSH client is OpenSSH (built into Windows 10+): supports `~`, `IgnoreUnknown`
 - Unix shell files and ShellCheck configuration use LF line endings
 - Shell scripts need platform tags (`.unix.sh` / `.win.ps1`) - never assume Unix-only
 - Path separators: use `pathlib.Path` in Python; avoid hardcoded `/` in target strings
 
 ### Packages and Files
+
+- The `core` module is always included, including module-filtered runs, and owns setup shared by every machine. OS settings and features belong in the explicitly selected `system` module. Machine manifests explicitly declare `pkg_managers: list[PkgManager]`; never infer or install managers from package usage or PATH. `BREW` includes casks. Validate manager platform compatibility and declaration dependencies in Python before running scripts; setup scripts only perform installation. Package installation and manager maintenance may use only declared managers; custom scripts must follow the same policy.
 
 - Define packages with `Package(...)` directly; package helper constructors (`brew(...)`, `apt(...)`, etc.) are removed
 - `FileMapping(mode=...)` owns mapped-file permissions; owner-only modes use a current-user and SYSTEM ACL on Windows
@@ -76,7 +84,7 @@ Composes modules and adds machine-specific overrides.
 
 - Platform tags on scripts: `name.macos.sh`, `name.unix.sh`, `name.win.ps1`
 - Script prefixes: `once_` = run once, `watch_` = re-run on file change, `init_` = run before packages, `up_` = run only during `mc update`, `_` = helper (never auto-executed, sourced by other scripts)
-- Execution order: files → `init_*` scripts → packages → remaining scripts
+- Execution order: files → declared manager setup → remaining `init_*` scripts → packages → remaining scripts
 - `~/.env` is the only generated file - written by `mc apply` with just `MC_HOME` and `MC_ID`
 - Three-tier script environment (`build_script_env`):
 
@@ -121,6 +129,7 @@ runtime state, caches, and machine-generated application data local.
 - Avoid trivial helper wrappers like `def _target(name): return str(base / name)`; use `str(base / path)` directly unless the helper adds real behavior
 - If a package/file/script list is just static data used once, keep it inline in the `Module(...)` or `MachineManifest(...)` definition; only extract it when there is real logic or reuse
 - Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration
+- Preserve existing script phase comments, progress messages, command choices, and setup/update behavior when making focused changes
 - Use brief comments to separate operational script phases and explain non-obvious quoting, environment, or control flow
 - Do not add scripts whose only job is printing setup reminders; put that guidance in docs unless the script performs real work
 

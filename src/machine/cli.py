@@ -19,7 +19,7 @@ from machine.core import (
     setup_file_logging,
 )
 from machine.ops.files import deploy_files, validate
-from machine.ops.packages import cache_sudo, install_packages
+from machine.ops.packages import cache_sudo, install_packages, validate_managers
 from machine.ops.scripts import (
     build_script_env,
     filter_scripts,
@@ -148,14 +148,14 @@ def apply(
         err_console.print("[red]No machine set. Run: mc apply[/]")
         raise SystemExit(1)
 
+    manifest = load_manifest(machine, root)
+    validate_managers(manifest.pkg_managers)
     save_current_machine(machine)
     write_env_file(machine, root)
-
-    manifest = load_manifest(machine, root)
     all_modules = resolve_modules(manifest.modules, root)
     module_filter = set(module_names)
-
     errors = validate(all_modules)
+
     if errors:
         for e in errors:
             err_console.print(f"[red]  {e}[/]")
@@ -166,7 +166,8 @@ def apply(
         if unknown:
             err_console.print(f"[red]Unknown modules: {', '.join(sorted(unknown))}[/]")
             raise SystemExit(1)
-        active = [m for m in all_modules if m.name in module_filter]
+
+        active = [m for m in all_modules if m.name in module_filter or m.name == "core"]
         all_files = [f for m in active for f in m.files]
         all_packages = [p for m in active for p in m.packages]
         raw_scripts = [s for m in active for s in m.scripts]
@@ -178,6 +179,7 @@ def apply(
 
     all_scripts = filter_scripts(raw_scripts)
     script_env = build_script_env(machine, root)
+    script_env["MC_PACKAGE_MANAGERS"] = " ".join(manifest.pkg_managers)
     owners = _build_owners(active, manifest, machine)
 
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
@@ -196,8 +198,14 @@ def apply(
 
     _, file_failures = deploy_files(all_files, owners=owners)
     failures.extend(file_failures)
-    failures.extend(run_scripts(init_scripts, env=script_env, owners=owners))
-    failures.extend(install_packages(all_packages, owners=owners))
+    init_failures = run_scripts(init_scripts, env=script_env, owners=owners)
+    failures.extend(init_failures)
+
+    if init_failures:
+        _print_summary(failures, settings.log_file)
+        return
+
+    failures.extend(install_packages(all_packages, manifest.pkg_managers, owners=owners))
     failures.extend(run_scripts(post_scripts, env=script_env, owners=owners))
 
     _print_summary(failures, settings.log_file)
@@ -209,9 +217,12 @@ def _print_summary(failures: list[tuple[str, str, str]], log_file: Path) -> None
         console.print(f"\n[bold green]Done![/] [dim](log: {log_file})[/]")
         return
     err_console.print(f"\n[bold yellow]Completed with {len(failures)} failure(s):[/]")
+
     for module, item, detail in failures:
         err_console.print(f"  [red]\\[{module}][/] {item} [dim]({detail})[/]")
     err_console.print(f"[dim]See {log_file}[/]")
+
+    raise typer.Exit(1)
 
 
 def _build_owners(
@@ -258,6 +269,7 @@ def update(
         raise SystemExit(1)
 
     manifest = load_manifest(machine_id, root)
+    validate_managers(manifest.pkg_managers)
     all_modules = resolve_modules(manifest.modules, root)
 
     if module_names:
@@ -265,7 +277,8 @@ def update(
         if unknown:
             err_console.print(f"[red]Unknown modules: {', '.join(sorted(unknown))}[/]")
             raise SystemExit(1)
-        active = [m for m in all_modules if m.name in set(module_names)]
+
+        active = [m for m in all_modules if m.name in set(module_names) or m.name == "core"]
         raw_scripts = [s for m in active for s in m.scripts]
         all_packages = [p for m in active for p in m.packages]
     else:
@@ -284,21 +297,25 @@ def update(
             owners[s] = m.name
         for p in m.packages:
             owners[p.name] = m.name
+
     for s in manifest.scripts:
         owners.setdefault(s, machine_id)
     for p in manifest.packages:
         owners.setdefault(p.name, machine_id)
 
     script_env = build_script_env(machine_id, root)
+    script_env["MC_PACKAGE_MANAGERS"] = " ".join(manifest.pkg_managers)
     mode = "[dim](dry-run)[/] " if settings.dry_run else ""
     console.print(f"{mode}Updating [bold]{machine_id}[/]")
 
     cache_sudo()
     failures = install_packages(
         script_packages,
+        manifest.pkg_managers,
         owners=owners,
         rerun_script_packages=True,
     )
+
     failures.extend(run_scripts(up_scripts, env=script_env, owners=owners))
     _print_summary(failures, settings.log_file)
 
@@ -498,6 +515,7 @@ def show(
         return path.removeprefix(root_prefix)
 
     console.print(f"[bold]{machine}[/]")
+    console.print(f"  Managers: {', '.join(manifest.pkg_managers) or 'none'}")
     if mods:
         console.print(f"  Modules: {', '.join(m.name for m in mods)}")
 

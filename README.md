@@ -40,10 +40,17 @@ mc status            # Current machine and local paths
 Create `machines/<id>/manifest.py`:
 
 ```python
-from machine.manifest import MachineManifest
+from machine.manifest import MachineManifest, PkgManager
 
-manifest = MachineManifest(modules=[])
+manifest = MachineManifest(
+    pkg_managers=[PkgManager.BREW],
+    modules=[],
+)
 ```
+
+`core` is always included, including module-filtered runs, and owns shared setup
+such as package-manager installation and maintenance.
+Declare each machine's managers in `pkg_managers`; an empty list enables none.
 
 Use `mc list` to find module names to add. Replace `<id>` below with the directory name:
 
@@ -63,7 +70,11 @@ module = Module()
 ```
 
 Add its name to the manifest's `modules` list, then `mc apply <name>` for just that
-module on the selected machine.
+module on the selected machine. Nested modules use dotted names:
+`config/tools/tool/module.py` becomes `tools.tool`, including in `depends`.
+Discovery descends through grouping folders and stops at each `module.py`;
+**folder names cannot contain dots.**
+Files and scripts remain relative to their module folder.
 
 ### Scripts
 
@@ -74,14 +85,13 @@ Use explicit `scripts=` only for files outside those directories.
 Platform tags go before the extension, e.g. `watch_setup.unix.sh`.
 No tag means all platforms, so tag shell-specific scripts.
 
-| Tag      | Runs on                              |
-| -------- | ------------------------------------ |
-| `.macos` | macOS                                |
-| `.linux` | Linux, WSL, GitHub Codespaces        |
-| `.unix`  | macOS, Linux, WSL, GitHub Codespaces |
-| `.win`   | Windows                              |
-| `.wsl`   | WSL                                  |
-| `.ghcs`  | GitHub Codespaces                    |
+| Tag      | Runs on           |
+| -------- | ----------------- |
+| `.macos` | macOS             |
+| `.linux` | Linux, WSL        |
+| `.unix`  | macOS, Linux, WSL |
+| `.win`   | Windows           |
+| `.wsl`   | WSL               |
 
 | Prefix   | When it runs                                            |
 | -------- | ------------------------------------------------------- |

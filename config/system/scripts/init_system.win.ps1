@@ -31,8 +31,6 @@ Invoke-Admin {
         -Force | Out-Null
 }
 
-# TODO: Separate features and wsl setup from core windows setup.
-
 # install windows features
 Write-Host "enabling windows features..."
 Invoke-Admin {

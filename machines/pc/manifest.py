@@ -1,6 +1,6 @@
 """Windows PC machine manifest."""
 
-from machine.manifest import MachineManifest, Package
+from machine.manifest import MachineManifest, Package, PkgManager
 
 sib_script_install_path = '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\SteamInputBridge"'
 sib_script_url = (
@@ -8,16 +8,15 @@ sib_script_url = (
 )
 
 manifest = MachineManifest(
-    modules=["git", "shell", "ssh", "ssh-server", "vscode", "win-term", "codex", "core"],
+    pkg_managers=[PkgManager.WINGET, PkgManager.SCOOP],
+    modules=["git", "shell", "ssh", "ssh-server", "vscode", "win-term", "codex", "system"],
     packages=[
         # Dev tools
-        Package(name="python", winget="Python.Python.3.14"),
+        Package(name="tailscale", winget="tailscale.tailscale"),
         Package(name="dotnet", winget="Microsoft.DotNet.SDK.10"),
         Package(name="sys-internals", winget="Microsoft.Sysinternals.Suite"),
-        Package(name="tailscale", winget="tailscale.tailscale"),
         Package(name="docker", winget="docker.DockerDesktop"),
         Package(name="power-toys", winget="microsoft.PowerToys"),
-        Package(name="jetbrains-mono", winget="DEVCOM.JetBrainsMonoNerdFont"),
         # Utilities
         Package(name="7zip", scoop="7zip"),
         Package(name="CPU-Z", winget="CPUID.CPU-Z"),

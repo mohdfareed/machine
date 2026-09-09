@@ -13,7 +13,7 @@ module = Module(
         Package(
             name="docker",
             script="curl -fsSL https://get.docker.com | sh",
-            platforms=[Platform.LINUX, Platform.WSL],
+            platforms=[Platform.LINUX],
         ),
         Package(
             name="docker",

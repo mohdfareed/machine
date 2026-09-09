@@ -1,4 +1,4 @@
-"""Package manager bootstrap module."""
+"""Explicitly selected OS settings and features."""
 
 from machine.manifest import Module
 

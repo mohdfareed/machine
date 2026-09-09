@@ -1,318 +1,224 @@
-"""Package installation edge-case tests."""
+"""Package selection, presence checks, and failure handling."""
 
-from machine.manifest import Package
+import subprocess
+
+import pytest
+
+from machine.core import Platform
+from machine.manifest import Package, PkgManager
 from machine.ops import packages as machine_packages
 
 
-def test_install_succeeded_accepts_winget_noop() -> None:
-    """Winget reports already-installed packages with a non-zero no-op exit."""
-    output = (
-        "Found an existing package already installed. Trying to upgrade the installed package...\n"
-        "No available upgrade found.\n"
-        "No newer package versions are available from the configured sources.\n"
-    ).encode()
-
-    assert machine_packages._install_succeeded("winget", 1, output)
-
-
-def test_install_packages_records_winget_noop_as_installed(monkeypatch) -> None:
-    """No-op winget upgrades should not be surfaced as apply failures."""
-    package = Package(name="steam", winget="Valve.Steam")
-
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.WINDOWS)
+@pytest.fixture
+def commands(monkeypatch):
+    calls = []
+    monkeypatch.setattr(machine_packages.settings, "dry_run", False)
     monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
+    monkeypatch.setattr(machine_packages.shutil, "which", lambda name: name)
     monkeypatch.setattr(
-        machine_packages.shutil, "which", lambda name: "winget.exe" if name == "winget" else None
+        machine_packages, "run_collect", lambda cmd, **kwargs: (calls.append(cmd) or 0, b"")
     )
-    monkeypatch.setattr(machine_packages, "_winget_installed", lambda package_id: False)
-    monkeypatch.setattr(
-        machine_packages,
-        "run_collect",
-        lambda *args, **kwargs: (
-            1,
-            (
-                "Found an existing package already installed. Trying to upgrade the installed "
-                "package...\nNo available upgrade found.\n"
-                "No newer package versions are available from the configured sources.\n"
-            ).encode(),
-        ),
-    )
-
-    failures = machine_packages.install_packages([package], owners={"steam": "pc"})
-
-    assert failures == []
+    return calls
 
 
-def test_install_packages_skips_when_winget_already_manages_package(monkeypatch) -> None:
-    """Apply should not attempt upgrades for packages already managed by winget."""
-    package = Package(name="steam", winget="Valve.Steam")
+@pytest.mark.parametrize(
+    "source,platform",
+    [
+        ("brew", Platform.MACOS),
+        ("cask", Platform.MACOS),
+        ("mas", Platform.MACOS),
+        ("winget", Platform.WINDOWS),
+        ("scoop", Platform.WINDOWS),
+        ("apt", Platform.WSL),
+        ("snap", Platform.LINUX),
+    ],
+)
+@pytest.mark.parametrize("installed", [False, True])
+def test_install_only_when_selected_manager_lacks_package(
+    monkeypatch, commands, source, platform, installed
+):
+    monkeypatch.setattr(machine_packages, "PLATFORM", platform)
+    queries = []
+    value = 123 if source == "mas" else "example"
+    package = Package.model_validate({"name": "example", source: value})
 
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.WINDOWS)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
-    monkeypatch.setattr(
-        machine_packages.shutil, "which", lambda name: "winget.exe" if name == "winget" else None
-    )
-    monkeypatch.setattr(
-        machine_packages, "_winget_installed", lambda package_id: package_id == "Valve.Steam"
-    )
+    def query(cmd, **kwargs):
+        queries.append(cmd)
+        if source == "mas":
+            output = "123 Example App\n" if installed else ""
+        elif source == "apt":
+            output = "install ok installed" if installed else "deinstall ok config-files"
+        else:
+            output = "example\n" if installed else ""
+        rc = 0 if installed or source == "mas" else 1
+        return subprocess.CompletedProcess(cmd, rc, stdout=output)
 
-    called = False
-
-    def _unexpected_install(*args, **kwargs):  # type: ignore[no-untyped-def]
-        nonlocal called
-        called = True
-        return None
-
-    monkeypatch.setattr(machine_packages, "_install", _unexpected_install)
-
-    failures = machine_packages.install_packages([package], owners={"steam": "pc"})
-
-    assert failures == []
-    assert not called
-
-
-def test_install_packages_reinstalls_when_winget_does_not_manage_package(monkeypatch) -> None:
-    """Apply should install with winget when the requested package is absent."""
-    package = Package(name="steam", winget="Valve.Steam")
-
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.WINDOWS)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
-    monkeypatch.setattr(
-        machine_packages.shutil, "which", lambda name: "winget.exe" if name == "winget" else None
-    )
-    monkeypatch.setattr(machine_packages, "_winget_installed", lambda package_id: False)
-
-    calls = 0
-
-    def _fake_install(*args, **kwargs):  # type: ignore[no-untyped-def]
-        nonlocal calls
-        calls += 1
-        return None
-
-    monkeypatch.setattr(machine_packages, "_install", _fake_install)
-
-    failures = machine_packages.install_packages([package], owners={"steam": "pc"})
-
-    assert failures == []
-    assert calls == 1
-
-
-def test_install_packages_skips_when_brew_already_manages_package(monkeypatch) -> None:
-    """Apply should not re-run brew installs for packages Homebrew already manages."""
-    package = Package(name="git", brew="git")
-
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.MACOS)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
-    monkeypatch.setattr(
-        machine_packages.shutil,
-        "which",
-        lambda name: "/opt/homebrew/bin/brew" if name == "brew" else None,
-    )
-    monkeypatch.setattr(
-        machine_packages,
-        "_source_installed",
-        lambda source, value: source == "brew" and value == "git",
-    )
-    monkeypatch.setattr(machine_packages, "_installed_source_snapshots", lambda sources: {})
-
-    called = False
-
-    def _unexpected_install(*args, **kwargs):  # type: ignore[no-untyped-def]
-        nonlocal called
-        called = True
-        return None
-
-    monkeypatch.setattr(machine_packages, "_install", _unexpected_install)
-
-    failures = machine_packages.install_packages([package], owners={"git": "git"})
-
-    assert failures == []
-    assert not called
+    monkeypatch.setattr(machine_packages.subprocess, "run", query)
+    manager = PkgManager.BREW if source == "cask" else PkgManager(source)
+    assert machine_packages.install_packages([package, package], [manager]) == []
+    expected = machine_packages._MANAGER_CONFIGS[source].install_cmd.format(value)
+    if installed:
+        assert commands == []
+    else:
+        assert commands and all(cmd == expected for cmd in commands)
+    assert len(queries) == 2
+    assert len(commands) == (0 if installed else 2)
+    if source in {"brew", "cask"}:
+        assert queries[0] == [
+            "brew",
+            "list",
+            "--formula" if source == "brew" else "--cask",
+            "example",
+        ]
+    if source == "winget":
+        assert queries[0] == ["winget", "list", "--exact", "--id", "example"]
 
 
-def test_install_packages_reinstalls_when_brew_does_not_manage_package(monkeypatch) -> None:
-    """Apply should install with brew when the requested package is absent."""
-    package = Package(name="git", brew="git")
-
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.MACOS)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
-    monkeypatch.setattr(
-        machine_packages.shutil,
-        "which",
-        lambda name: "/opt/homebrew/bin/brew" if name == "brew" else None,
-    )
-    monkeypatch.setattr(machine_packages, "_source_installed", lambda source, value: False)
-    monkeypatch.setattr(machine_packages, "_installed_source_snapshots", lambda sources: {})
-
-    calls = 0
-
-    def _fake_install(*args, **kwargs):  # type: ignore[no-untyped-def]
-        nonlocal calls
-        calls += 1
-        return None
-
-    monkeypatch.setattr(machine_packages, "_install", _fake_install)
-
-    failures = machine_packages.install_packages([package], owners={"git": "git"})
-
-    assert failures == []
-    assert calls == 1
+@pytest.mark.parametrize(
+    "declared,available,expected",
+    [
+        ([], {"winget", "scoop"}, "manager not declared: winget, scoop"),
+        ([PkgManager.SCOOP], {"winget"}, "no manager available"),
+        ([PkgManager.SCOOP], {"winget", "scoop"}, None),
+    ],
+)
+def test_source_selection_enforces_declarations(
+    monkeypatch, commands, declared, available, expected
+):
+    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
+    monkeypatch.setattr(machine_packages.shutil, "which", lambda n: n if n in available else None)
+    monkeypatch.setattr(machine_packages, "_source_installed", lambda *args: False)
+    package = Package(name="example", winget="Example.App", scoop="example", script="fallback")
+    failures = machine_packages.install_packages([package], declared, owners={"example": "test"})
+    assert failures == ([("test", "example", expected)] if expected else [])
+    assert commands == ([] if expected else ["scoop install example"])
 
 
-def test_install_packages_skips_non_applicable_sources(monkeypatch) -> None:
-    """Packages with only foreign-platform sources should be skipped cleanly."""
-    package = Package(name="zsh", brew="zsh")
-
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.WINDOWS)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
-    monkeypatch.setattr(
-        machine_packages.shutil, "which", lambda name: "winget.exe" if name == "winget" else None
-    )
-
-    called = False
-
-    def _unexpected_install(*args, **kwargs):  # type: ignore[no-untyped-def]
-        nonlocal called
-        called = True
-        return None
-
-    monkeypatch.setattr(machine_packages, "_install", _unexpected_install)
-
-    failures = machine_packages.install_packages([package], owners={"zsh": "shell"})
-
-    assert failures == []
-    assert not called
-
-
-def test_install_packages_uses_cask_source_on_macos(monkeypatch) -> None:
-    """macOS should install casks via brew install --cask."""
-    package = Package(name="zed", cask="zed", winget="ZedIndustries.Zed")
-    commands: list[str] = []
-
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.MACOS)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
-    monkeypatch.setattr(
-        machine_packages.shutil,
-        "which",
-        lambda name: "/opt/homebrew/bin/brew" if name == "brew" else None,
-    )
-    monkeypatch.setattr(machine_packages, "_winget_installed", lambda package_id: False)
-    monkeypatch.setattr(machine_packages, "_source_installed", lambda source, value: False)
-    monkeypatch.setattr(machine_packages, "_installed_source_snapshots", lambda sources: {})
-
-    def _fake_run_collect(cmd, **kwargs):  # type: ignore[no-untyped-def]
-        commands.append(cmd)
-        return 0, bytearray()
-
-    monkeypatch.setattr(machine_packages, "run_collect", _fake_run_collect)
-
-    failures = machine_packages.install_packages([package], owners={"zed": "zed"})
-
-    assert failures == []
-    assert commands == ["brew install --cask zed"]
-
-
-def test_install_packages_skips_cask_when_present_in_snapshot(monkeypatch) -> None:
-    """Apply should skip casks already present in the bulk Homebrew snapshot."""
-    package = Package(name="zed", cask="zed")
-
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.MACOS)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
-    monkeypatch.setattr(
-        machine_packages.shutil,
-        "which",
-        lambda name: "/opt/homebrew/bin/brew" if name == "brew" else None,
-    )
-    monkeypatch.setattr(
-        machine_packages,
-        "_installed_source_snapshots",
-        lambda sources: {"cask": {"zed"}},
-    )
-
-    called = False
-
-    def _unexpected_install(*args, **kwargs):  # type: ignore[no-untyped-def]
-        nonlocal called
-        called = True
-        return None
-
-    monkeypatch.setattr(machine_packages, "_install", _unexpected_install)
-
-    failures = machine_packages.install_packages([package], owners={"zed": "zed"})
-
-    assert failures == []
-    assert not called
-
-
-def test_install_packages_uses_script_when_no_native_source_applies(monkeypatch) -> None:
-    """Script installs should be used when no manager source applies on this platform."""
-    package = Package(name="tailscale", cask="tailscale", script="install tailscale")
-    commands: list[str] = []
-
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.LINUX)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
+def test_platform_skips_and_script_package_apply_update(monkeypatch, commands):
+    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.LINUX)
     monkeypatch.setattr(machine_packages.shutil, "which", lambda name: None)
-
-    def _fake_run(cmd, **kwargs):  # type: ignore[no-untyped-def]
-        commands.append(cmd)
-        return 0
-
-    monkeypatch.setattr(machine_packages, "run", _fake_run)
-
-    failures = machine_packages.install_packages([package], owners={"tailscale": "homelab"})
-
-    assert failures == []
-    assert commands == ["install tailscale"]
+    packages = [Package(cask="foreign"), Package(name="example", cask="example", script="setup")]
+    assert machine_packages.install_packages(packages, []) == []
+    assert commands == ["setup"]
+    commands.clear()
+    monkeypatch.setattr(machine_packages.shutil, "which", lambda name: name)
+    assert machine_packages.install_packages(packages, []) == []
+    assert commands == []
+    assert machine_packages.install_packages(packages, [], rerun_script_packages=True) == []
+    assert commands == ["setup"]
 
 
-def test_install_packages_reads_mas_list_once_and_skips_installed_apps(monkeypatch) -> None:
-    """Apply should not re-run `mas install` for already installed App Store apps."""
-    packages = [Package(name="Xcode", mas=497799835), Package(name="Keynote", mas=409183694)]
-    calls = 0
-
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.MACOS)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
+@pytest.mark.parametrize("source,platform", [("winget", Platform.WINDOWS), ("mas", Platform.MACOS)])
+def test_dry_run_does_not_query_missing_manager(monkeypatch, commands, source, platform):
+    monkeypatch.setattr(machine_packages, "PLATFORM", platform)
+    monkeypatch.setattr(machine_packages.settings, "dry_run", True)
+    monkeypatch.setattr(machine_packages.shutil, "which", lambda name: None)
     monkeypatch.setattr(
-        machine_packages.shutil, "which", lambda name: "/usr/bin/mas" if name == "mas" else None
+        machine_packages.subprocess, "run", lambda *a, **kw: pytest.fail("queried missing manager")
     )
-
-    def _fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
-        nonlocal calls
-        calls += 1
-        return type(
-            "Proc", (), {"returncode": 0, "stdout": "497799835 Xcode\n409183694 Keynote\n"}
-        )()
-
-    monkeypatch.setattr(machine_packages.subprocess, "run", _fake_run)
-    monkeypatch.setattr(
-        machine_packages,
-        "_install",
-        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("unexpected install")),
+    package = Package.model_validate(
+        {"name": "example", source: 123 if source == "mas" else "Example.App"}
     )
+    assert machine_packages.install_packages([package], [PkgManager(source)]) == []
+    assert len(commands) == 1
 
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        subprocess.CalledProcessError(1, ["mas", "list"]),
+        subprocess.TimeoutExpired(["mas", "list"], 30),
+        FileNotFoundError("mas disappeared"),
+    ],
+)
+def test_list_query_failure_blocks_affected_packages_only(monkeypatch, commands, error):
+    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.MACOS)
+    queries = []
+
+    def query(cmd, **kwargs):
+        queries.append(cmd)
+        assert kwargs["check"]
+        raise error
+
+    monkeypatch.setattr(machine_packages.subprocess, "run", query)
+    packages = [
+        Package(name="first", mas=123),
+        Package(name="second", mas=456),
+        Package(name="script", script="setup"),
+    ]
     failures = machine_packages.install_packages(
-        packages, owners={"Xcode": "macbook", "Keynote": "macbook"}
+        packages, [PkgManager.MAS], rerun_script_packages=True
     )
+    assert [name for _, name, _ in failures] == ["first", "second"]
+    assert len(queries) == 2
+    assert commands == ["setup"]
 
-    assert failures == []
-    assert calls == 1
 
+def test_per_package_query_timeout_is_reported(monkeypatch, commands):
+    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
 
-def test_command_succeeds_uses_resolved_executable(monkeypatch) -> None:
-    """Windows command shims should be launched through their resolved path."""
-    commands: list[list[str]] = []
+    def query(cmd, **kwargs):
+        raise subprocess.TimeoutExpired(cmd, 30)
 
-    monkeypatch.setattr(
-        machine_packages.shutil,
-        "which",
-        lambda name: r"C:\Users\test\scoop\shims\scoop.CMD" if name == "scoop" else None,
+    monkeypatch.setattr(machine_packages.subprocess, "run", query)
+    failures = machine_packages.install_packages(
+        [Package(winget="Example.App")], [PkgManager.WINGET]
     )
+    assert len(failures) == 1
+    assert commands == []
 
-    def _fake_run(cmd, **kwargs):  # type: ignore[no-untyped-def]
+
+@pytest.mark.parametrize(
+    "output,success",
+    [
+        (b"Found an existing package already installed. No available upgrade found", True),
+        (b"installation failed", False),
+    ],
+)
+def test_winget_noop_and_install_failure(monkeypatch, commands, output, success):
+    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
+    monkeypatch.setattr(machine_packages, "_source_installed", lambda *args: False)
+    monkeypatch.setattr(machine_packages, "run_collect", lambda *a, **kw: (1, output))
+    failures = machine_packages.install_packages(
+        [Package(winget="Example.App")], [PkgManager.WINGET]
+    )
+    assert failures == ([] if success else [("?", "Example.App", "winget exit 1")])
+
+
+def test_queries_resolve_windows_shims(monkeypatch):
+    executable = r"C:\Users\test\scoop\shims\scoop.CMD"
+    monkeypatch.setattr(machine_packages.shutil, "which", lambda name: executable)
+    commands = []
+
+    def query(cmd, **kwargs):
         commands.append(cmd)
-        return type("Proc", (), {"returncode": 0})()
+        return subprocess.CompletedProcess(cmd, 0, stdout="")
 
-    monkeypatch.setattr(machine_packages.subprocess, "run", _fake_run)
+    monkeypatch.setattr(machine_packages.subprocess, "run", query)
+    assert machine_packages._source_installed("scoop", "7zip")
+    assert commands == [[executable, "list", "7zip"]]
 
-    assert machine_packages._command_succeeds(["scoop", "list", "7zip"])
-    assert commands == [[r"C:\Users\test\scoop\shims\scoop.CMD", "list", "7zip"]]
+
+def test_manager_validation_checks_platform_and_dependencies(monkeypatch) -> None:
+    cases = [
+        (Platform.WINDOWS, [PkgManager.WINGET, PkgManager.SCOOP], set(), True),
+        (Platform.WINDOWS, [PkgManager.BREW], set(), False),
+        (Platform.MACOS, [PkgManager.BREW, PkgManager.MAS], set(), True),
+        (Platform.MACOS, [PkgManager.MAS], {"brew"}, False),
+        (Platform.MACOS, [PkgManager.SNAP], {"snap"}, False),
+        (Platform.LINUX, [PkgManager.SNAP], set(), False),
+        (Platform.LINUX, [PkgManager.SNAP], {"snap"}, True),
+        (Platform.LINUX, [PkgManager.APT], set(), False),
+        (Platform.WSL, [PkgManager.APT, PkgManager.SNAP], {"apt"}, True),
+        (Platform.LINUX, [PkgManager.MAS, PkgManager.BREW], set(), False),
+    ]
+    for platform, managers, installed, valid in cases:
+        monkeypatch.setattr(machine_packages, "PLATFORM", platform)
+        monkeypatch.setattr(
+            machine_packages.shutil, "which", lambda name: name if name in installed else None
+        )
+        if valid:
+            machine_packages.validate_managers(managers)
+        else:
+            with pytest.raises(ValueError):
+                machine_packages.validate_managers(managers)

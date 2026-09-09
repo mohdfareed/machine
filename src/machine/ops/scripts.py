@@ -13,6 +13,7 @@ from pathlib import Path
 
 from machine.core import PLATFORM, Platform, err_console, is_unix, run, settings
 from machine.manifest import SCRIPT_SUFFIXES
+from machine.ops.packages import refresh_path
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ def build_script_env(machine_id: str, root: Path) -> dict[str, str]:
         env = _resolve_env(Path(mc_private) / "env" / f"{machine_id}.env", env)
 
     # Shell-specific additions share the same environment as the machine variables.
-    shell = "powershell" if PLATFORM == Platform.WINDOWS else "pwsh"
+    shell = "powershell" if PLATFORM.is_a(Platform.WINDOWS) else "pwsh"
     if shutil.which(shell):
         module_root = str(Path(__file__).parents[1] / "powershell")
         module_path = _get_pwsh_module_path(shell, env)
@@ -58,24 +59,15 @@ def write_env_file(machine_id: str, root: Path) -> None:
 
 def matches_platform(script: Path) -> bool:
     """Return True if the script's platform tags match the current platform."""
-    suffixes = {s.lower() for s in script.suffixes}
-    tags = {".macos", ".linux", ".unix", ".win", ".wsl", ".ghcs"}
-
-    if not (suffixes & tags):
-        return True
-
-    match PLATFORM:
-        case Platform.MACOS:
-            return bool(suffixes & {".macos", ".unix"})
-        case Platform.LINUX:
-            return bool(suffixes & {".linux", ".unix"})
-        case Platform.WSL:
-            return bool(suffixes & {".wsl", ".linux", ".unix"})
-        case Platform.WINDOWS:
-            return bool(suffixes & {".win"})
-        case Platform.GHCS:
-            return bool(suffixes & {".ghcs", ".linux", ".unix"})
-    raise AssertionError(f"Unhandled platform: {PLATFORM}")
+    tags = {
+        ".macos": Platform.MACOS,
+        ".linux": Platform.LINUX,
+        ".unix": Platform.UNIX,
+        ".win": Platform.WINDOWS,
+        ".wsl": Platform.WSL,
+    }
+    targets = [tags[suffix.lower()] for suffix in script.suffixes if suffix.lower() in tags]
+    return not targets or any(PLATFORM.is_a(target) for target in targets)
 
 
 def filter_scripts(scripts: list[str]) -> list[str]:
@@ -118,6 +110,10 @@ def run_scripts(
         fail = _execute(script, env, module)
         if fail:
             failures.append(fail)
+            if script.name.startswith("init_"):
+                break
+        elif script.name.startswith("init_") and not settings.dry_run:
+            refresh_path()
 
         if tracked:
             state[script.name] = {
@@ -209,7 +205,7 @@ def _execute(
         case ".py":
             cmd = f"{sys.executable} {script}"
         case ".ps1":
-            if PLATFORM == Platform.WINDOWS:
+            if PLATFORM.is_a(Platform.WINDOWS):
                 cmd = f'powershell -ExecutionPolicy Bypass -File "{script}"'
             else:
                 cmd = f'pwsh -File "{script}"'
