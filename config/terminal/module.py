@@ -2,8 +2,7 @@
 
 from pathlib import Path
 
-from app.core import Platform
-from app.machine import FileMapping, Module, Package
+from app.models import FileMapping, Module, Package, Platform
 
 WIN_TERM_CONFIG = Path(
     r"%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState"

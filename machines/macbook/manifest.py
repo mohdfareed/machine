@@ -1,6 +1,6 @@
 """Personal laptop (macOS) machine manifest."""
 
-from app.machine import Machine, Package, PkgManager
+from app.models import Machine, Package, PkgManager
 
 manifest = Machine(
     pkg_managers=[PkgManager.BREW, PkgManager.MAS],

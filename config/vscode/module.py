@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from app.core import PLATFORM, Platform
-from app.machine import FileMapping, Module, Package
+from app.env import PLATFORM
+from app.models import FileMapping, Module, Package, Platform
 
 match PLATFORM:
     case Platform.MACOS:

@@ -1,6 +1,7 @@
 #!/usr/bin/env zsh
 
-# Environment
+# =============================================================================
+# MARK: Environment
 # =============================================================================
 
 # homebrew
@@ -25,7 +26,8 @@ fi
 # oh-my-posh theme
 eval "$(oh-my-posh init zsh --config 'pure')"
 
-# Completions
+# =============================================================================
+# MARK: Completions
 # =============================================================================
 
 # homebrew completions
@@ -66,7 +68,8 @@ _prune_zinit_completions() {
   (( removed )) && rm -f -- "${ZDOTDIR:-$HOME}"/.zcompdump*
 }
 
-# Configuration
+# =============================================================================
+# MARK: Configuration
 # =============================================================================
 
 # history
@@ -91,7 +94,8 @@ zstyle ':fzf-tab:*' switch-group '<' '>'
 zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 # source: https://github.com/Aloxaf/fzf-tab?tab=readme-ov-file#configure
 
-# ZINIT (zsh plugin manager)
+# =============================================================================
+# MARK: ZINIT (zsh plugin manager)
 # =============================================================================
 # examples: https://zdharma-continuum.github.io/zinit/wiki/GALLERY
 
@@ -113,7 +117,8 @@ zinit wait lucid for \
   Aloxaf/fzf-tab
 # source: https://github.com/zdharma-continuum/fast-syntax-highlighting
 
-# Infrastructure
+# =============================================================================
+# MARK: Infrastructure
 # =============================================================================
 
 # functions and aliases

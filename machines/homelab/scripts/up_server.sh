@@ -3,7 +3,8 @@ set -Eeuo pipefail
 
 # Server maintenance tasks run during `mc update`.
 
-# # MARK: System Maintenance
+# =============================================================================
+# MARK: System Maintenance
 # =============================================================================
 
 # Install pending macOS updates (security patches and critical fixes only).
@@ -26,7 +27,8 @@ echo "flushing DNS cache..."
 sudo dscacheutil -flushcache
 sudo killall -HUP mDNSResponder 2>/dev/null || true
 
-# # MARK: Cleanup
+# =============================================================================
+# MARK: Cleanup
 # =============================================================================
 
 echo "cleaning up system caches..."

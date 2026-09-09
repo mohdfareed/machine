@@ -1,6 +1,7 @@
 #!/usr/bin/env pwsh
 
-# Functions and Aliases
+# =============================================================================
+# MARK: Functions and Aliases
 # =============================================================================
 
 Set-Alias -Name lg -Value LazyGit

@@ -1,171 +1,48 @@
-"""Machine manifest models and loaders."""
+"""Machine and module loading, resolution, and validation."""
 
 import importlib.util
-from enum import StrEnum
 from pathlib import Path
-from typing import Self
 
-from pydantic import BaseModel, model_validator
+from app.discovery import list_modules, list_scripts
+from app.models import FileMapping, Machine, Module
 
-from app.core import Platform
-
-SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
-
-
-# # MARK: Models
+# =============================================================================
+# MARK: Validation
+# =============================================================================
 
 
-class FileMapping(BaseModel):
-    """A config file or directory to symlink."""
+def validate_modules(modules: list[Module]) -> list[str]:
+    """Return errors for missing file sources and scripts in resolved modules."""
+    errors: list[str] = []
 
-    source: str
-    target: str
-    mode: int | None = None
-    platforms: list[Platform] | None = None
+    for mod in modules:
+        for fm in mod.files:
+            if not Path(fm.source).exists():
+                errors.append(f"Module '{mod.name}' file source missing: {fm.source}")
+        for script in mod.scripts:
+            if not Path(script).exists():
+                errors.append(f"Module '{mod.name}' script missing: {script}")
 
-    def applies_to(self, platform: Platform) -> bool:
-        """Return True when this file mapping should be considered on *platform*."""
-        return self.platforms is None or any(platform.is_a(target) for target in self.platforms)
-
-
-class Package(BaseModel):
-    """A package with optional per-manager install names."""
-
-    name: str = ""
-    platforms: list[Platform] | None = None
-    script: str | None = None
-
-    # macos
-    brew: str | None = None
-    cask: str | None = None
-    mas: int | None = None
-    # linux
-    apt: str | None = None
-    snap: str | None = None
-    # windows
-    winget: str | None = None
-    scoop: str | None = None
-
-    def applies_to(self, platform: Platform) -> bool:
-        """Return True when this package should be considered on *platform*."""
-        return self.platforms is None or any(platform.is_a(target) for target in self.platforms)
-
-    @model_validator(mode="after")
-    def _check_source(self) -> Self:
-        name_sources: list[str | None] = [
-            self.brew,
-            self.cask,
-            self.apt,
-            self.snap,
-            self.winget,
-            self.scoop,
-            str(self.mas),
-        ]
-
-        if not any(s is not None for s in [*name_sources, self.script]):
-            raise ValueError(f"Package '{self.name}' has no install source")
-        if not self.name:
-            self.name = next(s for s in name_sources if s is not None)
-
-        return self
+    return errors
 
 
-class Module(BaseModel):
-    """A composable unit of configuration."""
-
-    name: str = ""
-    depends: list[str] = []
-    scripts: list[str] = []
-    files: list[FileMapping] = []
-    overrides: list[FileMapping] = []
-    packages: list[Package] = []
-
-
-class PkgManager(StrEnum):
-    """Package managers explicitly enabled by a machine manifest."""
-
-    BREW = "brew"
-    MAS = "mas"
-    APT = "apt"
-    SNAP = "snap"
-    WINGET = "winget"
-    SCOOP = "scoop"
-
-
-class Machine(BaseModel):
-    """Complete machine declaration."""
-
-    pkg_managers: list[PkgManager] = []
-    modules: list[str] = []
-    scripts: list[str] = []
-    files: list[FileMapping] = []
-    packages: list[Package] = []
-
-
-# # MARK: Discovery
-
-
-def list_modules(root: Path) -> list[str]:
-    """List available module names by scanning ``config/``."""
-    modules_dir = root / "config"
-    if not modules_dir.exists():
-        return []
-
-    names: set[str] = set()
-    for directory, dirs, files in modules_dir.walk():
-        if directory != modules_dir and "module.py" in files:
-            parts = directory.relative_to(modules_dir).parts
-            if any("." in part for part in parts):
-                raise ValueError(f"Module directory names cannot contain dots: {directory}")
-
-            names.add(".".join(parts))
-            dirs.clear()
-            continue
-
-        dirs[:] = [name for name in dirs if not name.startswith(".") and name != "__pycache__"]
-        if directory == modules_dir:
-            names.update(Path(name).stem for name in files if name.endswith(".py"))
-
-    return sorted(names)
-
-
-def list_machines(root: Path) -> list[str]:
-    """List available machine IDs by scanning ``machines/``."""
-    machines_dir = root / "machines"
-    if not machines_dir.exists():
-        return []
-
-    names: set[str] = set()
-    for entry in machines_dir.iterdir():
-        if entry.is_dir() and (entry / "manifest.py").exists():
-            names.add(entry.name)
-        elif entry.is_file() and entry.suffix == ".py":
-            names.add(entry.stem)
-
-    return sorted(names)
-
-
-# # MARK: Loaders
-
-_module_cache: dict[str, Module] = {}
+# =============================================================================
+# MARK: Loaders
+# =============================================================================
 
 
 def load_module(name: str, root: Path) -> Module:
-    """Load a dotted module name, with legacy top-level flat module support."""
+    """Load a dotted module name from its configuration directory."""
+    # Locate the module declaration.
     parts = name.split(".")
     if any(not part or any(char in part for char in "/\\:") for part in parts):
         raise ValueError(f"Invalid module name: {name}")
     module_dir = root / "config" / Path(*parts)
-    dir_path = module_dir / "module.py"
-    flat_path = root / "config" / f"{name}.py"
+    path = module_dir / "module.py"
+    if not path.exists():
+        raise FileNotFoundError(f"No module: {path}")
 
-    if dir_path.exists():
-        path = dir_path
-    elif "." not in name and flat_path.exists():
-        path = flat_path
-    else:
-        raise FileNotFoundError(f"No module: {dir_path} or {flat_path}")
-
+    # Load and validate the exported module.
     mod = _import_py(path, f"config.{name}.module")
     result = getattr(mod, "module", None)
     if result is None:
@@ -175,46 +52,28 @@ def load_module(name: str, root: Path) -> Module:
 
     result.name = name
 
-    # Flat modules have no directory - skip path resolution
-    if not dir_path.exists():
-        _module_cache[name] = result
-        return result
-
-    # Resolve source paths relative to module dir
+    # Resolve source paths relative to the module directory.
     for f in result.files:
         f.source = str(module_dir / f.source)
     for i, s in enumerate(result.scripts):
         result.scripts[i] = str(module_dir / s)
 
-    # Auto-discover scripts/ directory
-    scripts_dir = module_dir / "scripts"
-    if scripts_dir.is_dir():
-        existing = set(result.scripts)
-        for script in sorted(scripts_dir.iterdir()):
-            if script.is_file() and script.suffix in SCRIPT_SUFFIXES:
-                spath = str(script)
-                if spath not in existing:
-                    result.scripts.append(spath)
+    # Discover additional scripts in the module directory.
+    existing = set(result.scripts)
+    result.scripts.extend(s for s in list_scripts(module_dir / "scripts") if s not in existing)
 
-    _module_cache[name] = result
     return result
 
 
 def load_manifest(machine_id: str, root: Path) -> Machine:
-    """Load a machine manifest from ``machines/<id>/manifest.py`` or ``machines/<id>.py``."""
+    """Load a machine manifest from ``machines/<id>/manifest.py``."""
+    # Locate the machine declaration.
     machine_dir = root / "machines" / machine_id
-    dir_path = machine_dir / "manifest.py"
-    flat_path = root / "machines" / f"{machine_id}.py"
+    path = machine_dir / "manifest.py"
+    if not path.exists():
+        raise FileNotFoundError(f"No manifest: {path}")
 
-    if dir_path.exists():
-        path = dir_path
-        is_dir_manifest = True
-    elif flat_path.exists():
-        path = flat_path
-        is_dir_manifest = False
-    else:
-        raise FileNotFoundError(f"No manifest: {dir_path} or {flat_path}")
-
+    # Load and validate the exported machine.
     mod = _import_py(path, f"machines.{machine_id}.manifest")
     result = getattr(mod, "manifest", None)
     if result is None:
@@ -222,49 +81,40 @@ def load_manifest(machine_id: str, root: Path) -> Machine:
     if not isinstance(result, Machine):
         raise TypeError(f"'manifest' must be Machine, got {type(result)}")
 
-    # Core is the shared baseline for every machine.
+    # Include core as the shared baseline for every machine.
     result.modules = ["core", *(name for name in result.modules if name != "core")]
 
-    # Flat manifests have no directory - skip path/script resolution
-    if not is_dir_manifest:
-        result.modules = _resolve_deps(result.modules, root)
-        return result
-
-    # Resolve machine-specific file sources relative to machine dir
+    # Resolve source paths relative to the machine directory.
     for f in result.files:
         f.source = str(machine_dir / f.source)
     for i, s in enumerate(result.scripts):
         result.scripts[i] = str(machine_dir / s)
 
-    # Resolve module dependencies (auto-include missing, ordered before dependents)
+    # Include dependencies before their dependent modules.
     result.modules = _resolve_deps(result.modules, root)
 
-    # Auto-discover local overrides declared by modules
+    # Discover local overrides without replacing explicit machine mappings.
     for mod_name in result.modules:
         mod_obj = load_module(mod_name, root)
         for override in mod_obj.overrides:
             local_file = machine_dir / override.source
-            if local_file.exists():
-                already = any(f.target == override.target for f in result.files)
-                if not already:
-                    result.files.append(
-                        FileMapping(
-                            source=str(local_file),
-                            target=override.target,
-                            mode=override.mode,
-                            platforms=override.platforms,
-                        )
-                    )
+            if not local_file.exists():
+                continue
+            if any(f.target == override.target for f in result.files):
+                continue
 
-    # Auto-discover scripts/ directory
-    scripts_dir = machine_dir / "scripts"
-    if scripts_dir.is_dir():
-        existing = set(result.scripts)
-        for script in sorted(scripts_dir.iterdir()):
-            if script.is_file() and script.suffix in SCRIPT_SUFFIXES:
-                path = str(script)
-                if path not in existing:
-                    result.scripts.append(path)
+            result.files.append(
+                FileMapping(
+                    source=str(local_file),
+                    target=override.target,
+                    mode=override.mode,
+                    platforms=override.platforms,
+                )
+            )
+
+    # Discover additional scripts in the machine directory.
+    existing = set(result.scripts)
+    result.scripts.extend(s for s in list_scripts(machine_dir / "scripts") if s not in existing)
 
     return result
 
@@ -274,11 +124,13 @@ def resolve_modules(modules: list[str], root: Path) -> list[Module]:
     return [load_module(name, root) for name in modules]
 
 
-# # MARK: Helpers
+# =============================================================================
+# MARK: Loading Helpers
+# =============================================================================
 
 
 def _resolve_deps(modules: list[str], root: Path) -> list[str]:
-    """Resolve module dependencies recursively."""
+
     resolved: list[str] = []
     seen: set[str] = set()
 
@@ -291,14 +143,20 @@ def _resolve_deps(modules: list[str], root: Path) -> list[str]:
         seen.add(name)
         resolved.append(name)
 
-    for name in modules:
-        _add(name)
+    # Expand manifest groups before resolving dependencies.
+    available = list_modules(root)
+    for selection in modules:
+        matches = [n for n in available if n == selection or n.startswith(selection + ".")]
+        if not matches:
+            raise FileNotFoundError(f"No module or group: {selection}")
+        for name in matches:
+            _add(name)
 
     return resolved
 
 
 def _import_py(path: Path, module_name: str) -> object:
-    """Dynamically import a Python file."""
+
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise ImportError(f"Cannot load: {path}")

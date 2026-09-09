@@ -1,5 +1,5 @@
 """SSH server setup module."""
 
-from app.machine import Module
+from app.models import Module
 
 module = Module(depends=["ssh"])

@@ -2,8 +2,10 @@
 
 from pathlib import Path
 
-from app.core import Platform
-from app.machine import FileMapping, Package, load_manifest
+import pytest
+
+from app.machine import load_manifest
+from app.models import Failure, FileMapping, Package, Platform
 from app.ops import packages as machine_packages
 from app.ops import scripts as machine_scripts
 
@@ -19,12 +21,13 @@ def test_module_dependencies_auto_included(tmp_path: Path) -> None:
         "client": ["base"],
         "server": ["client"],
     }.items():
-        (config_dir / f"{name}.py").write_text(
-            f"from app.machine import Module\nmodule = Module(depends={dependencies!r})\n",
+        (config_dir / name).mkdir()
+        (config_dir / name / "module.py").write_text(
+            f"from app.models import Module\nmodule = Module(depends={dependencies!r})\n",
             encoding="utf-8",
         )
     (machine_dir / "manifest.py").write_text(
-        "from app.machine import Machine\nmanifest = Machine(modules=['server', 'client'])\n",
+        "from app.models import Machine\nmanifest = Machine(modules=['server', 'client'])\n",
         encoding="utf-8",
     )
 
@@ -36,10 +39,13 @@ def test_module_dependencies_auto_included(tmp_path: Path) -> None:
 def test_manifest_override_preserves_metadata(tmp_path: Path) -> None:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
-    (config_dir / "core.py").write_text("from app.machine import Module\nmodule = Module()\n")
-    (config_dir / "example.py").write_text(
-        "from app.core import Platform\n"
-        "from app.machine import FileMapping, Module\n"
+    (config_dir / "core").mkdir()
+    (config_dir / "core" / "module.py").write_text(
+        "from app.models import Module\nmodule = Module()\n"
+    )
+    (config_dir / "example").mkdir()
+    (config_dir / "example" / "module.py").write_text(
+        "from app.models import FileMapping, Module, Platform\n"
         "module = Module(overrides=[FileMapping(\n"
         "    source='local.conf', target='~/.example/config',\n"
         "    mode=0o600, platforms=[Platform.LINUX, Platform.WINDOWS],\n"
@@ -49,7 +55,7 @@ def test_manifest_override_preserves_metadata(tmp_path: Path) -> None:
     machine_dir = tmp_path / "machines" / "test"
     machine_dir.mkdir(parents=True)
     (machine_dir / "manifest.py").write_text(
-        "from app.machine import Machine\nmanifest = Machine(modules=['example'])\n",
+        "from app.models import Machine\nmanifest = Machine(modules=['example'])\n",
         encoding="utf-8",
     )
     local_config = machine_dir / "local.conf"
@@ -68,18 +74,24 @@ def test_manifest_override_preserves_metadata(tmp_path: Path) -> None:
 def test_core_is_included_with_or_without_manager_declarations(tmp_path: Path) -> None:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
-    (config_dir / "core.py").write_text("from app.machine import Module\nmodule = Module()\n")
-    (config_dir / "apps.py").write_text(
-        "from app.machine import Module, Package\n"
+    (config_dir / "core").mkdir()
+    (config_dir / "core" / "module.py").write_text(
+        "from app.models import Module\nmodule = Module()\n"
+    )
+    (config_dir / "apps").mkdir()
+    (config_dir / "apps" / "module.py").write_text(
+        "from app.models import Module, Package\n"
         "module = Module(packages=[Package(winget='Example.App')])\n"
     )
     machines_dir = tmp_path / "machines"
     machines_dir.mkdir()
-    (machines_dir / "empty.py").write_text(
-        "from app.machine import Machine\nmanifest = Machine(modules=['apps'])\n"
+    (machines_dir / "empty").mkdir()
+    (machines_dir / "empty" / "manifest.py").write_text(
+        "from app.models import Machine\nmanifest = Machine(modules=['apps'])\n"
     )
-    (machines_dir / "declared.py").write_text(
-        "from app.machine import Machine, Package, PkgManager\n"
+    (machines_dir / "declared").mkdir()
+    (machines_dir / "declared" / "manifest.py").write_text(
+        "from app.models import Machine, Package, PkgManager\n"
         "manifest = Machine(pkg_managers=[PkgManager.WINGET], "
         "packages=[Package(winget='Example.App')])\n"
     )
@@ -104,10 +116,10 @@ def test_platform_matching_is_directional_and_shared(monkeypatch) -> None:
             assert file.applies_to(platform) == (target in matches)
             assert package.applies_to(platform) == (target in matches)
             tag = "win" if target == Platform.WINDOWS else target.value
-            assert machine_scripts.matches_platform(Path(f"setup.{tag}.sh")) == (target in matches)
+            assert machine_scripts._matches_platform(Path(f"setup.{tag}.sh")) == (target in matches)
         assert FileMapping(source="source", target="target").applies_to(platform)
         assert not FileMapping(source="source", target="target", platforms=[]).applies_to(platform)
-        assert machine_scripts.matches_platform(Path("setup.sh"))
+        assert machine_scripts._matches_platform(Path("setup.sh"))
 
     monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WSL)
     assert machine_packages._applicable_sources(Package(apt="example", snap="example")) == [
@@ -116,17 +128,19 @@ def test_platform_matching_is_directional_and_shared(monkeypatch) -> None:
     ]
 
 
-def test_nested_modules_discovery_and_resolution(tmp_path: Path) -> None:
-    from app.machine import list_modules, load_module
+@pytest.mark.parametrize("selection", ["tools.editor", "tools"])
+def test_nested_modules_discovery_and_resolution(tmp_path: Path, selection: str) -> None:
+    from app.discovery import list_modules
+    from app.machine import load_module
 
     config = tmp_path / "config"
-    for name in ["core", "tools/base", "tools/editor", "other/editor", "tools/editor/assets"]:
+    for name in ["core", "tools/base", "tools/editor", "toolsmith/editor", "tools/editor/assets"]:
         directory = config / name
         directory.mkdir(parents=True, exist_ok=True)
-        (directory / "module.py").write_text("from app.machine import Module\nmodule = Module()\n")
+        (directory / "module.py").write_text("from app.models import Module\nmodule = Module()\n")
     editor = config / "tools" / "editor"
     (editor / "module.py").write_text(
-        "from app.machine import Module, FileMapping\n"
+        "from app.models import Module, FileMapping\n"
         "module = Module(depends=['tools.base'], "
         "files=[FileMapping(source='settings.json', target='~/.editor.json')])\n"
     )
@@ -135,11 +149,12 @@ def test_nested_modules_discovery_and_resolution(tmp_path: Path) -> None:
     script.write_text("#!/bin/sh\n")
     machines = tmp_path / "machines"
     machines.mkdir()
-    (machines / "test.py").write_text(
-        "from app.machine import Machine\nmanifest = Machine(modules=['tools.editor'])\n"
+    (machines / "test").mkdir()
+    (machines / "test" / "manifest.py").write_text(
+        f"from app.models import Machine\nmanifest = Machine(modules=[{selection!r}])\n"
     )
 
-    assert list_modules(tmp_path) == ["core", "other.editor", "tools.base", "tools.editor"]
+    assert list_modules(tmp_path) == ["core", "tools.base", "tools.editor", "toolsmith.editor"]
     assert load_manifest("test", tmp_path).modules == ["core", "tools.base", "tools.editor"]
     module = load_module("tools.editor", tmp_path)
     assert module.name == "tools.editor"
@@ -157,10 +172,10 @@ def test_init_scripts_refresh_path_and_stop_on_failure(monkeypatch) -> None:
     def execute(script, env, module):
         events.append(script.name)
         if script.name == "init_failed.sh":
-            return (module, str(script), "failed")
+            return Failure(module=module, item=str(script), detail="failed")
         return None
 
     monkeypatch.setattr(machine_scripts, "_execute", execute)
     failures = machine_scripts.run_scripts(["init_first.sh", "init_failed.sh", "init_last.sh"])
     assert events == ["init_first.sh", "path", "init_failed.sh"]
-    assert failures == [("?", "init_failed.sh", "failed")]
+    assert failures == [Failure(module="?", item="init_failed.sh", detail="failed")]

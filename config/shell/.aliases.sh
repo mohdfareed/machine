@@ -1,7 +1,8 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
-# Aliases
+# =============================================================================
+# MARK: Aliases
 # =============================================================================
 
 if [ "$TERM_PROGRAM" = "vscode" ]; then
@@ -22,7 +23,8 @@ alias cat='bat --paging=never'
 alias gen-pass='openssl rand -base64 32'
 alias gen-token='openssl rand -hex 32'
 
-# Platform-Specific
+# =============================================================================
+# MARK: Platform-Specific
 # =============================================================================
 
 # Linux: show disk usage for real filesystems
@@ -76,7 +78,8 @@ if [[ "$OSTYPE" == darwin* ]]; then
 
 fi
 
-# Functions
+# =============================================================================
+# MARK: Functions
 # =============================================================================
 
 # load private values into this shell on demand

@@ -5,8 +5,9 @@ shopt -s nullglob
 : "${MC_HOMELAB_DIR:?}"
 : "${MC_HOMELAB_STORAGE_DIR:?}"
 
-# Configuration
-# -----------------------------------------------------------------------------
+# =============================================================================
+# MARK: Configuration
+# =============================================================================
 
 # Remote hostnames must resolve through SSH. Add more hosts to this array.
 REMOTE_HOSTS=(rpi)
@@ -36,14 +37,16 @@ if [[ ! -d "$parent" ]]; then
     exit 1
 fi
 
-# Temporary workspace
-# -----------------------------------------------------------------------------
+# =============================================================================
+# MARK: Temporary workspace
+# =============================================================================
 
 staging_root="$(mktemp -d "${TMPDIR:-/tmp}/mc-backup.XXXXXX")"
 trap 'rm -rf -- "$staging_root"' EXIT
 
-# Per-host archiving and retention
-# -----------------------------------------------------------------------------
+# =============================================================================
+# MARK: Per-host archiving and retention
+# =============================================================================
 
 # Compress one host, publish its archive, then prune only that host's history.
 archive_host() {
@@ -76,8 +79,9 @@ archive_host() {
     echo "  archive complete → $archive"
 }
 
-# Current host
-# -----------------------------------------------------------------------------
+# =============================================================================
+# MARK: Current host
+# =============================================================================
 
 # Resolve the path here using this host's required MC_HOMELAB_DIR.
 local_host="${MC_ID:-$(hostname -s)}"
@@ -94,8 +98,9 @@ for data_dir in "$local_homelab_dir"/*/data/; do
 done
 archive_host "$local_host"
 
-# Remote hosts
-# -----------------------------------------------------------------------------
+# =============================================================================
+# MARK: Remote hosts
+# =============================================================================
 
 # Collect and archive each remote host independently. If a later host cannot be
 # reached, archives already completed for other hosts remain usable.

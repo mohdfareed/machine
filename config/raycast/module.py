@@ -1,6 +1,6 @@
 """Raycast launcher configuration module."""
 
-from app.machine import FileMapping, Module, Package
+from app.models import FileMapping, Module, Package
 
 module = Module(
     packages=[

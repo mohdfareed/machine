@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from app import cli
+from app.cli import apply, sync
 
 
 def git(root: Path, *args: str) -> str:
@@ -33,12 +33,12 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     git(tmp_path, "clone", str(canonical), str(checkout))
     # A fork's origin may be unrelated or unavailable; sync must ignore it.
     git(checkout, "remote", "set-url", "origin", str(tmp_path / "unavailable-fork"))
-    monkeypatch.setattr(cli.settings, "home", checkout)
-    monkeypatch.setattr(cli.settings, "dry_run", False)
-    monkeypatch.setattr(cli, "CANONICAL_REPO_URL", str(canonical))
-    monkeypatch.setattr(cli, "get_current_machine", lambda: "test")
+    monkeypatch.setattr(sync.settings, "home", checkout)
+    monkeypatch.setattr(sync.settings, "dry_run", False)
+    monkeypatch.setattr(sync, "_CANONICAL_REPO_URL", str(canonical))
+    monkeypatch.setattr(sync, "get_current_machine", lambda: "test")
     applied = []
-    monkeypatch.setattr(cli, "apply", lambda **kwargs: applied.append(kwargs))
+    monkeypatch.setattr(sync, "apply", lambda **kwargs: applied.append(kwargs))
     return canonical, checkout, applied
 
 
@@ -59,9 +59,9 @@ def test_sync_restores_local_edits_before_apply(sync_repos, monkeypatch, no_appl
 
     # Observe the restored content at deployment time, not just after sync returns.
     monkeypatch.setattr(
-        cli, "apply", lambda **kwargs: applied.append((checkout / "config.txt").read_text())
+        sync, "apply", lambda **kwargs: applied.append((checkout / "config.txt").read_text())
     )
-    cli.sync(no_apply=no_apply)
+    sync.sync(no_apply=no_apply)
 
     assert git(checkout, "rev-parse", "HEAD") == git(canonical, "rev-parse", "HEAD")
     assert (checkout / "config.txt").read_text() == expected
@@ -75,7 +75,7 @@ def test_sync_autostash_conflict_preserves_edits_and_stops_apply(sync_repos):
     git(canonical, "commit", "-am", "Update config")
 
     with pytest.raises(SystemExit):
-        cli.sync(no_apply=False)
+        sync.sync(no_apply=False)
 
     assert git(checkout, "ls-files", "--unmerged")
     assert git(checkout, "show", "stash@{0}:config.txt") == "local edit"
@@ -91,7 +91,7 @@ def test_sync_divergence_preserves_commits_and_stops_apply(sync_repos):
     git(canonical, "commit", "-am", "Upstream change")
 
     with pytest.raises(SystemExit):
-        cli.sync(no_apply=False)
+        sync.sync(no_apply=False)
 
     assert git(checkout, "rev-parse", "HEAD") == before
     assert not applied
@@ -101,10 +101,10 @@ def test_sync_fetch_failure_does_not_apply_stale_fetch_head(sync_repos, monkeypa
     canonical, checkout, applied = sync_repos
     git(checkout, "fetch", str(canonical), "main")
     before = git(checkout, "rev-parse", "HEAD")
-    monkeypatch.setattr(cli, "CANONICAL_REPO_URL", str(canonical / "missing"))
+    monkeypatch.setattr(sync, "_CANONICAL_REPO_URL", str(canonical / "missing"))
 
     with pytest.raises(SystemExit):
-        cli.sync(no_apply=False)
+        sync.sync(no_apply=False)
 
     assert git(checkout, "rev-parse", "HEAD") == before
     assert not applied
@@ -112,18 +112,18 @@ def test_sync_fetch_failure_does_not_apply_stale_fetch_head(sync_repos, monkeypa
 
 def test_sync_dry_run_does_not_fetch_or_apply(sync_repos, monkeypatch):
     _, checkout, applied = sync_repos
-    monkeypatch.setattr(cli.settings, "dry_run", True)
-    cli.sync(no_apply=False)
+    monkeypatch.setattr(sync.settings, "dry_run", True)
+    sync.sync(no_apply=False)
     assert not (checkout / ".git" / "FETCH_HEAD").exists()
     assert not applied
 
 
 @pytest.mark.parametrize("setup_fails", [False, True])
 def test_filtered_apply_preserves_declared_manager_setup(monkeypatch, setup_fails) -> None:
-    from app import machine as models
-    from app.ops import packages as machine_packages
+    from app import machine, models
+    from app.ops import managers as machine_managers
 
-    monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.WINDOWS)
+    monkeypatch.setattr(machine_managers, "PLATFORM", models.Platform.WINDOWS)
 
     managers = [models.PkgManager.WINGET]
     manifest = models.Machine(pkg_managers=managers, modules=["core", "system", "apps"])
@@ -135,15 +135,17 @@ def test_filtered_apply_preserves_declared_manager_setup(monkeypatch, setup_fail
         ),
     ]
     events = []
-    monkeypatch.setattr(models, "load_manifest", lambda *args: manifest)
-    monkeypatch.setattr(models, "resolve_modules", lambda *args: modules)
-    monkeypatch.setattr(cli, "save_current_machine", lambda *args: None)
-    monkeypatch.setattr(cli, "write_env_file", lambda *args: None)
-    monkeypatch.setattr(cli, "validate", lambda *args: [])
-    monkeypatch.setattr(cli, "filter_scripts", lambda scripts: scripts)
-    monkeypatch.setattr(cli, "build_script_env", lambda *args: {})
-    monkeypatch.setattr(cli, "cache_sudo", lambda: None)
-    monkeypatch.setattr(cli, "deploy_files", lambda *args, **kwargs: (None, []))
+    monkeypatch.setattr(machine, "load_manifest", lambda *args: manifest)
+    monkeypatch.setattr(machine, "resolve_modules", lambda *args: modules)
+    monkeypatch.setattr(apply, "save_current_machine", lambda *args: None)
+    monkeypatch.setattr(apply, "write_env_file", lambda *args: None)
+    monkeypatch.setattr(apply, "validate_modules", lambda *args: [])
+    monkeypatch.setattr(apply, "filter_scripts", lambda scripts: scripts)
+    monkeypatch.setattr(apply, "build_env", lambda *args: {})
+    monkeypatch.setattr(apply, "cache_sudo", lambda: None)
+    monkeypatch.setattr(
+        apply, "deploy_files", lambda *args, **kwargs: models.FileResult(created=0, failures=[])
+    )
 
     def run_scripts(scripts, *, env, owners):
         assert env["MC_PACKAGE_MANAGERS"] == "winget"
@@ -151,7 +153,7 @@ def test_filtered_apply_preserves_declared_manager_setup(monkeypatch, setup_fail
             assert scripts == ["init_pkgs.win.ps1", "init_apps.ps1"]
         events.extend(scripts)
         if setup_fails and "init_pkgs.win.ps1" in scripts:
-            return [("core", "winget", "setup failed")]
+            return [models.Failure(module="core", item="winget", detail="setup failed")]
         return []
 
     def install_packages(packages, declared, **kwargs):
@@ -159,13 +161,13 @@ def test_filtered_apply_preserves_declared_manager_setup(monkeypatch, setup_fail
         events.append("packages")
         return []
 
-    monkeypatch.setattr(cli, "run_scripts", run_scripts)
-    monkeypatch.setattr(cli, "install_packages", install_packages)
+    monkeypatch.setattr(apply, "run_scripts", run_scripts)
+    monkeypatch.setattr(apply, "install_packages", install_packages)
     if setup_fails:
-        with pytest.raises(cli.typer.Exit) as exc:
-            cli.apply(machine="test", module_names=["apps"])
+        with pytest.raises(apply.typer.Exit) as exc:
+            apply.apply(machine="test", module_names=["apps"])
         assert exc.value.exit_code == 1
         assert events == ["init_pkgs.win.ps1", "init_apps.ps1"]
     else:
-        cli.apply(machine="test", module_names=["apps"])
+        apply.apply(machine="test", module_names=["apps"])
         assert events == ["init_pkgs.win.ps1", "init_apps.ps1", "packages", "core.ps1"]

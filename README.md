@@ -63,7 +63,7 @@ Preserve commits with a regular merge so the work branch can fast-forward afterw
 Create `machines/<id>/manifest.py`:
 
 ```python
-from app.machine import Machine, PkgManager
+from app.models import Machine, PkgManager
 
 manifest = Machine(
     pkg_managers=[PkgManager.BREW],
@@ -87,7 +87,7 @@ mc apply -m <id>      # Select, remember, and apply it
 Create `config/<name>/module.py`:
 
 ```python
-from app.machine import Module
+from app.models import Module
 
 module = Module()
 ```
@@ -98,6 +98,9 @@ module on the selected machine. Nested modules use dotted names:
 Discovery descends through grouping folders and stops at each `module.py`;
 **folder names cannot contain dots.**
 Files and scripts remain relative to their module folder.
+
+In manifests, `modules=["tools"]` includes all modules under that grouping folder,
+including newly added ones. CLI filters and `depends` still use exact module names.
 
 ### Scripts
 

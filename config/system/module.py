@@ -1,5 +1,5 @@
 """Explicitly selected OS settings and features."""
 
-from app.machine import Module
+from app.models import Module
 
 module = Module()

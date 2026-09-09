@@ -1,11 +1,10 @@
 """Windows command transport must preserve PowerShell source and failures."""
 
-import os
 import sys
 
 import pytest
 
-from app import core
+from app import shell
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows PowerShell command transport")
@@ -35,10 +34,11 @@ from app import core
     ],
 )
 def test_windows_commands_preserve_source_and_failure(command, expected, code, _):
-    rc, output = core._tee_pipe(command, {**os.environ, "DEV": r"C:\Dev Projects"})
+    result = shell.run(command, env={"DEV": r"C:\Dev Projects"}, capture_output=True)
+    output = result.stdout
     assert b"CLIXML" not in output
     assert b"CategoryInfo" not in output
     assert b"FullyQualifiedErrorId" not in output
     assert b"At line:" not in output
-    assert rc == code
+    assert result.returncode == code
     assert expected in output.decode(errors="replace")

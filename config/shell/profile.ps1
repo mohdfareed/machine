@@ -1,6 +1,7 @@
 #!/usr/bin/env pwsh
 
-# Environment
+# =============================================================================
+# MARK: Environment
 # =============================================================================
 
 $env:PATH += "$([IO.Path]::PathSeparator)$HOME/.local/bin" # user local bin
@@ -9,7 +10,8 @@ $env:PIP_REQUIRE_VIRTUALENV = $true  # python
 # Share MC_HOME with WSL
 $env:WSLENV = (@($env:WSLENV, 'MC_HOME/p') | Where-Object { $_ }) -join ':'
 
-# Helpers
+# =============================================================================
+# MARK: Helpers
 # =============================================================================
 
 function Import-DotEnv($path) {
@@ -54,7 +56,8 @@ function Invoke-Cached($key, [scriptblock]$generate) {
     }
 }
 
-# Infrastructure
+# =============================================================================
+# MARK: Infrastructure
 # =============================================================================
 
 # Ensure HOME is available on Windows (used by .env expansions)
@@ -70,7 +73,8 @@ if ($env:MC_HOME -and $env:MC_ID) {
     Import-DotEnv "$env:MC_HOME/machines/$env:MC_ID/machine.env"
 }
 
-# Configuration
+# =============================================================================
+# MARK: Configuration
 # =============================================================================
 
 $mcAppDir = if ($IsWindows) {
@@ -107,7 +111,8 @@ oh-my-posh init pwsh --config "pure" | Invoke-Expression
 # tab-completion
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 
-# Infrastructure
+# =============================================================================
+# MARK: Infrastructure
 # =============================================================================
 
 # functions & aliases

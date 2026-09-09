@@ -1,5 +1,5 @@
 """Package entry point."""
 
-from app.cli import main
+from app.cli.entry import main
 
 main(prog_name="mc")

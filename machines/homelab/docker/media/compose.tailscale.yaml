@@ -13,7 +13,9 @@ x-tailscale-env: &tailscale-env
   TS_STATE_DIR: /var/lib/tailscale
   TS_USERSPACE: "false"
 
-# MARK : Services
+# =============================================================================
+# MARK: Services
+# =============================================================================
 
 services:
   ts-plex:
@@ -49,7 +51,9 @@ services:
       - ts-weaver-state:/var/lib/tailscale
       - ./ts-config/weaver:/config
 
-# MARK : Volumes
+# =============================================================================
+# MARK: Volumes
+# =============================================================================
 
 volumes:
   ts-plex-state:

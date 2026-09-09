@@ -7,8 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from app.core import Platform
-from app.machine import FileMapping
+from app.models import FileMapping, Platform
 from app.ops import files as machine_files
 
 
@@ -54,10 +53,10 @@ def test_deploy_files_skips_non_applicable_platforms(
     monkeypatch.setattr(machine_files, "PLATFORM", Platform.WINDOWS)
     monkeypatch.setattr(machine_files, "_symlink", _record_link)
 
-    created, failures = machine_files.deploy_files(mappings)
+    result = machine_files.deploy_files(mappings)
 
-    assert created == 2
-    assert failures == []
+    assert result.created == 2
+    assert result.failures == []
     assert [source for source, _target in linked] == [universal_source, windows_source]
     assert [str(target) for _source, target in linked] == ["universal-target", "windows-target"]
 

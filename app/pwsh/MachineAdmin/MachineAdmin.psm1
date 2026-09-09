@@ -1,10 +1,23 @@
 function Invoke-Admin {
+    <#
+    .SYNOPSIS
+    Run a script block with administrator access and relay its text output.
+    .DESCRIPTION
+    Run directly when already elevated; otherwise request access through UAC.
+    Pass outside values through param() and ArgumentList because the elevated block
+    runs in a separate process. Failures exit the calling process with a nonzero code.
+    .PARAMETER ScriptBlock
+    The commands to run with administrator access.
+    .PARAMETER ArgumentList
+    Values passed to the script block's parameters.
+    #>
     param(
         [Parameter(Mandatory, Position = 0)]
         [scriptblock]$ScriptBlock,
         [object[]]$ArgumentList = @()
     )
 
+    # Run directly when the current process is already elevated.
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = [Security.Principal.WindowsPrincipal]::new($identity)
     if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -21,9 +34,10 @@ function Invoke-Admin {
         return
     }
 
-    # A UAC process has its own scope; pass outside values through param()/ArgumentList.
+    # Serialize arguments for the separate UAC process.
     $arguments = [Management.Automation.PSSerializer]::Serialize($ArgumentList).Replace("'", "''")
-    # RunAs cannot redirect stdout; relay text through a shared temporary file.
+
+    # Relay text through a shared temporary file because RunAs cannot redirect stdout.
     $outputPath = [IO.Path]::GetTempFileName()
     $outputLiteral = $outputPath.Replace("'", "''")
     $command = @"
@@ -52,6 +66,7 @@ exit `$script:adminExitCode
 "@
     $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($command))
 
+    # Request elevation and open the output relay.
     $reader = $null
     try {
         $reader = [IO.StreamReader]::new(
@@ -70,6 +85,7 @@ exit `$script:adminExitCode
             exit 1
         }
 
+        # Stream output until the child exits, then drain the remaining lines.
         while (-not $process.HasExited) {
             while ($null -ne ($line = $reader.ReadLine())) { Write-Host $line }
             Start-Sleep -Milliseconds 100
@@ -82,6 +98,7 @@ exit `$script:adminExitCode
         }
     }
     finally {
+        # Close the reader before removing the output file.
         if ($reader) { $reader.Dispose() }
         Remove-Item -LiteralPath $outputPath -Force -ErrorAction SilentlyContinue
     }

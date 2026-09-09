@@ -1,6 +1,6 @@
 """Homelab (macOS) machine manifest."""
 
-from app.machine import FileMapping, Machine, Package, PkgManager
+from app.models import FileMapping, Machine, Package, PkgManager
 
 manifest = Machine(
     pkg_managers=[PkgManager.BREW, PkgManager.MAS],

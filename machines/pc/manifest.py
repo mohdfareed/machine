@@ -1,7 +1,7 @@
 """PC machine manifest for Windows and WSL."""
 
-from app.core import PLATFORM, Platform
-from app.machine import Machine, Package, PkgManager
+from app.env import PLATFORM
+from app.models import Machine, Package, PkgManager, Platform
 
 sib_script_install_path = '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\steam-input-bridge"'
 sib_script_url = (

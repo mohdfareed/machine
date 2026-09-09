@@ -14,7 +14,8 @@ export HISTDUP=erase
 # fix tmux + ssh issues
 export TERM=xterm-256color
 
-# Infrastructure
+# =============================================================================
+# MARK: Infrastructure
 # =============================================================================
 
 dotenv::load() {

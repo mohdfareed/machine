@@ -18,7 +18,8 @@ while true; do
     [[ "${answer:-y}" =~ ^[Yy]$ ]] || break
 done
 
-# # MARK: Power & Sleep
+# =============================================================================
+# MARK: Power & Sleep
 # =============================================================================
 
 echo "configuring power management..."
@@ -39,14 +40,16 @@ echo "enabling wake on network access..."
 sudo pmset -a networkoversleep 1
 sudo pmset -a tcpkeepalive 1
 
-# # MARK: Scheduled Tasks
+# =============================================================================
+# MARK: Scheduled Tasks
 # =============================================================================
 
 # Wake machine daily for maintenance.
 echo "scheduling daily wake at $AUTO_WAKE_TIME..."
 sudo pmset repeat wakeorpoweron MTWRFSU "$AUTO_WAKE_TIME"
 
-# # MARK: Security
+# =============================================================================
+# MARK: Security
 # =============================================================================
 
 # Enable the application firewall.
@@ -54,7 +57,8 @@ echo "enabling firewall..."
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
 
-# # MARK: System Defaults
+# =============================================================================
+# MARK: System Defaults
 # =============================================================================
 
 echo "setting server-oriented defaults..."
@@ -84,7 +88,8 @@ if ! sudo launchctl print system/com.apple.smbd >/dev/null 2>&1; then
     sudo launchctl bootstrap system /System/Library/LaunchDaemons/com.apple.smbd.plist
 fi
 
-# # MARK: Docker
+# =============================================================================
+# MARK: Docker
 # =============================================================================
 
 # Start Docker Desktop at login.
@@ -94,7 +99,8 @@ if [[ -d "$DOCKER_APP" ]]; then
     osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"$DOCKER_APP\", hidden:true}" 2>/dev/null || true
 fi
 
-# # MARK: Scheduled Backups
+# =============================================================================
+# MARK: Scheduled Backups
 # =============================================================================
 
 # Load the daily backup job.

@@ -1,7 +1,7 @@
 """Git configuration module."""
 
-from app.core import PLATFORM, Platform
-from app.machine import FileMapping, Module, Package
+from app.env import PLATFORM
+from app.models import FileMapping, Module, Package, Platform
 
 module = Module(
     files=[

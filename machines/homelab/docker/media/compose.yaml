@@ -18,9 +18,11 @@ x-media-volume: &media-volume
   bind:
     create_host_path: false
 
-# MARK : Services
-
 services:
+  # ===========================================================================
+  # MARK: Services
+  # ===========================================================================
+
   plex:
     image: plexinc/pms-docker:latest
     container_name: plex
@@ -86,7 +88,9 @@ services:
       homepage.href: https://weaver.${TAILNET_NAME}.ts.net
       homepage.description: Usenet downloader
 
+  # ===========================================================================
   # MARK: Infrastructure
+  # ===========================================================================
 
   watchlist-sync:
     build:

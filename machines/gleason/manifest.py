@@ -1,7 +1,7 @@
 """Gleason work machine manifest."""
 
-from app.core import PLATFORM, Platform
-from app.machine import Machine, Package, PkgManager
+from app.env import PLATFORM
+from app.models import Machine, Package, PkgManager, Platform
 
 manifest = Machine(
     pkg_managers=(
