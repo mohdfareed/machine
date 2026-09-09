@@ -68,7 +68,7 @@
         "startingDirectory": "%USERPROFILE%"
       },
       {
-        "commandline": "\"C:\\Users\\mohdfareed\\AppData\\Local\\Microsoft\\WindowsApps\\Microsoft.PowerShell_8wekyb3d8bbwe\\pwsh.exe\"",
+        "commandline": "\"C:\\Users\\mfareed\\AppData\\Local\\Microsoft\\WindowsApps\\Microsoft.PowerShell_8wekyb3d8bbwe\\pwsh.exe\"",
         "guid": "{9bdd1377-33cf-4e83-a2f1-7010443e7e0b}",
         "hidden": false,
         "name": "GEMS Machine",
