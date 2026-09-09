@@ -26,6 +26,7 @@ manifest = MachineManifest(
         Package(name="iCloud", winget="9PKTQ5699M62"),
         Package(name="Apple Music", winget="9pfhdd62mxs1"),
         Package(name="Spotify", winget="Spotify.Spotify"),
+        Package(name="Plex", winget="Plex.Plex"),
         # Gaming
         Package(name="Steam", winget="valve.Steam"),
         Package(name="Riot Games", winget="RiotGames.Valorant.NA"),
