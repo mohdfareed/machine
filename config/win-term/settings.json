@@ -1,9 +1,6 @@
 {
     "$help": "https://aka.ms/terminal-documentation",
     "$schema": "https://aka.ms/terminal-profiles-schema",
-    "import": [
-        "settings.local.json"
-    ],
     "actions": 
     [
         {
@@ -29,12 +26,12 @@
             "keys": "ctrl+c"
         },
         {
-            "id": "Terminal.PasteFromClipboard",
-            "keys": "ctrl+v"
-        },
-        {
             "id": "Terminal.FindText",
             "keys": "ctrl+f"
+        },
+        {
+            "id": "Terminal.PasteFromClipboard",
+            "keys": "ctrl+v"
         }
     ],
     "newTabMenu": 
@@ -80,6 +77,12 @@
                 "icon": "ms-appx:///ProfileIcons/pwsh.png",
                 "name": "GEMS Machine",
                 "startingDirectory": "C:\\Users\\mfareed\\Dev\\GEMS\\Gems.Machine"
+            },
+            {
+                "guid": "{5fb123f1-af88-5b5c-8953-d14a8def1978}",
+                "hidden": false,
+                "name": "PowerShell 7",
+                "source": "Windows.Terminal.PowershellCore"
             }
         ]
     },
