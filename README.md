@@ -59,9 +59,9 @@ mc show              # List files, packages, and scripts in apply order
 Create `machines/<id>/manifest.py`:
 
 ```python
-from machine.manifest import MachineManifest, PkgManager
+from app.machine import Machine, PkgManager
 
-manifest = MachineManifest(
+manifest = Machine(
     pkg_managers=[PkgManager.BREW],
     modules=[],
 )
@@ -83,7 +83,7 @@ mc apply -m <id>      # Select, remember, and apply it
 Create `config/<name>/module.py`:
 
 ```python
-from machine.manifest import Module
+from app.machine import Module
 
 module = Module()
 ```

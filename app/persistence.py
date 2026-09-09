@@ -1,6 +1,6 @@
 """Current-machine persistence helpers."""
 
-from machine.core import settings
+from app.core import settings
 
 
 def get_current_machine() -> str | None:

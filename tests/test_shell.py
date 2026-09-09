@@ -5,7 +5,7 @@ import sys
 
 import pytest
 
-from machine import core
+from app import core
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows PowerShell command transport")

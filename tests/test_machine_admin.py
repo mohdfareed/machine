@@ -16,7 +16,7 @@ def test_admin_output_and_failure_status(tmp_path: Path, already_admin, mode, ex
     shell = shutil.which("powershell.exe")
     if shell is None:
         pytest.skip("Windows PowerShell is unavailable")
-    source = Path(__file__).parents[1] / "src/machine/powershell/MachineAdmin/MachineAdmin.psm1"
+    source = Path(__file__).parents[1] / "app/powershell/MachineAdmin/MachineAdmin.psm1"
     module = tmp_path / "MachineAdmin.psm1"
     # Exercise either branch without elevation or any machine changes.
     module.write_text(

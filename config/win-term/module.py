@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from machine.core import Platform
-from machine.manifest import FileMapping, Module, Package
+from app.core import Platform
+from app.machine import FileMapping, Module, Package
 
 CONFIG_DIR = Path(r"%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState")
 

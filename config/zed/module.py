@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from machine.core import PLATFORM, Platform
-from machine.manifest import FileMapping, Module, Package
+from app.core import PLATFORM, Platform
+from app.machine import FileMapping, Module, Package
 
 match PLATFORM:
     case Platform.WINDOWS:

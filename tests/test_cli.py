@@ -4,7 +4,7 @@ import subprocess
 
 import pytest
 
-from machine import cli
+from app import cli
 
 
 def test_sync_abort_stops_before_pull_and_apply(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -31,13 +31,13 @@ def test_sync_abort_stops_before_pull_and_apply(monkeypatch: pytest.MonkeyPatch)
 
 @pytest.mark.parametrize("setup_fails", [False, True])
 def test_filtered_apply_preserves_declared_manager_setup(monkeypatch, setup_fails) -> None:
-    from machine import manifest as models
-    from machine.ops import packages as machine_packages
+    from app import machine as models
+    from app.ops import packages as machine_packages
 
     monkeypatch.setattr(machine_packages, "PLATFORM", machine_packages.Platform.WINDOWS)
 
     managers = [models.PkgManager.WINGET]
-    manifest = models.MachineManifest(pkg_managers=managers, modules=["core", "system", "apps"])
+    manifest = models.Machine(pkg_managers=managers, modules=["core", "system", "apps"])
     modules = [
         models.Module(name="core", scripts=["init_pkgs.win.ps1", "core.ps1"]),
         models.Module(name="system", scripts=["init_system.ps1", "system.ps1"]),

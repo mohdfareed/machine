@@ -1,8 +1,8 @@
 """Personal laptop (macOS) machine manifest."""
 
-from machine.manifest import MachineManifest, Package, PkgManager
+from app.machine import Machine, Package, PkgManager
 
-manifest = MachineManifest(
+manifest = Machine(
     pkg_managers=[PkgManager.BREW, PkgManager.MAS],
     modules=[
         "git",

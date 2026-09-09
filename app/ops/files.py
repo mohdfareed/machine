@@ -6,8 +6,8 @@ import stat
 import subprocess
 from pathlib import Path
 
-from machine.core import PLATFORM, is_windows, settings
-from machine.manifest import FileMapping, Module
+from app.core import PLATFORM, is_windows, settings
+from app.machine import FileMapping, Module
 
 logger = logging.getLogger(__name__)
 

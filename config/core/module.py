@@ -1,5 +1,5 @@
 """Always-included setup and maintenance shared by every machine."""
 
-from machine.manifest import Module
+from app.machine import Module
 
 module = Module()

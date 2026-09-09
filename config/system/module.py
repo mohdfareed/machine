@@ -1,5 +1,5 @@
 """Explicitly selected OS settings and features."""
 
-from machine.manifest import Module
+from app.machine import Module
 
 module = Module()

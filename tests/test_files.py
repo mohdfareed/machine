@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from machine.core import Platform
-from machine.manifest import FileMapping
-from machine.ops import files as machine_files
+from app.core import Platform
+from app.machine import FileMapping
+from app.ops import files as machine_files
 
 
 class _WindowsPrivilegeError(OSError):

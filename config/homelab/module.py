@@ -1,7 +1,7 @@
 """Homelab Docker service deployment module."""
 
-from machine.core import Platform
-from machine.manifest import Module, Package
+from app.core import Platform
+from app.machine import Module, Package
 
 module = Module(
     packages=[

@@ -1,14 +1,14 @@
 """PC machine manifest for Windows and WSL."""
 
-from machine.core import PLATFORM, Platform
-from machine.manifest import MachineManifest, Package, PkgManager
+from app.core import PLATFORM, Platform
+from app.machine import Machine, Package, PkgManager
 
 sib_script_install_path = '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\steam-input-bridge"'
 sib_script_url = (
     "https://raw.githubusercontent.com/mohdfareed/steam-input-bridge/main/Scripts/Bootstrap-App.ps1"
 )
 
-manifest = MachineManifest(
+manifest = Machine(
     pkg_managers=(
         [PkgManager.APT, PkgManager.SNAP, PkgManager.BREW]
         if PLATFORM == Platform.WSL

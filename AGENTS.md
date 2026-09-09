@@ -27,7 +27,7 @@ Cross-platform machine bootstrapper and dotfile manager.
 
 ## Project Layout
 
-- `src/machine/` - Python package (CLI app)
+- `app/` - Python package (CLI app)
 - `config/` - Shared dotfiles and configs
 - `machines/` - Per-host configurations
 - `scripts/bootstrap.sh` / `scripts/bootstrap.ps1` - Bare-machine bootstrap
@@ -56,7 +56,7 @@ the dependent).
 
 ### Manifest (`machines/<id>/manifest.py`)
 
-Exports a `MachineManifest(pkg_managers, modules, files, packages, scripts)`.
+Exports a `Machine(pkg_managers, modules, files, packages, scripts)`.
 Composes modules and adds machine-specific overrides.
 
 ### Cross-Platform Requirements
@@ -113,7 +113,7 @@ belongs in machine manifests. Commit portable configuration; keep credentials,
 runtime state, caches, and machine-generated application data local.
 
 - Machine extras: `extra.zsh` → `~/.zshrc.local`
-- Repo root derived from `Path(__file__).parents[2]` - no env var needed
+- Repo root derived from `Path(__file__).parents[1]` in `app/core.py` - no env var needed
 - App data: `typer.get_app_dir("mc")` for logs/state; define runtime file paths once in `Settings` and reuse them in readers, writers, and CLI commands
 - Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/vscode/` and `config/zed/`
 - VS Code Remote Tunnels are owned by the `vscode` module; account authorization remains a one-time manual step on each machine
@@ -128,7 +128,7 @@ runtime state, caches, and machine-generated application data local.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - Keep substantive Python out of shell strings; put it in a normal `.py` file and have the shell entrypoint invoke it
 - Avoid trivial helper wrappers like `def _target(name): return str(base / name)`; use `str(base / path)` directly unless the helper adds real behavior
-- If a package/file/script list is just static data used once, keep it inline in the `Module(...)` or `MachineManifest(...)` definition; only extract it when there is real logic or reuse
+- If a package/file/script list is just static data used once, keep it inline in the `Module(...)` or `Machine(...)` definition; only extract it when there is real logic or reuse
 - Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration
 - Preserve existing script phase comments, progress messages, command choices, and setup/update behavior when making focused changes
 - Use brief comments to separate operational script phases and explain non-obvious quoting, environment, or control flow

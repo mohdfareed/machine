@@ -1,8 +1,8 @@
 """Homelab (macOS) machine manifest."""
 
-from machine.manifest import FileMapping, MachineManifest, Package, PkgManager
+from app.machine import FileMapping, Machine, Package, PkgManager
 
-manifest = MachineManifest(
+manifest = Machine(
     pkg_managers=[PkgManager.BREW, PkgManager.MAS],
     modules=[
         "git",

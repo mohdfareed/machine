@@ -11,9 +11,9 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from machine.core import PLATFORM, Platform, err_console, is_unix, run, settings
-from machine.manifest import SCRIPT_SUFFIXES
-from machine.ops.packages import refresh_path
+from app.core import PLATFORM, Platform, err_console, is_unix, run, settings
+from app.machine import SCRIPT_SUFFIXES
+from app.ops.packages import refresh_path
 
 logger = logging.getLogger(__name__)
 

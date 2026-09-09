@@ -10,7 +10,7 @@ import click
 import typer
 from rich.prompt import Prompt
 
-from machine.core import (
+from app.core import (
     PLATFORM,
     console,
     err_console,
@@ -18,23 +18,23 @@ from machine.core import (
     setup_console_logging,
     setup_file_logging,
 )
-from machine.ops.files import deploy_files, validate
-from machine.ops.packages import (
+from app.ops.files import deploy_files, validate
+from app.ops.packages import (
     cache_sudo,
     install_packages,
     select_package_source,
     validate_managers,
 )
-from machine.ops.scripts import (
+from app.ops.scripts import (
     build_script_env,
     filter_scripts,
     run_scripts,
     write_env_file,
 )
-from machine.persistence import get_current_machine, save_current_machine
+from app.persistence import get_current_machine, save_current_machine
 
 if TYPE_CHECKING:
-    from machine.manifest import MachineManifest, Module, Package, PkgManager
+    from app.machine import Machine, Module, Package, PkgManager
 
 _logger = logging.getLogger(__name__)
 
@@ -91,13 +91,13 @@ def callback(
 
 
 def get_machines() -> list[str]:
-    from machine.manifest import list_machines
+    from app.machine import list_machines
 
     return list_machines(settings.home)
 
 
 def get_modules() -> list[str]:
-    from machine.manifest import list_modules
+    from app.machine import list_modules
 
     return list_modules(settings.home)
 
@@ -145,7 +145,7 @@ def apply(
     ] = [],
 ) -> None:
     """Deploy configs, install packages, and run scripts."""
-    from machine.manifest import load_manifest, resolve_modules
+    from app.machine import load_manifest, resolve_modules
 
     root = settings.home
     if not machine:
@@ -231,7 +231,7 @@ def _print_summary(failures: list[tuple[str, str, str]], log_file: Path) -> None
 
 def _build_owners(
     active_modules: list["Module"],
-    manifest: "MachineManifest",
+    manifest: "Machine",
     machine_id: str,
 ) -> dict[str, str]:
     """Build a single owner map for files, packages, and scripts."""
@@ -264,7 +264,7 @@ def update(
     ] = [],
 ) -> None:
     """Run up_* maintenance scripts for the current machine."""
-    from machine.manifest import load_manifest, resolve_modules
+    from app.machine import load_manifest, resolve_modules
 
     root = settings.home
     machine_id = get_current_machine()
@@ -480,7 +480,7 @@ def status_log() -> None:
 @app.command("list", rich_help_panel="Info")
 def list_all() -> None:
     """List available machines and modules."""
-    from machine.manifest import list_machines, list_modules
+    from app.machine import list_machines, list_modules
 
     root = settings.home
     for label, names in [("Machines", list_machines(root)), ("Modules", list_modules(root))]:
@@ -508,7 +508,7 @@ def show(
     ] = get_current_machine() or "",
 ) -> None:
     """Show resolved configuration for a machine."""
-    from machine.manifest import load_manifest, resolve_modules
+    from app.machine import load_manifest, resolve_modules
 
     root = settings.home
     manifest = load_manifest(machine, root)

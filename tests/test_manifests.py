@@ -2,10 +2,10 @@
 
 from pathlib import Path
 
-from machine.core import Platform
-from machine.manifest import FileMapping, Package, load_manifest
-from machine.ops import packages as machine_packages
-from machine.ops import scripts as machine_scripts
+from app.core import Platform
+from app.machine import FileMapping, Package, load_manifest
+from app.ops import packages as machine_packages
+from app.ops import scripts as machine_scripts
 
 
 def test_module_dependencies_auto_included(tmp_path: Path) -> None:
@@ -20,12 +20,11 @@ def test_module_dependencies_auto_included(tmp_path: Path) -> None:
         "server": ["client"],
     }.items():
         (config_dir / f"{name}.py").write_text(
-            f"from machine.manifest import Module\nmodule = Module(depends={dependencies!r})\n",
+            f"from app.machine import Module\nmodule = Module(depends={dependencies!r})\n",
             encoding="utf-8",
         )
     (machine_dir / "manifest.py").write_text(
-        "from machine.manifest import MachineManifest\n"
-        "manifest = MachineManifest(modules=['server', 'client'])\n",
+        "from app.machine import Machine\nmanifest = Machine(modules=['server', 'client'])\n",
         encoding="utf-8",
     )
 
@@ -37,10 +36,10 @@ def test_module_dependencies_auto_included(tmp_path: Path) -> None:
 def test_manifest_override_preserves_metadata(tmp_path: Path) -> None:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
-    (config_dir / "core.py").write_text("from machine.manifest import Module\nmodule = Module()\n")
+    (config_dir / "core.py").write_text("from app.machine import Module\nmodule = Module()\n")
     (config_dir / "example.py").write_text(
-        "from machine.core import Platform\n"
-        "from machine.manifest import FileMapping, Module\n"
+        "from app.core import Platform\n"
+        "from app.machine import FileMapping, Module\n"
         "module = Module(overrides=[FileMapping(\n"
         "    source='local.conf', target='~/.example/config',\n"
         "    mode=0o600, platforms=[Platform.LINUX, Platform.WINDOWS],\n"
@@ -50,8 +49,7 @@ def test_manifest_override_preserves_metadata(tmp_path: Path) -> None:
     machine_dir = tmp_path / "machines" / "test"
     machine_dir.mkdir(parents=True)
     (machine_dir / "manifest.py").write_text(
-        "from machine.manifest import MachineManifest\n"
-        "manifest = MachineManifest(modules=['example'])\n",
+        "from app.machine import Machine\nmanifest = Machine(modules=['example'])\n",
         encoding="utf-8",
     )
     local_config = machine_dir / "local.conf"
@@ -70,20 +68,19 @@ def test_manifest_override_preserves_metadata(tmp_path: Path) -> None:
 def test_core_is_included_with_or_without_manager_declarations(tmp_path: Path) -> None:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
-    (config_dir / "core.py").write_text("from machine.manifest import Module\nmodule = Module()\n")
+    (config_dir / "core.py").write_text("from app.machine import Module\nmodule = Module()\n")
     (config_dir / "apps.py").write_text(
-        "from machine.manifest import Module, Package\n"
+        "from app.machine import Module, Package\n"
         "module = Module(packages=[Package(winget='Example.App')])\n"
     )
     machines_dir = tmp_path / "machines"
     machines_dir.mkdir()
     (machines_dir / "empty.py").write_text(
-        "from machine.manifest import MachineManifest\n"
-        "manifest = MachineManifest(modules=['apps'])\n"
+        "from app.machine import Machine\nmanifest = Machine(modules=['apps'])\n"
     )
     (machines_dir / "declared.py").write_text(
-        "from machine.manifest import MachineManifest, Package, PkgManager\n"
-        "manifest = MachineManifest(pkg_managers=[PkgManager.WINGET], "
+        "from app.machine import Machine, Package, PkgManager\n"
+        "manifest = Machine(pkg_managers=[PkgManager.WINGET], "
         "packages=[Package(winget='Example.App')])\n"
     )
     assert load_manifest("empty", tmp_path).modules == ["core", "apps"]
@@ -120,18 +117,16 @@ def test_platform_matching_is_directional_and_shared(monkeypatch) -> None:
 
 
 def test_nested_modules_discovery_and_resolution(tmp_path: Path) -> None:
-    from machine.manifest import list_modules, load_module
+    from app.machine import list_modules, load_module
 
     config = tmp_path / "config"
     for name in ["core", "tools/base", "tools/editor", "other/editor", "tools/editor/assets"]:
         directory = config / name
         directory.mkdir(parents=True, exist_ok=True)
-        (directory / "module.py").write_text(
-            "from machine.manifest import Module\nmodule = Module()\n"
-        )
+        (directory / "module.py").write_text("from app.machine import Module\nmodule = Module()\n")
     editor = config / "tools" / "editor"
     (editor / "module.py").write_text(
-        "from machine.manifest import Module, FileMapping\n"
+        "from app.machine import Module, FileMapping\n"
         "module = Module(depends=['tools.base'], "
         "files=[FileMapping(source='settings.json', target='~/.editor.json')])\n"
     )
@@ -141,8 +136,7 @@ def test_nested_modules_discovery_and_resolution(tmp_path: Path) -> None:
     machines = tmp_path / "machines"
     machines.mkdir()
     (machines / "test.py").write_text(
-        "from machine.manifest import MachineManifest\n"
-        "manifest = MachineManifest(modules=['tools.editor'])\n"
+        "from app.machine import Machine\nmanifest = Machine(modules=['tools.editor'])\n"
     )
 
     assert list_modules(tmp_path) == ["core", "other.editor", "tools.base", "tools.editor"]

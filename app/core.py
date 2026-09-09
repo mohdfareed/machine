@@ -20,8 +20,8 @@ from rich.logging import RichHandler
 # # MARK: Settings
 
 _meta = metadata("machine")
-# __file__ = src/machine/core.py → parents[2] = repo root
-_REPO_ROOT = Path(__file__).resolve().parents[2]
+# __file__ = app/core.py → parents[1] = repo root
+_REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # Strip ANSI/DEC escape sequences for log-file output
 _ANSI_RE = re.compile(r"\x1b(?:\[[0-9;?]*[A-Za-z]|\][^\x07]*\x07|\([A-Z])")

@@ -7,7 +7,7 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
-from machine.core import Platform
+from app.core import Platform
 
 SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 
@@ -92,7 +92,7 @@ class PkgManager(StrEnum):
     SCOOP = "scoop"
 
 
-class MachineManifest(BaseModel):
+class Machine(BaseModel):
     """Complete machine declaration."""
 
     pkg_managers: list[PkgManager] = []
@@ -200,7 +200,7 @@ def load_module(name: str, root: Path) -> Module:
     return result
 
 
-def load_manifest(machine_id: str, root: Path) -> MachineManifest:
+def load_manifest(machine_id: str, root: Path) -> Machine:
     """Load a machine manifest from ``machines/<id>/manifest.py`` or ``machines/<id>.py``."""
     machine_dir = root / "machines" / machine_id
     dir_path = machine_dir / "manifest.py"
@@ -219,8 +219,8 @@ def load_manifest(machine_id: str, root: Path) -> MachineManifest:
     result = getattr(mod, "manifest", None)
     if result is None:
         raise AttributeError(f"Missing 'manifest' in {path}")
-    if not isinstance(result, MachineManifest):
-        raise TypeError(f"'manifest' must be MachineManifest, got {type(result)}")
+    if not isinstance(result, Machine):
+        raise TypeError(f"'manifest' must be Machine, got {type(result)}")
 
     # Core is the shared baseline for every machine.
     result.modules = ["core", *(name for name in result.modules if name != "core")]

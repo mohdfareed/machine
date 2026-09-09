@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from machine.core import PLATFORM, Platform, is_windows, run_collect, settings
-from machine.manifest import Package, PkgManager
+from app.core import PLATFORM, Platform, is_windows, run_collect, settings
+from app.machine import Package, PkgManager
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
 """Gleason work machine manifest."""
 
-from machine.core import PLATFORM, Platform
-from machine.manifest import MachineManifest, Package, PkgManager
+from app.core import PLATFORM, Platform
+from app.machine import Machine, Package, PkgManager
 
-manifest = MachineManifest(
+manifest = Machine(
     pkg_managers=(
         [PkgManager.APT, PkgManager.SNAP]
         if PLATFORM == Platform.WSL

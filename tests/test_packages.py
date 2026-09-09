@@ -4,9 +4,9 @@ import subprocess
 
 import pytest
 
-from machine.core import Platform
-from machine.manifest import Package, PkgManager
-from machine.ops import packages as machine_packages
+from app.core import Platform
+from app.machine import Package, PkgManager
+from app.ops import packages as machine_packages
 
 
 @pytest.fixture

@@ -1,5 +1,5 @@
 """SSH server setup module."""
 
-from machine.manifest import Module
+from app.machine import Module
 
 module = Module(depends=["ssh"])

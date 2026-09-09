@@ -1,6 +1,6 @@
 """SSH client module."""
 
-from machine.manifest import FileMapping, Module
+from app.machine import FileMapping, Module
 
 module = Module(
     overrides=[
