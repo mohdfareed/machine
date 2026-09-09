@@ -6,3 +6,7 @@
 ; disable commit signing
 [commit]
     gpgsign = false
+
+; restore config for personal projects
+[includeIf "gitdir/i:~/Dev/personal/"]
+    path = ~/.gitconfig

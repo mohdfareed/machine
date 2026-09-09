@@ -9,7 +9,7 @@ manifest = Machine(
         "shell",
         "ssh",
         "vscode",
-        "ghostty",
+        "terminal",
         "system",
         "zed",
         "raycast",

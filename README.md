@@ -47,12 +47,16 @@ To re-deploy at a different path and reinstall `mc`:
 mc apply             # Apply the selected machine
 mc apply shell git   # Only these modules; skip machine-level extras
 mc update            # Run up_* scripts and rerun script-backed packages
-mc sync              # Pull --rebase, then apply the selected machine
-mc sync --push       # Also push local commits
-mc sync --no-apply   # Pull without applying
+mc sync              # Fetch canonical main, fast-forward if possible, then apply
+mc sync --no-apply   # Sync without applying
 mc status            # Current machine and local paths
 mc show              # List files, packages, and scripts in apply order
 ```
+
+`mc sync` fetches canonical `main`, fast-forwards with autostash, then applies.
+Local edits are preserved. Conflicts stop before apply; use Git to resolve them.
+Merge work-fork changes into canonical `main` on your personal machine.
+Preserve commits with a regular merge so the work branch can fast-forward afterward.
 
 ### Machines
 
@@ -63,7 +67,7 @@ from app.machine import Machine, PkgManager
 
 manifest = Machine(
     pkg_managers=[PkgManager.BREW],
-    modules=[],
+    modules=["shell"],
 )
 ```
 

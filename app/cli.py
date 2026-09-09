@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Annotated
 
 import click
 import typer
-from rich.prompt import Prompt
 
 from app.core import (
     PLATFORM,
@@ -37,6 +36,7 @@ if TYPE_CHECKING:
     from app.machine import Machine, Module, Package, PkgManager
 
 _logger = logging.getLogger(__name__)
+CANONICAL_REPO_URL = "https://github.com/mohdfareed/machine.git"
 
 # # MARK: App Entry Point
 
@@ -56,10 +56,14 @@ def main(prog_name: str | None = None) -> None:
     try:
         app(prog_name=prog_name)
     except SystemExit:
-        raise
+        raise  # successful or handled
+
+    # Handle user interrupts.
     except KeyboardInterrupt:
         err_console.print("\n[dim]Interrupted.[/]")
         sys.exit(130)
+
+    # Handle unexpected errors.
     except Exception as e:
         _logger.debug("Unhandled exception", exc_info=True)
         err_console.print(f"[bold red]Error:[/] {e}")
@@ -326,90 +330,48 @@ def update(
 
 @app.command(rich_help_panel="Lifecycle")
 def sync(
-    stash: bool = typer.Option(False, "-s", "--stash", help="Stash changes before sync."),
-    force: bool = typer.Option(False, "-f", "--force", help="Discard changes before sync."),
-    push: bool = typer.Option(False, "-p", "--push", help="Push after pulling."),
     no_apply: bool = typer.Option(False, "--no-apply", help="Skip apply after sync."),
 ) -> None:
-    """Pull repo changes and re-run apply."""
-    if stash and force:
-        err_console.print("[red]--stash and --force are mutually exclusive.[/]")
+    """Sync repo changes and re-run apply."""
+    if settings.dry_run:
+        console.print(f"[dim](dry-run)[/] Fetch main from {CANONICAL_REPO_URL}")
+        return  # Skip in dry run mode.
+
+    # Fetch and merge canonical main in the repo root.
+    git = ["git", "-C", str(settings.home)]
+    for args in (
+        ["fetch", "--no-tags", CANONICAL_REPO_URL, "refs/heads/main"],
+        ["merge", "--ff-only", "--autostash", "FETCH_HEAD"],
+    ):
+        # Failed on any marge/stash conflicts/errors.
+        result = subprocess.run([*git, *args], capture_output=True, text=True)
+        if result.returncode != 0:
+            _logger.error("git %s failed:\n%s\n%s", " ".join(args), result.stdout, result.stderr)
+            err_console.print("[red]Resolve the Git error, then run: mc sync[/]")
+            raise SystemExit(1)
+
+    # Verify merge. Autostash conflicts can leave merge's exit code at zero.
+    result = subprocess.run([*git, "ls-files", "--unmerged"], capture_output=True, text=True)
+    if result.returncode != 0:
+        _logger.error("git ls-files failed:\n%s\n%s", result.stdout, result.stderr)
+        err_console.print("[red]Could not check for conflicts.[/]")
         raise SystemExit(1)
 
-    if settings.dry_run:
-        console.print("[dim](dry-run)[/] Would sync repo changes")
+    # Merge conflicts leave unmerged files in the index.
+    if result.stdout.strip():
+        err_console.print("[red]Could not restore local changes without conflicts.[/]")
+        err_console.print("[dim]Resolve conflicts before applying.[/]")
+        raise SystemExit(1)
+
+    # Sync succeeded.
+    console.print("[green]Synced with canonical main.[/]")
+    if no_apply:
         return
 
-    root = settings.home
-    git = ["git", "-C", str(root)]
-    result = subprocess.run([*git, "status", "--porcelain"], capture_output=True, text=True)
-    is_dirty = bool(result.stdout.strip())
-    stashed = False
-
-    if is_dirty:
-        discard = _prompt_force(stash=stash, force=force)
-        if discard is None:
-            console.print("[dim]Aborted.[/]")
-            return
-
-        if discard:
-            subprocess.run([*git, "fetch", "--all"], capture_output=True)
-            subprocess.run([*git, "reset", "--hard", "origin/HEAD"])
-            console.print("[yellow]Local changes discarded.[/]")
-        else:
-            subprocess.run([*git, "stash", "push", "-m", "mc sync"])
-            console.print("[yellow]Local changes stashed with message 'mc sync'.[/]")
-            stashed = True
-
-    result = subprocess.run([*git, "pull", "--rebase"], capture_output=True, text=True)
-    if result.returncode != 0:
-        subprocess.run([*git, "rebase", "--abort"], capture_output=True)
-        _logger.error("git pull --rebase failed:\n%s\n%s", result.stdout, result.stderr)
-        err_console.print("[red]Pull failed - rebase conflict or network error.[/]")
-        err_console.print("[dim]Resolve conflicts manually, then run: mc sync[/]")
-        raise SystemExit(1)
-    console.print("[green]Pulled latest changes.[/]")
-
-    if push:
-        result = subprocess.run([*git, "push"], capture_output=True, text=True)
-        if result.returncode != 0:
-            _logger.error("git push failed:\n%s\n%s", result.stdout, result.stderr)
-            err_console.print("[red]Push failed.[/]")
-            err_console.print(f"[dim]{result.stderr.strip()}[/]")
-            raise SystemExit(1)
-        console.print("[green]Pushed local commits.[/]")
-
-    if stashed:
-        subprocess.run([*git, "stash", "pop"])
-
-    if not no_apply:
-        machine_id = get_current_machine()
-        if machine_id:
-            console.print()
-            apply(machine=machine_id)
-        else:
-            console.print("[dim]No machine set - skipping apply.[/]")
-
-
-def _prompt_force(stash: bool, force: bool) -> bool | None:
-    if force:
-        choice = "discard"
-    elif stash:
-        choice = "stash"
-    else:
-        choice = Prompt.ask(
-            "[yellow]Local changes detected.[/]",
-            choices=["stash", "discard", "abort"],
-            default="abort",
-        )
-
-    if choice == "abort":
-        return None
-    if choice == "discard":
-        if not typer.confirm("This cannot be undone. Are you sure?"):
-            return None
-        return True
-    return False
+    # Deploy the current machine.
+    console.print()
+    machine_id = get_current_machine()
+    apply(machine=machine_id)
 
 
 # # MARK: Info Commands
@@ -441,8 +403,8 @@ def status(ctx: typer.Context) -> None:
 
     console.print(f"[bold]{settings.name}[/] {settings.version}")
     machine = get_current_machine()
-    if machine:
-        console.print(f"  Machine: {machine}")
+
+    console.print(f"  Machine: {machine or '[dim]none[/]'}")
     console.print(f"  Home:    {settings.home}")
     console.print(f"  Data:    {settings.app_dir}")
 
@@ -580,6 +542,7 @@ def show(
             ],
         ),
     ]
+
     for title, rows in sections:
         if rows:
             console.print(f"\n[bold]{title}:[/]")

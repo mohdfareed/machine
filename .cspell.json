@@ -3,13 +3,7 @@
   "version": "0.2",
   "language": "en",
   "useGitignore": true,
-  "dictionaries": [
-    "bash",
-    "powershell",
-    "python",
-    "softwareTerms",
-    "companies"
-  ],
+  "dictionaries": ["bash", "powershell", "python", "softwareTerms", "companies"],
   "ignorePaths": [
     "*.lock",
     "*.json",
@@ -22,6 +16,7 @@
   ],
   "words": [
     "autogroup",
+    "autostash",
     "bazarr",
     "bootstrapper",
     "clickjacking",
@@ -39,7 +34,7 @@
     "hostnames",
     "keepalive",
     "keygen",
-    "LASTEXITCODE",
+    "lastexitcode",
     "ldflags",
     "linuxbrew",
     "loginless",
@@ -51,6 +46,7 @@
     "newznab",
     "nohup",
     "nonroot",
+    "nosystem",
     "nzbgeek",
     "PGID",
     "pkill",
@@ -66,12 +62,12 @@
     "testpaths",
     "trimpath",
     "tskey",
-    "USERSPACE",
+    "userspace",
     "watchlist",
     "winerror",
     "winget",
     "worktree",
-    "WSLENV",
+    "wslenv",
     "wslinfo",
     "xhigh"
   ]

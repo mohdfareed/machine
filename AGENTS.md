@@ -37,6 +37,12 @@ Cross-platform machine bootstrapper and dotfile manager.
 - `./scripts/check.sh` - Non-mutating validation entrypoint (always use this to validate)
 - `./scripts/fix.sh` - Format, auto-fix lint, and normalize script permissions before re-running checks
 - `uv run mc --help` - Run CLI in dev
+- `mc sync` fetches canonical `mohdfareed/machine` main, integrates with Git's
+  fast-forward-only merge with autostash, then applies the current checkout.
+  Tracked local edits are restored before apply; ahead commits and detached HEAD
+  are allowed. Git failures or autostash restoration conflicts stop before apply.
+  Never discard local changes; leave conflicting auto-stashes for recovery with Git.
+  Branches, commits, pushes, and PRs belong to Git.
 
 ## Architecture
 
@@ -125,13 +131,15 @@ runtime state, caches, and machine-generated application data local.
 ## Coding Conventions
 
 - Before writing new code, check the codebase for existing patterns and follow them
+- Always keep the happy path flat: handle alternative, skip, and failure paths first with early `return`, `continue`, `break`, or exceptions as appropriate, then let the main path proceed without unnecessary nesting or `else`. Apply this throughout control flow, not just validation; preserve required cleanup and shared follow-up work.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - Keep substantive Python out of shell strings; put it in a normal `.py` file and have the shell entrypoint invoke it
 - Avoid trivial helper wrappers like `def _target(name): return str(base / name)`; use `str(base / path)` directly unless the helper adds real behavior
 - If a package/file/script list is just static data used once, keep it inline in the `Module(...)` or `Machine(...)` definition; only extract it when there is real logic or reuse
 - Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration
+- Keep permanent tests minimal and proportionate to the behavior changed. Prefer a few focused regression cases over exhaustive combinations, large fixtures, or test scaffolding. Use temporary tests for broader one-off verification and remove them afterward; do not retain exploratory coverage by default. Reuse existing tests and the standard check entrypoint rather than expanding the suite for every edit.
 - Preserve existing script phase comments, progress messages, command choices, and setup/update behavior when making focused changes
-- Use brief comments to separate operational script phases and explain non-obvious quoting, environment, or control flow
+- Organize multi-step code into logical chunks with brief, action-oriented header comments, separated by blank lines. The headers should read like a recipe: a reader can understand the sequence without reading each block's implementation. Apply this to all code, not just scripts; preserve existing section-marker styles. Describe meaningful steps rather than narrating every statement, and explain non-obvious constraints where needed.
 - Do not add scripts whose only job is printing setup reminders; put that guidance in docs unless the script performs real work
 
 ## Homelab

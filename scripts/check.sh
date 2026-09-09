@@ -40,4 +40,4 @@ uv run pytest -q
 npx --yes cspell@latest lint --no-progress --no-summary "**"
 
 echo
-echo "==> All checks passed!"
+printf '\033[32m==> All checks passed!\033[0m\n'

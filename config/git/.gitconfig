@@ -11,15 +11,17 @@
     format = ssh ; use ssh key for signing
 
 ; git settings
+[init]
+    defaultBranch = main
 [core]
     excludesfile = ~/.gitignore
     autocrlf = input ; normalize line endings to LF on commit
-[init]
-    defaultBranch = main
 [fetch]
     prune = true ; remove stale remote-tracking branches
 [pull]
     rebase = true
+[merge]
+    autostash = true ; automatically stash before merge
 [rerere]
     enabled = true ; remember conflict resolutions
 

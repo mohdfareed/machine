@@ -17,7 +17,7 @@ manifest = Machine(
     modules=(
         ["git", "shell", "ssh", "codex"]
         if PLATFORM == Platform.WSL
-        else ["git", "shell", "ssh", "ssh-server", "vscode", "win-term", "codex", "system"]
+        else ["git", "shell", "ssh", "ssh-server", "vscode", "terminal", "codex", "system"]
     ),
     packages=[
         # Dev tools

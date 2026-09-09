@@ -10,7 +10,7 @@ manifest = Machine(
         "ssh",
         "ssh-server",
         "vscode",
-        "ghostty",
+        "terminal",
         "homelab",
         "system",
         "codex",

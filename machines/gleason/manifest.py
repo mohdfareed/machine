@@ -12,7 +12,7 @@ manifest = Machine(
     modules=(
         ["git", "shell", "ssh", "codex"]
         if PLATFORM == Platform.WSL
-        else ["git", "shell", "ssh", "vscode", "win-term", "system", "zed", "raycast", "codex"]
+        else ["git", "shell", "ssh", "vscode", "terminal", "system", "zed", "raycast", "codex"]
     ),
     packages=[
         Package(name="vs-professional", winget="microsoft.visualstudio.professional"),
