@@ -272,7 +272,10 @@ def _tee_pipe(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".ps1", encoding="utf-8-sig", delete_on_close=False
     ) as script:
-        script.write(cmd + "\nif (-not $?) { exit 1 }\n")
+        script.write(
+            "try {\n" + cmd + "\nif (-not $?) { exit 1 }\n}\n"
+            "catch {\n[Console]::Error.WriteLine($_.Exception.Message)\nexit 1\n}\n"
+        )
         script.close()
 
         proc = subprocess.Popen(

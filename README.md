@@ -105,11 +105,8 @@ No tag means all platforms, so tag shell-specific scripts.
 
 Configuration validation errors or a failed `init_` script stop the entire apply.
 Unhandled errors also stop the run. Dependencies control ordering, not failure isolation.
-
 Before execution, `mc` prepares each script's environment: shared variables such
 as `MC_HOME` and `MC_ID`, machine config and secrets, then shell-specific additions.
-For PowerShell, it extends `PSModulePath` with the bundled `MachineAdmin` module,
-making `Invoke-Admin` available without changing how the script is launched.
 
 ### Secrets
 

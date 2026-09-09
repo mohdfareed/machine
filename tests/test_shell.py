@@ -26,11 +26,19 @@ from machine import core
             0,
         ),
         ('Write-Host "before error"; throw "example failure"', "example failure", 1),
+        (
+            "\"throw 'repository already exists'\" | Invoke-Expression",
+            "repository already exists",
+            1,
+        ),
         ('cmd.exe /c "echo native output & exit 7"', "native output", 1),
     ],
 )
 def test_windows_commands_preserve_source_and_failure(command, expected, code, capfd):
     rc, output = core._tee_pipe(command, {**os.environ, "DEV": r"C:\Dev Projects"})
     assert b"CLIXML" not in output
+    assert b"CategoryInfo" not in output
+    assert b"FullyQualifiedErrorId" not in output
+    assert b"At line:" not in output
     assert rc == code
     assert expected in output.decode(errors="replace")

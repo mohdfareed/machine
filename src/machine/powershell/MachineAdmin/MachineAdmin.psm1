@@ -10,8 +10,14 @@ function Invoke-Admin {
     if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         $ErrorActionPreference = 'Stop'
         $global:LASTEXITCODE = 0
-        & $ScriptBlock @ArgumentList
-        if ($LASTEXITCODE) { throw "Admin block failed (exit $LASTEXITCODE)." }
+        try {
+            & $ScriptBlock @ArgumentList
+        }
+        catch {
+            Write-Host $_.Exception.Message
+            exit 1
+        }
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
         return
     }
 
@@ -34,11 +40,13 @@ $ScriptBlock
         `$script:adminExitCode = `$LASTEXITCODE
     }
     catch {
-        `$_ | Out-String
+        `$_.Exception.Message
         `$script:adminExitCode = 1
     }
 } *>&1 | Out-String -Stream -Width 240 | ForEach-Object {
-    [IO.File]::AppendAllText('$outputLiteral', "`$_``r``n", [Text.Encoding]::UTF8)
+    if (-not [string]::IsNullOrWhiteSpace(`$_)) {
+        [IO.File]::AppendAllText('$outputLiteral', "`$_``r``n", [Text.Encoding]::UTF8)
+    }
 }
 exit `$script:adminExitCode
 "@
@@ -58,7 +66,8 @@ exit `$script:adminExitCode
                 -PassThru -ErrorAction Stop
         }
         catch {
-            throw "Could not obtain administrator access: $($_.Exception.Message)"
+            Write-Host "Could not obtain administrator access: $($_.Exception.Message)"
+            exit 1
         }
 
         while (-not $process.HasExited) {
@@ -68,7 +77,8 @@ exit `$script:adminExitCode
         $process.WaitForExit()
         while ($null -ne ($line = $reader.ReadLine())) { Write-Host $line }
         if ($process.ExitCode -ne 0) {
-            throw "Admin block failed (exit $($process.ExitCode))."
+            # The child already printed its error; preserve failure without another error record.
+            exit $process.ExitCode
         }
     }
     finally {
