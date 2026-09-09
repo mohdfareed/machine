@@ -7,24 +7,71 @@ Invoke-Admin {
     Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 }
 
-Write-Host "configuring SSH services..."
+Write-Host "setting up SSH services..."
 Invoke-Admin {
     Get-Service -Name sshd | Set-Service -StartupType Automatic
     Get-Service -Name ssh-agent | Set-Service -StartupType Automatic
 }
 
-Write-Host "fixing OpenSSH PowerShell configuration..."
+Write-Host 'making PowerShell profile links trusted for SSH...'
 Invoke-Admin {
-    # PowerShell 7 MSIX aliases cannot be used as the OpenSSH system shell.
+    # RedirectionGuard in SSH sessions rejects links created without elevation.
+    param($profileDirectory)
+    foreach ($name in 'profile.ps1', 'aliases.ps1', 'profile.local.ps1') {
+        $path = Join-Path $profileDirectory $name
+        $link = Get-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue
+        if ($null -eq $link -or $link.LinkType -ne 'SymbolicLink' -or $link.PSIsContainer) {
+            continue
+        }
+
+        $target = @($link.Target)[0]
+        if (-not [IO.Path]::IsPathRooted($target)) {
+            $target = Join-Path $profileDirectory $target
+        }
+        if (-not (Test-Path -LiteralPath $target -PathType Leaf)) {
+            throw "Profile link target is missing: $target"
+        }
+
+        # Preserve the original link until its elevated replacement is created.
+        $backup = "$path.$([guid]::NewGuid().ToString('N')).backup"
+        Move-Item -LiteralPath $path -Destination $backup
+        try {
+            New-Item -ItemType SymbolicLink -Path $path -Target $target | Out-Null
+        }
+        catch {
+            Move-Item -LiteralPath $backup -Destination $path
+            throw
+        }
+        Remove-Item -LiteralPath $backup -Force
+    }
+} -ArgumentList (Join-Path $HOME 'Documents\PowerShell')
+
+# Configure OpenSSH to use the PowerShell MSIX executable as the default shell.
+# This is the new windows default distribution for PowerShell.
+$powerShellPackage = Get-AppxPackage -Name Microsoft.PowerShell
+if (-not $powerShellPackage) {
+    throw 'PowerShell MSIX is not installed for the current user.'
+}
+
+# Use the real executable, not the app alias; rediscover its path after MSIX updates.
+# NOTE: This breaks across MSIX updates. Rerun `mc apply ssh-server` to fix.
+$defaultShell = Join-Path $powerShellPackage.InstallLocation 'pwsh.exe'
+if (-not (Test-Path -LiteralPath $defaultShell -PathType Leaf)) {
+    throw "PowerShell executable not found: $defaultShell"
+}
+
+Write-Host "configuring OpenSSH PowerShell..."
+Invoke-Admin {
+    param($defaultShell)
     New-ItemProperty `
         -Path "HKLM:\SOFTWARE\OpenSSH" `
         -Name DefaultShell `
-        -Value "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" `
+        -Value $defaultShell `
         -PropertyType String `
         -Force | Out-Null
-}
+} -ArgumentList $defaultShell
 
-Write-Host "fixing OpenSSH admin keys configuration..."
+Write-Host "configuring OpenSSH admin keys..."
 Invoke-Admin {
     # Windows OpenSSH overrides authorized_keys for Administrators to a separate
     # file (administrators_authorized_keys), breaking standard pubkey auth.

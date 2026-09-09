@@ -30,7 +30,7 @@ These are the patterns that cause real problems in this codebase:
 4. **Copy-pasted blocks across scripts are DRY violations.** Use `_`-prefixed
    helper scripts (auto-skipped by the runner) and `source` them.
 
-5. **Stale comments are lies.** `REVIEW` or `TODO` comments that reference
+5. **Stale comments are lies.** `NOTE` or `TODO` comments that reference
    resolved or outdated issues should be updated or removed.
 
 6. **`mc show` is the source of truth for run order.** If something looks like
