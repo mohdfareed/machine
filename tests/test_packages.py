@@ -50,7 +50,7 @@ def test_install_only_when_selected_manager_lacks_package(
             output = "install ok installed" if installed else "deinstall ok config-files"
         else:
             output = "example\n" if installed else ""
-        rc = 0 if installed or source == "mas" else 1
+        rc = 0 if installed or source in {"mas", "apt"} else 1
         return subprocess.CompletedProcess(cmd, rc, stdout=output)
 
     monkeypatch.setattr(machine_packages.subprocess, "run", query)

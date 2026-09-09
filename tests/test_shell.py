@@ -34,7 +34,7 @@ from machine import core
         ('cmd.exe /c "echo native output & exit 7"', "native output", 1),
     ],
 )
-def test_windows_commands_preserve_source_and_failure(command, expected, code, capfd):
+def test_windows_commands_preserve_source_and_failure(command, expected, code, _):
     rc, output = core._tee_pipe(command, {**os.environ, "DEV": r"C:\Dev Projects"})
     assert b"CLIXML" not in output
     assert b"CategoryInfo" not in output

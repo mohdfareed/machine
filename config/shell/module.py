@@ -43,7 +43,7 @@ module = Module(
         Package(
             name="uv",
             script="curl -LsSf https://astral.sh/uv/install.sh | sh",
-            platforms=[Platform.LINUX],
+            platforms=[Platform.LINUX, Platform.WSL],
         ),
         # utilities
         Package(brew="fzf"),

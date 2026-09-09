@@ -50,7 +50,7 @@ fi
 
 # Install the cli tool
 echo "Installing machine cli..."
-uv tool install "$MC_HOME" --editable --force
+uv tool install "$MC_HOME" --editable --force || true # ensure cleanup
 
 # cleanup
 rm -rf "$tmpdir" 2>/dev/null || true

@@ -1,10 +1,19 @@
 """Gleason work machine manifest."""
 
+from machine.core import PLATFORM, Platform
 from machine.manifest import MachineManifest, Package, PkgManager
 
 manifest = MachineManifest(
-    pkg_managers=[PkgManager.WINGET, PkgManager.SCOOP],
-    modules=["git", "shell", "ssh", "vscode", "win-term", "system", "zed", "raycast", "codex"],
+    pkg_managers=(
+        [PkgManager.APT, PkgManager.SNAP]
+        if PLATFORM == Platform.WSL
+        else [PkgManager.WINGET, PkgManager.SCOOP]
+    ),
+    modules=(
+        ["git", "shell", "ssh", "codex"]
+        if PLATFORM == Platform.WSL
+        else ["git", "shell", "ssh", "vscode", "win-term", "system", "zed", "raycast", "codex"]
+    ),
     packages=[
         Package(name="vs-professional", winget="microsoft.visualstudio.professional"),
         Package(name="dotnet", winget="microsoft.dotnet.sdk.10"),
@@ -13,6 +22,6 @@ manifest = MachineManifest(
         Package(name="advanced-system-settings", winget="9N8MHTPHNGVV"),
         Package(name="docker", winget="docker.DockerDesktop"),
         Package(name="craft-docs", winget="LukiLabs.Craft"),
-        Package(name="go", winget="golang.Go"),
+        Package(name="go", winget="golang.Go", apt="golang-go"),
     ],
 )

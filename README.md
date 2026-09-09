@@ -14,9 +14,27 @@ Windows PowerShell:
 irm https://raw.githubusercontent.com/mohdfareed/machine/main/scripts/bootstrap.ps1 | iex
 ```
 
-Default checkout: `~/.machine`. Export `MC_HOME` first for a different path
-(`$env:MC_HOME` in PowerShell).
+To use `mc` (`mc apply` adds it to path):
 
+```sh
+~/.local/bin/mc -h
+```
+
+Windows machines use the same manifest on WSL, selecting managers and modules
+with `Platform.WSL`. Run from Windows after bootstrap:
+
+```powershell
+cd $env:MC_HOME
+wsl -- bash ./scripts/bootstrap.sh
+```
+
+To use `mc` in WSL from Windows:
+
+```powershell
+wsl -- bash -c '$HOME/.local/bin/mc --help'
+```
+
+Default checkout: `~/.machine`. Export `MC_HOME` before bootstrap to change it.
 To re-deploy at a different path and reinstall `mc`:
 
 1. After moving the checkout,

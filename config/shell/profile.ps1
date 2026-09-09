@@ -6,6 +6,9 @@
 $env:PATH += "$([IO.Path]::PathSeparator)$HOME/.local/bin" # user local bin
 $env:PIP_REQUIRE_VIRTUALENV = $true  # python
 
+# Share MC_HOME with WSL
+$env:WSLENV = (@($env:WSLENV, 'MC_HOME/p') | Where-Object { $_ }) -join ':'
+
 # Helpers
 # =============================================================================
 
