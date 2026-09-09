@@ -2,6 +2,11 @@
 
 from machine.manifest import MachineManifest, Package
 
+sib_script_install_path = '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\SteamInputBridge"'
+sib_script_url = (
+    "https://raw.githubusercontent.com/mohdfareed/steam-input-bridge/main/Scripts/Bootstrap-App.ps1"
+)
+
 manifest = MachineManifest(
     modules=["git", "shell", "ssh", "ssh-server", "vscode", "win-term", "codex", "core"],
     packages=[
@@ -33,5 +38,9 @@ manifest = MachineManifest(
         Package(name="Xbox Accessories", winget="9nblggh30xj3"),
         Package(name="8BitDo Ultimate Software", winget="8BitDo.UltimateSoftwareV2"),
         Package(name="Razer Synapse", winget="RazerInc.RazerInstaller.Synapse4"),
+        Package(
+            name="Steam Input Bridge",
+            script=f"{sib_script_install_path}; irm {sib_script_url} | iex",
+        ),
     ],
 )
