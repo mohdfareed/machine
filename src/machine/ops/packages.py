@@ -69,7 +69,8 @@ def cache_sudo() -> None:
 
 def refresh_path() -> None:
     """Re-read PATH from a login shell so installed managers are visible."""
-    if is_windows:
+    # Equivalent to `is_windows` but is a statically known platform guard.
+    if sys.platform == "win32":
         import winreg
 
         paths = [os.environ.get("PATH", "")]
