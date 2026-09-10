@@ -23,7 +23,7 @@ Once per installation, in System Settings
 - Enable Remote Management for your account and choose its privileges and menu-bar
   options. Set a VNC password only if your client needs legacy VNC.
 - Under File Sharing, choose shared folders and permissions, enable your account
-  under Options → Windows File Sharing. NOTE: You must provide Full Disk Access.
+  under Options → Windows File Sharing. **NOTE:** You must provide Full Disk Access.
   Configure the Time Machine backup-destination option on its share if used.
 
 ## Backup

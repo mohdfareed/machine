@@ -64,7 +64,7 @@ Create the admin account, then configure:
 - OpenSubtitles: wanted languages.
   - Enable timing correction and set thresholds to 100% with 180s max offset.
   - Ensure Docker is using gRPC FUSE.
-  - NOTE: This is due to a delay in the default engine of ~100-150 ms
+  - **NOTE:** This is due to a delay in the default engine of ~100-150 ms
     in file metadata causing Scryer's subtitles time correction to fail to
     find the subtitles on the server.
 - Set `Import Behavior` of all catalogs to `Move`.

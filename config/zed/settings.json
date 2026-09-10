@@ -73,14 +73,29 @@
   "prettier": {
     "allowed": true,
   },
+  // Terminal
+  "terminal": {
+    "font_family": "JetBrainsMono Nerd Font",
+    "font_size": 14,
+    "cursor_shape": "bar",
+    "option_as_meta": true,
+  },
   // ==========================================================================
   // MARK: Intellisense
   // ==========================================================================
   "semantic_tokens": "combined",
-  "document_folding_ranges": "on",
   "document_symbols": "on",
-  "completion_menu_item_kind": "symbol",
+  "document_folding_ranges": "on",
   "code_lens": "menu",
+  "completion_menu_item_kind": "symbol",
+  "global_lsp_settings": {
+    "semantic_token_rules": [
+      {
+        // comments highlighter extension
+        "token_type": "comment",
+      },
+    ],
+  },
   "inlay_hints": {
     "toggle_on_modifiers_press": {
       "control": true,
@@ -115,15 +130,6 @@
     "YAML": {
       "tab_size": 2,
     },
-  },
-  // ==========================================================================
-  // MARK: Terminal
-  // ==========================================================================
-  "terminal": {
-    "font_family": "JetBrainsMono Nerd Font",
-    "font_size": 14,
-    "cursor_shape": "bar",
-    "option_as_meta": true,
   },
   // ==========================================================================
   // MARK: Version Control
@@ -214,7 +220,7 @@
       "provider": "openai-subscribed",
       "model": "gpt-6-astra",
       "enable_thinking": true,
-      "effort": "high",
+      "effort": "medium",
       "speed": "standard",
     },
     // ========================================================================

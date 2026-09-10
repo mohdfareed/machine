@@ -3,4 +3,18 @@
     "context": "Editor",
     "bindings": {},
   },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "ctrl-alt-m": [
+        "pane::DeploySearch",
+        {
+          "query": " (?:TODO|WIP|MAYBE|QUESTION|INFO|NOTE|XXX|DOCS|PERF|TEST|ERROR|FIXME|FIX|BUG|DELETE|HACK|WARNING|WARN|SAFETY|IMPORTANT)\\b",
+          "regex": true,
+          "case_sensitive": true,
+          "whole_word": false,
+        },
+      ],
+    },
+  },
 ]

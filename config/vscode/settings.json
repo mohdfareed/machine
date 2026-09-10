@@ -1,5 +1,4 @@
 {
-  // ==========================================================================
   // MARK: editor
   // ==========================================================================
   "editor.formatOnSave": true,
@@ -9,14 +8,12 @@
   "editor.occurrencesHighlight": "multiFile",
   "editor.stickyScroll.enabled": true,
   "explorer.confirmDelete": false,
-  // ==========================================================================
   // MARK: whitespace
   // ==========================================================================
   "editor.renderWhitespace": "boundary",
   "files.trimTrailingWhitespace": true,
   "files.trimFinalNewlines": true,
   "files.insertFinalNewline": true,
-  // ==========================================================================
   // MARK: files associations
   // ==========================================================================
   "files.associations": {
@@ -26,7 +23,6 @@
   "material-icon-theme.files.associations": {
     "AGENTS.md": "copilot",
   },
-  // ==========================================================================
   // MARK: visual
   // ==========================================================================
   "workbench.tree.enableStickyScroll": true,
@@ -36,19 +32,16 @@
   "editor.smoothScrolling": true,
   "editor.cursorSmoothCaretAnimation": "on",
   "editor.rulers": [80, 120],
-  // ==========================================================================
   // MARK: startup
   // ==========================================================================
   "workbench.editor.empty.hint": "hidden",
   "workbench.startupEditor": "newUntitledFile",
   "window.openWithoutArgumentsInNewWindow": "on",
-  // ==========================================================================
   // MARK: minimap
   // ==========================================================================
   "editor.minimap.renderCharacters": false,
   "editor.minimap.autohide": "mouseover",
   "editor.minimap.showRegionSectionHeaders": true,
-  // ==========================================================================
   // MARK: theme
   // ==========================================================================
   "workbench.iconTheme": "material-icon-theme",
@@ -56,13 +49,11 @@
   "oneDarkPro.bold": true,
   "oneDarkPro.vivid": true,
   "oneDarkPro.markdownStyle": false,
-  // ==========================================================================
   // MARK: font
   // ==========================================================================
   "editor.fontFamily": "JetBrainsMono Nerd Font",
   "editor.fontSize": 14,
   "editor.fontLigatures": true,
-  // ==========================================================================
   // MARK: suggestions
   // ==========================================================================
   "editor.suggest.preview": true,
@@ -71,7 +62,6 @@
   "cSpell.enabledFileTypes": {
     "*": true,
   },
-  // ==========================================================================
   // MARK: terminal
   // ==========================================================================
   "terminal.integrated.macOptionIsMeta": true,
@@ -86,14 +76,12 @@
   "terminal.integrated.defaultProfile.osx": "zsh",
   "terminal.integrated.defaultProfile.linux": "zsh",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
-  // ==========================================================================
   // MARK: font
   // ==========================================================================
   "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.smoothScrolling": true,
   "terminal.integrated.fontLigatures.enabled": true,
-  // ==========================================================================
   // MARK: git
   // ==========================================================================
   "git.allowForcePush": true,
@@ -107,7 +95,6 @@
   "diffEditor.renderSideBySide": false,
   "diffEditor.experimental.showMoves": true,
   "scm.repositories.explorer": true,
-  // ==========================================================================
   // MARK: copilot
   // ==========================================================================
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
@@ -132,7 +119,6 @@
     "https://*.google.com": true,
   },
   "chat.titleBar.openInAgentsWindow.enabled": false,
-  // ==========================================================================
   // MARK: comments
   // ==========================================================================
   "commentAnchors.scrollPosition": "center",
@@ -152,7 +138,6 @@
     },
   },
   "commentAnchors.workspace.excludeFiles": "**/{.git,bin,.venv}/**/*",
-  // ==========================================================================
   // MARK: markdown
   // ==========================================================================
   "markdown.preview.typographer": true,
@@ -168,27 +153,23 @@
       "other": "on",
     },
   },
-  // ==========================================================================
   // MARK: json
   // ==========================================================================
   "[jsonc]": {
     "editor.detectIndentation": false,
     "editor.indentSize": 2,
   },
-  // ==========================================================================
   // MARK: yaml
   // ==========================================================================
   "[yaml]": {
     "editor.detectIndentation": false,
     "editor.indentSize": 2,
   },
-  // ==========================================================================
   // MARK: swift
   // ==========================================================================
   "[swift]": {
     "editor.inlayHints.enabled": "offUnlessPressed",
   },
-  // ==========================================================================
   // MARK: python
   // ==========================================================================
   "python.analysis.typeCheckingMode": "strict",
@@ -218,7 +199,6 @@
   },
   "python.testing.pytestArgs": ["--color=yes"],
   "python.useEnvironmentsExtension": true,
-  // ==========================================================================
   // MARK: c#
   // ==========================================================================
   "[csharp]": {
@@ -231,24 +211,20 @@
   "dotnet.formatting.organizeImportsOnFormat": true,
   "dotnet.codeLens.enableReferencesCodeLens": false,
   "godotTools.editorPath.godot4": "${GODOT}",
-  // ==========================================================================
   // MARK: go
   // ==========================================================================
   "go.toolsManagement.autoUpdate": true,
   "[go]": {
     "editor.defaultFormatter": "golang.go",
   },
-  // ==========================================================================
   // MARK: powershell
   // ==========================================================================
   "powershell.promptToUpdatePowerShell": false,
-  // ==========================================================================
   // MARK: shellcheck
   // ==========================================================================
   "shellcheck.customArgs": ["--severity=warning"],
-  // ==========================================================================
   // MARK: Spelling
   // ==========================================================================
   "cSpell.userWords": ["endregion"],
-  // TODO - review new customizations above ===================================
+  // TODO: Review new customizations above. ===================================
 }
