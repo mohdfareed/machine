@@ -4,10 +4,11 @@ Cross-platform machine setup and management. Shared modules define tools,
 dotfiles, and setup scripts; per-machine manifests selects what a machine needs,
 with machine-specific configuration and overrides.
 
-The `mc` CLI deploys configuration, installs missing packages, runs maintenance, and syncs repository changes across machines.
+The `mc` CLI deploys configuration, installs missing packages, runs maintenance,
+and syncs repository changes across machines.
 
 The [homelab](config/homelab/README.md) configuration extends this to self-hosted services.
-It manages a Docker-based server setup and configuration and service deployment../
+It manages a Docker-based server setup and configuration and service deployment.
 
 ## Bootstrap
 
