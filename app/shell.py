@@ -10,6 +10,7 @@ import tempfile
 import threading
 from pathlib import Path
 
+from app import reporting
 from app.env import is_unix, is_windows, settings
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -37,7 +38,7 @@ def cache_sudo() -> None:
     # Acquire credentials before starting background refreshes.
     rc = subprocess.call(["sudo", "-v"], stdin=sys.stdin)
     if rc != 0:
-        _logger.warning("sudo -v failed (exit %d); scripts may re-prompt", rc)
+        reporting.warning(f"sudo authentication failed (exit {rc}); scripts may prompt again.")
         return
 
     stop = threading.Event()
@@ -114,9 +115,8 @@ def run(
 ) -> subprocess.CompletedProcess[bytes]:
     """Run a command, stream and log output, and optionally return it as bytes."""
 
-    _logger.debug("$ %s", _short(cmd))
+    reporting.command(_short(cmd))
     if settings.dry_run:
-        _logger.info("[dry-run] %s", _short(cmd))
         return subprocess.CompletedProcess(cmd, 0, stdout=b"" if capture_output else None)
 
     # Stream the command through the platform's transport.

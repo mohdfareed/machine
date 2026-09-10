@@ -6,6 +6,7 @@ import stat
 import subprocess
 from pathlib import Path
 
+from app import reporting
 from app.env import PLATFORM, is_windows, settings
 from app.models import Failure, FileMapping, FileResult
 
@@ -27,14 +28,14 @@ def deploy_files(
     # Skip inapplicable mappings and missing sources before deployment.
     for fm in files:
         if not fm.applies_to(PLATFORM):
-            _logger.debug("Skip (not applicable): %s", fm.target)
+            _logger.debug("Skip: %s", fm.target)
             continue
 
         src = Path(fm.source)
         tgt = Path(os.path.expandvars(fm.target)).expanduser()
         module = (owners or {}).get(fm.source, "?")
         if not src.exists():
-            _logger.warning("[%s] Source not found: %s", module, src)
+            reporting.error(f"[{module}] Source not found: {src}")
             failures.append(Failure(module=module, item=str(src), detail="source not found"))
             continue
 
@@ -42,7 +43,8 @@ def deploy_files(
             if _symlink(src, tgt, fm.mode):
                 created += 1
         except OSError as exc:
-            _logger.error("[%s] Failed to link %s → %s: %s", module, tgt, src, exc)
+            reporting.error(f"[{module}] Failed to link {tgt}")
+            _logger.debug("[%s] Failed to link %s → %s: %s", module, tgt, src, exc, exc_info=True)
             failures.append(Failure(module=module, item=str(tgt), detail=str(exc)))
 
     return FileResult(created=created, failures=failures)
@@ -58,7 +60,7 @@ def _symlink(source: Path, target: Path, mode: int | None = None) -> bool:
     if settings.dry_run:
         if _points_to_source(target, source):
             return False
-        _logger.info("[dry-run] Link %s → %s", target, source)
+        reporting.detail(f"Would link {target} → {source}")
         return True
 
     # Refresh permissions when the target already points to the source.

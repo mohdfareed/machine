@@ -15,9 +15,9 @@ manifest = Machine(
         else [PkgManager.WINGET, PkgManager.SCOOP]
     ),
     modules=(
-        ["git", "shell", "ssh", "codex"]
+        ["git", "shell", "ssh", "agents"]
         if PLATFORM == Platform.WSL
-        else ["git", "shell", "ssh", "ssh-server", "vscode", "terminal", "codex", "system"]
+        else ["git", "shell", "ssh", "ssh-server", "vscode", "terminal", "agents", "system"]
     ),
     packages=[
         # Dev tools

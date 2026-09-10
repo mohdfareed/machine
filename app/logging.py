@@ -43,6 +43,8 @@ def setup_console_logging() -> None:
         keywords=[],
     )
     handler.setFormatter(logging.Formatter("%(message)s"))
+    # Presentation messages are already printed; retain them only in the file log.
+    handler.addFilter(lambda record: not getattr(record, "reported", False))
 
     # Keep debug records available to the file handler.
     logging.root.setLevel(logging.DEBUG)
@@ -74,6 +76,7 @@ def setup_file_logging() -> None:
     _output_logger.addHandler(handler)
 
     # Separate invocations in the log file.
-    _logger.debug("=" * 60)
-    _logger.debug("mc %s", " ".join(sys.argv[1:]) or "(no args)")
-    _logger.debug("=" * 60)
+    title = f"─── {settings.name} {settings.version} ───"
+    _logger.debug(title)
+    _logger.debug("cmd: mc %s", " ".join(sys.argv[1:]) or "(no args)")
+    _logger.debug("─" * len(title))

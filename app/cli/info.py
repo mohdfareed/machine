@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
+from app import reporting
 from app.cli.entry import complete_machines, get_current_machine, machines
 from app.env import PLATFORM, build_env, settings
-from app.logging import console, err_console
 from app.ops.packages import select_package_source
 from app.ops.scripts import filter_scripts
 
@@ -31,8 +31,8 @@ def private() -> None:
     """Print the resolved MC_PRIVATE path for the current machine."""
     machine_id = get_current_machine()
     if not machine_id:
-        err_console.print("[red]No machine selected.[/]")
-        err_console.print("[dim]Run: mc apply -m <id>[/]")
+        reporting.error("No machine selected.")
+        reporting.detail("Run: mc apply -m <id>", error=True)
         raise SystemExit(1)
 
     env = build_env(machine_id, settings.home)
@@ -45,12 +45,12 @@ def status(ctx: typer.Context) -> None:
     if ctx.invoked_subcommand is not None:
         return
 
-    console.print(f"[bold]{settings.name}[/] {settings.version}")
+    reporting.heading(f"{settings.name} {settings.version}")
     machine = get_current_machine()
 
-    console.print(f"  Machine: {machine or '[dim]none[/]'}")
-    console.print(f"  Home:    {settings.home}")
-    console.print(f"  Data:    {settings.app_dir}")
+    reporting.detail(f"Machine: {machine or 'none'}")
+    reporting.detail(f"Home: {settings.home}")
+    reporting.detail(f"Data: {settings.app_dir}")
 
 
 @status_app.command("id")
@@ -58,8 +58,8 @@ def status_id() -> None:
     """Print the current machine ID."""
     machine = get_current_machine()
     if not machine:
-        err_console.print("[red]No machine selected.[/]")
-        err_console.print("[dim]Run: mc apply -m <id>[/]")
+        reporting.error("No machine selected.")
+        reporting.detail("Run: mc apply -m <id>", error=True)
         raise typer.Exit(1)
 
     typer.echo(machine)
@@ -70,11 +70,11 @@ def status_state() -> None:
     """Print the saved script state."""
     path = settings.state_file
     if not path.exists():
-        err_console.print("[red]No saved script state found.[/]")
-        err_console.print("[dim]Run mc apply to deploy the machine and record script state.[/]")
+        reporting.error("No saved script state found.")
+        reporting.detail("Run mc apply to deploy the machine and record script state.", error=True)
         raise typer.Exit(1)
 
-    typer.echo(path.read_text(encoding="utf-8"), nl=False)
+    typer.echo(path)
 
 
 @status_app.command("log")
@@ -82,13 +82,13 @@ def status_log() -> None:
     """Print the current log."""
     path = settings.log_file
     if not path.exists():
-        err_console.print("[red]No log file found.[/]")
-        err_console.print(
-            "[dim]Run a command without --help or --version to initialize logging.[/]"
+        reporting.error("No log file found.")
+        reporting.detail(
+            "Run a command without --help or --version to initialize logging.", error=True
         )
         raise typer.Exit(1)
 
-    typer.echo(path.read_text(encoding="utf-8"), nl=False)
+    typer.echo(path)
 
 
 def list_all() -> None:
@@ -98,12 +98,12 @@ def list_all() -> None:
     root = settings.home
     for label, names in [("Machines", list_machines(root)), ("Modules", list_modules(root))]:
         if not names:
-            console.print(f"[dim]No {label.lower()} found.[/]")
+            reporting.detail(f"No {label.lower()} found.")
             continue
 
-        console.print(f"[bold]{label}:[/]")
+        reporting.heading(label)
         for name in names:
-            console.print(f"  {name}")
+            reporting.detail(name)
 
 
 # =============================================================================
@@ -138,19 +138,19 @@ def show(
         return path.removeprefix(root_prefix)
 
     # Show the machine and its selected managers and modules.
-    console.print(f"[bold]{machine}[/]")
-    console.print(f"  Managers: {', '.join(manifest.pkg_managers) or 'none'}")
+    reporting.heading(machine)
+    reporting.detail(f"Managers: {', '.join(manifest.pkg_managers) or 'none'}")
     if mods:
-        console.print(f"  Modules: {', '.join(m.name for m in mods)}")
+        reporting.detail(f"Modules: {', '.join(m.name for m in mods)}")
 
     # Show files for the current platform.
     files = [(m.name, f) for m in mods for f in m.files if f.applies_to(PLATFORM)] + [
         (machine, f) for f in manifest.files if f.applies_to(PLATFORM)
     ]
     if files:
-        console.print("\n[bold]Files:[/]")
+        reporting.heading("Files")
         for mod, f in files:
-            console.print(f"  [cyan]{mod:<12}[/] {_short(f.source)} → {f.target}")
+            reporting.detail(f"{mod} · {_short(f.source)} → {f.target}")
 
     # Build execution sections in module and declaration order.
     # Use the same script filtering as apply.
@@ -164,38 +164,35 @@ def show(
         (
             "Init Scripts",
             [
-                f"  [cyan]{mod:<12}[/] {_short(script)}"
+                f"{mod} · {_short(script)}"
                 for mod, script in all_scripts
                 if Path(script).name.startswith("init_")
             ],
         ),
         (
             "Packages",
-            [
-                f"  [cyan]{mod:<12}[/] {p.name} [dim]({_pkg_source(p, manifest.pkg_managers)})[/]"
-                for mod, p in pkgs
-            ],
+            [f"{mod} · {p.name} ({_pkg_source(p, manifest.pkg_managers)})" for mod, p in pkgs],
         ),
         (
             "Scripts",
             [
-                f"  [cyan]{mod:<12}[/] {_short(script)}"
+                f"{mod} · {_short(script)}"
                 for mod, script in all_scripts
                 if not Path(script).name.startswith(("init_", "up_"))
             ],
         ),
         (
-            "Update Packages (mc update only)",
+            "Update Packages",
             [
-                f"  [cyan]{mod:<12}[/] {p.name} [dim]({_pkg_source(p, manifest.pkg_managers)})[/]"
+                f"{mod} · {p.name} ({_pkg_source(p, manifest.pkg_managers)})"
                 for mod, p in pkgs
                 if p.script
             ],
         ),
         (
-            "Update Scripts (mc update only)",
+            "Update Scripts",
             [
-                f"  [cyan]{mod:<12}[/] {_short(script)}"
+                f"{mod} · {_short(script)}"
                 for mod, script in all_scripts
                 if Path(script).name.startswith("up_")
             ],
@@ -207,9 +204,9 @@ def show(
         if not rows:
             continue
 
-        console.print(f"\n[bold]{title}:[/]")
+        reporting.heading(title)
         for row in rows:
-            console.print(row)
+            reporting.detail(row)
 
 
 def _pkg_source(p: "Package", managers: list["PkgManager"]) -> str:
@@ -219,6 +216,5 @@ def _pkg_source(p: "Package", managers: list["PkgManager"]) -> str:
         return str(exc)
 
     if source is None:
-        return "script" if p.script else "not applicable"
-
+        return "script" if p.script else "unknown"
     return f"{source}: {getattr(p, source)}"

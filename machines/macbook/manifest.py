@@ -13,7 +13,7 @@ manifest = Machine(
         "system",
         "zed",
         "raycast",
-        "codex",
+        "agents",
     ],
     files=[],
     packages=[

@@ -8,9 +8,9 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+from app import reporting
 from app.discovery import SCRIPT_SUFFIXES
 from app.env import PLATFORM, is_unix, settings
-from app.logging import err_console
 from app.models import Failure, Platform
 from app.shell import refresh_path, run
 
@@ -115,13 +115,8 @@ def _execute(
     if is_unix and not os.access(script, os.X_OK):
         os.chmod(script, 0o755)
 
-    _logger.info("[%s] Run: %s", module, script.name)
-    if not settings.debug:
-        err_console.print(rf"  [dim]\[{module}][/] {script.stem}")
-
-    if settings.dry_run:
-        _logger.info("[dry-run] [%s] %s", module, script.name)
-        return None
+    reporting.heading(f"{'Would run' if settings.dry_run else 'Running'} {script.name}")
+    reporting.detail(f"Module: {module}")
 
     # Select the script interpreter.
     match script.suffix.lower():
@@ -135,9 +130,14 @@ def _execute(
         case _:
             cmd = str(script)
 
+    if settings.dry_run:
+        reporting.command(cmd)
+        return None
+
     # Stream execution output and report failures relative to the repository.
     rc = run(cmd, env=env, label=module).returncode
     if rc == 0:
+        reporting.success(f"Ran {script.name}")
         return None
 
     try:
@@ -145,7 +145,8 @@ def _execute(
     except ValueError:
         rel = script
 
-    _logger.error("[%s] Script failed (exit %d): %s", module, rc, rel)
+    reporting.error(f"Script failed (exit {rc})")
+    _logger.debug("[%s] Script failed (exit %d): %s", module, rc, rel)
     return Failure(module=module, item=str(rel), detail=f"exit {rc}")
 
 
@@ -161,7 +162,7 @@ def _load_state() -> dict:
     try:
         return json.loads(settings.state_file.read_text())
     except json.JSONDecodeError, KeyError:
-        _logger.warning("Corrupted state, resetting")
+        reporting.warning("Corrupted state, resetting")
         return {}
 
 

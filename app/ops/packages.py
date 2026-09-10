@@ -4,6 +4,7 @@ import logging
 import shutil
 import subprocess
 
+from app import reporting
 from app.env import PLATFORM, settings
 from app.models import Failure, Package, PkgManager
 from app.ops import managers as package_managers
@@ -52,13 +53,13 @@ def install_packages(
                             source, getattr(pkg, source)
                         )
                     if installed[key]:
-                        _logger.debug("Skip (installed): %s", pkg.name)
+                        _logger.debug("Skip: %s", pkg.name)
                         continue
 
             elif not pkg.script:
                 continue
             elif not rerun_script_packages and shutil.which(pkg.name):
-                _logger.debug("Skip (installed): %s", pkg.name)
+                _logger.debug("Skip: %s", pkg.name)
                 continue
 
             # Install missing packages and cache successful manager-backed installs.
@@ -71,7 +72,8 @@ def install_packages(
                 installed[(source, str(getattr(pkg, source)))] = True
 
         except (ValueError, OSError, subprocess.SubprocessError) as exc:
-            _logger.error("[%s] %s: %s", module, pkg.name, exc)
+            reporting.error(f"[{module}] Failed to install {pkg.name}")
+            _logger.debug("[%s] %s: %s", module, pkg.name, exc, exc_info=True)
             failures.append(Failure(module=module, item=pkg.name, detail=str(exc)))
 
     return failures
@@ -85,12 +87,16 @@ def _install(pkg: Package, source: PackageSource | None, module: str = "?") -> F
     )
     assert cmd is not None
 
-    _logger.info("[%s] %s: %s", module, pkg.name, source or "script")
+    reporting.heading(f"{'Would install' if settings.dry_run else 'Installing'} {pkg.name}")
+    reporting.detail(f"Module: {module}")
     result = run(cmd, label=module, capture_output=True)
     if package_managers.install_succeeded(source, result.returncode, result.stdout):
+        if not settings.dry_run:
+            reporting.success(f"Installed {pkg.name}")
         return None
 
-    _logger.error(
+    reporting.error(f"Install failed (exit {result.returncode})")
+    _logger.debug(
         "[%s] Failed to install %s (exit %d): %s", module, pkg.name, result.returncode, cmd
     )
     return Failure(

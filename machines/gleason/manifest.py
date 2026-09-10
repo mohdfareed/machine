@@ -10,9 +10,9 @@ manifest = Machine(
         else [PkgManager.WINGET, PkgManager.SCOOP]
     ),
     modules=(
-        ["git", "shell", "ssh", "codex"]
+        ["git", "shell", "ssh", "agents"]
         if PLATFORM == Platform.WSL
-        else ["git", "shell", "ssh", "vscode", "terminal", "system", "zed", "raycast", "codex"]
+        else ["git", "shell", "ssh", "vscode", "terminal", "system", "zed", "raycast", "agents"]
     ),
     packages=[
         Package(name="vs-professional", winget="microsoft.visualstudio.professional"),

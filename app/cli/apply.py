@@ -5,16 +5,15 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
+from app import reporting
 from app.cli.entry import (
     complete_machines,
     complete_modules,
     get_current_machine,
     machines,
-    print_summary,
     save_current_machine,
 )
 from app.env import build_env, settings, write_env_file
-from app.logging import console, err_console
 from app.machine import validate_modules
 from app.ops.files import deploy_files
 from app.ops.managers import validate_managers
@@ -57,8 +56,8 @@ def apply(
 
     root = settings.home
     if not machine:
-        err_console.print("[red]No machine selected.[/]")
-        err_console.print("[dim]Run: mc apply -m <id>[/]")
+        reporting.error("No machine selected.")
+        reporting.detail("Run: mc apply -m <id>", error=True)
         raise SystemExit(1)
 
     # Load and validate the machine configuration.
@@ -71,17 +70,18 @@ def apply(
     errors = validate_modules(all_modules)
 
     if errors:
+        reporting.error("Invalid module configuration.")
         for e in errors:
-            err_console.print(f"[red]  {e}[/]")
-        err_console.print("[dim]Fix the module configuration, then run: mc apply[/]")
+            reporting.detail(e, error=True)
+        reporting.detail("Fix the module configuration, then run: mc apply", error=True)
         raise SystemExit(1)
 
     # Select deployment inputs, keeping core setup in filtered runs.
     if module_filter:
         unknown = module_filter - {m.name for m in all_modules}
         if unknown:
-            err_console.print(f"[red]Unknown modules: {', '.join(sorted(unknown))}[/]")
-            err_console.print("[dim]Run mc show to inspect the machine's configured modules.[/]")
+            reporting.error(f"Unknown modules: {', '.join(sorted(unknown))}")
+            reporting.detail("Run mc show to inspect the machine's configured modules.", error=True)
             raise SystemExit(1)
 
         active = [m for m in all_modules if m.name in module_filter or m.name == "core"]
@@ -100,9 +100,8 @@ def apply(
     script_env["MC_PACKAGE_MANAGERS"] = " ".join(manifest.pkg_managers)
     owners = _build_owners(active, manifest, machine)
 
-    mode = "[dim](dry-run)[/] " if settings.dry_run else ""
-    console.print(f"{mode}Applying [bold]{machine}[/]")
-    console.print(f"  Modules: {', '.join(m.name for m in active)}")
+    reporting.heading(f"Apply plan · {machine}" if settings.dry_run else f"Applying {machine}")
+    reporting.detail(f"Modules: {', '.join(m.name for m in active)}")
 
     init_scripts = [s for s in all_scripts if Path(s).name.startswith("init_")]
     post_scripts = [
@@ -115,20 +114,26 @@ def apply(
     cache_sudo()
     failures: list[Failure] = []
 
+    reporting.heading("Deploying files")
     file_result = deploy_files(all_files, owners=owners)
+    reporting.detail(
+        f"{file_result.created} files would change"
+        if settings.dry_run
+        else f"{file_result.created} files changed"
+    )
     failures.extend(file_result.failures)
     init_failures = run_scripts(init_scripts, env=script_env, owners=owners)
     failures.extend(init_failures)
 
     if init_failures:
-        print_summary(failures, settings.log_file)
+        reporting.print_summary(failures, settings.log_file, action="Apply", init_failed=True)
         return
 
     # Install packages and run the remaining apply scripts.
     failures.extend(install_packages(all_packages, manifest.pkg_managers, owners=owners))
     failures.extend(run_scripts(post_scripts, env=script_env, owners=owners))
 
-    print_summary(failures, settings.log_file)
+    reporting.print_summary(failures, settings.log_file, action="Apply")
 
 
 # =============================================================================

@@ -2,20 +2,18 @@
 
 import logging
 import sys
-from pathlib import Path
 
 import click
 import typer
 
+from app import reporting
 from app.discovery import list_machines, list_modules
 from app.env import settings
 from app.logging import (
     console,
-    err_console,
     setup_console_logging,
     setup_file_logging,
 )
-from app.models import Failure
 
 _logger = logging.getLogger(__name__)
 
@@ -31,14 +29,14 @@ def main(prog_name: str | None = None) -> None:
 
     # Handle user interrupts.
     except KeyboardInterrupt:
-        err_console.print("\n[dim]Interrupted.[/]")
+        reporting.error("Interrupted.")
         sys.exit(130)
 
     # Handle unexpected errors.
     except Exception as e:
         _logger.debug("Unhandled exception", exc_info=True)
-        err_console.print(f"[red]Error: {e}[/]")
-        err_console.print(f"[dim]See {settings.log_file} for details.[/]")
+        reporting.error(f"Error: {e}")
+        reporting.detail(f"See {settings.log_file} for details.", error=True)
         sys.exit(1)
 
 
@@ -107,21 +105,6 @@ def complete_modules(incomplete: str) -> list[tuple[str, str]]:
     """Shell completion for discovered module names."""
     return [(n, "Module") for n in list_modules(settings.home) if n.startswith(incomplete)]
 
-
-def print_summary(failures: list[Failure], log_file: Path) -> None:
-    """Report deployment results and exit unsuccessfully when failures remain."""
-    if not failures:
-        console.print(f"\n[bold green]Done![/] [dim](log: {log_file})[/]")
-        return
-
-    err_console.print(f"\n[red]Completed with {len(failures)} failure(s):[/]")
-    for failure in failures:
-        err_console.print(
-            f"  [red]\\[{failure.module}][/] {failure.item} [dim]({failure.detail})[/]"
-        )
-    err_console.print(f"[dim]See {log_file} for details.[/]")
-
-    raise typer.Exit(1)
 
 def _create_app() -> typer.Typer:
     # Load command owners after their shared callbacks and state helpers are available.

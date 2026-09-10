@@ -30,6 +30,7 @@ Cross-platform machine bootstrapper and dotfile manager.
 - `app/cli/` - CLI entrypoint, separate apply/update/sync commands, info commands, and shared reporting
 - `app/models.py` - Runtime settings, configuration models, and operation results
 - `app/logging.py` - Shared consoles and logging
+- `app/reporting.py` - Shared human-facing presentation and outcome reporting
 - `app/discovery.py` - Machine, module, and script discovery
 - `app/machine.py` - Module/manifest loading, dependency resolution, and validation
 - `app/env.py` - Runtime settings, platform detection, shared environment, and login-shell env file
@@ -134,7 +135,7 @@ runtime state, caches, and machine-generated application data local.
 - App data: `typer.get_app_dir("mc")` for logs/state; define runtime file paths once in `Settings` and reuse them in readers, writers, and CLI commands
 - Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/vscode/` and `config/zed/`
 - VS Code Remote Tunnels are owned by the `vscode` module; account authorization remains a one-time manual step on each machine
-- The `codex` module owns the Codex CLI, unified ChatGPT desktop app, and portable `~/.codex/config.toml`; credentials, pairing/enrollments, live databases, histories, caches, downloaded plugins, and generated memories stay machine-local
+- The `agents` module owns the Codex CLI, unified ChatGPT desktop app, and portable `~/.codex/config.toml`; credentials, pairing/enrollments, live databases, histories, caches, downloaded plugins, and generated memories stay machine-local
 - Editor tasks should avoid ad hoc external tool dependencies; prefer shell builtins or repo-managed entrypoints so tasks stay portable across machines
 - Shared repo policy should prefer cross-editor files (`pyproject.toml`, `.editorconfig`, `.shellcheckrc`, `.markdownlint.json`, `.cspell.json`) over editor-specific settings
 - Standalone services own their code, tests, dependencies, documentation, and internal directory setup; this repo owns only deployment wiring and host prerequisites
@@ -156,6 +157,7 @@ runtime state, caches, and machine-generated application data local.
 - Prefix module-private implementation details (loggers, helpers, classes, and constants) with `_`; keep intentionally shared interfaces public and do not import another module's private names in application code.
 - Document public functions, classes, and properties with concise docstrings; do not add docstrings to private helpers. Use ordinary comments for non-obvious private implementation details.
 - Keep CLI errors consistent: a short red failure summary on the error console, followed by separate dim recovery guidance when actionable. Keep technical details in plain-text logs; do not embed Rich markup in log messages.
+- Centralize human-facing output in `app/reporting.py`: bold magenta `▶` headings, green `✓` success, yellow `!` warnings, red `✗` errors, and dim commands/details. Use terminal theme colors, no fixed-width decoration or tool-name prefixes. Leave external command output untouched and plain-value commands undecorated. Keep presentation minimal; no reporting framework or extra tracking solely for richer summaries.
 - Do not add scripts whose only job is printing setup reminders; put that guidance in docs unless the script performs real work
 
 ## Homelab

@@ -13,7 +13,7 @@ manifest = Machine(
         "terminal",
         "homelab",
         "system",
-        "codex",
+        "agents",
     ],
     files=[
         FileMapping(

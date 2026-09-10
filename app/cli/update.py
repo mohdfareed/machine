@@ -5,9 +5,9 @@ from typing import Annotated
 
 import typer
 
-from app.cli.entry import complete_modules, get_current_machine, print_summary
+from app import reporting
+from app.cli.entry import complete_modules, get_current_machine
 from app.env import PLATFORM, build_env, settings
-from app.logging import console, err_console
 from app.ops.managers import validate_managers
 from app.ops.packages import install_packages
 from app.ops.scripts import filter_scripts, run_scripts
@@ -34,8 +34,8 @@ def update(
     root = settings.home
     machine_id = get_current_machine()
     if not machine_id:
-        err_console.print("[red]No machine selected.[/]")
-        err_console.print("[dim]Run: mc apply -m <id>[/]")
+        reporting.error("No machine selected.")
+        reporting.detail("Run: mc apply -m <id>", error=True)
         raise SystemExit(1)
 
     # Load the machine and select maintenance inputs.
@@ -46,8 +46,8 @@ def update(
     if module_names:
         unknown = set(module_names) - {m.name for m in all_modules}
         if unknown:
-            err_console.print(f"[red]Unknown modules: {', '.join(sorted(unknown))}[/]")
-            err_console.print("[dim]Run mc show to inspect the machine's configured modules.[/]")
+            reporting.error(f"Unknown modules: {', '.join(sorted(unknown))}")
+            reporting.detail("Run mc show to inspect the machine's configured modules.", error=True)
             raise SystemExit(1)
 
         active = [m for m in all_modules if m.name in set(module_names) or m.name == "core"]
@@ -60,7 +60,7 @@ def update(
     up_scripts = [s for s in filter_scripts(raw_scripts) if Path(s).name.startswith("up_")]
     script_packages = [p for p in all_packages if p.script and p.applies_to(PLATFORM)]
     if not up_scripts and not script_packages:
-        console.print("[dim]No update actions found.[/]")
+        reporting.detail("No update actions found.")
         return
 
     # Resolve ownership and the shared script environment.
@@ -78,8 +78,9 @@ def update(
 
     script_env = build_env(machine_id, root)
     script_env["MC_PACKAGE_MANAGERS"] = " ".join(manifest.pkg_managers)
-    mode = "[dim](dry-run)[/] " if settings.dry_run else ""
-    console.print(f"{mode}Updating [bold]{machine_id}[/]")
+    reporting.heading(
+        f"Update plan · {machine_id}" if settings.dry_run else f"Updating {machine_id}"
+    )
 
     # Re-run script-backed packages before maintenance scripts.
     cache_sudo()
@@ -91,4 +92,4 @@ def update(
     )
 
     failures.extend(run_scripts(up_scripts, env=script_env, owners=owners))
-    print_summary(failures, settings.log_file)
+    reporting.print_summary(failures, settings.log_file, action="Update")
