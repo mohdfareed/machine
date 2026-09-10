@@ -25,11 +25,11 @@ if TYPE_CHECKING:
     from app.models import Failure, Machine, Module
 
 # =============================================================================
-# MARK: Apply Command
+# MARK: Deploy Command
 # =============================================================================
 
 
-def apply(
+def deploy(
     machine: Annotated[
         str | None,
         typer.Option(
@@ -52,12 +52,13 @@ def apply(
     ] = [],
 ) -> None:
     """Deploy configs, install packages, and run scripts."""
+
     from app.machine import load_manifest, resolve_modules
 
     root = settings.home
     if not machine:
         reporting.error("No machine selected.")
-        reporting.detail("Run: mc apply -m <id>", error=True)
+
         raise SystemExit(1)
 
     # Load and validate the machine configuration.
@@ -73,7 +74,7 @@ def apply(
         reporting.error("Invalid module configuration.")
         for e in errors:
             reporting.detail(e, error=True)
-        reporting.detail("Fix the module configuration, then run: mc apply", error=True)
+
         raise SystemExit(1)
 
     # Select deployment inputs, keeping core setup in filtered runs.
@@ -81,7 +82,7 @@ def apply(
         unknown = module_filter - {m.name for m in all_modules}
         if unknown:
             reporting.error(f"Unknown modules: {', '.join(sorted(unknown))}")
-            reporting.detail("Run mc show to inspect the machine's configured modules.", error=True)
+
             raise SystemExit(1)
 
         active = [m for m in all_modules if m.name in module_filter or m.name == "core"]
@@ -100,7 +101,7 @@ def apply(
     script_env["MC_PACKAGE_MANAGERS"] = " ".join(manifest.pkg_managers)
     owners = _build_owners(active, manifest, machine)
 
-    reporting.heading(f"Apply plan · {machine}" if settings.dry_run else f"Applying {machine}")
+    reporting.heading(f"Plan · {machine}" if settings.dry_run else machine)
     reporting.detail(f"Modules: {', '.join(m.name for m in active)}")
 
     init_scripts = [s for s in all_scripts if Path(s).name.startswith("init_")]
@@ -126,14 +127,14 @@ def apply(
     failures.extend(init_failures)
 
     if init_failures:
-        reporting.print_summary(failures, settings.log_file, action="Apply", init_failed=True)
+        reporting.print_summary(failures, settings.log_file, init_failed=True)
         return
 
-    # Install packages and run the remaining apply scripts.
+    # Install packages and run the remaining deployment scripts.
     failures.extend(install_packages(all_packages, manifest.pkg_managers, owners=owners))
     failures.extend(run_scripts(post_scripts, env=script_env, owners=owners))
 
-    reporting.print_summary(failures, settings.log_file, action="Apply")
+    reporting.print_summary(failures, settings.log_file)
 
 
 # =============================================================================

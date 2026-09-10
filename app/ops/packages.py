@@ -45,12 +45,12 @@ def install_packages(
             source = select_package_source(pkg, managers, None if settings.dry_run else available)
             if source is not None:
                 # A dry run can plan installs before manager setup has run.
-                key = (source, str(getattr(pkg, source)))
+                key = (source, str(pkg.sources[source]))
 
                 if package_managers.MANAGER_CONFIGS[source].binary in available:
                     if key not in installed:
                         installed[key] = package_managers.source_installed(
-                            source, getattr(pkg, source)
+                            source, pkg.sources[source]
                         )
                     if installed[key]:
                         _logger.debug("Skip: %s", pkg.name)
@@ -69,7 +69,7 @@ def install_packages(
                 continue
 
             if source is not None and not settings.dry_run:
-                installed[(source, str(getattr(pkg, source)))] = True
+                installed[(source, str(pkg.sources[source]))] = True
 
         except (ValueError, OSError, subprocess.SubprocessError) as exc:
             reporting.error(f"[{module}] Failed to install {pkg.name}")
@@ -81,7 +81,7 @@ def install_packages(
 
 def _install(pkg: Package, source: PackageSource | None, module: str = "?") -> Failure | None:
     cmd = (
-        package_managers.MANAGER_CONFIGS[source].install_cmd.format(getattr(pkg, source))
+        package_managers.MANAGER_CONFIGS[source].install_cmd.format(pkg.sources[source])
         if source is not None
         else pkg.script
     )
@@ -147,5 +147,5 @@ def _applicable_sources(pkg: Package) -> list[PackageSource]:
         for platform, sources in package_managers.PLATFORM_SOURCES.items()
         if PLATFORM.is_a(platform)
         for source in sources
-        if getattr(pkg, source) is not None
+        if source in pkg.sources
     ]

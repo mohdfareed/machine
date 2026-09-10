@@ -1,10 +1,14 @@
 {
+  "lsp": {
+    "markdownlint": {
+      "settings": {
+        "MD013": false, // disable 80 char line length limit
+      },
+    },
+  },
+  // file associations
   "file_types": {
-    "JSONC": [
-      "**/zed/settings.json",
-      "**/vscode/settings.json",
-      "**/*.code-snippets",
-    ],
+    "JSONC": ["**/zed/settings.json", "**/vscode/settings.json", "**/*.code-snippets"],
     "ini": ["**/ghostty/config", "**/ssh.config"],
     "Git Config": ["**/.gitconfig.*"],
     "Shell Script": ["**/.zshenv.*", "**/.zshrc.*"],

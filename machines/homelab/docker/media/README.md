@@ -41,7 +41,7 @@ Use this order on a fresh install; restored `data/` keeps the existing setup.
 
    ```sh
    export PLEX_CLAIM=claim-...
-   mc apply homelab
+   mc deploy homelab
    ```
 
 3. Approve the new Tailscale devices if auth key requires it.

@@ -48,7 +48,7 @@ def load_module(name: str, root: Path) -> Module:
     if result is None:
         raise AttributeError(f"Missing 'module' in {path}")
     if not isinstance(result, Module):
-        raise TypeError(f"'module' must be Module, got {type(result)}")
+        raise TypeError(f"'module' must be {Module.__name__}, got {type(result)}")
 
     result.name = name
 
@@ -79,7 +79,7 @@ def load_manifest(machine_id: str, root: Path) -> Machine:
     if result is None:
         raise AttributeError(f"Missing 'manifest' in {path}")
     if not isinstance(result, Machine):
-        raise TypeError(f"'manifest' must be Machine, got {type(result)}")
+        raise TypeError(f"'manifest' must be {Machine.__name__}, got {type(result)}")
 
     # Include core as the shared baseline for every machine.
     result.modules = ["core", *(name for name in result.modules if name != "core")]

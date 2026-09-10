@@ -101,7 +101,7 @@ def test_symlink_preserves_data_on_windows_privilege_error(
 
 
 def test_symlink_skips_existing_hardlink(tmp_path: Path) -> None:
-    """Re-applying an already-correct hard link should be a no-op."""
+    """Redeploying an already-correct hard link should be a no-op."""
     source = tmp_path / "source.txt"
     target = tmp_path / "target.txt"
     source.write_text("ssh config", encoding="utf-8")

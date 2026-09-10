@@ -12,10 +12,10 @@ from pathlib import Path
 
 from app import reporting
 from app.env import is_unix, is_windows, settings
+from app.logging import output_logger
 
-_REPO_ROOT = Path(__file__).resolve().parents[1]
 _logger = logging.getLogger(__name__)
-_output_logger = logging.getLogger("app.logging.output")
+
 
 # Strip ANSI/DEC escape sequences for log-file output.
 _ANSI_RE = re.compile(r"\x1b(?:\[[0-9;?]*[A-Za-z]|\][^\x07]*\x07|\([A-Z])")
@@ -115,7 +115,7 @@ def run(
 ) -> subprocess.CompletedProcess[bytes]:
     """Run a command, stream and log output, and optionally return it as bytes."""
 
-    reporting.command(_short(cmd))
+    reporting.command(cmd.replace(str(settings.home) + os.sep, "." + os.sep))
     if settings.dry_run:
         return subprocess.CompletedProcess(cmd, 0, stdout=b"" if capture_output else None)
 
@@ -131,13 +131,9 @@ def run(
     for line in collected.decode(errors="replace").splitlines():
         stripped = _ANSI_RE.sub("", line).rstrip()
         if stripped:
-            _output_logger.debug("%s| %s", prefix, stripped)
+            output_logger.debug("%s| %s", prefix, stripped)
 
     return subprocess.CompletedProcess(cmd, rc, stdout=bytes(collected) if capture_output else None)
-
-
-def _short(cmd: str) -> str:
-    return cmd.replace(str(_REPO_ROOT) + os.sep, "").replace(str(_REPO_ROOT), ".")
 
 
 # =============================================================================
@@ -147,7 +143,7 @@ def _short(cmd: str) -> str:
 
 def _tee_pty(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
     if sys.platform == "win32":
-        raise RuntimeError("_tee_pty is unavailable on Windows")
+        raise RuntimeError("PTY transport is unavailable on Windows")
 
     import pty
     import select
@@ -206,7 +202,7 @@ def _tee_pty(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
 
 def _tee_pipe(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
     if sys.platform != "win32":
-        raise RuntimeError("_tee_pipe is only available on Windows")
+        raise RuntimeError("Pipe transport is only available on Windows")
 
     # Prefer PowerShell Core, falling back to Windows PowerShell.
     exe = shutil.which("pwsh.exe") or shutil.which("powershell.exe")

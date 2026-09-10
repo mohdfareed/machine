@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from app.cli import apply, sync
+from app.cli import deploy, sync
 
 
 def git(root: Path, *args: str) -> str:
@@ -37,14 +37,14 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(sync.settings, "dry_run", False)
     monkeypatch.setattr(sync, "_CANONICAL_REPO_URL", str(canonical))
     monkeypatch.setattr(sync, "get_current_machine", lambda: "test")
-    applied = []
-    monkeypatch.setattr(sync, "apply", lambda **kwargs: applied.append(kwargs))
-    return canonical, checkout, applied
+    deployed = []
+    monkeypatch.setattr(sync, "deploy", lambda **kwargs: deployed.append(kwargs))
+    return canonical, checkout, deployed
 
 
-@pytest.mark.parametrize("no_apply", [False, True])
-def test_sync_restores_local_edits_before_apply(sync_repos, monkeypatch, no_apply):
-    canonical, checkout, applied = sync_repos
+@pytest.mark.parametrize("no_deploy", [False, True])
+def test_sync_restores_local_edits_before_deploy(sync_repos, monkeypatch, no_deploy):
+    canonical, checkout, deployed = sync_repos
 
     # Change different parts of the same tracked file locally and upstream.
     original = "".join(f"setting {i}\n" for i in range(10))
@@ -59,31 +59,31 @@ def test_sync_restores_local_edits_before_apply(sync_repos, monkeypatch, no_appl
 
     # Observe the restored content at deployment time, not just after sync returns.
     monkeypatch.setattr(
-        sync, "apply", lambda **kwargs: applied.append((checkout / "config.txt").read_text())
+        sync, "deploy", lambda **kwargs: deployed.append((checkout / "config.txt").read_text())
     )
-    sync.sync(no_apply=no_apply)
+    sync.sync(no_deploy=no_deploy)
 
     assert git(checkout, "rev-parse", "HEAD") == git(canonical, "rev-parse", "HEAD")
     assert (checkout / "config.txt").read_text() == expected
-    assert applied == ([] if no_apply else [expected])
+    assert deployed == ([] if no_deploy else [expected])
 
 
-def test_sync_autostash_conflict_preserves_edits_and_stops_apply(sync_repos):
-    canonical, checkout, applied = sync_repos
+def test_sync_autostash_conflict_preserves_edits_and_stops_deploy(sync_repos):
+    canonical, checkout, deployed = sync_repos
     (checkout / "config.txt").write_text("local edit\n")
     (canonical / "config.txt").write_text("upstream edit\n")
     git(canonical, "commit", "-am", "Update config")
 
     with pytest.raises(SystemExit):
-        sync.sync(no_apply=False)
+        sync.sync(no_deploy=False)
 
     assert git(checkout, "ls-files", "--unmerged")
     assert git(checkout, "show", "stash@{0}:config.txt") == "local edit"
-    assert not applied
+    assert not deployed
 
 
-def test_sync_divergence_preserves_commits_and_stops_apply(sync_repos):
-    canonical, checkout, applied = sync_repos
+def test_sync_divergence_preserves_commits_and_stops_deploy(sync_repos):
+    canonical, checkout, deployed = sync_repos
     (checkout / "config.txt").write_text("local commit\n")
     git(checkout, "commit", "-am", "Local change")
     before = git(checkout, "rev-parse", "HEAD")
@@ -91,35 +91,35 @@ def test_sync_divergence_preserves_commits_and_stops_apply(sync_repos):
     git(canonical, "commit", "-am", "Upstream change")
 
     with pytest.raises(SystemExit):
-        sync.sync(no_apply=False)
+        sync.sync(no_deploy=False)
 
     assert git(checkout, "rev-parse", "HEAD") == before
-    assert not applied
+    assert not deployed
 
 
-def test_sync_fetch_failure_does_not_apply_stale_fetch_head(sync_repos, monkeypatch):
-    canonical, checkout, applied = sync_repos
+def test_sync_fetch_failure_does_not_deploy_stale_fetch_head(sync_repos, monkeypatch):
+    canonical, checkout, deployed = sync_repos
     git(checkout, "fetch", str(canonical), "main")
     before = git(checkout, "rev-parse", "HEAD")
     monkeypatch.setattr(sync, "_CANONICAL_REPO_URL", str(canonical / "missing"))
 
     with pytest.raises(SystemExit):
-        sync.sync(no_apply=False)
+        sync.sync(no_deploy=False)
 
     assert git(checkout, "rev-parse", "HEAD") == before
-    assert not applied
+    assert not deployed
 
 
-def test_sync_dry_run_does_not_fetch_or_apply(sync_repos, monkeypatch):
-    _, checkout, applied = sync_repos
+def test_sync_dry_run_does_not_fetch_or_deploy(sync_repos, monkeypatch):
+    _, checkout, deployed = sync_repos
     monkeypatch.setattr(sync.settings, "dry_run", True)
-    sync.sync(no_apply=False)
+    sync.sync(no_deploy=False)
     assert not (checkout / ".git" / "FETCH_HEAD").exists()
-    assert not applied
+    assert not deployed
 
 
 @pytest.mark.parametrize("setup_fails", [False, True])
-def test_filtered_apply_preserves_declared_manager_setup(monkeypatch, setup_fails) -> None:
+def test_filtered_deploy_preserves_declared_manager_setup(monkeypatch, setup_fails) -> None:
     from app import machine, models
     from app.ops import managers as machine_managers
 
@@ -137,14 +137,14 @@ def test_filtered_apply_preserves_declared_manager_setup(monkeypatch, setup_fail
     events = []
     monkeypatch.setattr(machine, "load_manifest", lambda *args: manifest)
     monkeypatch.setattr(machine, "resolve_modules", lambda *args: modules)
-    monkeypatch.setattr(apply, "save_current_machine", lambda *args: None)
-    monkeypatch.setattr(apply, "write_env_file", lambda *args: None)
-    monkeypatch.setattr(apply, "validate_modules", lambda *args: [])
-    monkeypatch.setattr(apply, "filter_scripts", lambda scripts: scripts)
-    monkeypatch.setattr(apply, "build_env", lambda *args: {})
-    monkeypatch.setattr(apply, "cache_sudo", lambda: None)
+    monkeypatch.setattr(deploy, "save_current_machine", lambda *args: None)
+    monkeypatch.setattr(deploy, "write_env_file", lambda *args: None)
+    monkeypatch.setattr(deploy, "validate_modules", lambda *args: [])
+    monkeypatch.setattr(deploy, "filter_scripts", lambda scripts: scripts)
+    monkeypatch.setattr(deploy, "build_env", lambda *args: {})
+    monkeypatch.setattr(deploy, "cache_sudo", lambda: None)
     monkeypatch.setattr(
-        apply, "deploy_files", lambda *args, **kwargs: models.FileResult(created=0, failures=[])
+        deploy, "deploy_files", lambda *args, **kwargs: models.FileResult(created=0, failures=[])
     )
 
     def run_scripts(scripts, *, env, owners):
@@ -161,13 +161,13 @@ def test_filtered_apply_preserves_declared_manager_setup(monkeypatch, setup_fail
         events.append("packages")
         return []
 
-    monkeypatch.setattr(apply, "run_scripts", run_scripts)
-    monkeypatch.setattr(apply, "install_packages", install_packages)
+    monkeypatch.setattr(deploy, "run_scripts", run_scripts)
+    monkeypatch.setattr(deploy, "install_packages", install_packages)
     if setup_fails:
-        with pytest.raises(apply.typer.Exit) as exc:
-            apply.apply(machine="test", module_names=["apps"])
+        with pytest.raises(deploy.typer.Exit) as exc:
+            deploy.deploy(machine="test", module_names=["apps"])
         assert exc.value.exit_code == 1
         assert events == ["init_pkgs.win.ps1", "init_apps.ps1"]
     else:
-        apply.apply(machine="test", module_names=["apps"])
+        deploy.deploy(machine="test", module_names=["apps"])
         assert events == ["init_pkgs.win.ps1", "init_apps.ps1", "packages", "core.ps1"]

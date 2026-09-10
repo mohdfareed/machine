@@ -29,13 +29,14 @@ def update(
     ] = [],
 ) -> None:
     """Run maintenance and update scripts for the current machine."""
+
     from app.machine import load_manifest, resolve_modules
 
     root = settings.home
     machine_id = get_current_machine()
     if not machine_id:
         reporting.error("No machine selected.")
-        reporting.detail("Run: mc apply -m <id>", error=True)
+
         raise SystemExit(1)
 
     # Load the machine and select maintenance inputs.
@@ -47,7 +48,7 @@ def update(
         unknown = set(module_names) - {m.name for m in all_modules}
         if unknown:
             reporting.error(f"Unknown modules: {', '.join(sorted(unknown))}")
-            reporting.detail("Run mc show to inspect the machine's configured modules.", error=True)
+
             raise SystemExit(1)
 
         active = [m for m in all_modules if m.name in set(module_names) or m.name == "core"]
@@ -60,7 +61,7 @@ def update(
     up_scripts = [s for s in filter_scripts(raw_scripts) if Path(s).name.startswith("up_")]
     script_packages = [p for p in all_packages if p.script and p.applies_to(PLATFORM)]
     if not up_scripts and not script_packages:
-        reporting.detail("No update actions found.")
+        reporting.detail("No maintenance actions found.")
         return
 
     # Resolve ownership and the shared script environment.
@@ -78,9 +79,7 @@ def update(
 
     script_env = build_env(machine_id, root)
     script_env["MC_PACKAGE_MANAGERS"] = " ".join(manifest.pkg_managers)
-    reporting.heading(
-        f"Update plan · {machine_id}" if settings.dry_run else f"Updating {machine_id}"
-    )
+    reporting.heading(f"Plan · {machine_id}" if settings.dry_run else machine_id)
 
     # Re-run script-backed packages before maintenance scripts.
     cache_sudo()
@@ -92,4 +91,4 @@ def update(
     )
 
     failures.extend(run_scripts(up_scripts, env=script_env, owners=owners))
-    reporting.print_summary(failures, settings.log_file, action="Update")
+    reporting.print_summary(failures, settings.log_file)

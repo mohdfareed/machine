@@ -50,7 +50,7 @@ if (-not $powerShellPackage) {
 }
 
 # Use the real executable, not the app alias; rediscover its path after MSIX updates.
-# NOTE: This breaks across MSIX updates. Rerun `mc apply ssh-server` to fix.
+# NOTE: This breaks across MSIX updates. Rerun `mc deploy ssh-server` to fix.
 $defaultShell = Join-Path $powerShellPackage.InstallLocation 'pwsh.exe'
 if (-not (Test-Path -LiteralPath $defaultShell -PathType Leaf)) {
     throw "PowerShell executable not found: $defaultShell"

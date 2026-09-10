@@ -82,7 +82,7 @@ Create a `<service>/compose.yaml` file per service at:
 
 ```mermaid
 flowchart TD
-    Shared["config/homelab/docker/service"] --> Deploy["mc apply homelab"]
+    Shared["config/homelab/docker/service"] --> Deploy["mc deploy homelab"]
     Machine["machines/id/docker/service"] --> Deploy
     Deploy --> Link["~/.homelab/service → repo"]
     Link --> Compose["Docker Compose"]
@@ -93,7 +93,7 @@ flowchart TD
 Run on the target machine, with `homelab` included in its manifest:
 
 ```sh
-mc apply homelab
+mc deploy homelab
 ```
 
 This pulls/builds and starts **all** its Compose stacks.

@@ -11,13 +11,13 @@ etc.
   start with fresh configuration.
 - Finish Docker Desktop's first launch and Tailscale sign-in. After a reboot,
   check both are running in the logged-in user session; power-on alone isn't enough.
-- Select this machine with `mc apply -m homelab`. On a fresh media install, do the
+- Select this machine with `mc deploy -m homelab`. On a fresh media install, do the
   [first-start steps](docker/media/README.md#first-start) before the full deployment.
 
 Power/sleep and file sharing setup are in [init_server.sh](scripts/init_server.sh).
 Once per installation, in System Settings
 
-- Grant the terminal app Full Disk Access before applying (required to enable SSH).
+- Grant the terminal app Full Disk Access before deploying (required to enable SSH).
 - Under General → Sharing → Remote Login, verify only Administrators have access;
   setup preserves existing memberships. Enable remote-user Full Disk Access if needed.
 - Enable Remote Management for your account and choose its privileges and menu-bar

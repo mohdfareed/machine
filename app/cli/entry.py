@@ -25,7 +25,7 @@ _logger = logging.getLogger(__name__)
 def main(prog_name: str | None = None) -> None:
     """Run the CLI and handle interrupts and unexpected errors."""
     try:
-        _create_app()(prog_name=prog_name)
+        _create_app()(prog_name=prog_name or settings.command)
 
     # Handle user interrupts.
     except KeyboardInterrupt:
@@ -66,7 +66,7 @@ def save_current_machine(machine_id: str) -> None:
 def _callback(
     debug: bool = typer.Option(False, "-d", "--debug", help="Enable debug logging."),
     dry_run: bool = typer.Option(
-        False, "-n", "--dry-run", help="Preview changes without applying."
+        False, "-n", "--dry-run", help="Preview changes without deploying."
     ),
     version: bool = typer.Option(False, "-v", "--version", help="Show version and exit."),
 ) -> None:
@@ -108,7 +108,7 @@ def complete_modules(incomplete: str) -> list[tuple[str, str]]:
 
 def _create_app() -> typer.Typer:
     # Load command owners after their shared callbacks and state helpers are available.
-    from app.cli import apply, info, sync, update
+    from app.cli import deploy, info, sync, update
 
     # Create the app and attach its callback and status commands.
     app = typer.Typer(
@@ -117,11 +117,11 @@ def _create_app() -> typer.Typer:
         invoke_without_command=True,
         context_settings={"help_option_names": ["-h", "--help"]},
     )
-    app.add_typer(info.status_app, name="status", rich_help_panel="Info")
+    app.add_typer(info.status_app, name=info.status.__name__, rich_help_panel="Info")
     app.callback()(_callback)
 
     # Register lifecycle and info commands in their help panels.
-    app.command(rich_help_panel="Lifecycle")(apply.apply)
+    app.command(rich_help_panel="Lifecycle")(deploy.deploy)
     app.command(rich_help_panel="Lifecycle")(update.update)
     app.command(rich_help_panel="Lifecycle")(sync.sync)
     app.command(rich_help_panel="Info")(info.home)

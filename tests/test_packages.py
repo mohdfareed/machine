@@ -99,7 +99,7 @@ def test_source_selection_enforces_declarations(
     assert commands == ([] if expected else ["scoop install example"])
 
 
-def test_platform_skips_and_script_package_apply_update(monkeypatch, commands):
+def test_platform_skips_and_script_package_deploy_update(monkeypatch, commands):
     monkeypatch.setattr(machine_packages, "PLATFORM", Platform.LINUX)
     monkeypatch.setattr(machine_packages.shutil, "which", lambda name: None)
     packages = [Package(cask="foreign"), Package(name="example", cask="example", script="setup")]

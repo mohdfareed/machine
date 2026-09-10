@@ -1,7 +1,7 @@
 """Runtime settings, machine configuration, and operation results."""
 
 from enum import StrEnum
-from importlib.metadata import metadata
+from importlib.metadata import distribution
 from pathlib import Path
 from typing import ClassVar, Self
 
@@ -12,7 +12,8 @@ from pydantic import BaseModel, model_validator
 # MARK: Settings
 # =============================================================================
 
-_meta = metadata("machine")
+_distribution = distribution("machine")
+_meta = _distribution.metadata
 
 
 class Settings:
@@ -21,7 +22,10 @@ class Settings:
     name: ClassVar[str] = _meta["Name"]
     version: ClassVar[str] = _meta["Version"]
     description: ClassVar[str] = _meta["Summary"]
-    app_dir: ClassVar[Path] = Path(typer.get_app_dir("mc"))
+    command: ClassVar[str] = next(
+        entry.name for entry in _distribution.entry_points if entry.group == "console_scripts"
+    )
+    app_dir: ClassVar[Path] = Path(typer.get_app_dir(command))
 
     debug: bool = False
     dry_run: bool = False
@@ -114,6 +118,20 @@ class Package(BaseModel):
     # Windows packages.
     winget: str | None = None
     scoop: str | None = None
+
+    @property
+    def sources(self) -> dict[str, str | int]:
+        """Map external package-source identifiers to their configured values."""
+        values = {
+            "brew": self.brew,
+            "cask": self.cask,
+            "mas": self.mas,
+            "apt": self.apt,
+            "snap": self.snap,
+            "winget": self.winget,
+            "scoop": self.scoop,
+        }
+        return {source: value for source, value in values.items() if value is not None}
 
     def applies_to(self, platform: Platform) -> bool:
         """Return True when this package should be considered on *platform*."""

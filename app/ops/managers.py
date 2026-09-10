@@ -61,11 +61,11 @@ def validate_managers(managers: list[PkgManager]) -> None:
 
     # Check setup prerequisites after platform compatibility.
     if PkgManager.MAS in managers and PkgManager.BREW not in managers:
-        raise ValueError("mas requires brew in pkg_managers")
+        raise ValueError("mas requires brew in the machine's declared package managers")
     if PkgManager.APT in managers and not shutil.which("apt"):
         raise ValueError("apt must already be installed")
     if PkgManager.SNAP in managers and not shutil.which("snap") and PkgManager.APT not in managers:
-        raise ValueError("Installing snap requires apt in pkg_managers")
+        raise ValueError("Installing snap requires apt in the machine's declared package managers")
 
 
 # =============================================================================

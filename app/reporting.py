@@ -73,16 +73,19 @@ def command(cmd: str) -> None:
 
 
 def print_summary(
-    failures: list[Failure], log_file: Path, *, action: str = "Apply", init_failed: bool = False
+    failures: list[Failure],
+    log_file: Path,
+    *,
+    init_failed: bool = False,
 ) -> None:
     """Report the outcome and exit unsuccessfully when operations failed."""
     if not failures:
-        message = f"{action} plan complete." if settings.dry_run else f"{action} complete."
+        message = "Plan complete." if settings.dry_run else "Complete."
         success(message)
         detail(f"Log: {log_file}")
         return
 
-    error(f"{action} finished with {len(failures)} failure(s).")
+    error(f"Finished with {len(failures)} failure(s).")
     for failure in failures:
         detail(f"Failed: {failure.module} · {failure.item}", error=True)
     if init_failed:

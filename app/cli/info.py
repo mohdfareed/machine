@@ -32,7 +32,6 @@ def private() -> None:
     machine_id = get_current_machine()
     if not machine_id:
         reporting.error("No machine selected.")
-        reporting.detail("Run: mc apply -m <id>", error=True)
         raise SystemExit(1)
 
     env = build_env(machine_id, settings.home)
@@ -59,7 +58,6 @@ def status_id() -> None:
     machine = get_current_machine()
     if not machine:
         reporting.error("No machine selected.")
-        reporting.detail("Run: mc apply -m <id>", error=True)
         raise typer.Exit(1)
 
     typer.echo(machine)
@@ -67,28 +65,14 @@ def status_id() -> None:
 
 @status_app.command("state")
 def status_state() -> None:
-    """Print the saved script state."""
-    path = settings.state_file
-    if not path.exists():
-        reporting.error("No saved script state found.")
-        reporting.detail("Run mc apply to deploy the machine and record script state.", error=True)
-        raise typer.Exit(1)
-
-    typer.echo(path)
+    """Print the script-state file path."""
+    typer.echo(settings.state_file)
 
 
 @status_app.command("log")
 def status_log() -> None:
-    """Print the current log."""
-    path = settings.log_file
-    if not path.exists():
-        reporting.error("No log file found.")
-        reporting.detail(
-            "Run a command without --help or --version to initialize logging.", error=True
-        )
-        raise typer.Exit(1)
-
-    typer.echo(path)
+    """Print the log file path."""
+    typer.echo(settings.log_file)
 
 
 def list_all() -> None:
@@ -126,6 +110,7 @@ def show(
     ] = get_current_machine() or "",
 ) -> None:
     """Show resolved configuration for a machine."""
+
     from app.machine import load_manifest, resolve_modules
 
     # Resolve the machine configuration.
@@ -153,7 +138,7 @@ def show(
             reporting.detail(f"{mod} · {_short(f.source)} → {f.target}")
 
     # Build execution sections in module and declaration order.
-    # Use the same script filtering as apply.
+    # Use the same script filtering as deploy.
     all_scripts = [(m.name, script) for m in mods for script in filter_scripts(m.scripts)] + [
         (machine, script) for script in filter_scripts(manifest.scripts)
     ]
@@ -182,7 +167,7 @@ def show(
             ],
         ),
         (
-            "Update Packages",
+            "Maintenance Packages",
             [
                 f"{mod} · {p.name} ({_pkg_source(p, manifest.pkg_managers)})"
                 for mod, p in pkgs
@@ -190,7 +175,7 @@ def show(
             ],
         ),
         (
-            "Update Scripts",
+            "Maintenance Scripts",
             [
                 f"{mod} · {_short(script)}"
                 for mod, script in all_scripts
@@ -217,4 +202,4 @@ def _pkg_source(p: "Package", managers: list["PkgManager"]) -> str:
 
     if source is None:
         return "script" if p.script else "unknown"
-    return f"{source}: {getattr(p, source)}"
+    return f"{source}: {p.sources[source]}"

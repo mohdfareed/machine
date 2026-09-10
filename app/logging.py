@@ -10,7 +10,7 @@ from rich.logging import RichHandler
 from app.env import settings
 
 _logger = logging.getLogger(__name__)
-_output_logger = logging.getLogger(__name__ + ".output")
+output_logger = logging.getLogger(__name__ + ".output")
 _console_handler: logging.Handler | None = None
 
 # Output consoles
@@ -24,7 +24,7 @@ err_console = Console(stderr=True)
 
 
 # Route streamed subprocess output to the file only, never to the console.
-_output_logger.propagate = False
+output_logger.propagate = False
 
 
 def setup_console_logging() -> None:
@@ -73,10 +73,10 @@ def setup_file_logging() -> None:
 
     # Share the file handler with application and subprocess output loggers.
     logging.root.addHandler(handler)
-    _output_logger.addHandler(handler)
+    output_logger.addHandler(handler)
 
     # Separate invocations in the log file.
     title = f"─── {settings.name} {settings.version} ───"
     _logger.debug(title)
-    _logger.debug("cmd: mc %s", " ".join(sys.argv[1:]) or "(no args)")
+    _logger.debug("cmd: %s %s", settings.command, " ".join(sys.argv[1:]) or "(no args)")
     _logger.debug("─" * len(title))

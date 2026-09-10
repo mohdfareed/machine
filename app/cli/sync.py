@@ -1,4 +1,4 @@
-"""Sync canonical repository changes and apply the current machine."""
+"""Sync canonical repository changes and deploy the current machine."""
 
 import logging
 import subprocess
@@ -6,7 +6,7 @@ import subprocess
 import typer
 
 from app import reporting
-from app.cli.apply import apply
+from app.cli.deploy import deploy
 from app.cli.entry import get_current_machine
 from app.env import settings
 
@@ -19,11 +19,14 @@ _CANONICAL_REPO_URL = "https://github.com/mohdfareed/machine.git"
 
 
 def sync(
-    no_apply: bool = typer.Option(False, "--no-apply", help="Skip apply after sync."),
+    no_deploy: bool = typer.Option(
+        False, "--no-deploy", help="Skip deployment after repository integration."
+    ),
 ) -> None:
-    """Sync repo changes and re-run apply."""
+    """Sync repo changes and deploy the current checkout."""
+
     if settings.dry_run:
-        reporting.heading("Sync plan")
+        reporting.heading("Plan")
         reporting.detail(f"Would fetch main from {_CANONICAL_REPO_URL}")
         reporting.detail("Would merge canonical main with --ff-only --autostash.")
         reporting.detail("Would check for conflicts after restoring local changes.")
@@ -42,9 +45,9 @@ def sync(
         result = subprocess.run([*git, *args], capture_output=True, text=True)
         if result.returncode != 0:
             _logger.debug("git %s failed:\n%s\n%s", " ".join(args), result.stdout, result.stderr)
-            reporting.error("Git sync failed.")
+            reporting.error("Git operation failed.")
             reporting.detail(f"See {settings.log_file} for details.", error=True)
-            reporting.detail("Resolve the Git error, then run: mc sync", error=True)
+
             raise SystemExit(1)
 
     # Check for conflicts left by autostash restoration.
@@ -55,19 +58,19 @@ def sync(
         _logger.debug("git ls-files failed:\n%s\n%s", result.stdout, result.stderr)
         reporting.error("Could not check for conflicts.")
         reporting.detail(f"See {settings.log_file} for details.", error=True)
-        reporting.detail("Resolve the Git error, then run: mc sync", error=True)
+
         raise SystemExit(1)
 
     if result.stdout.strip():
         reporting.error("Could not restore local changes without conflicts.")
-        reporting.detail("Resolve conflicts before applying.", error=True)
+        reporting.detail("Resolve conflicts before deploying.", error=True)
         raise SystemExit(1)
 
-    # Report the sync result and stop if apply was skipped.
-    reporting.success("Synced with canonical main.")
-    if no_apply:
+    # Report the sync result and stop if deployment was skipped.
+    reporting.success("Complete · canonical main.")
+    if no_deploy:
         return
 
     # Deploy the current machine.
     machine_id = get_current_machine()
-    apply(machine=machine_id)
+    deploy(machine=machine_id)
