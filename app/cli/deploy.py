@@ -15,12 +15,10 @@ from app.cli.entry import (
     validate_machine,
 )
 from app.env import build_env, settings, write_env_file
-from app.machine import validate_modules
 from app.ops.files import deploy_files
 from app.ops.managers import validate_managers
 from app.ops.packages import install_packages
 from app.ops.scripts import filter_scripts, run_scripts
-from app.shell import cache_sudo
 
 if TYPE_CHECKING:
     from app.models import Failure, Machine, Module
@@ -53,7 +51,7 @@ def deploy(
     ] = [],
 ) -> None:
     """Deploy configs, install packages, and run scripts."""
-    from app.machine import load_manifest, resolve_modules
+    from app.machine import load_machine
 
     root = settings.home
     if not machine:
@@ -61,36 +59,30 @@ def deploy(
         raise SystemExit(1)
 
     # Load and validate the machine configuration.
-    manifest = load_manifest(machine, root)
+    manifest, mods = load_machine(machine, root)
     validate_managers(manifest.pkg_managers)
-    save_current_machine(machine)
-    write_env_file(machine, root)
-    all_modules = resolve_modules(manifest.modules, root)
     module_filter = set(module_names)
-    errors = validate_modules(all_modules)
-
-    if errors:
-        reporting.error("Invalid module configuration.")
-        for e in errors:
-            reporting.detail(e, error=True)
-        raise SystemExit(1)
 
     # Select deployment inputs, keeping core setup in filtered runs.
     if module_filter:
-        unknown = module_filter - {m.name for m in all_modules}
+        unknown = module_filter - {m.name for m in mods}
         if unknown:
             reporting.error(f"Unknown modules: {', '.join(sorted(unknown))}")
             raise SystemExit(1)
 
-        active = [m for m in all_modules if m.name in module_filter or m.name == "core"]
+        active = [m for m in mods if m.name in module_filter or m.name == "core"]
         all_files = [f for m in active for f in m.files]
         all_packages = [p for m in active for p in m.packages]
         raw_scripts = [s for m in active for s in m.scripts]
     else:
-        active = all_modules
+        active = mods
         all_files = [f for m in active for f in m.files] + manifest.files
         all_packages = [p for m in active for p in m.packages] + manifest.packages
         raw_scripts = [s for m in active for s in m.scripts] + manifest.scripts
+
+    # Persist the validated machine selection before deployment.
+    save_current_machine(machine)
+    write_env_file(machine, root)
 
     # Prepare the script environment and execution phases.
     all_scripts = filter_scripts(raw_scripts)

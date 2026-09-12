@@ -143,11 +143,10 @@ def test_filtered_deploy_preserves_declared_manager_setup(monkeypatch, setup_fai
         ),
     ]
     events = []
-    monkeypatch.setattr(machine, "load_manifest", lambda *args: manifest)
-    monkeypatch.setattr(machine, "resolve_modules", lambda *args: modules)
+    monkeypatch.setattr(machine, "load_machine", lambda *args: (manifest, modules))
     monkeypatch.setattr(deploy, "save_current_machine", lambda *args: None)
     monkeypatch.setattr(deploy, "write_env_file", lambda *args: None)
-    monkeypatch.setattr(deploy, "validate_modules", lambda *args: [])
+
     monkeypatch.setattr(deploy, "filter_scripts", lambda scripts: scripts)
     monkeypatch.setattr(deploy, "build_env", lambda *args: {})
     monkeypatch.setattr(deploy, "cache_sudo", lambda: None)

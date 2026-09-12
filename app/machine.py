@@ -14,15 +14,8 @@ from app.models import FileMapping, Machine, Module
 def validate_modules(modules: list[Module]) -> list[str]:
     """Return errors for missing file sources and scripts in resolved modules."""
     errors: list[str] = []
-
     for mod in modules:
-        for fm in mod.files:
-            if not Path(fm.source).exists():
-                errors.append(f"Module '{mod.name}' file source missing: {fm.source}")
-        for script in mod.scripts:
-            if not Path(script).exists():
-                errors.append(f"Module '{mod.name}' script missing: {script}")
-
+        errors.extend(_validate_sources(mod.name, mod.files, mod.scripts))
     return errors
 
 
@@ -31,12 +24,29 @@ def validate_modules(modules: list[Module]) -> list[str]:
 # =============================================================================
 
 
+def load_machine(machine_id: str, root: Path) -> tuple[Machine, list[Module]]:
+    """Load and statically validate a complete machine configuration."""
+    manifest = load_manifest(machine_id, root)
+    modules = resolve_modules(manifest.modules, root)
+    errors = [
+        *validate_modules(modules),
+        *_validate_sources(machine_id, manifest.files, manifest.scripts),
+    ]
+
+    if errors:
+        details = "\n".join(f"- {error}" for error in errors)
+        raise ValueError(f"Invalid machine configuration:\n{details}")
+
+    return manifest, modules
+
+
 def load_module(name: str, root: Path) -> Module:
     """Load a dotted module name from its configuration directory."""
     # Locate the module declaration.
     parts = name.split(".")
     if any(not part or any(char in part for char in "/\\:") for part in parts):
         raise ValueError(f"Invalid module name: {name}")
+
     module_dir = root / "config" / Path(*parts)
     path = module_dir / "module.py"
     if not path.exists():
@@ -45,11 +55,11 @@ def load_module(name: str, root: Path) -> Module:
     # Load and validate the exported module.
     mod = _import_py(path, f"config.{name}.module")
     result = getattr(mod, "module", None)
+
     if result is None:
         raise AttributeError(f"Missing 'module' in {path}")
     if not isinstance(result, Module):
         raise TypeError(f"'module' must be {Module.__name__}, got {type(result)}")
-
     result.name = name
 
     # Resolve source paths relative to the module directory.
@@ -127,6 +137,18 @@ def resolve_modules(modules: list[str], root: Path) -> list[Module]:
 # =============================================================================
 # MARK: Loading Helpers
 # =============================================================================
+
+
+def _validate_sources(owner: str, files: list[FileMapping], scripts: list[str]) -> list[str]:
+    errors = [
+        f"'{owner}' file source missing: {file.source}"
+        for file in files
+        if not Path(file.source).exists()
+    ]
+    errors.extend(
+        f"'{owner}' script missing: {script}" for script in scripts if not Path(script).exists()
+    )
+    return errors
 
 
 def _resolve_deps(modules: list[str], root: Path) -> list[str]:

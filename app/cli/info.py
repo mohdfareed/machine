@@ -111,12 +111,11 @@ def show(
 ) -> None:
     """Show resolved configuration for a machine."""
 
-    from app.machine import load_manifest, resolve_modules
+    from app.machine import load_machine
 
     # Resolve the machine configuration.
     root = settings.home
-    manifest = load_manifest(machine, root)
-    mods = resolve_modules(manifest.modules, root)
+    manifest, mods = load_machine(machine, root)
     root_prefix = str(root) + os.sep
 
     def _short(path: str) -> str:

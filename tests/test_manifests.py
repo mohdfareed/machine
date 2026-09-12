@@ -4,10 +4,38 @@ from pathlib import Path
 
 import pytest
 
-from app.machine import load_manifest
+from app.discovery import list_machines
+from app.env import settings
+from app.machine import load_machine, load_manifest
 from app.models import Failure, FileMapping, Package, Platform
 from app.ops import packages as machine_packages
 from app.ops import scripts as machine_scripts
+
+
+def test_all_machine_configurations_are_valid() -> None:
+    for machine_id in list_machines(settings.home):
+        load_machine(machine_id, settings.home)
+
+
+def test_load_machine_validates_all_sources(tmp_path: Path) -> None:
+    core = tmp_path / "config" / "core"
+    core.mkdir(parents=True)
+    (core / "module.py").write_text(
+        "from app.models import FileMapping, Module\n"
+        "module = Module(files=[FileMapping(source='missing.conf', target='~/.config')])\n"
+    )
+    machine = tmp_path / "machines" / "test"
+    machine.mkdir(parents=True)
+    (machine / "manifest.py").write_text(
+        "from app.models import Machine\nmanifest = Machine(scripts=['missing.sh'])\n"
+    )
+
+    with pytest.raises(ValueError) as error:
+        load_machine("test", tmp_path)
+
+    message = str(error.value)
+    assert "'core' file source missing" in message
+    assert "'test' script missing" in message
 
 
 def test_module_dependencies_auto_included(tmp_path: Path) -> None:

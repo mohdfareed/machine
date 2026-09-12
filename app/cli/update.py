@@ -29,34 +29,31 @@ def update(
     ] = [],
 ) -> None:
     """Run maintenance and update scripts for the current machine."""
-
-    from app.machine import load_manifest, resolve_modules
+    from app.machine import load_machine
 
     root = settings.home
     machine_id = get_current_machine()
     if not machine_id:
         reporting.error("No machine selected.")
-
         raise SystemExit(1)
 
     # Load the machine and select maintenance inputs.
-    manifest = load_manifest(machine_id, root)
+    manifest, mods = load_machine(machine_id, root)
     validate_managers(manifest.pkg_managers)
-    all_modules = resolve_modules(manifest.modules, root)
 
     if module_names:
-        unknown = set(module_names) - {m.name for m in all_modules}
+        unknown = set(module_names) - {m.name for m in mods}
         if unknown:
             reporting.error(f"Unknown modules: {', '.join(sorted(unknown))}")
 
             raise SystemExit(1)
 
-        active = [m for m in all_modules if m.name in set(module_names) or m.name == "core"]
+        active = [m for m in mods if m.name in set(module_names) or m.name == "core"]
         raw_scripts = [s for m in active for s in m.scripts]
         all_packages = [p for m in active for p in m.packages]
     else:
-        raw_scripts = [s for m in all_modules for s in m.scripts] + manifest.scripts
-        all_packages = [p for m in all_modules for p in m.packages] + manifest.packages
+        raw_scripts = [s for m in mods for s in m.scripts] + manifest.scripts
+        all_packages = [p for m in mods for p in m.packages] + manifest.packages
 
     up_scripts = [s for s in filter_scripts(raw_scripts) if Path(s).name.startswith("up_")]
     script_packages = [p for p in all_packages if p.script and p.applies_to(PLATFORM)]
@@ -66,7 +63,7 @@ def update(
 
     # Resolve ownership and the shared script environment.
     owners: dict[str, str] = {}
-    for m in all_modules:
+    for m in mods:
         for s in m.scripts:
             owners[s] = m.name
         for p in m.packages:
