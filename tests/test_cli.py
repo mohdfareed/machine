@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from app.cli import deploy, sync
+from app.cli import deploy, entry, sync
 
 
 def git(root: Path, *args: str) -> str:
@@ -40,6 +40,14 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     deployed = []
     monkeypatch.setattr(sync, "deploy", lambda **kwargs: deployed.append(kwargs))
     return canonical, checkout, deployed
+
+
+def test_machine_validation_is_case_insensitive(monkeypatch):
+    monkeypatch.setattr(entry, "machine_ids", ["homelab", "macbook"])
+
+    assert entry.validate_machine("HOMELAB") == "homelab"
+    with pytest.raises(entry.typer.BadParameter):
+        entry.validate_machine("unknown")
 
 
 @pytest.mark.parametrize("no_deploy", [False, True])

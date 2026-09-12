@@ -27,7 +27,7 @@ def sync(
 
     if settings.dry_run:
         reporting.heading("Plan")
-        reporting.detail(f"Would fetch main from {_CANONICAL_REPO_URL}")
+        reporting.detail(f"Fetch main from {_CANONICAL_REPO_URL}")
         reporting.detail("Would merge canonical main with --ff-only --autostash.")
         reporting.detail("Would check for conflicts after restoring local changes.")
         return

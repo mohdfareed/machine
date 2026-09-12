@@ -22,6 +22,7 @@ def deploy_files(
     owners: dict[str, str] | None = None,
 ) -> FileResult:
     """Deploy applicable file mappings and return the created count and failures."""
+    reporting.heading("Deploying files")
     created = 0
     failures: list[Failure] = []
 
@@ -47,7 +48,9 @@ def deploy_files(
             _logger.debug("[%s] Failed to link %s → %s: %s", module, tgt, src, exc, exc_info=True)
             failures.append(Failure(module=module, item=str(tgt), detail=str(exc)))
 
-    return FileResult(created=created, failures=failures)
+    results = FileResult(created=created, failures=failures)
+    reporting.detail(f"{results.created} files changed")
+    return results
 
 
 # =============================================================================

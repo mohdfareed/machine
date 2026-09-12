@@ -25,18 +25,10 @@ def _print(
     style: str = "",
     error: bool = False,
     level: int = logging.INFO,
-    space: bool = False,
 ) -> None:
     output = err_console if error else console
-    if space:
-        output.print()
     output.print(Text(prefix + message, style=style))
     _logger.log(level, message, extra={"reported": True})
-
-
-def heading(message: str) -> None:
-    """Start a human-readable section without fixed-width decoration."""
-    _print(message, prefix="▶ ", style="bold magenta", space=True)
 
 
 def detail(message: str, *, error: bool = False) -> None:
@@ -46,7 +38,7 @@ def detail(message: str, *, error: bool = False) -> None:
 
 def success(message: str) -> None:
     """Mark a successfully completed operation."""
-    _print(message, prefix="✓ ", style="green", space=True)
+    _print(message, prefix="✓ ", style="green")
 
 
 def warning(message: str) -> None:
@@ -56,15 +48,20 @@ def warning(message: str) -> None:
 
 def error(message: str) -> None:
     """Show a short failure summary on the error console."""
-    _print(message, prefix="✗ ", style="red", error=True, level=logging.ERROR, space=True)
+    _print(message, prefix="✗ ", style="red", error=True, level=logging.ERROR)
 
 
 def command(cmd: str) -> None:
     """Announce a command without altering its external output."""
-    label = "Would run: " if settings.dry_run else "$ "
-    _print(label + cmd, prefix="  ", style="dim")
+    _print("$ " + cmd, prefix="  ", style="dim")
     if not settings.dry_run:
         console.print()
+
+
+def heading(message: str) -> None:
+    """Start a human-readable section without fixed-width decoration."""
+    detail("")
+    _print(message, prefix="▶ ", style="bold magenta")
 
 
 # =============================================================================
@@ -80,15 +77,16 @@ def print_summary(
 ) -> None:
     """Report the outcome and exit unsuccessfully when operations failed."""
     if not failures:
-        message = "Plan complete." if settings.dry_run else "Complete."
-        success(message)
+        detail("")
         detail(f"Log: {log_file}")
+        success(f"Machine deployed successfully.")
         return
 
     error(f"Finished with {len(failures)} failure(s).")
     for failure in failures:
         detail(f"Failed: {failure.module} · {failure.item}", error=True)
+
+    detail(f"Log: {log_file}", error=True)
     if init_failed:
         detail("Initialization failed; remaining steps were not run.", error=True)
-    detail(f"Log: {log_file}", error=True)
     raise typer.Exit(1)

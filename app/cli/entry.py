@@ -3,7 +3,6 @@
 import logging
 import sys
 
-import click
 import typer
 
 from app import reporting
@@ -44,7 +43,7 @@ def main(prog_name: str | None = None) -> None:
 # MARK: Current Machine
 # =============================================================================
 
-machines = click.Choice(list_machines(settings.home), case_sensitive=False)
+machine_ids = list_machines(settings.home)
 
 
 def get_current_machine() -> str | None:
@@ -92,18 +91,28 @@ def _callback(
 # =============================================================================
 
 
+def validate_machine(value: str) -> str:
+    """Validate a machine ID and return its canonical casing."""
+    for machine_id in machine_ids:
+        if machine_id.casefold() == value.casefold():
+            return machine_id
+
+    choices = "|".join(machine_ids)
+    raise typer.BadParameter(f"{value!r} is not one of: {choices}")
+
+
 def complete_machines(incomplete: str) -> list[tuple[str, str]]:
     """Shell completion for machine IDs, marking the current selection."""
     return [
-        (n, "Machine (default)" if n == get_current_machine() else "Machine")
-        for n in list_machines(settings.home)
+        (n, "(default)" if n == get_current_machine() else "")
+        for n in machine_ids
         if n.startswith(incomplete)
     ]
 
 
 def complete_modules(incomplete: str) -> list[tuple[str, str]]:
     """Shell completion for discovered module names."""
-    return [(n, "Module") for n in list_modules(settings.home) if n.startswith(incomplete)]
+    return [(n, "") for n in list_modules(settings.home) if n.startswith(incomplete)]
 
 
 def _create_app() -> typer.Typer:

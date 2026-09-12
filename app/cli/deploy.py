@@ -10,8 +10,9 @@ from app.cli.entry import (
     complete_machines,
     complete_modules,
     get_current_machine,
-    machines,
+    machine_ids,
     save_current_machine,
+    validate_machine,
 )
 from app.env import build_env, settings, write_env_file
 from app.machine import validate_modules
@@ -36,9 +37,9 @@ def deploy(
             "-m",
             "--machine",
             metavar="MACHINE",
-            help=f"The machine to set up. <{'|'.join(machines.choices)}>",
+            help=f"The machine to set up.\t<{'|'.join(machine_ids)}>",
             autocompletion=complete_machines,
-            click_type=machines,
+            callback=validate_machine,
             prompt=True,
         ),
     ] = get_current_machine() or None,
@@ -52,13 +53,11 @@ def deploy(
     ] = [],
 ) -> None:
     """Deploy configs, install packages, and run scripts."""
-
     from app.machine import load_manifest, resolve_modules
 
     root = settings.home
     if not machine:
         reporting.error("No machine selected.")
-
         raise SystemExit(1)
 
     # Load and validate the machine configuration.
@@ -74,7 +73,6 @@ def deploy(
         reporting.error("Invalid module configuration.")
         for e in errors:
             reporting.detail(e, error=True)
-
         raise SystemExit(1)
 
     # Select deployment inputs, keeping core setup in filtered runs.
@@ -82,7 +80,6 @@ def deploy(
         unknown = module_filter - {m.name for m in all_modules}
         if unknown:
             reporting.error(f"Unknown modules: {', '.join(sorted(unknown))}")
-
             raise SystemExit(1)
 
         active = [m for m in all_modules if m.name in module_filter or m.name == "core"]
@@ -100,10 +97,6 @@ def deploy(
     script_env = build_env(machine, root)
     script_env["MC_PACKAGE_MANAGERS"] = " ".join(manifest.pkg_managers)
     owners = _build_owners(active, manifest, machine)
-
-    reporting.heading(f"Plan · {machine}" if settings.dry_run else machine)
-    reporting.detail(f"Modules: {', '.join(m.name for m in active)}")
-
     init_scripts = [s for s in all_scripts if Path(s).name.startswith("init_")]
     post_scripts = [
         s
@@ -112,20 +105,15 @@ def deploy(
     ]
 
     # Deploy files and run setup before installing packages.
-    cache_sudo()
-    failures: list[Failure] = []
-
-    reporting.heading("Deploying files")
+    reporting.heading(f"Machine: {machine}")
+    reporting.detail(f"Modules: {', '.join(m.name for m in active)}")
     file_result = deploy_files(all_files, owners=owners)
-    reporting.detail(
-        f"{file_result.created} files would change"
-        if settings.dry_run
-        else f"{file_result.created} files changed"
-    )
-    failures.extend(file_result.failures)
     init_failures = run_scripts(init_scripts, env=script_env, owners=owners)
-    failures.extend(init_failures)
 
+    # Report failures during initialization and stop deployment.
+    failures: list[Failure] = []
+    failures.extend(file_result.failures)
+    failures.extend(init_failures)
     if init_failures:
         reporting.print_summary(failures, settings.log_file, init_failed=True)
         return

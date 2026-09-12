@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Annotated
 import typer
 
 from app import reporting
-from app.cli.entry import complete_machines, get_current_machine, machines
+from app.cli.entry import complete_machines, get_current_machine, validate_machine
 from app.env import PLATFORM, build_env, settings
 from app.ops.packages import select_package_source
 from app.ops.scripts import filter_scripts
@@ -104,7 +104,7 @@ def show(
             metavar="MACHINE",
             help="The machine to inspect.",
             autocompletion=complete_machines,
-            click_type=machines,
+            callback=validate_machine,
             prompt=True,
         ),
     ] = get_current_machine() or "",

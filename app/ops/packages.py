@@ -87,8 +87,7 @@ def _install(pkg: Package, source: PackageSource | None, module: str = "?") -> F
     )
     assert cmd is not None
 
-    reporting.heading(f"{'Would install' if settings.dry_run else 'Installing'} {pkg.name}")
-    reporting.detail(f"Module: {module}")
+    reporting.heading(f"Installing {pkg.name}@{module}")
     result = run(cmd, label=module, capture_output=True)
     if package_managers.install_succeeded(source, result.returncode, result.stdout):
         if not settings.dry_run:

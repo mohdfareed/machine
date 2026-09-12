@@ -10,17 +10,18 @@ readme = "README.md"
 
 requires-python = ">=3.14"
 dependencies = [
-    "click>=8.5.0",
-    "rich>=15.0.0",
-    "typer>=0.21",
-    "pydantic>=2.13.2",
+    "click>=8.5",
+    "rich>=15.0",
+    "typer>=0.27",
+    "pydantic>=2.13",
 ]
 
 [dependency-groups]
 dev = [
+    "codespell>=2.4",
     "pyright>=1.1",
-    "pytest>=9.0.3",
-    "ruff>=0.15.11",
+    "pytest>=9.1",
+    "ruff>=0.16",
     "shellcheck-py>=0.11",
 ]
 
@@ -49,6 +50,9 @@ src = [".", "config", "machines"]
 
 [tool.ruff.lint]
 select = ["E", "I", "W", "RUF"]
+
+[tool.codespell]
+skip = "*.lock,*.json,*.plist,compose.yaml,.git,.venv,**/data/**,**/logs/**,config/**/scripts/**,config/**/module.py,machines/**/scripts/**,machines/**/manifest.py"
 
 [tool.pyright]
 pythonVersion = "3.14"

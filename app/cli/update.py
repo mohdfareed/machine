@@ -79,7 +79,7 @@ def update(
 
     script_env = build_env(machine_id, root)
     script_env["MC_PACKAGE_MANAGERS"] = " ".join(manifest.pkg_managers)
-    reporting.heading(f"Plan · {machine_id}" if settings.dry_run else machine_id)
+    reporting.heading(machine_id)
 
     # Re-run script-backed packages before maintenance scripts.
     cache_sudo()

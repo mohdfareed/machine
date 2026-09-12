@@ -79,12 +79,9 @@ def build_env(machine_id: str, root: Path) -> dict[str, str]:
 
 def write_env_file(machine_id: str, root: Path) -> None:
     """Write MC_HOME and MC_ID to ~/.env for login shells."""
-    if settings.dry_run:
-        _logger.info("[dry-run] write %s", _ENV_FILE)
-        return
-
-    _ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
-    _ENV_FILE.write_text(f"MC_HOME={root}\nMC_ID={machine_id}\n")
+    if not settings.dry_run:
+        _ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _ENV_FILE.write_text(f"MC_HOME={root}\nMC_ID={machine_id}\n")
     _logger.info("Wrote %s", _ENV_FILE)
 
 
@@ -95,6 +92,19 @@ def write_env_file(machine_id: str, root: Path) -> None:
 
 def _resolve_env(path: Path, raw: dict[str, str]) -> dict[str, str]:
     env = dict(raw)
+
+    # Overlay file values before expansion so references declared in the same
+    # file are resolved before callers use them to locate another env file.
+    if path.is_file():
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            key, separator, value = line.partition("=")
+            if not key or not separator:
+                continue
+            env[key.strip()] = value.strip().strip('"').strip("'")
 
     # Expand env references in values until no changes occur.
     for _ in range(len(env)):
@@ -115,21 +125,6 @@ def _resolve_env(path: Path, raw: dict[str, str]) -> dict[str, str]:
 
         if not changed:
             break
-
-    # Skip missing env files.
-    if not path.is_file():
-        return env
-
-    # Overlay raw file values for expansion on the next resolution pass.
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        key, _, value = line.partition("=")
-        if not key or not _:
-            continue
-        env[key.strip()] = value.strip().strip('"').strip("'")
 
     return env
 

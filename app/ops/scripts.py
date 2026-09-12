@@ -114,9 +114,7 @@ def _execute(
     # Prepare script permissions and announce execution.
     if is_unix and not os.access(script, os.X_OK):
         os.chmod(script, 0o755)
-
-    reporting.heading(f"{'Would run' if settings.dry_run else 'Running'} {script.name}")
-    reporting.detail(f"Module: {module}")
+    reporting.heading(f"Running {script.name}@{module}")
 
     # Select the script interpreter.
     match script.suffix.lower():

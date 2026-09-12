@@ -2,42 +2,41 @@
 set -Eeuo pipefail
 cd "$(dirname "$0")/.."
 
-echo "==> Syncing dependencies..."
-uv sync --dev --locked
+echo "==> Checking dependency updates..."
+uv lock --check
+uv lock --upgrade --dry-run
 
 echo
-echo "==> Running checks..."
+echo "==> Checking synced dependencies..."
+uv sync --dev --check
 
-shell_scripts="$(mktemp)"
-python_scripts="$(mktemp)"
-trap 'rm -f "$shell_scripts" "$python_scripts"' EXIT
+echo
+echo "==> Checking shell scripts..."
+find . \
+    \( -path './.git' -o -path './.venv' \) -prune -o \
+    -type f -name '*.sh' \
+    -exec uv run shellcheck --severity=warning {} +
 
-find . -name '*.sh' ! -path './.venv/*' -print0 > "$shell_scripts"
-if [[ -s "$shell_scripts" ]]; then
-    xargs -0 uv run shellcheck --severity=warning < "$shell_scripts"
-    if command -v zsh >/dev/null 2>&1; then
-        while IFS= read -r -d '' f; do
-            if head -1 "$f" | grep -q 'env zsh'; then
-                zsh -n "$f"
-            fi
-        done < "$shell_scripts"
-    else
-        echo "Skipping zsh syntax checks because zsh is not installed."
-    fi
+# Check zsh scripts
+if command -v zsh >/dev/null 2>&1; then
+    while IFS= read -r -d '' script; do
+        if grep -q '^#!/usr/bin/env zsh' "$script"; then
+            zsh -n "$script"
+        fi
+    done < <(find . \
+        \( -path './.git' -o -path './.venv' \) -prune -o \
+        -type f -name '*.sh' -print0)
+else
+    echo "Skipping zsh syntax checks because zsh is not installed."
 fi
 
-find . -name '*.py' ! -path './.venv/*' -print0 > "$python_scripts"
-if [[ -s "$python_scripts" ]]; then
-    xargs -0 uv run python -c \
-        'import pathlib, sys; [compile(pathlib.Path(path).read_text(encoding="utf-8"), path, "exec") for path in sys.argv[1:]]' \
-        < "$python_scripts"
-fi
-
+echo
+echo "==> Checking Python files..."
 uv run ruff format --check .
 uv run ruff check .
 uv run pyright
+uv run codespell .
 uv run pytest -q
-npx --yes cspell@latest lint --no-progress --no-summary "**"
 
 echo
 printf '\033[32m==> All checks passed!\033[0m\n'

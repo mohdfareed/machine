@@ -144,7 +144,7 @@ runtime state, caches, and machine-generated application data local.
 - VS Code Remote Tunnels are owned by the `vscode` module; account authorization remains a one-time manual step on each machine
 - The `agents` module owns the Codex CLI, unified ChatGPT desktop app, and portable `~/.codex/config.toml`; credentials, pairing/enrollments, live databases, histories, caches, downloaded plugins, and generated memories stay machine-local
 - Editor tasks should avoid ad hoc external tool dependencies; prefer shell builtins or repo-managed entrypoints so tasks stay portable across machines
-- Shared repo policy should prefer cross-editor files (`pyproject.toml`, `.editorconfig`, `.shellcheckrc`, `.markdownlint.json`, `.cspell.json`) over editor-specific settings
+- Shared repo policy should prefer cross-editor files (`pyproject.toml`, `.editorconfig`, `.shellcheckrc`, `.markdownlint.json`) over editor-specific settings
 - Standalone services own their code, tests, dependencies, documentation, and internal directory setup; this repo owns only deployment wiring and host prerequisites
 
 ## Coding Conventions
@@ -197,5 +197,5 @@ add a new convention for every fix or feature, or record completed work here.
 - Use Mermaid for useful diagrams, not ASCII art; avoid introductions, exhaustive inventories, generic tutorials, and repeated guidance across READMEs
 - Do not add README navigation blocks or section-anchor cross-links; keep notes about using the system, not implementation details
 - Do not turn discussion questions into documentation changes; edit docs when requested or when implementation changes invalidate existing instructions
-- Never add inline spellchecker directives to Markdown; keep spelling exceptions in `.cspell.json`
+- Never add inline spellchecker directives to Markdown; keep spelling exceptions in `pyproject.toml`
 - Before sending, remove every bullet whose deletion would not change the reader's understanding or next action
