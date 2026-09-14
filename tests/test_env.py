@@ -14,7 +14,7 @@ def test_build_env_resolves_private_path_without_saving_selection(tmp_path, monk
     private = tmp_path / "private"
     machine_dir = root / "machines" / "test"
     machine_dir.mkdir(parents=True)
-    (private / "env").mkdir(parents=True)
+    private.mkdir()
     env_file = tmp_path / ".env"
     env_file.write_text("MC_ID=previous\n")
     monkeypatch.setattr(env, "_ENV_FILE", env_file)
@@ -26,9 +26,7 @@ def test_build_env_resolves_private_path_without_saving_selection(tmp_path, monk
     (machine_dir / "machine.env").write_text(
         'PRIVATE_ROOT="$PRIVATE_SOURCE"\nMC_PRIVATE="$PRIVATE_ROOT"\n'
     )
-    (private / "env" / "test.env").write_text(
-        'TAILNET_NAME="example"\nMC_ID=wrong\nMC_PRIVATE=/wrong\n'
-    )
+    (private / "machine.env").write_text('TAILNET_NAME="example"\nMC_ID=wrong\nMC_PRIVATE=/wrong\n')
 
     result = env.build_env("test")
 

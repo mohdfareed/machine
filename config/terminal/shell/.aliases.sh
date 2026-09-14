@@ -1,68 +1,59 @@
 #!/usr/bin/env zsh
 
 # =============================================================================
-# MARK: Aliases
+# MARK: Files and directories
 # =============================================================================
 
-if [ "$TERM_PROGRAM" = "vscode" ]; then
-    alias clear='clear && clear'
+alias cat='bat --paging=never'
+
+if [[ "$OSTYPE" == linux* ]]; then
+    # show disk usage for real filesystems
+    alias disk='df -h -x tmpfs -x devtmpfs -x squashfs -x overlay -x efivarfs'
 fi
 
-alias ls='eza --icons --group-directories-first --sort=Name'
-alias lst='ls -T'
-alias lls='ls -lhmU --git --no-user'
-alias llst='lls -T'
+if [[ "$OSTYPE" == darwin* ]]; then
+    # remove hidden flag from files and directories
+    alias unhide='chflags nohidden'
+    alias unhide-recurse='chflags -R nohidden'
+fi
 
-alias zsh::reload='exec $SHELL'
-alias ssh::gen-key='ssh-keygen -t ed25519 -C'
+# =============================================================================
+# MARK: Development
+# =============================================================================
 
-alias lg='lazygit'
-alias dc='docker compose'
+# activate python virtual environment
+venv::activate() {
+    usage="usage: $0 [venv_dir]"
+    if (($# > 1)); then echo "$usage" && return 1; fi
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$usage" && return 0
+    fi
+    # shellcheck source=/dev/null
+    source "${1-.venv}/bin/activate"
+}
+
+# =============================================================================
+# MARK: SSH and credentials
+# =============================================================================
+
+# generate random passwords and API tokens
 alias gen-pass='openssl rand -base64 32'
 alias gen-token='openssl rand -hex 32'
 
-# =============================================================================
-# MARK: Platform-Specific
-# =============================================================================
+# generate an SSH key
+alias ssh::gen-key='ssh-keygen -t ed25519 -C'
 
-# Linux: show disk usage for real filesystems
-if [[ "$OSTYPE" == linux* ]]; then
+# register an SSH key to authorized_keys on a host
+ssh::reg-key() {
+    usage="usage: $0 host [key]"
+    if (( $# < 1 || $# > 2 )); then echo "$usage" && return 1; fi
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$usage" && return 0
+    fi
+    ssh-copy-id -i "$HOME/.ssh/${2:-personal}.pub" "$1"
+}
 
-    alias disk='df -h -x tmpfs -x devtmpfs -x squashfs -x overlay -x efivarfs'
-
-fi
-
-# macOS: re-add all ssh keys to keychain
 if [[ "$OSTYPE" == darwin* ]]; then
-
-    # remove hidden flag from files and directories
-    function unhide {
-        local usage="usage: unhide [-r|--recursive] path"
-        local recursive=false
-
-        if [[ "${1-}" == "-h" || "${1-}" == "--help" ]]; then
-            printf '%s\n' "$usage"
-            return 0
-        fi
-
-        if [[ "${1-}" == "-r" || "${1-}" == "--recursive" ]]; then
-            recursive=true
-            shift
-        fi
-
-        if (( $# != 1 )); then
-            printf '%s\n' "$usage" >&2
-            return 1
-        fi
-
-        local target="$1"
-        if [[ "$recursive" == true ]]; then
-            chflags -R nohidden "$target"
-        else
-            chflags nohidden "$target"
-        fi
-    }
-
     # fix ssh issues by re-adding keys to keychain
     function ssh::fix-keychain {
         for file in ~/.ssh/*; do
@@ -73,39 +64,17 @@ if [[ "$OSTYPE" == darwin* ]]; then
             ssh-add --apple-use-keychain "$file"
         done
     }
-
 fi
 
 # =============================================================================
-# MARK: Functions
+# MARK: Shell and environment
 # =============================================================================
 
-# load private values into this shell on demand
-secrets() {
-    if [[ -z "$MC_PRIVATE" || -z "$MC_ID" ]]; then
-        echo "mc environment not configured"
-        return 1
-    fi
+if [ "$TERM_PROGRAM" = "vscode" ]; then
+    alias clear='clear && clear'
+fi
 
-    local file="$MC_PRIVATE/env/$MC_ID.env"
-    if [[ ! -f "$file" ]]; then
-        echo "no secrets file found"
-        return 1
-    fi
-
-    dotenv::load "$file"
-    echo "secrets loaded for this shell"
-}
-
-# clone a git repo
-git::clone() {
-    usage="usage: $0 name [args...]"
-    if (($# < 1)); then echo "$usage" && return 1; fi
-    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        echo "$usage" && return 0
-    fi
-    git clone "git@github.com:mohdfareed/$1.git" "${@:2}"
-}
+alias zsh::reload='exec $SHELL'
 
 # time shell startup
 zsh::time() {
@@ -117,38 +86,13 @@ zsh::time() {
     for _ in $(seq 1 "${1-1}"); do time $SHELL -i -c exit; done
 }
 
-# activate python virtual environment
-venv::activate() {
-    usage="usage: $0 [venv_dir]"
-    if (($# > 1)); then echo "$usage" && return 1; fi
-    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        echo "$usage" && return 0
-    fi
-
-    venv=${1-.venv}
-    if [[ ! -d "$venv" ]]; then
-        echo "no virtual environment directory found"
+# load private values into this shell on demand
+mc::secrets() {
+    local file="${MC_PRIVATE:?}/machine.env"
+    if [[ ! -f "$file" ]]; then
+        print -u2 "No secrets file: $file"
         return 1
     fi
-
-    # shellcheck source=/dev/null
-    source "$venv/bin/activate"
-}
-
-# register an SSH key to authorized_keys on a host
-ssh::reg-key() {
-    usage="usage: $0 [key_name] [user@]host"
-    if (( $# < 1 || $# > 2 )); then echo "$usage" && return 1; fi
-    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-        echo "$usage" && return 0
-    fi
-
-    key="$HOME/.ssh/${1-personal}.pub"
-    if [[ ! -f "$key" ]]; then
-        echo "no public key file found"
-        return 1
-    fi
-    host=$2
-
-    ssh-copy-id -i "$key" "$host"
+    dotenv::load "$file"
+    echo "secrets loaded"
 }

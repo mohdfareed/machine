@@ -1,10 +1,11 @@
 # =============================================================================
-# MARK: Environment and Input
+# MARK: Environment and Utilities
 # =============================================================================
 
+zmodule homebrew
 zmodule environment
 zmodule input
-zmodule homebrew --if-command brew
+zmodule exa --if-command eza
 
 # =============================================================================
 # MARK: Completion
@@ -14,14 +15,15 @@ zmodule homebrew --if-command brew
 zmodule zsh-users/zsh-completions --fpath src
 zmodule ohmyzsh/ohmyzsh --root plugins/docker/completions --fpath .
 zmodule completion
+# Load dotnet **after** the main completion is initialized.
 zmodule ohmyzsh/ohmyzsh --root plugins/dotnet --if-command dotnet
-
-# Keep support for the older fzf versions shipped by APT.
-zmodule ohmyzsh/ohmyzsh --root plugins/fzf --if-command fzf
 
 # =============================================================================
 # MARK: Suggestions and History
 # =============================================================================
+
+# Load key bindings and fuzzy completion from the installed fzf.
+zmodule fzf --use mkdir --if-command fzf --cmd 'source <(fzf --zsh)'
 
 # Preserve the upstream order for widgets that wrap one another.
 zmodule zsh-users/zsh-syntax-highlighting

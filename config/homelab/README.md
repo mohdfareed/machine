@@ -14,7 +14,7 @@ Tailscale networking.
 
 - Create Auth and API keys at
   [Tailscale Console](https://console.tailscale.com/admin/settings/keys)
-  and store them in `$MC_PRIVATE/env/$MC_ID.env` below.
+  and store them in `$MC_PRIVATE/machine.env` below.
 - Auth key properties:
   - Reusable,
   - ephemeral (optional),
@@ -22,7 +22,7 @@ Tailscale networking.
   - tags (`tag:container`)
 
 ```env
-# `$MC_PRIVATE/env/$MC_ID.env`
+# `$MC_PRIVATE/machine.env`
 TAILNET_NAME=<tailnet-name-without-.ts.net>
 TAILSCALE_API_KEY=tskey-api-<id>-<secret>
 TS_DOCKER_AUTHKEY=tskey-client-<id>-<secret>
@@ -67,10 +67,11 @@ using one of three patterns:
 Docker is automatically installed, but should be started for the first time and
 configured to run on boot.
 
-The deploy script (`docker.unix.sh`) creates `~/.homelab/<service>/`
-directories on the host, symlinks compose files from the repo, and runs
-`docker compose up`. Runtime data (volumes, logs) stays in `~/.homelab/` for
-manual backup and migration. Example backup script at
+The deploy scripts link `$MC_HOMELAB_DIR/<service>` to repository service
+directories (symlinks on Unix, junctions on Windows), then run `docker compose up`.
+Existing real paths are left untouched; move or migrate them separately before
+deploying. Compose defines the runtime data locations; relative bind mounts live
+inside the repository service directory. Example backup script at
 [`_backup.sh`](../../machines/homelab/scripts/_backup.sh).
 
 ### Add a service
@@ -84,7 +85,7 @@ Create a `<service>/compose.yaml` file per service at:
 flowchart TD
     Shared["config/homelab/docker/service"] --> Deploy["mc deploy homelab"]
     Machine["machines/id/docker/service"] --> Deploy
-    Deploy --> Link["~/.homelab/service → repo"]
+    Deploy --> Link["$MC_HOMELAB_DIR/service → repo"]
     Link --> Compose["Docker Compose"]
 ```
 
@@ -97,10 +98,10 @@ mc deploy homelab
 ```
 
 This pulls/builds and starts **all** its Compose stacks.
-For an individual service, open its directory under `~/.homelab/`:
+For an individual service, open its directory under `$MC_HOMELAB_DIR`:
 
 ```sh
-secrets # alias to load private env vars
+mc::secrets # alias to load private env vars
 docker compose up -d --build
 docker compose logs --follow
 ```

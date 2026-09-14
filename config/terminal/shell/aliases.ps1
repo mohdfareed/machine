@@ -1,67 +1,58 @@
 #!/usr/bin/env pwsh
 
 # =============================================================================
-# MARK: Functions and Aliases
+# MARK: Files and directories
 # =============================================================================
 
-Set-Alias -Name lg -Value LazyGit
+Set-Alias -Name cat -Value ShowFile
+function ShowFile { bat --paging=never @args }
+
+# Match Zim's exa module defaults and shortcuts.
+if (-not $env:EZA_COLORS) {
+    $env:EZA_COLORS = 'da=1;34:gm=1;34:Su=1;34'
+}
+
 Set-Alias -Name ls -Value ListFiles
+function ListFiles { eza --group-directories-first @args }
 
-# Match the Zsh file-listing shortcuts.
-function ListFiles {
-    eza --icons --group-directories-first --sort=Name @args
+eza --git $PSCommandPath *> $null
+if ($LASTEXITCODE -eq 0) {
+    # Enable Git status only when this eza build supports it.
+    function ll { ListFiles -l --git @args }
+}
+else {
+    function ll { ListFiles -l @args }
 }
 
-function lst {
-    ListFiles -T @args
-}
+function l { ll -a @args }
+function lr { ll -T @args }
+function lx { ll -sextension @args }
+function lk { ll -ssize @args }
+function lt { ll -smodified @args }
+function lc { ll -schanged @args }
 
-function lls {
-    ListFiles -lhmU --git --no-user @args
-}
+# =============================================================================
+# MARK: Development
+# =============================================================================
 
-function llst {
-    lls -T @args
-}
+# Activate a Python virtual environment in this shell.
+function Enter-Venv {
+    [CmdletBinding()]
+    param ([string]$Path = '.venv')
 
-if ($env:TERM_PROGRAM -eq 'vscode') {
-    function Clear {
-        Clear-Host; Clear-Host
-    }
-}
-
-# Load private values into this shell on demand
-function Secrets {
-    if (-not $env:MC_PRIVATE -or -not $env:MC_ID) {
-        Write-Error "mc environment not configured"
-        return
-    }
-
-    $file = "$env:MC_PRIVATE/env/$env:MC_ID.env"
-    if (-not (Test-Path $file)) {
-        Write-Error "no secrets file found"
-        return
+    # Python uses Activate.ps1; uv uses the lowercase filename.
+    $bin = if ($IsWindows) { 'Scripts' } else { 'bin' }
+    $activate = Join-Path $Path $bin 'Activate.ps1'
+    if (-not (Test-Path -LiteralPath $activate -PathType Leaf)) {
+        $activate = Join-Path $Path $bin 'activate.ps1'
     }
 
-    Import-DotEnv $file
-    Write-Host "secrets loaded for this shell"
+    . $activate
 }
 
-# Clone a git repo
-function GitClone {
-    param (
-        [Switch]$Help,
-        [Parameter(Mandatory = $true)][string]$RepoName,
-        [string[]]$AdditionalArgs
-    )
-
-    if ($Help) {
-        Write-Host "Usage: GitClone -RepoName <repo-name> [-AdditionalArgs <arg1> <arg2> ...]"
-        return
-    }
-
-    git clone "git@github.com:mohdfareed/$RepoName.git" $AdditionalArgs
-}
+# =============================================================================
+# MARK: SSH and credentials
+# =============================================================================
 
 # Generate a new SSH key pair
 function GenKey {
@@ -95,12 +86,29 @@ function RegKey {
     }
 
     $pubKeyPath = "$HOME/.ssh/$KeyName.pub"
-    if (-Not (Test-Path $pubKeyPath)) {
-        Write-Error "Public key file not found: $pubKeyPath"
-        return
-    }
-
     $pubKey = Get-Content -Path $pubKeyPath -Raw
     ssh "$User@$HostName" "echo '$pubKey' >> ~/.ssh/authorized_keys"
     Write-Host "Public key $pubKeyPath added to $User@${HostName}:authorized_keys"
+}
+
+# =============================================================================
+# MARK: Shell and environment
+# =============================================================================
+
+if ($env:TERM_PROGRAM -eq 'vscode') {
+    function Clear {
+        Clear-Host; Clear-Host
+    }
+}
+
+# Load private values into this shell on demand
+function Import-Secrets {
+    $file = Join-Path $env:MC_PRIVATE 'machine.env' -ErrorAction Stop
+    if (-not (Test-Path $file)) {
+        Write-Error "no secrets file found"
+        return
+    }
+
+    Import-DotEnv $file
+    Write-Host "secrets loaded for this shell"
 }

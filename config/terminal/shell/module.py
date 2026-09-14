@@ -26,6 +26,7 @@ module = Module(
     packages=[
         # zsh
         Package(brew="zsh", apt="zsh"),
+        Package(brew="fzf", apt="fzf"),
         # powershell
         Package(
             cask="powershell@preview",
@@ -34,17 +35,13 @@ module = Module(
             winget="microsoft.powershell",
         ),
         # utilities
-        Package(brew="fzf", apt="fzf"),
-        Package(apt="unzip"),
         Package(brew="eza", winget="eza-community.eza"),
+        Package(brew="bat", winget="sharkdp.bat"),
         Package(brew="oh-my-posh", winget="JanDeDobbeleer.OhMyPosh"),
+        # tools
+        Package(apt="unzip"),
         Package(brew="btop", snap="btop", scoop="btop-lhm"),
-        Package(
-            brew="fastfetch",
-            winget="fastfetch",
-            apt="fastfetch",
-            platforms=[Platform.MACOS, Platform.WINDOWS, Platform.LINUX],
-        ),
+        Package(brew="fastfetch", winget="fastfetch", apt="fastfetch"),
         # fonts
         Package(
             name="jetbrains-mono",

@@ -87,7 +87,7 @@ def build_env(machine_id: str, *, include_private: bool = True) -> dict[str, str
 
     # Load this machine's secrets without letting them relocate its base paths.
     selected = {key: env[key] for key in base}
-    private_file = Path(env["MC_PRIVATE"]) / "env" / f"{machine_id}.env"
+    private_file = Path(env["MC_PRIVATE"]) / "machine.env"
     env.update(_read_env(private_file, {**os.environ, **env}))
     env.update(selected)
     return env

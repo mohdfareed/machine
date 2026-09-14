@@ -29,14 +29,21 @@ if (-not $dockerReady) {
     throw 'docker daemon not available'
 }
 
-# Link homelab service directories while preserving existing runtime data.
+# Link homelab service directories without replacing real paths.
 New-Item -ItemType Directory -Path $homelabDir -Force | Out-Null
 function Set-ServiceLink {
     param([IO.DirectoryInfo]$ServiceDirectory)
 
     $link = Join-Path $homelabDir $ServiceDirectory.Name
     $item = Get-Item -LiteralPath $link -Force -ErrorAction SilentlyContinue
-    if ($item -and $item.LinkType) {
+
+    # Leave existing data for a separate migration.
+    if ($item -and -not $item.LinkType) {
+        throw "cannot replace $link; move or migrate the existing path before deploying"
+    }
+
+    # Create or update the directory junction.
+    if ($item) {
         $target = @($item.Target)[0]
         if (-not [IO.Path]::IsPathRooted($target)) {
             $target = Join-Path $item.Parent.FullName $target
@@ -46,18 +53,6 @@ function Set-ServiceLink {
         }
         Remove-Item -LiteralPath $link -Force
     }
-    elseif ($item) {
-        foreach ($runtime in 'data', 'logs') {
-            $source = Join-Path $link $runtime
-            $destination = Join-Path $ServiceDirectory.FullName $runtime
-            if ((Test-Path -LiteralPath $source) -and -not (Test-Path -LiteralPath $destination)) {
-                Write-Host "migrating $($ServiceDirectory.Name)/$runtime → repo..."
-                Move-Item -LiteralPath $source -Destination $destination
-            }
-        }
-        Remove-Item -LiteralPath $link -Recurse -Force
-    }
-
     New-Item -ItemType Junction -Path $link -Target $ServiceDirectory.FullName | Out-Null
 }
 

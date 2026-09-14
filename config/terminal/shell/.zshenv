@@ -1,8 +1,21 @@
 #!/usr/bin/env zsh
 
-export TERM=xterm-256color # fix tmux + ssh issues
+# =============================================================================
+# MARK: Environment
+# =============================================================================
+
+export TERM=xterm-256color # fix tmux + ssh issues on ghostty
 export SHELL_SESSIONS_DISABLE=1 # disable macOS per-session history
 export PIP_REQUIRE_VIRTUALENV=true # python
+
+typeset -U path
+path=(
+    "$HOME/.local/bin"
+    "${GOPATH:-$HOME/go}/bin"
+    /snap/bin
+    $path
+)
+unset go_bin go_path
 
 # =============================================================================
 # MARK: Infrastructure
@@ -17,6 +30,3 @@ dotenv::load() {
 dotenv::load "$HOME/.env"
 # machine vars
 dotenv::load "$MC_MACHINE/machine.env"
-
-# Share command activation with mc without loading the interactive profile.
-[[ -f "$MC_HOME/app/scripts/environment.unix.sh" ]] && source "$MC_HOME/app/scripts/environment.unix.sh"

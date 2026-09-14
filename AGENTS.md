@@ -139,13 +139,13 @@ the loader's source selection.
 
   1. Base variables derived in memory from the selected ID; `~/.env` saves the same defaults for login shells
   2. `$MC_MACHINE/machine.env` - committed config vars (paths, hostname, ...)
-  3. `$MC_PRIVATE/env/$MC_ID.env` - private dotenv values for the selected machine
+  3. `$MC_PRIVATE/machine.env` - private dotenv values
 
 - `mc` loads all three tiers into every script subprocess - scripts should NOT re-source them
-- Shell profiles load saved base variables and committed machine values. The PowerShell `secrets` helper loads the per-machine private tier on demand.
-- Zim owns interactive Zsh plugins and completion initialization. Declare plugins in `config/terminal/shell/.zimrc`; install and update them through the `terminal.shell` module's deployment and upgrade scripts.
+- Shell profiles load saved base variables and committed machine values without app-specific guards. The script runner honors Unix shebangs and starts Zsh with `-f` to skip user startup files; scripts inherit the app's prepared environment. Zsh `mc::secrets` and PowerShell `Import-Secrets` load the private tier on demand.
+- Zim owns interactive Zsh plugins, Homebrew activation, and completion initialization. Declare plugins in `config/terminal/shell/.zimrc`; install and update them through the `terminal.shell` module's deployment and upgrade scripts. Shell configuration must not source application helpers.
 - `machine.env` uses plain `KEY=VALUE` (no `export`); values may reference earlier vars
-- `MC_PRIVATE` defaults to `<repository>/private`; committed `machine.env` may override it (e.g. `$ICLOUD/.machine`)
+- `MC_PRIVATE` defaults to `<repository>/private`; committed `machine.env` may override it (e.g. `$ICLOUD/.machine`). Its `machine.env` is the only private dotenv file; do not add alternate layouts, fallbacks, or migration handling.
 - Scripts skip gracefully when `MC_PRIVATE` directory doesn't exist
 - Scripts check their own prerequisites and existing setup before changing anything; there is no script-run history. Package presence is determined from the requested package manager at deployment time.
 
@@ -205,7 +205,7 @@ or add special config entrypoints outside the module declaration system.
 - Git integration tests must clear inherited `GIT_*` variables before their first Git command and isolate user/system configuration. Temporary working directories alone do not isolate repository metadata or the index.
 - Keep permanent tests minimal and proportionate to the behavior changed. Prefer a few focused regression cases over exhaustive combinations, large fixtures, or test scaffolding. Use temporary tests for broader one-off verification and remove them afterward; do not retain exploratory coverage by default. Reuse existing tests and the standard check entrypoint rather than expanding the suite for every edit.
 - Preserve existing script phase comments, progress messages, command choices, and setup/update behavior when making focused changes
-- Organize multi-step code into logical chunks with brief, action-oriented header comments, separated by blank lines. The headers should read like a recipe: a reader can understand the sequence without reading each block's implementation. Apply this to all code, not just scripts; use the section-header format below for section markers and separators. Describe meaningful steps rather than narrating every statement, and explain non-obvious constraints where needed.
+- Organize multi-step code into logical chunks with brief, action-oriented header comments, separated by blank lines. The headers should read like a recipe: a reader can understand the sequence without reading each block's implementation. Apply this to all code, not just scripts; use the section-header format below for section markers and separators. Describe meaningful steps rather than narrating every statement, and explain non-obvious constraints where needed. Group related aliases and functions by purpose, with platform checks beside the affected commands.
 - Section headers use three comment lines: an `=` border, `# MARK: <Title>`, and the same border. Each border is exactly 79 characters including indentation and the comment prefix; adjust the number of `=` characters accordingly. Preserve the section's indentation and use the language's comment syntax (`// MARK: <Title>` in JSONC). Ordinary explanatory comments, recipe-step comments, and Markdown headings do not need borders.
 - Put public interfaces before private helpers. Prefix module-private implementation details (helpers, classes, and constants) with `_`; keep intentionally shared interfaces public and do not access another module's private names in application code.
 - Document public functions, classes, and properties with concise docstrings; do not add docstrings to private helpers. Use ordinary comments for non-obvious private implementation details.

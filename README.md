@@ -75,7 +75,8 @@ manifest = Machine(
 > **NOTE:** A Windows machine's manifest is also used during the WSL deployment.
 > Ensure the manifest configures WSL using the appropriate platform flags.
 
-The selected machine is `MC_ID` in `~/.env`; both the CLI and shell use that file.
+The default machine is `MC_ID` in `~/.env`; the CLI and shell startup use that file.
+Scripts launched by `mc` preserve the environment prepared for their selected machine.
 With no saved selection, deployment prompts for a machine.
 Use `mc list` to find module names to add. Replace `<id>` below with the directory name:
 
@@ -146,13 +147,12 @@ Set `MC_PRIVATE` in `machines/<id>/machine.env` to my private storage;
 it defaults to `<repository>/private`. Keep secret values out of
 committed machine files and the generated `~/.env`.
 
-Both the app and PowerShell `secrets` helper read `$MC_PRIVATE/env/$MC_ID.env`,
-plain `KEY=VALUE`. If using the former `$MC_PRIVATE/machine.env` layout, move that
-file to the selected machine's path before deploying.
+The app, Zsh `mc::secrets`, and PowerShell `Import-Secrets` read
+`$MC_PRIVATE/machine.env`, plain `KEY=VALUE`.
 
 ```sh
 mc show private  # Resolve the selected machine's private directory
-secrets          # Load private env into this shell (shell module helper)
+mc::secrets      # Load private env into this shell (shell module helper)
 ```
 
 `mc` already loads its private env file for scripts; don't source it again there.

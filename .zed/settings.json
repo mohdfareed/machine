@@ -11,6 +11,6 @@
     "JSONC": ["**/zed/settings.json", "**/vscode/settings.json", "**/*.code-snippets"],
     "ini": ["**/ghostty/config", "**/ssh.config"],
     "Git Config": ["**/.gitconfig.*"],
-    "Shell Script": ["**/.zshenv.*", "**/.zshrc.*"],
+    "Shell Script": ["**/.zshenv.*", "**/.zshrc.*", "**/.zimrc"],
   },
 }

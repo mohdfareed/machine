@@ -8,5 +8,4 @@
     "yzhang.markdown-all-in-one",
     "tekumara.typos-vscode",
   ],
-  "unwantedRecommendations": ["streetsidesoftware.code-spell-checker"],
 }

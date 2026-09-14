@@ -11,7 +11,7 @@ $env:PIP_REQUIRE_VIRTUALENV = $true  # python
 $env:WSLENV = (@($env:WSLENV, 'MC_HOME/p') | Where-Object { $_ }) -join ':'
 
 # =============================================================================
-# MARK: Helpers
+# MARK: Infrastructure
 # =============================================================================
 
 function Import-DotEnv($path) {
@@ -36,10 +36,6 @@ function Import-DotEnv($path) {
         [System.Environment]::SetEnvironmentVariable($Matches[1], $val)
     }
 }
-
-# =============================================================================
-# MARK: Infrastructure
-# =============================================================================
 
 # Ensure HOME is available on Windows (used by .env expansions)
 if ([string]::IsNullOrEmpty($env:HOME)) {
@@ -87,7 +83,6 @@ if (Get-Command dotnet -ErrorAction SilentlyContinue) {
 
 # oh-my-posh
 oh-my-posh init pwsh --config "pure" | Invoke-Expression
-
 # tab-completion
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 

@@ -23,7 +23,7 @@ if ! docker info &>/dev/null; then
     exit 1
 fi
 
-# Symlink ~/.homelab/<service> → repo service dirs.
+# Link homelab service directories without replacing real paths.
 mkdir -p "$HOMELAB_DIR"
 
 link_service() {
@@ -32,15 +32,10 @@ link_service() {
     name="$(basename "$svc_dir")"
     local link="$HOMELAB_DIR/$name"
 
-    # Migrate runtime data from old deploy dirs.
-    if [[ -d "$link" && ! -L "$link" ]]; then
-        for runtime in data logs; do
-            if [[ -d "$link/$runtime" && ! -d "$svc_dir/$runtime" ]]; then
-                echo "migrating $name/$runtime → repo..."
-                mv "$link/$runtime" "$svc_dir/$runtime"
-            fi
-        done
-        rm -rf "$link"
+    # Leave existing data for a separate migration.
+    if [[ -e "$link" && ! -L "$link" ]]; then
+        echo "cannot replace $link; move or migrate the existing path before deploying" >&2
+        return 1
     fi
 
     # Create or update symlink.

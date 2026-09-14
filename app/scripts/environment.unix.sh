@@ -31,10 +31,9 @@ for _mc_bin in "$HOME/.local/bin" "${GOBIN:-${_mc_go_path%%:*}/bin}" /snap/bin; 
     esac
 done
 
-# Expose Homebrew commands and prefer its unversioned Python and free-threading build.
+# Expose Homebrew's linked commands.
 if [ -n "${HOMEBREW_PREFIX-}" ]; then
-    for _mc_bin in "$HOMEBREW_PREFIX/sbin" "$HOMEBREW_PREFIX/bin" \
-        "$HOMEBREW_PREFIX/opt/python/libexec/bin" "$HOMEBREW_PREFIX/opt/python-freethreading/bin"; do
+    for _mc_bin in "$HOMEBREW_PREFIX/sbin" "$HOMEBREW_PREFIX/bin"; do
         case ":${PATH-}:" in
             *":$_mc_bin:"*) ;;
             *) PATH="$_mc_bin${PATH:+:$PATH}" ;;

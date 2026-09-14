@@ -1,207 +1,88 @@
 # Application architecture
 
-The CLI owns workflow, the loader owns declaration rules, and operations own live
-work. Models describe data. Only CLI modules and the shell boundary use reporting.
-Solid arrows below show calls/dependencies; dotted arrows show reporting calls.
-Shared data-type imports are omitted.
+## Follow a deployment
 
-## Current boundaries
-
-```mermaid
-flowchart TD
-    CLI["CLI<br/>Choose machine + order phases<br/>Report outcomes and failures"]
-    Load["machine.py<br/>Load + normalize + validate<br/>Resolve applicable inputs"]
-    Find["discovery.py<br/>Find declarations"]
-    Models["models.py<br/>Data shapes + field/type checks"]
-    Env["env.py<br/>Machine overrides + host variables<br/>Save selection separately"]
-    Ops["ops/files.py + ops/packages.py<br/>Apply resolved inputs<br/>Check live prerequisites"]
-    Managers["managers.py<br/>Manager setup, queries and maintenance"]
-    Scripts["ops/scripts.py<br/>Run selected scripts"]
-    Shell["shell.py<br/>Execute or preview commands<br/>Prepare execution environment"]
-    Activation["app/scripts/*<br/>Internal activation + bootstrap"]
-    Report["reporting.py"]
-
-    CLI --> Load
-    CLI --> Env
-    CLI -->|resolved inputs + explicit options| Ops
-    CLI --> Managers
-    CLI --> Scripts
-    CLI --> Shell
-    Load --> Find
-    Load --> Env
-    Load -->|construct and type-check data| Models
-    Ops --> Shell
-    Ops --> Managers
-    Managers --> Scripts
-    Managers --> Shell
-    Scripts --> Shell
-    Shell --> Env
-    Shell --> Activation
-    CLI -.->|phases and outcomes| Report
-    Shell -.->|commands and command output| Report
-```
-
-| Owner | Responsibility |
-| --- | --- |
-| [cli/entry.py](cli/entry.py), [cli/__init__.py](cli/__init__.py) | Register commands, keep options in one invocation's Typer context, and report failures once. Shared callbacks and metadata do not depend back on entry. |
-| [deploy](cli/deploy.py), [upgrade](cli/upgrade.py), [sync](cli/sync.py), [info](cli/info.py) | Order phases, pass resolved inputs, save selection, present outcomes. Only deploy/upgrade classify `init_` and `up_` scripts. Information commands do not prepare interpreters or query installed packages. |
-| [models.py](models.py) | Field/type checks and data relationships. No business validators, name inference, CLI settings or installed-package metadata. `selected_source` carries the loader's package decision in private storage, outside the `Package(...)` constructor and schema. Unknown package arguments are rejected. |
-| [machine.py](machine.py), [discovery.py](discovery.py) | One `load_machine(id, modules, *, env)` entry. Discover/import declarations, include selected dependencies and overrides, filter platform/helpers, normalize paths/names, validate declarations and resolve sources before execution. No subprocesses or operation imports. |
-| [env.py](env.py) | Build explicit machine overrides, read host variables, resolve configured paths, and separately read/write the saved default. No reporting, interpreter preparation or mutable invocation settings. |
-| [files.py](ops/files.py) | Inspect live links/permissions, preserve real targets, deploy one resolved mapping, and return its changed target or raise with recovery context. |
-| [packages.py](ops/packages.py) | Consume resolved package choices; return skipped package names for CLI presentation and run missing installs or custom upgrades through managers and shell. |
-| [managers.py](managers.py) | Check manager readiness/presence, set up declared managers, install packages and maintain managers. Own manager-specific commands, identities and exit handling. |
-| [scripts.py](ops/scripts.py), [shell.py](shell.py) | Execute selected scripts without recognizing workflow prefixes. Shell owns processes, command output and environment/interpreter preparation, including its supporting scripts under `app/scripts/`. |
-| [reporting.py](reporting.py) | Private Rich consoles and small rendering functions. No application dependencies, result tracking or logging. |
-
-Operations depend in one direction: packages → managers → scripts → shell, and
-files → shell. Lower layers never import CLI or another module's private helpers.
-Public interfaces come before private helpers; recipe comments explain meaningful
-steps, and alternatives/failures leave early so the main path stays flat.
-
-## Command flows
-
-`show` displays resolved configuration; its `id`, `home`, `private` and `status`
-subcommands expose selection and runtime details. `list` discovers machines and modules.
-
-Deploy builds the selected environment and loads configuration, then checks manager
-prerequisites before saving selection or deploying files. The remaining order is:
+[cli/deploy.py](cli/deploy.py) is the recipe. It chooses a machine, calls
+`build_env()` and `load_machine()`, then checks manager prerequisites. Only after
+validation does it save the default selection and apply the resolved configuration:
 
 ```mermaid
 flowchart LR
-    Files[Files] --> Managers[Manager setup]
-    Managers --> Init[Init scripts]
-    Init --> Packages[Missing packages]
-    Packages --> Scripts[Remaining scripts]
+    Files[Link files] --> Managers[Prepare declared managers]
+    Managers --> Init[Run init scripts]
+    Init --> Packages[Install missing packages]
+    Packages --> Scripts[Run setup scripts]
 ```
 
-Manager installers live in [app/scripts](scripts). Each subsequent
-lookup or command prepares its own environment; phases never refresh PATH themselves.
+The CLI chooses script phases. Operations receive resolved inputs, the selected
+environment, and execution options; they do not infer the workflow themselves.
 
-Upgrade checks installed managers, upgrades all their packages, then runs selected
-custom package upgrades and `up_` scripts. Module filters include prerequisites and
-related overrides but exclude unrelated machine extras. Manager upgrades remain global.
+## Where responsibilities belong
 
-Sync fetches canonical main, merges fast-forward-only with autostash, checks actual
-unmerged files, then refreshes the CLI and completion. Failure stops the refresh;
-conflicting local edits remain available for Git recovery. It obtains the installed
-CLI location from `uv tool dir --bin`. Sync does not request sudo.
+| Owner | Responsibility |
+| --- | --- |
+| [cli/](cli/) | Choose inputs, order work, and report outcomes. `entry.py` catches failures once. |
+| [models.py](models.py) | Declaration shapes and field/type checks. |
+| [machine.py](machine.py) + [discovery.py](discovery.py) | Find declarations; expand modules and dependencies; normalize paths and names; validate declarations; choose package sources. |
+| [env.py](env.py) | Build selected-machine values, read host variables, resolve paths, and save/read the default selection. |
+| [ops/](ops/) | Apply files, packages, and scripts; check live conditions and return results or raise. |
+| [managers.py](managers.py) | Own package-manager commands, installation checks, bootstrap, and upgrades. |
+| [shell.py](shell.py) + [scripts/](scripts/) | Prepare process environments and interpreters, execute commands, and handle command output. |
+| [reporting.py](reporting.py) | Render application output through private Rich consoles. |
 
-## Environment and execution
+Business validation belongs in the loader, not model validators. The loader fixes
+each package's source before execution; installed tools do not change that choice.
+Derived `selected_source` is excluded from declaration constructors and schemas.
 
-`build_env(id)` derives the selected machine's base paths, overlays committed
-`machine.env`, and loads `$MC_PRIVATE/env/$MC_ID.env`. It returns only explicit
-overrides; inherited variables are used for expansion without freezing the host PATH.
-The default private directory is `<repository>/private`. Private values do not
-change the resolved machine identity or base directories. `show private` resolves the
-path without reading secret contents. Older saved files need only `MC_ID` because
-base paths are derived again, rather than taken from stale saved values.
+Only CLI modules and `shell.py` use reporting. All subprocesses go through
+`shell.py`; lower layers never import the CLI or another module's private
+implementation. [test_architecture.py](../tests/test_architecture.py) enforces these boundaries.
 
-The same overrides reach file normalization, packages, manager setup and scripts.
-Only manager setup adds `MC_PKG_MANAGERS`. `set_current_machine` only
-saves the default/base variables; environment construction never depends on that write.
+## How the environment reaches a command
 
-`process_env(overrides)` prepares the environment before each command and executable
-lookup. It removes inherited Git repository and diff-tool context so commands select
-their own repositories, while preserving global Git configuration and SSH settings.
-Unix inherits the remaining caller variables and sources
-[app/scripts/environment.unix.sh](scripts/environment.unix.sh) in a bounded, noninteractive
-shell. This internal helper activates installed commands and is also used by Zsh. It must remain
-quiet, read-only and safe with missing tools or repeated sourcing. Explicit overrides
-win after activation; user profiles are never run by the app.
+`env.build_env(id)` builds explicit overrides in this order:
 
-Windows reads current registered machine/user variables, expands their references
-using the selected overrides, and puts registered PATH entries before preserved
-caller entries. Explicit PATH replaces both. This supports newly installed tools;
-it does not reconstruct a login session or remove inherited variables/directories
-that were deleted from registration. Execution machinery stays in the app.
-`config/` is the catalog of selectable modules; `machines/` composes them.
-Neither is a location for special application entrypoints.
+1. Base paths and identity derived from the selected machine.
+2. Its committed `machine.env`.
+3. `$MC_PRIVATE/machine.env`, preserving the resolved identity and base paths.
 
-`run(cmd, *, env, dry_run, ...)` announces commands and returns the process result,
-or `None` when a preview skips execution. It inherits the terminal unless capture
-is needed; `echo_output` relays captured output through the shell reporting boundary.
-`query(cmd, *, env, ...)` always performs a quiet bounded read, including in previews.
-Both use the same environment preparation as `find_executable`. Previewed `run` calls
-skip preparation and execution; availability queries still inspect current state.
+This does not read or change the saved selection. `~/.env` stores the default for
+future invocations; `set_current_machine()` writes it separately. The same overrides
+reach files, packages, and scripts. Only manager setup receives `MC_PKG_MANAGERS`.
 
-Scripts and commands inherit the caller's working directory. Configured file targets
-must resolve to absolute paths before mutation. Scripts needing repository resources
-use explicit paths. Script execution does not interpret deployment phase prefixes.
+Before each executable lookup or command, `shell.process_env()` reads the host
+environment again. Unix activates installed commands through the internal
+`environment.unix.sh`; Windows reads registered user/machine variables. Explicit
+overrides win, and inherited Git repository/diff-tool context is removed.
+The script runner honors each Unix shebang and adds `-f` for Zsh to skip user
+startup files. PowerShell uses `-NoProfile` and receives the bundled `MachineAdmin`
+module. Scripts inherit the prepared environment; explicitly launching another
+shell with profiles can replace it.
 
-PowerShell execution uses Windows PowerShell on Windows and Core on Unix
-(`pwsh`, falling back to `pwsh-preview`), with
-`-NoProfile` and `-File`. Module paths are prepared for that interpreter immediately
-before real execution, so PowerShell installed earlier in the run receives
-[MachineAdmin](scripts/MachineAdmin/MachineAdmin.psm1) through `app/scripts/` on
-`PSModulePath`. Its temporary elevation-output
-relay preserves Windows behavior without creating persistent logs.
+Interactive Zsh activation belongs to Zim and `.zshrc`, independently of the app.
+Normal Zsh startup loads saved and committed values and ordinary PATH settings
+from `.zshenv`, without an app-specific guard.
 
-## Preview, failure and state
+## Other command flows
 
-`--dry-run`/`-n` belongs to `deploy`, `upgrade` and `sync`, after the command name.
-It announces preview mode once before lifecycle work; action messages stay
-the same. Previews inspect real package presence and file permissions, then skip writes,
-installs and script execution. A manager/interpreter that would be installed is
-not queried before it exists. Scripts and a future Git merge cannot be simulated;
-preview completion does not certify their future results.
+- [upgrade](cli/upgrade.py) upgrades declared managers and all their packages,
+  then selected custom packages and `up_` scripts. Module filters limit custom
+  maintenance, not manager-wide upgrades.
+- [sync](cli/sync.py) fetches canonical main, merges with `--ff-only --autostash`,
+  checks for restoration conflicts, then refreshes the CLI and completions.
+- [show and list](cli/info.py) inspect configuration and selection without running
+  setup or querying installed packages. Configuration inspection excludes secrets.
 
-Existing real file targets move to the next free adjacent backup before linking.
-A later failure preserves that backup but can leave the original target absent;
-errors identify recovery paths. Unix permission previews compare the source mode.
-Windows mappings with permissions deliberately reapply them, including owner-only
-ACLs, and previews report that same work instead of requiring an ACL comparison system.
+## Preview and failure behavior
 
-An operation error stops the workflow. Lower layers add relevant context and raise;
-CLI entry reports the failure, with a traceback for `--debug`. Prior effects are not
-rolled back. External scripts must propagate their own internal failures.
+`--dry-run` follows normal resolution and read-only checks, then skips mutations.
+`query()` always performs its read; previewed `run()` calls only display the command.
+Script internals are not simulated.
 
-The only saved application selection is `~/.env`. Links, permissions, backups and
-installed tools are deployment effects. Package presence is cached only within one
-install call. There is no script history, ownership map, aggregate failure report,
-sudo keepalive, persistent log or command transcript.
+The first failure stops the workflow. Completed work is not rolled back. File
+deployment preserves replaced real targets in adjacent backups and reports recovery
+paths on failure. There is no script history or persistent application log;
+deployment checks the actual files and installed packages each time.
 
-## Enforcement
-
-[tests/test_architecture.py](../tests/test_architecture.py) checks allowed imports,
-reporting access and private boundaries. Behavioral tests cover selected-environment
-propagation, validation before mutation, preview decisions, package identity, file
-preservation, failure handling and Git recovery. Use `./scripts/check.sh` plus
-representative CLI paths. Git fixtures clear inherited `GIT_*` variables before
-initialization and disable user/system configuration so temporary repositories
-cannot use the caller's repository or index. Windows ACL/elevation behavior still requires verification
-on Windows; passing mocked calls on macOS is not that verification.
-
-<details>
-<summary>Before this refactor</summary>
-
-```mermaid
-flowchart TD
-    CLI["CLI<br/>Workflow + reporting"]
-    Load["machine.py<br/>Loading + some validation"]
-    Models["models.py<br/>Automatic business validation<br/>Name inference + CLI settings"]
-    Env["env.py<br/>Saved selection + environment<br/>Shared mutable settings"]
-    Ops["ops/*<br/>More validation + phase knowledge"]
-    Shell["shell.py<br/>Processes + PATH + sudo"]
-    Report["reporting.py"]
-    CLI --> Load
-    CLI --> Env
-    CLI --> Ops
-    CLI --> Shell
-    Load --> Models
-    Load -->|manager validation| Ops
-    Ops --> Shell
-    Ops -->|global settings| Env
-    Shell --> Env
-    CLI -.-> Report
-    Env -.-> Report
-    Ops -.-> Report
-    Shell -.-> Report
-```
-
-Validation was split across model construction, loading and installation. Saving
-selection was a prerequisite for building its environment, so previews could use
-the wrong machine. Operations chose their own messages, and the script executor
-interpreted `init_` to refresh global PATH. Deferred imports hid an entry/command cycle.
-
-</details>
+Validate changes with `./scripts/check.sh`. Regression tests cover environment
+precedence, validation before mutation, previews, data preservation, and failures.

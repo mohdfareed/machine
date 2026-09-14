@@ -51,7 +51,7 @@ if powershell=$(command -v pwsh || command -v pwsh-preview); then
     find . \
         \( -path './.git' -o -path './.venv' \) -prune -o \
         -type f \( -name '*.ps1' -o -name '*.psm1' \) \
-        -exec "$powershell" -NoProfile -File ./scripts/check-powershell.ps1 {} +
+        -exec "$powershell" -NoProfile -File ./scripts/check-pwsh.ps1 {} +
 else
     printf "\033[33mSkipping pwsh syntax checks because pwsh is not installed.\033[0m\n"
 fi
