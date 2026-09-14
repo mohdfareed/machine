@@ -1,2 +1,1 @@
-shell=bash
-exclude=SC1071
+disable=SC1071 # Zsh files are checked by the native parser in scripts/check.sh.

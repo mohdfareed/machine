@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 set -Eeuo pipefail
 
 if ! command -v tailscale &>/dev/null; then

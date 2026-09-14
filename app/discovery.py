@@ -2,18 +2,27 @@
 
 from pathlib import Path
 
+from app import env
+
 SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 """Set of valid script file extensions."""
 
 
-# =============================================================================
-# MARK: Machines and Modules
-# =============================================================================
+def list_scripts(directory: Path) -> list[str]:
+    """List supported script files directly inside a directory in sorted order."""
+    if not directory.is_dir():
+        return []
+
+    return [
+        str(script)
+        for script in sorted(directory.iterdir())
+        if script.is_file() and script.suffix.lower() in SCRIPT_SUFFIXES
+    ]
 
 
-def list_modules(root: Path) -> list[str]:
+def list_modules() -> list[str]:
     """List available module names by scanning ``config/``."""
-    modules_dir = root / "config"
+    modules_dir = env.ROOT / "config"
     if not modules_dir.exists():
         return []
 
@@ -34,32 +43,15 @@ def list_modules(root: Path) -> list[str]:
     return sorted(names)
 
 
-def list_machines(root: Path) -> list[str]:
+def list_machines() -> list[str]:
     """List available machine IDs by scanning ``machines/``."""
-    machines_dir = root / "machines"
+    machines_dir = env.ROOT / "machines"
     if not machines_dir.exists():
         return []
 
     names: set[str] = set()
     for entry in machines_dir.iterdir():
-        if entry.is_dir() and (entry / "manifest.py").exists():
+        if entry.is_dir() and (entry / "machine.py").exists():
             names.add(entry.name)
 
     return sorted(names)
-
-
-# =============================================================================
-# MARK: Scripts
-# =============================================================================
-
-
-def list_scripts(directory: Path) -> list[str]:
-    """List supported script files directly inside a directory in sorted order."""
-    if not directory.is_dir():
-        return []
-
-    return [
-        str(script)
-        for script in sorted(directory.iterdir())
-        if script.is_file() and script.suffix in SCRIPT_SUFFIXES
-    ]

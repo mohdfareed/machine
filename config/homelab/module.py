@@ -7,17 +7,16 @@ module = Module(
         Package(
             name="tailscale",
             cask="tailscale",
-            script="curl -fsSL https://tailscale.com/install.sh | sh",
-        ),
-        Package(
-            name="docker",
-            script="curl -fsSL https://get.docker.com | sh",
-            platforms=[Platform.LINUX],
+            winget="Tailscale.Tailscale",
+            cmd="curl -fsSL https://tailscale.com/install.sh | sh",
+            up_cmd=True,
         ),
         Package(
             name="docker",
             cask="docker-desktop",
-            platforms=[Platform.MACOS],
+            winget="Docker.DockerDesktop",
+            cmd="curl -fsSL https://get.docker.com | sh",
+            platforms=[Platform.LINUX, Platform.MACOS, Platform.WINDOWS],
         ),
     ],
 )

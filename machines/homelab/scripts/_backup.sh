@@ -9,7 +9,7 @@ shopt -s nullglob
 # MARK: Configuration
 # =============================================================================
 
-# Remote hostnames must resolve through SSH. Add more hosts to this array.
+# Remote host names must resolve through SSH. Add more hosts to this array.
 REMOTE_HOSTS=(rpi)
 
 # Output: <backup root>/<host>/<UTC timestamp>.tar.gz

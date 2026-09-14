@@ -1,172 +1,34 @@
-"""Script filtering, execution, and run tracking."""
+"""Execute selected scripts with their required interpreters."""
 
-import hashlib
-import json
-import logging
 import os
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
-from app import reporting
-from app.discovery import SCRIPT_SUFFIXES
-from app.env import PLATFORM, is_unix, settings
-from app.models import Failure, Platform
-from app.shell import refresh_path, run
-
-_logger = logging.getLogger(__name__)
-
-
-# =============================================================================
-# MARK: Script Selection
-# =============================================================================
-
-
-def filter_scripts(scripts: list[str]) -> list[str]:
-    """Return scripts that match the current platform and are runnable."""
-    return [
-        s
-        for s in scripts
-        if (p := Path(s)).suffix.lower() in SCRIPT_SUFFIXES
-        and _matches_platform(p)
-        and not p.stem.startswith("_")
-    ]
-
-
-def _matches_platform(script: Path) -> bool:
-
-    tags = {
-        ".macos": Platform.MACOS,
-        ".linux": Platform.LINUX,
-        ".unix": Platform.UNIX,
-        ".win": Platform.WINDOWS,
-        ".wsl": Platform.WSL,
-    }
-    targets = [tags[suffix.lower()] for suffix in script.suffixes if suffix.lower() in tags]
-    return not targets or any(PLATFORM.is_a(target) for target in targets)
-
-
-# =============================================================================
-# MARK: Script Pipeline
-# =============================================================================
+from app.env import is_unix
+from app.shell import powershell_executable, run
 
 
 def run_scripts(
     scripts: list[str],
-    env: dict[str, str] | None = None,
-    owners: dict[str, str] | None = None,
-) -> list[Failure]:
-    """Run pre-filtered scripts, respecting `once_`/`watch_` tracking."""
-    if not scripts:
-        return []
+    *,
+    env: dict[str, str],
+    dry_run: bool,
+) -> None:
+    """Run selected scripts in order, stopping at the first failure."""
+    for script in (Path(path) for path in scripts):
+        powershell = script.suffix.lower() == ".ps1"
 
-    # Load tracking state before processing the script pipeline.
-    state = _load_state()
-    _logger.info("Scripts: %d to run", len(scripts))
-    failures: list[Failure] = []
+        # Select the interpreter and prepare only the environment it needs.
+        match script.suffix.lower():
+            case ".py":
+                cmd = [sys.executable, str(script)]
+            case ".ps1":
+                executable = powershell_executable(env, dry_run=dry_run)
+                cmd = [executable, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)]
+            case _:
+                cmd = [str(script)]
+                if is_unix and not dry_run and not os.access(script, os.X_OK):
+                    script.chmod(0o755)
 
-    for script in (Path(s) for s in scripts):
-        tracked = script.name.startswith(("once_", "watch_"))
-        module = (owners or {}).get(str(script), "?")
-
-        # Skip tracked scripts that do not need another run.
-        if tracked and script.name in state:
-            if script.name.startswith("once_"):
-                _logger.debug("Skip (already ran): %s", script.name)
-                continue
-
-            current_hash = hashlib.sha256(script.read_bytes()).hexdigest()[:16]
-            if state[script.name].get("hash") == current_hash:
-                _logger.debug("Skip (unchanged): %s", script.name)
-                continue
-
-        # Stop on initialization failure; refresh PATH after successful setup.
-        fail = _execute(script, env, module)
-        if fail:
-            failures.append(fail)
-            if script.name.startswith("init_"):
-                break
-        elif script.name.startswith("init_") and not settings.dry_run:
-            refresh_path()
-
-        # Record tracked script attempts.
-        if tracked:
-            state[script.name] = {
-                "hash": hashlib.sha256(script.read_bytes()).hexdigest()[:16],
-                "ran": datetime.now(UTC).isoformat(),
-            }
-
-    # Persist shared state even when an initialization failure stops the pipeline.
-    _save_state(state)
-    return failures
-
-
-# =============================================================================
-# MARK: Script Execution
-# =============================================================================
-
-
-def _execute(
-    script: Path,
-    env: dict[str, str] | None = None,
-    module: str = "?",
-) -> Failure | None:
-    # Prepare script permissions and announce execution.
-    if is_unix and not os.access(script, os.X_OK):
-        os.chmod(script, 0o755)
-    reporting.heading(f"Running {script.name}@{module}")
-
-    # Select the script interpreter.
-    match script.suffix.lower():
-        case ".py":
-            cmd = f"{sys.executable} {script}"
-        case ".ps1":
-            if PLATFORM.is_a(Platform.WINDOWS):
-                cmd = f'powershell -ExecutionPolicy Bypass -File "{script}"'
-            else:
-                cmd = f'pwsh -File "{script}"'
-        case _:
-            cmd = str(script)
-
-    if settings.dry_run:
-        reporting.command(cmd)
-        return None
-
-    # Stream execution output and report failures relative to the repository.
-    rc = run(cmd, env=env, label=module).returncode
-    if rc == 0:
-        reporting.success(f"Ran {script.name}")
-        return None
-
-    try:
-        rel = script.relative_to(settings.home)
-    except ValueError:
-        rel = script
-
-    reporting.error(f"Script failed (exit {rc})")
-    _logger.debug("[%s] Script failed (exit %d): %s", module, rc, rel)
-    return Failure(module=module, item=str(rel), detail=f"exit {rc}")
-
-
-# =============================================================================
-# MARK: Script State
-# =============================================================================
-
-
-def _load_state() -> dict:
-    if not settings.state_file.exists():
-        return {}
-
-    try:
-        return json.loads(settings.state_file.read_text())
-    except json.JSONDecodeError, KeyError:
-        reporting.warning("Corrupted state, resetting")
-        return {}
-
-
-def _save_state(state: dict) -> None:
-    if settings.dry_run:
-        return
-
-    settings.state_file.parent.mkdir(parents=True, exist_ok=True)
-    settings.state_file.write_text(json.dumps(state, indent=2))
+        # Let execution prepare the environment and any required PowerShell modules.
+        run(cmd, env=env, dry_run=dry_run, check=True, powershell=powershell)

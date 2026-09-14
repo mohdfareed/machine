@@ -12,24 +12,25 @@ It manages a Docker-based server setup and configuration and service deployment.
 
 ## Bootstrap
 
-Run the following to bootstrap and deploy a new machine:
+Run the following to install the repository and CLI on a new machine:
 
 ```sh
 # unix
 repo="https://raw.githubusercontent.com/mohdfareed/machine/main"
-curl -LsSf $repo/scripts/bootstrap.sh | sh
-~/.local/bin/mc --help  # added to PATH on deploy
+curl -LsSf $repo/scripts/bootstrap.sh | sh -s -- --deploy
 ```
 
 ```powershell
 # powershell
 $repo = "https://raw.githubusercontent.com/mohdfareed/machine/main"
-irm $repo/scripts/bootstrap.ps1 | iex
-~/.local/bin/mc --help  # added to PATH on deploy
+$script = irm $repo/scripts/bootstrap.ps1
+& ([scriptblock]::Create($script) -Deploy
 ```
 
+Restart the shell afterward to make `mc` available on `PATH`.
+
 By default, the repo is deployed to `~/.machine`. Export `MC_HOME` before
-deployment to change it. To re-deploy at a different path and reinstall `mc`:
+bootstrapping to change it. To re-deploy at a different path and reinstall `mc`:
 
 1. After moving the checkout,
 2. set `MC_HOME` to its new path, and
@@ -41,47 +42,41 @@ To set up WSL, run the following after a Windows machine is deployed:
 
 ```powershell
 cd $env:MC_HOME
-wsl -- bash ./scripts/bootstrap.sh
-wsl -- bash -c '$HOME/.local/bin/mc --help'
+wsl -- bash ./scripts/bootstrap.sh --deploy
 ```
 
 ## Usage
 
 ```sh
-mc deploy            # Deploy the selected machine
-mc deploy shell git  # Only these modules; skip machine-level extras
-mc update            # Run up_* scripts and rerun script-backed packages
-mc sync              # Fetch canonical main, fast-forward if possible, then deploy
-mc sync --no-deploy  # Sync without deploying
-mc status            # Current machine and local paths
-mc show              # List files, packages, and scripts in deployment order
+mc deploy [mods...]  # Deploy all or the selected modules to the machine
+mc upgrade           # Upgrade installed packages and run upgrade scripts
+mc sync              # Integrate canonical main and refresh the CLI
+mc show              # Inspect resolved configuration
 ```
 
-`mc sync` fetches canonical `main`, fast-forwards with autostash, then deploys.
-Local edits are preserved. Conflicts stop before deployment; use Git to resolve them.
-Merge work-fork changes into canonical `main` on your personal machine.
-Preserve commits with a regular merge so the work branch can fast-forward afterward.
+`mc sync` is used to sync the deployment with canonical `main`. It fetches
+`main`, fast-forwards with autostash, and refreshes the installed CLI and shell
+completion. Local edits are preserved. Conflicts stop the sync; use Git to
+resolve them manually then re-run.
 
 ### Machines
 
-Create `machines/<id>/manifest.py`:
+Create `machines/<id>/machine.py`:
 
 ```python
 from app.models import Machine, PkgManager
 
 manifest = Machine(
     pkg_managers=[PkgManager.BREW],
-    modules=["shell"],
+    modules=["terminal.shell"],
 )
 ```
 
 > **NOTE:** A Windows machine's manifest is also used during the WSL deployment.
 > Ensure the manifest configures WSL using the appropriate platform flags.
 
-The `core` module is always included, including module-filtered runs, and owns
-shared setup such as package-manager installation and maintenance.
-Declare each machine's managers in `pkg_managers`; an empty list enables none.
-
+The selected machine is `MC_ID` in `~/.env`; both the CLI and shell use that file.
+With no saved selection, deployment prompts for a machine.
 Use `mc list` to find module names to add. Replace `<id>` below with the directory name:
 
 ```sh
@@ -99,14 +94,13 @@ from app.models import Module
 module = Module()
 ```
 
-Add its name to the manifest's `modules` list, then `mc deploy <name>` for just that
-module on the selected machine. Nested modules use dotted names:
-`config/tools/tool/module.py` becomes `tools.tool`, including in `depends`.
+Add its name to the manifest's `modules` list, then `mc deploy <name>` for just
+that module on the selected machine. Nested modules use dotted names:
+`config/terminal/git/module.py` becomes `terminal.git`, including in `depends`.
 Discovery descends through grouping folders and stops at each `module.py`;
 **folder names cannot contain dots.**
 Files and scripts remain relative to their module folder.
-
-In manifests, `modules=["tools"]` includes all modules under that grouping folder,
+In manifests, `modules=["terminal"]` includes all modules under that grouping folder,
 including newly added ones. CLI filters and `depends` still use exact module names.
 
 ### Scripts
@@ -115,7 +109,7 @@ Drop scripts directly in `config/<name>/scripts/` or `machines/<id>/scripts/`.
 Top-level `.sh`, `.py`, and `.ps1` files are auto-discovered; no list needed.
 Use explicit `scripts=` only for files outside those directories.
 
-Platform tags go before the extension, e.g. `watch_setup.unix.sh`.
+Platform tags go before the extension, e.g. `setup.unix.sh`.
 No tag means all platforms, so tag shell-specific scripts.
 
 | Tag      | Runs on           |
@@ -126,37 +120,46 @@ No tag means all platforms, so tag shell-specific scripts.
 | `.win`   | Windows           |
 | `.wsl`   | WSL               |
 
-| Prefix   | When it runs                                                 |
-| -------- | ------------------------------------------------------------ |
-| `init_`  | During deployment, after files and before packages           |
-| `once_`  | Once, then skipped while recorded in local state             |
-| `watch_` | First deployment, then when the script's own content changes |
-| `up_`    | Only during `mc update`                                      |
-| `_`      | Helper; never auto-executed                                  |
-| None     | Every deployment, after packages                             |
+| Prefix  | When it runs                                       |
+| ------- | -------------------------------------------------- |
+| `init_` | During deployment, after files and before packages |
+| `up_`   | Only during `mc upgrade`                           |
+| `_`     | Helper; never auto-executed                        |
+| None    | Every deployment, after packages                   |
 
-Configuration validation errors or a failed `init_` script stop the entire deployment.
-Unhandled errors also stop the run. Dependencies control ordering, not failure isolation.
-Before execution, `mc` prepares each script's environment: shared variables such
-as `MC_HOME` and `MC_ID`, machine config and secrets, then shell-specific additions.
+Scripts check existing setup themselves; there is no saved run history.
+The first failed operation stops deployment or upgrade. Fix the reported error,
+then rerun. Dependencies control ordering, not failure isolation.
+Before each command, `mc` prepares current host variables and tool activation,
+then applies the selected machine's variables and secrets. Declare machine-specific
+values in `machine.env`; environment refresh is handled internally by the app.
+
+`mc show` lists configured files, packages, and scripts for the current platform.
+`mc deploy -n` previews operations against the current setup. `-n`/`--dry-run`
+also applies to `upgrade` and `sync`. Commands use the
+terminal directly. Add `--debug` to show exception tracebacks;
+the CLI does not write log files.
 
 ### Secrets
 
-Keep secrets out of Git: `$MC_PRIVATE/env/$MC_ID.env`, plain `KEY=VALUE`.
 Set `MC_PRIVATE` in `machines/<id>/machine.env` to my private storage;
-otherwise it defaults to the app data directory's `private/`.
-Don't put secrets in `machine.env` or the generated `~/.env`.
+it defaults to `<repository>/private`. Keep secret values out of
+committed machine files and the generated `~/.env`.
+
+Both the app and PowerShell `secrets` helper read `$MC_PRIVATE/env/$MC_ID.env`,
+plain `KEY=VALUE`. If using the former `$MC_PRIVATE/machine.env` layout, move that
+file to the selected machine's path before deploying.
 
 ```sh
-mc private  # Resolve the selected machine's private directory
-secrets     # Load private env into this shell (shell module helper)
+mc show private  # Resolve the selected machine's private directory
+secrets          # Load private env into this shell (shell module helper)
 ```
 
-`mc` already loads the private env for scripts; don't source it again there.
+`mc` already loads its private env file for scripts; don't source it again there.
 
 ## Development
 
-From the repo:
+Application responsibilities and enforced boundaries are in [app/README.md](app/README.md).
 
 ```sh
 uv sync --dev           # Install dev dependencies

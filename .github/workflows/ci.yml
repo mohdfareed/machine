@@ -23,5 +23,6 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          key: venv-${{ runner.os }}-${{ hashFiles('uv.lock', 'scripts/check.sh') }}
+      - run: uv sync --dev
       - run: ./scripts/check.sh

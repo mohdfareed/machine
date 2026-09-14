@@ -1,5 +1,6 @@
 // Example/default ACLs for unrestricted connections.
 {
+    // Define the tailnet access control policies.
     "grants": [
         // Owner can access everything on the tailnet.
         {
@@ -7,16 +8,32 @@
             "dst": ["*"],
             "ip": ["*"],
         },
+
         // Shared users can access any port on devices shared with them.
         {
             "src": ["autogroup:shared"],
             "dst": ["*"],
             "ip": ["*"],
         },
+
         // Allow secure cross-container communication.
         {
             "src": ["tag:container"],
             "dst": ["tag:container"],
+            "ip": ["tcp:443"],
+        },
+
+        // Family members can access media containers.
+        {
+            "src": ["group:family"],
+            "dst": ["autogroup:internet"],
+            "ip": ["*"],
+        },
+
+        // Family members can use exit nodes.
+        {
+            "src": ["group:family"],
+            "dst": ["tag:media"],
             "ip": ["tcp:443"],
         },
     ],
@@ -33,15 +50,32 @@
         },
     ],
 
-    // Define device tags and assign to users.
-    "tagOwners": { "tag:container": ["autogroup:admin"] },
+    // Test access rules every time they're saved.
+    // "tests": [
+    //   {
+    //       "src": "alice@example.com",
+    //       "accept": ["tag:example"],
+    //       "deny": ["100.101.102.103:443"],
+    //   },
+    // ],
 
+    // Define user groups and their users.
+    "groups": { "group:family": ["chroe4euqhs@gmail.com"] },
+
+    // Define device tags and assign to users.
+    "tagOwners": {
+        "tag:container": ["autogroup:admin"],
+        "tag:media": ["autogroup:admin"],
+    },
+
+    // Define node attributes and assign to users or devices.
     "nodeAttrs": [
         // Allow admin users to enable Tailscale Funnel.
         {
             "target": ["autogroup:admin"],
             "attr": ["funnel"],
         },
+
         // Allow Home Lab containers to enable Tailscale Funnel.
         {
             "target": ["tag:container"],

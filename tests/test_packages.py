@@ -1,295 +1,249 @@
-"""Package selection, presence checks, and failure handling."""
+"""Resolved package execution, exact presence, and failure handling."""
 
+import json
 import subprocess
 
 import pytest
 
-from app.models import Failure, Package, PkgManager, Platform
-from app.ops import managers as machine_managers
+from app import managers as machine_managers
+from app.models import Package, PkgManager
 from app.ops import packages as machine_packages
 
 
 @pytest.fixture
 def commands(monkeypatch):
     calls = []
-    monkeypatch.setattr(machine_packages.settings, "dry_run", False)
-    monkeypatch.setattr(machine_packages, "refresh_path", lambda: None)
-    monkeypatch.setattr(machine_packages.shutil, "which", lambda name: name)
+    monkeypatch.setattr(machine_packages, "find_executable", lambda name, **kwargs: name)
 
-    def run(cmd, *, env=None, label="", capture_output=False):
-        calls.append(cmd)
-        return subprocess.CompletedProcess(cmd, 0, stdout=b"" if capture_output else None)
+    def run(command, **kwargs):
+        calls.append(command)
+        if kwargs["dry_run"]:
+            return None
+        return subprocess.CompletedProcess(command, 0, stdout=b"")
 
     monkeypatch.setattr(machine_packages, "run", run)
+    monkeypatch.setattr(machine_managers, "run", run)
     return calls
 
 
-@pytest.mark.parametrize(
-    "source,platform",
-    [
-        ("brew", Platform.MACOS),
-        ("cask", Platform.MACOS),
-        ("mas", Platform.MACOS),
-        ("winget", Platform.WINDOWS),
-        ("scoop", Platform.WINDOWS),
-        ("apt", Platform.WSL),
-        ("snap", Platform.LINUX),
-    ],
-)
+@pytest.mark.parametrize("source", ["brew", "cask", "mas", "apt", "snap", "scoop", "winget"])
 @pytest.mark.parametrize("installed", [False, True])
-def test_install_only_when_selected_manager_lacks_package(
-    monkeypatch, commands, source, platform, installed
-):
-    monkeypatch.setattr(machine_packages, "PLATFORM", platform)
+def test_install_only_when_selected_manager_lacks_package(monkeypatch, commands, source, installed):
+    identity = 123 if source == "mas" else "example"
+    package = Package.model_validate({"name": "example", source: identity})
+    package.selected_source = source
     queries = []
-    value = 123 if source == "mas" else "example"
-    package = Package.model_validate({"name": "example", source: value})
 
-    def query(cmd, **kwargs):
-        queries.append(cmd)
+    def query(command, **kwargs):
+        queries.append(command)
+        assert kwargs["env"] == {"PATH": "chosen"}
         if source == "mas":
-            output = "123 Example App\n" if installed else ""
+            output = "123 Example App\n" if installed else "456 Other\n"
         elif source == "apt":
-            output = "install ok installed" if installed else "deinstall ok config-files"
+            status = "install ok installed" if installed else "deinstall ok config-files"
+            output = f"example\t{status}\n"
+        elif source == "scoop":
+            output = json.dumps({"apps": [{"Name": "example" if installed else "example-extra"}]})
+        elif source in {"snap", "winget"}:
+            output = "Name Id Version\n" + ("example 1.0\n" if installed else "example-extra 1.0\n")
         else:
-            output = "example\n" if installed else ""
-        rc = 0 if installed or source in {"mas", "apt"} else 1
-        return subprocess.CompletedProcess(cmd, rc, stdout=output)
+            key = "formulae" if source == "brew" else "casks"
+            output = json.dumps({key: [{"installed": ["1.0"] if installed else []}]})
+        return subprocess.CompletedProcess(command, 0, stdout=output)
 
-    monkeypatch.setattr(machine_managers.subprocess, "run", query)
+    monkeypatch.setattr(machine_managers, "query", query)
     manager = PkgManager.BREW if source == "cask" else PkgManager(source)
-    assert machine_packages.install_packages([package, package], [manager]) == []
-    expected = machine_managers.MANAGER_CONFIGS[source].install_cmd.format(value)
-    if installed:
-        assert commands == []
-    else:
-        assert commands and all(cmd == expected for cmd in commands)
+    skipped = machine_packages.install_packages(
+        [package, package], env={"PATH": "chosen"}, dry_run=False
+    )
+    assert skipped == (["example", "example"] if installed else ["example"])
     assert len(queries) == 1
     assert len(commands) == (0 if installed else 1)
-    if source in {"brew", "cask"}:
-        assert queries[0] == [
-            "brew",
-            "list",
-            "--formula" if source == "brew" else "--cask",
-            "example",
-        ]
-    if source == "winget":
-        assert queries[0] == ["winget", "list", "--id", "example"]
 
 
-@pytest.mark.parametrize(
-    "declared,available,expected",
-    [
-        ([], {"winget", "scoop"}, "Manager not declared: winget, scoop"),
-        ([PkgManager.SCOOP], {"winget"}, "No manager available"),
-        ([PkgManager.SCOOP], {"winget", "scoop"}, None),
-    ],
-)
-def test_source_selection_enforces_declarations(
-    monkeypatch, commands, declared, available, expected
-):
-    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
-    monkeypatch.setattr(machine_packages.shutil, "which", lambda n: n if n in available else None)
-    monkeypatch.setattr(machine_managers, "source_installed", lambda *args: False)
-    package = Package(name="example", winget="Example.App", scoop="example", script="fallback")
-    failures = machine_packages.install_packages([package], declared, owners={"example": "test"})
-    assert failures == (
-        [Failure(module="test", item="example", detail=expected)] if expected else []
-    )
-    assert commands == ([] if expected else ["scoop install example"])
-
-
-def test_platform_skips_and_script_package_deploy_update(monkeypatch, commands):
-    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.LINUX)
-    monkeypatch.setattr(machine_packages.shutil, "which", lambda name: None)
-    packages = [Package(cask="foreign"), Package(name="example", cask="example", script="setup")]
-    assert machine_packages.install_packages(packages, []) == []
-    assert commands == ["setup"]
-    commands.clear()
-    monkeypatch.setattr(machine_packages.shutil, "which", lambda name: name)
-    assert machine_packages.install_packages(packages, []) == []
-    assert commands == []
-    assert machine_packages.install_packages(packages, [], rerun_script_packages=True) == []
-    assert commands == ["setup"]
-
-
-@pytest.mark.parametrize("source,platform", [("winget", Platform.WINDOWS), ("mas", Platform.MACOS)])
-def test_dry_run_does_not_query_missing_manager(monkeypatch, commands, source, platform):
-    monkeypatch.setattr(machine_packages, "PLATFORM", platform)
-    monkeypatch.setattr(machine_packages.settings, "dry_run", True)
-    monkeypatch.setattr(machine_packages.shutil, "which", lambda name: None)
+def test_snap_classic_is_only_an_install_argument(monkeypatch, commands):
+    queries = []
     monkeypatch.setattr(
-        machine_managers.subprocess, "run", lambda *a, **kw: pytest.fail("queried missing manager")
+        machine_managers,
+        "query",
+        lambda command, **kwargs: (
+            queries.append(command)
+            or subprocess.CompletedProcess(
+                command, 0, stdout="\n".join(["Name Version", "other 1.0"])
+            )
+        ),
     )
-    package = Package.model_validate(
-        {"name": "example", source: 123 if source == "mas" else "Example.App"}
+    package = Package(name="powershell", snap="powershell", snap_classic=True)
+    package.selected_source = "snap"
+    machine_packages.install_packages([package], env={}, dry_run=False)
+    assert queries == [["snap", "list"]]
+    assert commands == [["sudo", "snap", "install", "powershell", "--classic"]]
+
+
+def test_brew_presence_resolves_aliases_through_brew(monkeypatch):
+    commands = []
+
+    def query(command, **kwargs):
+        commands.append(command)
+        output = {"formulae": [{"name": "python@3.14", "installed": [{"version": "3.14"}]}]}
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps(output))
+
+    monkeypatch.setattr(machine_managers, "query", query)
+    assert machine_managers.source_installed("brew", "python", env={})
+    assert commands == [["brew", "info", "--json=v2", "--formula", "python"]]
+
+
+def test_source_choice_does_not_fall_back_to_an_available_manager(monkeypatch, commands):
+    monkeypatch.setattr(
+        machine_packages,
+        "find_executable",
+        lambda name, **kwargs: name if name == "scoop" else None,
     )
-    assert machine_packages.install_packages([package], [PkgManager(source)]) == []
-    assert len(commands) == 1
+    package = Package(name="example", winget="Example.App", scoop="example")
+    package.selected_source = "winget"
+    with pytest.raises(RuntimeError, match="Selected manager is unavailable: winget"):
+        machine_packages.install_packages([package], env={}, dry_run=False)
+    assert commands == []
+
+
+def test_preview_missing_manager_skips_presence_queries(monkeypatch, commands):
+    monkeypatch.setattr(machine_packages, "find_executable", lambda name, **kwargs: None)
+    monkeypatch.setattr(
+        machine_managers, "query", lambda *args, **kwargs: pytest.fail("queried absent manager")
+    )
+    package = Package(name="example", brew="example")
+    package.selected_source = "brew"
+    assert machine_packages.install_packages([package], env={}, dry_run=True) == []
+    assert commands == [["brew", "install", "example"]]
 
 
 @pytest.mark.parametrize(
     "error",
     [
-        subprocess.CalledProcessError(1, ["mas", "list"]),
-        subprocess.TimeoutExpired(["mas", "list"], 30),
-        FileNotFoundError("mas disappeared"),
+        subprocess.CalledProcessError(1, ["brew", "list"]),
+        subprocess.TimeoutExpired(["brew", "list"], 30),
+        FileNotFoundError("brew disappeared"),
     ],
 )
-def test_list_query_failure_blocks_affected_packages_only(monkeypatch, commands, error):
-    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.MACOS)
-    queries = []
-
-    def query(cmd, **kwargs):
-        queries.append(cmd)
-        assert kwargs["check"]
+def test_query_failure_stops_before_installing(monkeypatch, commands, error):
+    def query(command, **kwargs):
         raise error
 
-    monkeypatch.setattr(machine_managers.subprocess, "run", query)
-    packages = [
-        Package(name="first", mas=123),
-        Package(name="second", mas=456),
-        Package(name="script", script="setup"),
-    ]
-    failures = machine_packages.install_packages(
-        packages, [PkgManager.MAS], rerun_script_packages=True
-    )
-    assert [failure.item for failure in failures] == ["first", "second"]
-    assert len(queries) == 2
-    assert commands == ["setup"]
-
-
-def test_per_package_query_timeout_is_reported(monkeypatch, commands):
-    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
-
-    def query(cmd, **kwargs):
-        raise subprocess.TimeoutExpired(cmd, 30)
-
-    monkeypatch.setattr(machine_managers.subprocess, "run", query)
-    failures = machine_packages.install_packages(
-        [Package(winget="Example.App")], [PkgManager.WINGET]
-    )
-    assert len(failures) == 1
+    monkeypatch.setattr(machine_managers, "query", query)
+    package = Package(name="example", brew="example")
+    package.selected_source = "brew"
+    with pytest.raises(RuntimeError) as caught:
+        machine_packages.install_packages([package, package], env={}, dry_run=False)
+    assert caught.value.__cause__ is error
     assert commands == []
 
 
-@pytest.mark.parametrize(
-    "output,success",
-    [
-        (b"Found an existing package already installed. No available upgrade found", True),
-        (b"installation failed", False),
-    ],
-)
-def test_winget_noop_and_install_failure(monkeypatch, commands, output, success):
-    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
-    monkeypatch.setattr(machine_managers, "source_installed", lambda *args: False)
-    monkeypatch.setattr(
-        machine_packages,
-        "run",
-        lambda cmd, **kw: subprocess.CompletedProcess(
-            cmd, 1, stdout=output if kw.get("capture_output") else None
-        ),
-    )
-    failures = machine_packages.install_packages(
-        [Package(winget="Example.App")], [PkgManager.WINGET]
-    )
-    assert failures == (
-        [] if success else [Failure(module="?", item="Example.App", detail="winget exit 1")]
-    )
-
-
-def test_queries_resolve_windows_shims(monkeypatch):
-    executable = r"C:\Users\test\scoop\shims\scoop.CMD"
-    monkeypatch.setattr(machine_managers.shutil, "which", lambda name: executable)
-    commands = []
-
-    def query(cmd, **kwargs):
-        commands.append(cmd)
-        return subprocess.CompletedProcess(cmd, 0, stdout="")
-
-    monkeypatch.setattr(machine_managers.subprocess, "run", query)
-    assert machine_managers.source_installed("scoop", "7zip")
-    assert commands == [[executable, "list", "7zip"]]
-
-
-def test_manager_validation_checks_platform_and_dependencies(monkeypatch) -> None:
-    cases = [
-        (Platform.WINDOWS, [PkgManager.WINGET, PkgManager.SCOOP], set(), True),
-        (Platform.WINDOWS, [PkgManager.BREW], set(), False),
-        (Platform.MACOS, [PkgManager.BREW, PkgManager.MAS], set(), True),
-        (Platform.MACOS, [PkgManager.MAS], {"brew"}, False),
-        (Platform.MACOS, [PkgManager.SNAP], {"snap"}, False),
-        (Platform.LINUX, [PkgManager.SNAP], set(), False),
-        (Platform.LINUX, [PkgManager.SNAP], {"snap"}, True),
-        (Platform.LINUX, [PkgManager.APT], set(), False),
-        (Platform.WSL, [PkgManager.APT, PkgManager.SNAP], {"apt"}, True),
-        (Platform.LINUX, [PkgManager.MAS, PkgManager.BREW], set(), False),
-    ]
-    for platform, managers, installed, valid in cases:
-        monkeypatch.setattr(machine_managers, "PLATFORM", platform)
+def test_winget_absence_is_distinct_from_query_failure(monkeypatch):
+    for code, absent in ((0x8A150014, True), (1, False)):
         monkeypatch.setattr(
-            machine_managers.shutil, "which", lambda name: name if name in installed else None
+            machine_managers,
+            "query",
+            lambda command, **kwargs: subprocess.CompletedProcess(command, code, stdout=""),
         )
-        if valid:
-            machine_managers.validate_managers(managers)
+        if absent:
+            assert not machine_managers.source_installed("winget", "Example.App", env={})
         else:
-            with pytest.raises(ValueError):
-                machine_managers.validate_managers(managers)
+            with pytest.raises(subprocess.CalledProcessError):
+                machine_managers.source_installed("winget", "Example.App", env={})
 
 
-def test_package_preview_uses_declared_platform_preference(monkeypatch):
-    package = Package(
-        name="example", brew="example", cask="example", winget="Example.App", scoop="example"
+@pytest.mark.parametrize("success", [False, True])
+def test_winget_install_interprets_its_nonzero_result(monkeypatch, success):
+    output = (
+        b"Found an existing package already installed. No available upgrade found"
+        if success
+        else b"failed"
     )
-    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
-    managers = [PkgManager.WINGET, PkgManager.SCOOP]
-    assert machine_packages.select_package_source(package, managers) == "winget"
-    assert machine_packages.select_package_source(package, managers, {PkgManager.SCOOP}) == "scoop"
-    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.MACOS)
-    assert machine_packages.select_package_source(package, [PkgManager.BREW]) == "cask"
+
+    def run(command, **kwargs):
+        assert kwargs["capture_output"] and kwargs["echo_output"]
+        return subprocess.CompletedProcess(command, 1, stdout=output)
+
+    monkeypatch.setattr(machine_managers, "run", run)
+    package = Package(name="example", winget="Example.App")
+    package.selected_source = "winget"
+    if success:
+        machine_managers.install_package(package, env={}, dry_run=False)
+    else:
+        with pytest.raises(RuntimeError):
+            machine_managers.install_package(package, env={}, dry_run=False)
 
 
-@pytest.mark.parametrize(
-    "listed_id,installed", [("Microsoft.App", True), ("Microsoft.App.Preview", False)]
-)
-def test_winget_presence_matches_full_id_case_insensitively(monkeypatch, listed_id, installed):
-    monkeypatch.setattr(
-        machine_managers,
-        "_query",
-        lambda cmd: subprocess.CompletedProcess(
-            cmd, 0, stdout=f"Name Id Version Source\nApp {listed_id} 1.0 winget\n"
-        ),
-    )
-    assert machine_managers.source_installed("winget", "microsoft.app") is installed
-
-
-def test_presence_cache_is_local_to_each_install_run(monkeypatch, commands):
-    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
-    queries = []
-    monkeypatch.setattr(
-        machine_managers, "source_installed", lambda *args: queries.append(args) or False
-    )
-    package = Package(winget="Example.App")
-    for _ in range(2):
-        assert machine_packages.install_packages([package, package], [PkgManager.WINGET]) == []
-    assert len(queries) == 2
-    assert len(commands) == 2
-
-
-def test_failed_install_does_not_mark_package_installed(monkeypatch, commands):
-    monkeypatch.setattr(machine_packages, "PLATFORM", Platform.WINDOWS)
-    queries = []
-    monkeypatch.setattr(
-        machine_managers, "source_installed", lambda *args: queries.append(args) or False
-    )
+def test_custom_packages_check_availability_again_after_install(monkeypatch, commands):
+    env = {"DEV": "selected-machine"}
+    installed = set()
     monkeypatch.setattr(
         machine_packages,
-        "run",
-        lambda cmd, **kwargs: subprocess.CompletedProcess(
-            cmd, 1, stdout=b"failed" if kwargs.get("capture_output") else None
-        ),
+        "find_executable",
+        lambda name, **kwargs: name if name in installed else None,
     )
-    package = Package(winget="Example.App")
-    failures = machine_packages.install_packages([package, package], [PkgManager.WINGET])
-    assert len(queries) == 1
-    assert len(failures) == 2
+    seen = []
+
+    def run(command, **kwargs):
+        assert kwargs["env"] is env
+        seen.append((command, dict(kwargs["env"])))
+        installed.add("later")
+
+    monkeypatch.setattr(machine_packages, "run", run)
+    first = Package(name="first", cmd="setup-first", up_cmd=True)
+    later = Package(name="later", cmd="setup-later")
+    assert machine_packages.install_packages([first, later], env=env, dry_run=False) == ["later"]
+    assert seen == [("setup-first", {"DEV": "selected-machine"})]
+    assert machine_packages.upgrade_packages([first, later], env=env, dry_run=False) == ["later"]
+    assert seen[-1] == ("setup-first", env)
+
+
+def test_presence_cache_does_not_survive_an_invocation(monkeypatch, commands):
+    queries = []
+    monkeypatch.setattr(
+        machine_managers, "source_installed", lambda *args, **kwargs: queries.append(args) or False
+    )
+    package = Package(name="example", brew="example")
+    package.selected_source = "brew"
+    for _ in range(2):
+        machine_packages.install_packages([package, package], env={}, dry_run=False)
+    assert len(queries) == len(commands) == 2
+
+
+@pytest.mark.parametrize("operation", ["install", "custom-upgrade", "manager-upgrade"])
+def test_first_command_failure_stops_remaining_work(monkeypatch, commands, operation):
+    monkeypatch.setattr(machine_managers, "source_installed", lambda *args, **kwargs: False)
+
+    def fail(command, **kwargs):
+        commands.append(command)
+        raise RuntimeError("command failed")
+
+    monkeypatch.setattr(machine_packages, "run", fail)
+    monkeypatch.setattr(machine_managers, "run", fail)
+    with pytest.raises(RuntimeError):
+        if operation == "install":
+            package = Package(name="example", brew="example")
+            package.selected_source = "brew"
+            machine_packages.install_packages([package, package], env={}, dry_run=False)
+        elif operation == "custom-upgrade":
+            package = Package(name="example", cmd="setup", up_cmd=True)
+            machine_packages.upgrade_packages([package, package], env={}, dry_run=False)
+        else:
+            machine_managers.upgrade_managers(
+                [PkgManager.BREW, PkgManager.SNAP], env={}, dry_run=False
+            )
+    assert len(commands) == 1
+
+
+def test_preflight_checks_only_live_prerequisites(monkeypatch):
+    monkeypatch.setattr(machine_managers, "find_executable", lambda name, **kwargs: None)
+    machine_managers.validate_managers([PkgManager.BREW, PkgManager.MAS, PkgManager.SCOOP], env={})
+    for managers in ([PkgManager.WINGET], [PkgManager.APT], [PkgManager.SNAP]):
+        with pytest.raises(FileNotFoundError):
+            machine_managers.validate_managers(managers, env={})
+    with pytest.raises(FileNotFoundError):
+        machine_managers.validate_managers([PkgManager.BREW], env={}, for_upgrade=True)
+    monkeypatch.setattr(
+        machine_managers, "find_executable", lambda name, **kwargs: name if name == "apt" else None
+    )
+    machine_managers.validate_managers([PkgManager.APT, PkgManager.SNAP], env={})

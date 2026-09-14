@@ -1,0 +1,7 @@
+[files]
+ignore-hidden = false
+extend-exclude = [".git"]
+
+# PowerShell's case-insensitive comparison operator.
+[type.ps.extend-identifiers]
+ine = "ine"

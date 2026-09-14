@@ -1,27 +1,18 @@
 """Deploy the selected machine configuration."""
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import typer
 
-from app import reporting
-from app.cli.entry import (
-    complete_machines,
-    complete_modules,
-    get_current_machine,
-    machine_ids,
-    save_current_machine,
-    validate_machine,
-)
-from app.env import build_env, settings, write_env_file
-from app.ops.files import deploy_files
-from app.ops.managers import validate_managers
+from app import cli, reporting
+from app.discovery import list_machines
+from app.env import build_env, get_current_machine, set_current_machine
+from app.machine import load_machine
+from app.managers import setup_managers, validate_managers
+from app.ops.files import deploy_file
 from app.ops.packages import install_packages
-from app.ops.scripts import filter_scripts, run_scripts
-
-if TYPE_CHECKING:
-    from app.models import Failure, Machine, Module
+from app.ops.scripts import run_scripts
 
 # =============================================================================
 # MARK: Deploy Command
@@ -35,113 +26,74 @@ def deploy(
             "-m",
             "--machine",
             metavar="MACHINE",
-            help=f"The machine to set up.\t<{'|'.join(machine_ids)}>",
-            autocompletion=complete_machines,
-            callback=validate_machine,
-            prompt=True,
+            help="The machine to set up.",
+            autocompletion=cli.complete_machines,
+            callback=cli.validate_machine,
+            default_factory=get_current_machine,
         ),
-    ] = get_current_machine() or None,
+    ],
     module_names: Annotated[
         list[str],
         typer.Argument(
-            metavar="modules",
-            help="Limit setup to the specified modules.",
-            autocompletion=complete_modules,
+            metavar="MODULES",
+            help="Limit setup to the specified modules and their prerequisites.",
+            autocompletion=cli.complete_modules,
         ),
     ] = [],
+    dry_run: Annotated[
+        bool, typer.Option("-n", "--dry-run", help="Preview changes without applying them.")
+    ] = False,
 ) -> None:
     """Deploy configs, install packages, and run scripts."""
-    from app.machine import load_machine
+    if dry_run:
+        reporting.heading("Dry run: no changes will be made.")
 
-    root = settings.home
-    if not machine:
-        reporting.error("No machine selected.")
-        raise SystemExit(1)
+    # Prompt the user for a machine if none was provided.
+    machine = cli.validate_machine(machine or reporting.prompt("Machine", list_machines()))
+    if machine is None:
+        raise ValueError("No machine selected.")
 
-    # Load and validate the machine configuration.
-    manifest, mods = load_machine(machine, root)
-    validate_managers(manifest.pkg_managers)
-    module_filter = set(module_names)
+    # Load and validate the machine and its environment.
+    env = build_env(machine)
+    configuration = load_machine(machine, module_names, env=env)
+    validate_managers(configuration.pkg_managers, env=env)
 
-    # Select deployment inputs, keeping core setup in filtered runs.
-    if module_filter:
-        unknown = module_filter - {m.name for m in mods}
-        if unknown:
-            reporting.error(f"Unknown modules: {', '.join(sorted(unknown))}")
-            raise SystemExit(1)
+    # Save the default machine only after validation.
+    reporting.heading(f"Machine: {machine}")
+    reporting.detail(f"Modules: {', '.join(configuration.modules)}")
+    if not dry_run:
+        set_current_machine(machine)
 
-        active = [m for m in mods if m.name in module_filter or m.name == "core"]
-        all_files = [f for m in active for f in m.files]
-        all_packages = [p for m in active for p in m.packages]
-        raw_scripts = [s for m in active for s in m.scripts]
-    else:
-        active = mods
-        all_files = [f for m in active for f in m.files] + manifest.files
-        all_packages = [p for m in active for p in m.packages] + manifest.packages
-        raw_scripts = [s for m in active for s in m.scripts] + manifest.scripts
+    # Deploy files and prepare the declared package managers.
+    reporting.heading("Deploying files")
+    for mapping in configuration.files:
+        if changed := deploy_file(mapping, env=env, dry_run=dry_run):
+            reporting.detail(f"Update: {changed}")
 
-    # Persist the validated machine selection before deployment.
-    save_current_machine(machine)
-    write_env_file(machine, root)
-
-    # Prepare the script environment and execution phases.
-    all_scripts = filter_scripts(raw_scripts)
-    script_env = build_env(machine, root)
-    script_env["MC_PACKAGE_MANAGERS"] = " ".join(manifest.pkg_managers)
-    owners = _build_owners(active, manifest, machine)
-    init_scripts = [s for s in all_scripts if Path(s).name.startswith("init_")]
-    post_scripts = [
-        s
-        for s in all_scripts
-        if not Path(s).name.startswith("init_") and not Path(s).name.startswith("up_")
+    # Set up the declared package managers.
+    reporting.heading("Preparing package managers")
+    setup_managers(configuration.pkg_managers, env=env, dry_run=dry_run)
+    init_scripts = [
+        script for script in configuration.scripts if Path(script).name.startswith("init_")
     ]
 
-    # Deploy files and run setup before installing packages.
-    reporting.heading(f"Machine: {machine}")
-    reporting.detail(f"Modules: {', '.join(m.name for m in active)}")
-    file_result = deploy_files(all_files, owners=owners)
-    init_failures = run_scripts(init_scripts, env=script_env, owners=owners)
+    # Run initialization scripts before installing packages.
+    for script in init_scripts:
+        reporting.heading(f"Running {Path(script).name}")
+        run_scripts([script], env=env, dry_run=dry_run)
 
-    # Report failures during initialization and stop deployment.
-    failures: list[Failure] = []
-    failures.extend(file_result.failures)
-    failures.extend(init_failures)
-    if init_failures:
-        reporting.print_summary(failures, settings.log_file, init_failed=True)
-        return
+    # Install missing packages.
+    reporting.heading("Installing packages")
+    for name in install_packages(configuration.packages, env=env, dry_run=dry_run):
+        reporting.detail(f"Already installed: {name}")
+    post_scripts = [
+        script
+        for script in configuration.scripts
+        if not Path(script).name.startswith(("init_", "up_"))
+    ]
 
-    # Install packages and run the remaining deployment scripts.
-    failures.extend(install_packages(all_packages, manifest.pkg_managers, owners=owners))
-    failures.extend(run_scripts(post_scripts, env=script_env, owners=owners))
+    # Run the deployment scripts.
+    reporting.heading("Running setup scripts")
+    run_scripts(post_scripts, env=env, dry_run=dry_run)
 
-    reporting.print_summary(failures, settings.log_file)
-
-
-# =============================================================================
-# MARK: Helpers
-# =============================================================================
-
-
-def _build_owners(
-    active_modules: list["Module"],
-    manifest: "Machine",
-    machine_id: str,
-) -> dict[str, str]:
-    # Assign module ownership to files, packages, and scripts.
-    owners: dict[str, str] = {}
-    for m in active_modules:
-        for s in m.scripts:
-            owners[s] = m.name
-        for f in m.files:
-            owners[f.source] = m.name
-        for p in m.packages:
-            owners[p.name] = m.name
-
-    # Fill in machine-owned entries without replacing module ownership.
-    for f in manifest.files:
-        owners.setdefault(f.source, machine_id)
-    for p in manifest.packages:
-        owners.setdefault(p.name, machine_id)
-    for s in manifest.scripts:
-        owners.setdefault(s, machine_id)
-    return owners
+    reporting.success("Complete.")

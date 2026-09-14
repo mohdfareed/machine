@@ -1,20 +1,9 @@
-"""CLI entry point, callbacks, completion, and current-machine selection."""
-
-import logging
-import sys
+"""CLI registration and the application failure boundary."""
 
 import typer
 
-from app import reporting
-from app.discovery import list_machines, list_modules
-from app.env import settings
-from app.logging import (
-    console,
-    setup_console_logging,
-    setup_file_logging,
-)
-
-_logger = logging.getLogger(__name__)
+from app import cli, reporting
+from app.cli import deploy, info, sync, upgrade
 
 # =============================================================================
 # MARK: App Entry Point
@@ -22,119 +11,70 @@ _logger = logging.getLogger(__name__)
 
 
 def main(prog_name: str | None = None) -> None:
-    """Run the CLI and handle interrupts and unexpected errors."""
+    """Run one CLI invocation and present failures once."""
+    options = cli.Options()
     try:
-        _create_app()(prog_name=prog_name or settings.command)
+        _create_app()(prog_name=prog_name or cli.COMMAND, obj=options)
 
     # Handle user interrupts.
     except KeyboardInterrupt:
         reporting.error("Interrupted.")
-        sys.exit(130)
+        raise SystemExit(130)
 
-    # Handle unexpected errors.
-    except Exception as e:
-        _logger.debug("Unhandled exception", exc_info=True)
-        reporting.error(f"Error: {e}")
-        reporting.detail(f"See {settings.log_file} for details.", error=True)
-        sys.exit(1)
+    # Present the failure with optional technical context.
+    except Exception as exc:
+        reporting.error(str(exc))
+        if options.debug:
+            reporting.exception()
+            raise SystemExit(1)
 
-
-# =============================================================================
-# MARK: Current Machine
-# =============================================================================
-
-machine_ids = list_machines(settings.home)
-
-
-def get_current_machine() -> str | None:
-    """Return the last-used machine ID, or None if not set."""
-    return settings.machine_file.read_text().strip() if settings.machine_file.exists() else None
-
-
-def save_current_machine(machine_id: str) -> None:
-    """Persist the current machine ID."""
-    settings.machine_file.parent.mkdir(parents=True, exist_ok=True)
-    settings.machine_file.write_text(machine_id)
+        reporting.detail("Run with --debug for details.", error=True)
+        raise SystemExit(1)
 
 
 # =============================================================================
-# MARK: Callbacks
+# MARK: App Configuration
 # =============================================================================
 
 
 def _callback(
-    debug: bool = typer.Option(False, "-d", "--debug", help="Enable debug logging."),
-    dry_run: bool = typer.Option(
-        False, "-n", "--dry-run", help="Preview changes without deploying."
-    ),
+    context: typer.Context,
+    debug: bool = typer.Option(False, "-d", "--debug", help="Show exception tracebacks."),
     version: bool = typer.Option(False, "-v", "--version", help="Show version and exit."),
 ) -> None:
+    # Keep execution options local to this invocation.
+    options = context.ensure_object(cli.Options)
+    options.debug = debug
 
-    # Configure runtime options and console logging.
-    settings.debug = debug
-    settings.dry_run = dry_run
-    setup_console_logging()
-
-    # Handle informational exits before initializing file logging.
+    # Handle informational exits.
     if version:
-        console.print(f"{settings.name} {settings.version}")
-        sys.exit(0)
-
-    if {"-h", "--help"} & set(sys.argv):
-        return
-
-    setup_file_logging()
-
-
-# =============================================================================
-# MARK: Helpers
-# =============================================================================
-
-
-def validate_machine(value: str) -> str:
-    """Validate a machine ID and return its canonical casing."""
-    for machine_id in machine_ids:
-        if machine_id.casefold() == value.casefold():
-            return machine_id
-
-    choices = "|".join(machine_ids)
-    raise typer.BadParameter(f"{value!r} is not one of: {choices}")
-
-
-def complete_machines(incomplete: str) -> list[tuple[str, str]]:
-    """Shell completion for machine IDs, marking the current selection."""
-    return [
-        (n, "(default)" if n == get_current_machine() else "")
-        for n in machine_ids
-        if n.startswith(incomplete)
-    ]
-
-
-def complete_modules(incomplete: str) -> list[tuple[str, str]]:
-    """Shell completion for discovered module names."""
-    return [(n, "") for n in list_modules(settings.home) if n.startswith(incomplete)]
+        reporting.plain(f"{cli.NAME} {cli.VERSION}")
+        raise typer.Exit()
 
 
 def _create_app() -> typer.Typer:
-    # Load command owners after their shared callbacks and state helpers are available.
-    from app.cli import deploy, info, sync, update
-
-    # Create the app and attach its callback and status commands.
+    # Create the app and attach its callback.
     app = typer.Typer(
-        help=settings.description,
+        name=cli.COMMAND,
+        help=cli.DESCRIPTION,
         no_args_is_help=True,
         invoke_without_command=True,
         context_settings={"help_option_names": ["-h", "--help"]},
     )
-    app.add_typer(info.status_app, name=info.status.__name__, rich_help_panel="Info")
     app.callback()(_callback)
 
-    # Register lifecycle and info commands in their help panels.
-    app.command(rich_help_panel="Lifecycle")(deploy.deploy)
-    app.command(rich_help_panel="Lifecycle")(update.update)
-    app.command(rich_help_panel="Lifecycle")(sync.sync)
-    app.command(rich_help_panel="Info")(info.home)
-    app.command(rich_help_panel="Info")(info.private)
+    # Register deployment commands.
+    app.command(rich_help_panel="Deployment")(deploy.deploy)
+    app.command(rich_help_panel="Deployment")(upgrade.upgrade)
+    app.command(rich_help_panel="Deployment")(sync.sync)
+
+    # Group inspection commands while retaining the default configuration view.
+    show = typer.Typer(invoke_without_command=True, no_args_is_help=False)
+    show.callback()(info.show)
+    show.command("id")(info.machine_id)
+    show.command()(info.home)
+    show.command()(info.private)
+    show.command()(info.status)
+    app.add_typer(show, name=info.show.__name__, rich_help_panel="Info")
     app.command("list", rich_help_panel="Info")(info.list_all)
-    app.command(rich_help_panel="Info")(info.show)
     return app

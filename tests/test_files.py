@@ -1,4 +1,4 @@
-"""File deployment tests."""
+"""File preservation, preview decisions, and platform permissions."""
 
 import os
 import stat
@@ -7,169 +7,129 @@ from pathlib import Path
 
 import pytest
 
-from app.models import FileMapping, Platform
+from app.models import FileMapping
 from app.ops import files as machine_files
 
 
-class _WindowsPrivilegeError(OSError):
-    """Typed Windows symlink privilege error used by tests."""
-
-    winerror: int
-
-    def __init__(self) -> None:
-        super().__init__("symlink requires privilege")
-        self.winerror = 1314
-
-
-def test_deploy_files_skips_non_applicable_platforms(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    universal_source = tmp_path / "universal"
-    windows_source = tmp_path / "windows"
-    macos_source = tmp_path / "macos"
-    for source in (universal_source, windows_source, macos_source):
-        source.write_text(source.name, encoding="utf-8")
-
-    mappings = [
-        FileMapping(source=str(universal_source), target="universal-target"),
-        FileMapping(
-            source=str(windows_source),
-            target="windows-target",
-            platforms=[Platform.WINDOWS],
-        ),
-        FileMapping(
-            source=str(macos_source),
-            target="macos-target",
-            platforms=[Platform.MACOS],
-        ),
-    ]
-    linked: list[tuple[Path, Path]] = []
-
-    def _record_link(source: Path, target: Path, _mode: int | None = None) -> bool:
-        linked.append((source, target))
-        return True
-
-    monkeypatch.setattr(machine_files, "PLATFORM", Platform.WINDOWS)
-    monkeypatch.setattr(machine_files, "_symlink", _record_link)
-
-    result = machine_files.deploy_files(mappings)
-
-    assert result.created == 2
-    assert result.failures == []
-    assert [source for source, _target in linked] == [universal_source, windows_source]
-    assert [str(target) for _source, target in linked] == ["universal-target", "windows-target"]
+def test_missing_source_fails_before_target_changes(tmp_path):
+    target = tmp_path / "target"
+    target.write_text("existing")
+    mapping = FileMapping(source=str(tmp_path / "missing"), target=str(target))
+    with pytest.raises(FileNotFoundError):
+        machine_files.deploy_file(mapping, env={}, dry_run=False)
+    assert target.read_text() == "existing"
 
 
 @pytest.mark.parametrize("is_directory", [False, True], ids=["file", "directory"])
-def test_symlink_preserves_data_on_windows_privilege_error(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    is_directory: bool,
-) -> None:
+def test_failed_link_preserves_data_and_reports_backup(monkeypatch, tmp_path, is_directory):
     source = tmp_path / "source"
     target = tmp_path / "target"
     backup = tmp_path / "target.backup"
     if is_directory:
         source.mkdir()
         target.mkdir()
-    source_data = source / "config.txt" if is_directory else source
-    target_data = target / "config.txt" if is_directory else target
-    backup_data = backup / "config.txt" if is_directory else backup
-    source_data.write_text("new settings", encoding="utf-8")
-    target_data.write_text("existing settings", encoding="utf-8")
-    failure = _WindowsPrivilegeError()
+    source_data = source / "data" if is_directory else source
+    target_data = target / "data" if is_directory else target
+    backup_data = backup / "data" if is_directory else backup
+    source_data.write_text("new")
+    target_data.write_text("existing")
 
-    def _deny_symlink(self: Path, link_target: Path, target_is_directory: bool = False) -> None:
-        assert self == target
-        assert link_target == source
-        assert target_is_directory == is_directory
-        raise failure
+    def deny_link(*args, **kwargs):
+        raise PermissionError("link denied")
 
-    monkeypatch.setattr(machine_files, "is_windows", True)
-    monkeypatch.setattr(machine_files.settings, "dry_run", False)
-    monkeypatch.setattr(Path, "symlink_to", _deny_symlink)
-
+    monkeypatch.setattr(machine_files, "_create_link", deny_link)
     with pytest.raises(OSError) as error:
-        machine_files._symlink(source, target)
-
-    assert error.value.__cause__ is failure
-    assert source_data.read_text(encoding="utf-8") == "new settings"
-    assert backup_data.read_text(encoding="utf-8") == "existing settings"
+        machine_files.deploy_file(
+            FileMapping(source=str(source), target=str(target)), env={}, dry_run=False
+        )
+    assert str(backup) in str(error.value)
+    assert backup_data.read_text() == "existing"
+    assert source_data.read_text() == "new"
     assert not target.exists()
-    assert not target.is_symlink()
 
 
-def test_symlink_skips_existing_hardlink(tmp_path: Path) -> None:
-    """Redeploying an already-correct hard link should be a no-op."""
-    source = tmp_path / "source.txt"
-    target = tmp_path / "target.txt"
-    source.write_text("ssh config", encoding="utf-8")
+def test_existing_hard_link_is_unchanged(tmp_path):
+    source = tmp_path / "source"
+    target = tmp_path / "target"
+    source.write_text("settings")
     os.link(source, target)
-
-    changed = machine_files._symlink(source, target)
-
-    assert changed is False
-    assert not (tmp_path / "target.txt.backup").exists()
+    assert (
+        machine_files.deploy_file(
+            FileMapping(source=str(source), target=str(target)), env={}, dry_run=False
+        )
+        is None
+    )
+    assert not (tmp_path / "target.backup").exists()
 
 
 @pytest.mark.skipif(os.name == "nt", reason="Windows uses ACLs instead of POSIX modes")
-def test_symlink_applies_mode_to_existing_link(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    source = tmp_path / "source.txt"
-    target = tmp_path / "target.txt"
-    source.write_text("ssh config", encoding="utf-8")
-    target.symlink_to(source)
+def test_permission_preview_matches_real_change(tmp_path):
+    source = tmp_path / "source"
+    target = tmp_path / "target"
+    source.write_text("settings")
     source.chmod(0o644)
-
-    monkeypatch.setattr(machine_files, "is_windows", False)
-
-    changed = machine_files._symlink(source, target, 0o600)
-
-    assert changed is True
-    assert stat.S_IMODE(source.stat().st_mode) == 0o600
-
-
-def test_symlink_applies_private_windows_acl_to_source_and_link(
-    monkeypatch,
-    tmp_path: Path,
-) -> None:
-    source = tmp_path / "source.txt"
-    target = tmp_path / "target.txt"
-    source.write_text("ssh config", encoding="utf-8")
     target.symlink_to(source)
-    commands: list[list[object]] = []
+    mapping = FileMapping(source=str(source), target=str(target), mode=0o600)
+    assert machine_files.deploy_file(mapping, env={}, dry_run=True) == target
+    assert stat.S_IMODE(source.stat().st_mode) == 0o644
+    assert machine_files.deploy_file(mapping, env={}, dry_run=False) == target
+    assert stat.S_IMODE(source.stat().st_mode) == 0o600
+    assert machine_files.deploy_file(mapping, env={}, dry_run=True) is None
 
-    def _run(command: list[object], **_kwargs: object) -> subprocess.CompletedProcess[str]:
-        commands.append(command)
-        return subprocess.CompletedProcess("command", 0, stdout="user", stderr="")
 
+def test_windows_acl_reset_clears_explicit_grants_and_preview_does_not_write(monkeypatch, tmp_path):
+    source = tmp_path / "source"
+    target = tmp_path / "target"
+    source.write_text("settings")
+    target.symlink_to(source)
+    mapping = FileMapping(source=str(source), target=str(target), mode=0o600)
+    env = {"PATH": "chosen-path"}
+    commands = []
     monkeypatch.setattr(machine_files, "is_windows", True)
-    monkeypatch.setattr(machine_files.subprocess, "run", _run)
-
-    machine_files._symlink(source, target, 0o600)
-
-    assert any(command[0] == "icacls" and command[1] == source for command in commands)
-    assert any(
-        command[0] == "icacls" and command[1] == target and "/L" in command for command in commands
+    monkeypatch.setattr(
+        machine_files,
+        "query",
+        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 0, stdout="domain\\user\n"),
     )
 
+    def run(command, **kwargs):
+        assert kwargs["env"] is env
+        assert kwargs["dry_run"] is False
+        commands.append(command)
 
-def test_symlink_uses_next_backup_name_when_backup_exists(tmp_path: Path) -> None:
-    """Replacing an existing file should not fail if .backup already exists."""
+    monkeypatch.setattr(machine_files, "run", run)
+    original_mode = source.stat().st_mode
+    assert machine_files.deploy_file(mapping, env=env, dry_run=True) == target
+    assert commands == []
+    assert source.stat().st_mode == original_mode
+    assert machine_files.deploy_file(mapping, env=env, dry_run=False) == target
+    for path, suffix in ((source, []), (target, ["/L"])):
+        assert [command for command in commands if command[1] == str(path)] == [
+            ["icacls", str(path), "/setowner", "domain\\user", *suffix],
+            ["icacls", str(path), "/reset", *suffix],
+            [
+                "icacls",
+                str(path),
+                "/inheritance:r",
+                "/grant:r",
+                "domain\\user:(F)",
+                "*S-1-5-18:(F)",
+                *suffix,
+            ],
+        ]
+    assert machine_files.deploy_file(mapping, env=env, dry_run=True) == target
+
+
+def test_numbered_backups_are_preserved(tmp_path):
     source = tmp_path / "source.json"
     target = tmp_path / "settings.json"
-    source.write_text('{"editor.tabSize": 4}', encoding="utf-8")
-    target.write_text('{"editor.tabSize": 2}', encoding="utf-8")
-    (tmp_path / "settings.json.backup").write_text("older backup", encoding="utf-8")
-
-    changed = machine_files._symlink(source, target)
-
-    assert changed is True
-    assert (tmp_path / "settings.json.backup").read_text(encoding="utf-8") == "older backup"
-    assert (tmp_path / "settings.json.backup.1").read_text(
-        encoding="utf-8"
-    ) == '{"editor.tabSize": 2}'
+    source.write_text("new")
+    target.write_text("existing")
+    (tmp_path / "settings.json.backup").write_text("older")
+    mapping = FileMapping(source=str(source), target=str(target))
+    assert machine_files.deploy_file(mapping, env={}, dry_run=True) == target
+    assert target.read_text() == "existing"
+    assert machine_files.deploy_file(mapping, env={}, dry_run=False) == target
+    assert (tmp_path / "settings.json.backup").read_text() == "older"
+    assert (tmp_path / "settings.json.backup.1").read_text() == "existing"
     assert os.path.samefile(source, target)

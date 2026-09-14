@@ -6,10 +6,10 @@ set -Eeuo pipefail
 # =============================================================================
 
 # set hostname
-HOSTNAME="${MC_HOSTNAME:-$MC_ID}"
-if [[ -n "$HOSTNAME" ]]; then
+target_hostname="${MC_HOSTNAME:-$MC_ID}"
+if [[ -n "$target_hostname" && "$(scutil --get LocalHostName)" != "$target_hostname" ]]; then
     echo "setting hostname..."
-    sudo scutil --set LocalHostName "$HOSTNAME"
+    sudo scutil --set LocalHostName "$target_hostname"
 fi
 
 # enable Touch ID for sudo
@@ -67,4 +67,4 @@ sudo /usr/bin/tmutil addexclusion -p \
   "$HOME/Downloads" \
   "$HOME/Library/Cache" \
   "$HOME/Library/Developer/Xcode/DerivedData" \
-  "$HOME/Library/Containers/com.docker.docker/Data/vms"
+  "$HOME/Library/Containers/com.docker.docker/Data/vms" || true

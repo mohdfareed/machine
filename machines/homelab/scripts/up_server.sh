@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 set -Eeuo pipefail
 
-# Server maintenance tasks run during `mc update`.
+# Server maintenance tasks run during `mc upgrade`.
 
 # =============================================================================
 # MARK: System Maintenance

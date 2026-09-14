@@ -65,7 +65,7 @@ Create the admin account, then configure:
   - Enable timing correction and set thresholds to 100% with 180s max offset.
   - Ensure Docker is using gRPC FUSE.
   - **NOTE:** This is due to a delay in the default engine of ~100-150 ms
-    in file metadata causing Scryer's subtitles time correction to fail to
+    in file metadata causing subtitle time correction in Scryer to fail to
     find the subtitles on the server.
 - Set `Import Behavior` of all catalogs to `Move`.
 - Connect Plex. Set base URL to: `https://plex.<tailnet>.ts.net`
@@ -88,5 +88,5 @@ Create the admin account, then configure:
 - Add the same library folders as Scryer, scan, and connect
   [Infuse](https://firecore.com/infuse).
 
-Plex's watchlist is synced to Scryer, which will download new items automatically.
+The Plex watchlist is synced to Scryer, which will download new items automatically.
 This is done via [watchlist-sync](https://github.com/mohdfareed/watchlist-sync).

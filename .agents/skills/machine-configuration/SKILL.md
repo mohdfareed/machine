@@ -11,10 +11,10 @@ Read `AGENTS.md` for ownership, platform, validation, and operational safety rul
 
 Identify the requested host, its OS or WSL context, and whether the task authorizes
 repo changes, live changes, or both. Check the selected machine and checkout when
-relevant; a local `mc status` does not identify a remote host. Resolve uncertainty
+relevant; a local `mc show status` does not identify a remote host. Resolve uncertainty
 before mutation, and follow the project's access and deployment approval rules.
 
-Read the relevant `machines/<id>/manifest.py`, `machine.env`, modules, and setup
+Read the relevant `machines/<id>/machine.py`, `machine.env`, modules, and setup
 notes. Inspect only the live state needed to understand what is already installed
 or configured. Do not equate a declaration with successful deployment.
 
@@ -43,9 +43,10 @@ runtime behavior. Do not deploy merely to validate code changes.
 ## Deploy within the authorized scope
 
 Choose the operation deliberately: `mc deploy` deploys the current checkout,
-`mc update` performs maintenance, and `mc sync` integrates canonical main before
-deploying. Check the target checkout and local changes before syncing. Module
-filters still include shared core setup; do not assume they isolate all effects.
+`mc upgrade` upgrades installed software and performs maintenance, and `mc sync`
+integrates canonical main and refreshes the CLI and shell completion. Check the target checkout and local
+changes before syncing. Module filters exclude machine extras, but package-manager
+setup and upgrades remain machine-wide; do not assume filters isolate all effects.
 
 Before execution, explain material risks such as restarts, elevation, access
 changes, or data migration. Obtain any required approval under `AGENTS.md`; a

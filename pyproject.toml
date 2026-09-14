@@ -18,11 +18,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "codespell>=2.4",
     "pyright>=1.1",
     "pytest>=9.1",
     "ruff>=0.16",
     "shellcheck-py>=0.11",
+    "typos>=1.50",
 ]
 
 # =============================================================================
@@ -50,9 +50,6 @@ src = [".", "config", "machines"]
 
 [tool.ruff.lint]
 select = ["E", "I", "W", "RUF"]
-
-[tool.codespell]
-skip = "*.lock,*.json,*.plist,compose.yaml,.git,.venv,**/data/**,**/logs/**,config/**/scripts/**,config/**/module.py,machines/**/scripts/**,machines/**/manifest.py"
 
 [tool.pyright]
 pythonVersion = "3.14"

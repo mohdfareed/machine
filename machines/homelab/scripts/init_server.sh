@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 set -Eeuo pipefail
 
 # Make a Mac behave like an always-on headless server.

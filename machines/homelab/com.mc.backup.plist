@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -9,7 +9,7 @@
     <array>
         <string>/bin/zsh</string>
         <string>-c</string>
-        <string>source "$HOME/.zshenv" 2>/dev/null; exec "$MC_HOME/machines/$MC_ID/scripts/_backup.sh"</string>
+        <string>source "$HOME/.zshenv" 2>/dev/null; exec "$MC_MACHINE/_backup.sh"</string>
     </array>
 
     <!-- Run daily at 04:30 -->

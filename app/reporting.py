@@ -1,34 +1,30 @@
-"""Shared console presentation and plain-text outcome logging."""
+"""Shared console presentation."""
 
-import logging
-from pathlib import Path
+import sys
 
+import click
 import typer
+from rich.console import Console
 from rich.text import Text
-
-from app.env import settings
-from app.logging import console, err_console
-from app.models import Failure
-
-_logger = logging.getLogger(__name__)
-
 
 # =============================================================================
 # MARK: Presentation
 # =============================================================================
 
 
-def _print(
-    message: str,
-    *,
-    prefix: str = "",
-    style: str = "",
-    error: bool = False,
-    level: int = logging.INFO,
-) -> None:
-    output = err_console if error else console
-    output.print(Text(prefix + message, style=style))
-    _logger.log(level, message, extra={"reported": True})
+def plain(message: str, *, error: bool = False, end: str = "\n") -> None:
+    """Print literal text without styling or wrapping, with the requested ending."""
+    print(message, file=sys.stderr if error else sys.stdout, end=end)
+
+
+def prompt(message: str, choices: list[str]) -> str:
+    """Prompt for one of the allowed values, accepting any casing."""
+    return typer.prompt(message, type=click.Choice(choices, case_sensitive=False))
+
+
+def exception() -> None:
+    """Show the current exception traceback on the error console."""
+    _err_console.print_exception()
 
 
 def detail(message: str, *, error: bool = False) -> None:
@@ -43,19 +39,17 @@ def success(message: str) -> None:
 
 def warning(message: str) -> None:
     """Show a non-fatal problem on the error console."""
-    _print(message, prefix="! ", style="yellow", error=True, level=logging.WARNING)
+    _print(message, prefix="! ", style="yellow", error=True)
 
 
 def error(message: str) -> None:
     """Show a short failure summary on the error console."""
-    _print(message, prefix="✗ ", style="red", error=True, level=logging.ERROR)
+    _print(message, prefix="✗ ", style="red", error=True)
 
 
 def command(cmd: str) -> None:
     """Announce a command without altering its external output."""
     _print("$ " + cmd, prefix="  ", style="dim")
-    if not settings.dry_run:
-        console.print()
 
 
 def heading(message: str) -> None:
@@ -65,28 +59,19 @@ def heading(message: str) -> None:
 
 
 # =============================================================================
-# MARK: Summary
+# MARK: Rendering Helpers
 # =============================================================================
 
+_console = Console()
+_err_console = Console(stderr=True)
 
-def print_summary(
-    failures: list[Failure],
-    log_file: Path,
+
+def _print(
+    message: str,
     *,
-    init_failed: bool = False,
+    prefix: str = "",
+    style: str = "",
+    error: bool = False,
 ) -> None:
-    """Report the outcome and exit unsuccessfully when operations failed."""
-    if not failures:
-        detail("")
-        detail(f"Log: {log_file}")
-        success(f"Machine deployed successfully.")
-        return
-
-    error(f"Finished with {len(failures)} failure(s).")
-    for failure in failures:
-        detail(f"Failed: {failure.module} · {failure.item}", error=True)
-
-    detail(f"Log: {log_file}", error=True)
-    if init_failed:
-        detail("Initialization failed; remaining steps were not run.", error=True)
-    raise typer.Exit(1)
+    output = _err_console if error else _console
+    output.print(Text(prefix + message, style=style))

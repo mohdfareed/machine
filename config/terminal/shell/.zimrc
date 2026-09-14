@@ -1,0 +1,29 @@
+# =============================================================================
+# MARK: Environment and Input
+# =============================================================================
+
+zmodule environment
+zmodule input
+zmodule homebrew --if-command brew
+
+# =============================================================================
+# MARK: Completion
+# =============================================================================
+
+# Collect completion definitions before initializing completion once.
+zmodule zsh-users/zsh-completions --fpath src
+zmodule ohmyzsh/ohmyzsh --root plugins/docker/completions --fpath .
+zmodule completion
+zmodule ohmyzsh/ohmyzsh --root plugins/dotnet --if-command dotnet
+
+# Keep support for the older fzf versions shipped by APT.
+zmodule ohmyzsh/ohmyzsh --root plugins/fzf --if-command fzf
+
+# =============================================================================
+# MARK: Suggestions and History
+# =============================================================================
+
+# Preserve the upstream order for widgets that wrap one another.
+zmodule zsh-users/zsh-syntax-highlighting
+zmodule zsh-users/zsh-history-substring-search
+zmodule zsh-users/zsh-autosuggestions

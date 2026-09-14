@@ -1,4 +1,4 @@
-"""Windows feature failures must not prevent attempts at the remaining features."""
+"""Sequential script execution and Windows setup behavior."""
 
 import os
 import shutil
@@ -8,6 +8,82 @@ from pathlib import Path
 
 import pytest
 
+from app.ops import scripts as machine_scripts
+
+
+@pytest.mark.parametrize("failed_script", ["init_failed.py", "setup.py"])
+def test_scripts_stop_on_first_failure_without_interpreting_prefixes(
+    tmp_path: Path, monkeypatch, failed_script: str
+) -> None:
+    events = []
+    scripts = [tmp_path / name for name in ("init_first.py", failed_script, "last.py")]
+    for script in scripts:
+        script.write_text("pass\n")
+
+    def run(cmd, *, env, dry_run, check, powershell):
+        assert not powershell
+        assert check is True
+        assert dry_run is False
+        name = Path(cmd[-1]).name
+        events.append(name)
+        if name == failed_script:
+            raise RuntimeError("script failed")
+
+    monkeypatch.setattr(machine_scripts, "run", run)
+    with pytest.raises(RuntimeError, match="script failed"):
+        machine_scripts.run_scripts(
+            [str(script) for script in scripts], env=dict(os.environ), dry_run=False
+        )
+
+    assert events == ["init_first.py", failed_script]
+
+
+def test_scripts_run_each_time_with_spaced_paths(tmp_path: Path) -> None:
+    directory = tmp_path / "script directory"
+    directory.mkdir()
+    marker = tmp_path / "runs.txt"
+    scripts = [directory / name for name in ("once_setup.py", "watch_setup.py")]
+    for script in scripts:
+        script.write_text(
+            "import os\n"
+            "with open(os.environ['SCRIPT_MARKER'], 'a') as marker:\n"
+            "    marker.write('ran\\n')\n"
+        )
+
+    for _ in range(2):
+        machine_scripts.run_scripts(
+            [str(script) for script in scripts],
+            env={**os.environ, "SCRIPT_MARKER": str(marker)},
+            dry_run=False,
+        )
+
+    assert marker.read_text().splitlines() == ["ran"] * 4
+
+
+def test_script_preview_preserves_permissions(tmp_path: Path) -> None:
+    script = tmp_path / "init_preview.sh"
+    script.write_text("#!/bin/sh\nexit 1\n")
+    script.chmod(0o600)
+    mode = script.stat().st_mode
+    machine_scripts.run_scripts([str(script)], env=dict(os.environ), dry_run=True)
+
+    assert script.stat().st_mode == mode
+
+
+def test_powershell_preview_does_not_prepare_an_unavailable_interpreter(tmp_path, monkeypatch):
+    from app import shell
+
+    script = tmp_path / "setup.ps1"
+    script.write_text("throw 'preview executed'\n")
+    monkeypatch.setattr(shell.shutil, "which", lambda *a, **kw: None)
+    monkeypatch.setattr(
+        shell,
+        "prepare_powershell_env",
+        lambda *a: pytest.fail("preview queried PowerShell"),
+    )
+
+    machine_scripts.run_scripts([str(script)], env={}, dry_run=True)
+
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows elevation helper")
 @pytest.mark.parametrize("already_admin", [False, True])
@@ -16,7 +92,7 @@ def test_admin_output_and_failure_status(tmp_path: Path, already_admin, mode, ex
     shell = shutil.which("powershell.exe")
     if shell is None:
         pytest.skip("Windows PowerShell is unavailable")
-    source = Path(__file__).parents[1] / "app/powershell/MachineAdmin/MachineAdmin.psm1"
+    source = Path(__file__).parents[1] / "app/scripts/MachineAdmin/MachineAdmin.psm1"
     module = tmp_path / "MachineAdmin.psm1"
     # Exercise either branch without elevation or any machine changes.
     module.write_text(
@@ -88,7 +164,7 @@ Write-Host 'after-admin'
 
 
 def test_windows_features_report_failures_after_attempting_remaining_features(tmp_path: Path):
-    shell = shutil.which("pwsh") or shutil.which("powershell")
+    shell = shutil.which("pwsh") or shutil.which("pwsh-preview") or shutil.which("powershell")
     if shell is None:
         pytest.skip("PowerShell is unavailable")
     script = Path(__file__).parents[1] / "config/system/scripts/system.win.ps1"

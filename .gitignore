@@ -9,7 +9,10 @@ __pycache__/
 dist/
 lazy-lock.json
 
-# docker runtime data (created by containers, not tracked)
+# runtime data (container generated)
 **/docker/**/cache/
 **/docker/**/data/
 **/docker/**/logs/
+
+# machine deployment
+private/

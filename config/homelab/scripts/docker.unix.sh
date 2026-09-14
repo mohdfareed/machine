@@ -1,11 +1,11 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 set -Eeuo pipefail
 
 : "${MC_HOMELAB_DIR:?}"
 
 HOMELAB_DIR="$MC_HOMELAB_DIR"
 MODULE_DOCKER="$MC_HOME/config/homelab/docker"
-MACHINE_DOCKER="$MC_HOME/machines/$MC_ID/docker"
+MACHINE_DOCKER="$MC_MACHINE/docker"
 
 if ! command -v docker &>/dev/null; then
     echo "docker not found"

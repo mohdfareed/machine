@@ -6,6 +6,7 @@
     "ms-vscode.powershell",
     "timonwong.shellcheck",
     "yzhang.markdown-all-in-one",
-    "streetsidesoftware.code-spell-checker",
+    "tekumara.typos-vscode",
   ],
+  "unwantedRecommendations": ["streetsidesoftware.code-spell-checker"],
 }

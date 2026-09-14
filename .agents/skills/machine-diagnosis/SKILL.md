@@ -21,7 +21,7 @@ and shared targets when evidence warrants it; do not audit every file by default
 
 ## Compare intended and actual state
 
-Trace relevant configuration from `machines/<id>/manifest.py` and `machine.env`
+Trace relevant configuration from `machines/<id>/machine.py` and `machine.env`
 through selected modules, dependencies, mappings, packages, and scripts. Inspect
 applicable local setup notes. Determine which component owns the setting.
 
@@ -41,7 +41,7 @@ and manifests alone do not prove an operation succeeded.
 Look for conflicting ownership, stale configuration, missing deployment,
 platform mismatches, unmet prerequisites, and discrepancies between repository
 and live state. Also consider faults in the application or external service,
-not just in the bootstrapper.
+not just in the bootstrap process.
 
 Repeated declarations may be intentional overrides. Multiple writers require
 examining their order and responsibility, not assuming one is dead code. Runtime

@@ -15,10 +15,12 @@ find . \
     -type f \( -path '*/scripts/*.sh' -o -path '*/scripts/*.py' \) \
     -exec chmod +x {} +
 
+echo "==> Fixing spelling..."
+uv run typos --write-changes --no-check-filenames
+
 echo "==> Formatting and auto-fixing..."
 uv run ruff check --fix .
 uv run ruff format .
-uv run codespell --write-changes .
 
 echo
 "$(dirname "$0")/check.sh"

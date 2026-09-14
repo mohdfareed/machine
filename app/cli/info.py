@@ -1,86 +1,48 @@
-"""Inspect machine configuration and local data."""
+"""Inspect selected configuration without preparing execution."""
 
-import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import typer
 
-from app import reporting
-from app.cli.entry import complete_machines, get_current_machine, validate_machine
-from app.env import PLATFORM, build_env, settings
-from app.ops.packages import select_package_source
-from app.ops.scripts import filter_scripts
-
-if TYPE_CHECKING:
-    from app.models import Package, PkgManager
-
-status_app = typer.Typer(help="Show machine information and local data.")
+from app import cli, env, reporting
+from app.discovery import list_machines, list_modules
+from app.env import build_env, get_current_machine
+from app.machine import load_machine
 
 # =============================================================================
 # MARK: Info Commands
 # =============================================================================
 
 
+def machine_id() -> None:
+    """Print the saved machine ID."""
+    reporting.plain(get_current_machine() or "")
+
+
 def home() -> None:
-    """Print the repo root path (MC_HOME)."""
-    print(settings.home)
+    """Print the repository root."""
+    reporting.plain(str(env.ROOT))
 
 
 def private() -> None:
-    """Print the resolved MC_PRIVATE path for the current machine."""
+    """Print the private storage path."""
     machine_id = get_current_machine()
     if not machine_id:
-        reporting.error("No machine selected.")
-        raise SystemExit(1)
-
-    env = build_env(machine_id, settings.home)
-    print(env["MC_PRIVATE"])
+        raise ValueError(f"No machine selected. Select one with {cli.COMMAND} deploy.")
+    reporting.plain(build_env(machine_id, include_private=False)["MC_PRIVATE"])
 
 
-@status_app.callback(invoke_without_command=True)
-def status(ctx: typer.Context) -> None:
-    """Show machine home, app directory, and version."""
-    if ctx.invoked_subcommand is not None:
-        return
-
-    reporting.heading(f"{settings.name} {settings.version}")
-    machine = get_current_machine()
-
-    reporting.detail(f"Machine: {machine or 'none'}")
-    reporting.detail(f"Home: {settings.home}")
-    reporting.detail(f"Data: {settings.app_dir}")
-
-
-@status_app.command("id")
-def status_id() -> None:
-    """Print the current machine ID."""
-    machine = get_current_machine()
-    if not machine:
-        reporting.error("No machine selected.")
-        raise typer.Exit(1)
-
-    typer.echo(machine)
-
-
-@status_app.command("state")
-def status_state() -> None:
-    """Print the script-state file path."""
-    typer.echo(settings.state_file)
-
-
-@status_app.command("log")
-def status_log() -> None:
-    """Print the log file path."""
-    typer.echo(settings.log_file)
+def status() -> None:
+    """Show the selected machine, repo and CLI version."""
+    reporting.heading(f"{cli.NAME} {cli.VERSION}")
+    reporting.detail(f"Machine: {get_current_machine() or 'none'}")
+    reporting.detail(f"Home: {env.ROOT}")
 
 
 def list_all() -> None:
     """List available machines and modules."""
-    from app.discovery import list_machines, list_modules
-
-    root = settings.home
-    for label, names in [("Machines", list_machines(root)), ("Modules", list_modules(root))]:
+    for label, names in [("Machines", list_machines()), ("Modules", list_modules())]:
         if not names:
             reporting.detail(f"No {label.lower()} found.")
             continue
@@ -96,109 +58,47 @@ def list_all() -> None:
 
 
 def show(
+    context: typer.Context,
     machine: Annotated[
-        str,
+        str | None,
         typer.Option(
             "-m",
             "--machine",
             metavar="MACHINE",
             help="The machine to inspect.",
-            autocompletion=complete_machines,
-            callback=validate_machine,
-            prompt=True,
+            autocompletion=cli.complete_machines,
         ),
-    ] = get_current_machine() or "",
+    ] = None,
 ) -> None:
-    """Show resolved configuration for a machine."""
+    """Inspect machine information; without a subcommand, show resolved configuration."""
+    if context.invoked_subcommand is not None:
+        return
 
-    from app.machine import load_machine
+    # Resolve the selection and applicable declarations without loading secrets.
+    machine = machine or get_current_machine() or reporting.prompt("Machine", list_machines())
+    machine = cli.validate_machine(machine)
+    if machine is None:
+        raise ValueError("No machine selected.")
+    machine_env = build_env(machine, include_private=False)
+    configuration = load_machine(machine, env=machine_env)
 
-    # Resolve the machine configuration.
-    root = settings.home
-    manifest, mods = load_machine(machine, root)
-    root_prefix = str(root) + os.sep
+    # Describe selected inputs without reconstructing the execution workflow.
+    reporting.heading(f"Machine: {machine}")
+    reporting.detail(f"Managers: {', '.join(configuration.pkg_managers) or 'none'}")
+    reporting.detail(f"Modules: {', '.join(configuration.modules)}")
 
-    def _short(path: str) -> str:
-        return path.removeprefix(root_prefix)
+    reporting.heading("Files")
+    for file in configuration.files:
+        source = Path(file.source)
+        display = source.relative_to(env.ROOT) if source.is_relative_to(env.ROOT) else source
+        reporting.detail(f"{display} → {file.target}")
 
-    # Show the machine and its selected managers and modules.
-    reporting.heading(machine)
-    reporting.detail(f"Managers: {', '.join(manifest.pkg_managers) or 'none'}")
-    if mods:
-        reporting.detail(f"Modules: {', '.join(m.name for m in mods)}")
+    reporting.heading("Packages")
+    for package in configuration.packages:
+        reporting.detail(package.name)
 
-    # Show files for the current platform.
-    files = [(m.name, f) for m in mods for f in m.files if f.applies_to(PLATFORM)] + [
-        (machine, f) for f in manifest.files if f.applies_to(PLATFORM)
-    ]
-    if files:
-        reporting.heading("Files")
-        for mod, f in files:
-            reporting.detail(f"{mod} · {_short(f.source)} → {f.target}")
-
-    # Build execution sections in module and declaration order.
-    # Use the same script filtering as deploy.
-    all_scripts = [(m.name, script) for m in mods for script in filter_scripts(m.scripts)] + [
-        (machine, script) for script in filter_scripts(manifest.scripts)
-    ]
-    pkgs = [(m.name, p) for m in mods for p in m.packages if p.applies_to(PLATFORM)] + [
-        (machine, p) for p in manifest.packages if p.applies_to(PLATFORM)
-    ]
-    sections = [
-        (
-            "Init Scripts",
-            [
-                f"{mod} · {_short(script)}"
-                for mod, script in all_scripts
-                if Path(script).name.startswith("init_")
-            ],
-        ),
-        (
-            "Packages",
-            [f"{mod} · {p.name} ({_pkg_source(p, manifest.pkg_managers)})" for mod, p in pkgs],
-        ),
-        (
-            "Scripts",
-            [
-                f"{mod} · {_short(script)}"
-                for mod, script in all_scripts
-                if not Path(script).name.startswith(("init_", "up_"))
-            ],
-        ),
-        (
-            "Maintenance Packages",
-            [
-                f"{mod} · {p.name} ({_pkg_source(p, manifest.pkg_managers)})"
-                for mod, p in pkgs
-                if p.script
-            ],
-        ),
-        (
-            "Maintenance Scripts",
-            [
-                f"{mod} · {_short(script)}"
-                for mod, script in all_scripts
-                if Path(script).name.startswith("up_")
-            ],
-        ),
-    ]
-
-    # Show populated execution sections.
-    for title, rows in sections:
-        if not rows:
-            continue
-
-        reporting.heading(title)
-        for row in rows:
-            reporting.detail(row)
-
-
-def _pkg_source(p: "Package", managers: list["PkgManager"]) -> str:
-    try:
-        source = select_package_source(p, managers)
-    except ValueError as exc:
-        return str(exc)
-
-    if source is None:
-        return "script" if p.script else "unknown"
-    return f"{source}: {p.sources[source]}"
+    reporting.heading("Scripts")
+    for value in configuration.scripts:
+        script = Path(value)
+        display = script.relative_to(env.ROOT) if script.is_relative_to(env.ROOT) else script
+        reporting.detail(str(display))

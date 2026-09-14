@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env zsh
+set -Eeuo pipefail
 
 : "${MC_HOMELAB_STORAGE_DIR:?}"
 : "${MC_HOMELAB_MEDIA_DIR:?}"

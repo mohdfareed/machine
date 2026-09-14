@@ -1,242 +1,260 @@
-"""Shell environment preparation, terminal streaming, and file logging."""
+"""Command execution, bounded queries, and execution environment preparation."""
 
-import logging
 import os
-import re
+import shlex
 import shutil
 import subprocess
-import sys
 import tempfile
-import threading
 from pathlib import Path
 
 from app import reporting
-from app.env import is_unix, is_windows, settings
-from app.logging import output_logger
-
-_logger = logging.getLogger(__name__)
-
-
-# Strip ANSI/DEC escape sequences for log-file output.
-_ANSI_RE = re.compile(r"\x1b(?:\[[0-9;?]*[A-Za-z]|\][^\x07]*\x07|\([A-Z])")
-
+from app.env import ROOT, is_windows, system_env
 
 # =============================================================================
-# MARK: Prepare Shell Environment
-# =============================================================================
-
-_sudo_keepalive: threading.Event | None = None
-
-
-def cache_sudo() -> None:
-    """Prompt for sudo once and keep credentials alive in the background."""
-    global _sudo_keepalive
-
-    if is_windows or settings.dry_run or _sudo_keepalive is not None:
-        return
-
-    # Acquire credentials before starting background refreshes.
-    rc = subprocess.call(["sudo", "-v"], stdin=sys.stdin)
-    if rc != 0:
-        reporting.warning(f"sudo authentication failed (exit {rc}); scripts may prompt again.")
-        return
-
-    stop = threading.Event()
-    _sudo_keepalive = stop
-
-    def _keepalive() -> None:
-        while not stop.wait(60):
-            subprocess.call(["sudo", "-v"], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-
-    threading.Thread(target=_keepalive, daemon=True).start()
-
-
-def refresh_path() -> None:
-    """Refresh PATH from the Windows registry or a Unix login shell."""
-    # Equivalent to `is_windows` but is a statically known platform guard.
-    if sys.platform == "win32":
-        import winreg
-
-        paths = [os.environ.get("PATH", "")]
-        for hive, key in (
-            (
-                winreg.HKEY_LOCAL_MACHINE,
-                r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
-            ),
-            (winreg.HKEY_CURRENT_USER, "Environment"),
-        ):
-            try:
-                with winreg.OpenKey(hive, key) as handle:
-                    value, _ = winreg.QueryValueEx(handle, "Path")
-                    paths.append(os.path.expandvars(value))
-            except OSError:
-                pass
-
-        # Deduplicate directories, not whole PATH strings, so repeated refreshes cannot grow PATH.
-        entries = (entry for path in paths for entry in path.split(os.pathsep) if entry)
-        unique: dict[str, str] = {}
-        for entry in entries:
-            unique.setdefault(os.path.normcase(os.path.normpath(entry)), entry)
-
-        os.environ["PATH"] = os.pathsep.join(unique.values())
-        return
-
-    # Import the login-shell PATH on Unix.
-    try:
-        shell = os.environ.get("SHELL", "/bin/sh")
-        out = subprocess.check_output([shell, "-lc", "echo $PATH"], text=True, timeout=5).strip()
-
-        if out:
-            os.environ["PATH"] = out
-            _logger.debug("Refreshed PATH: %s", out)
-    except Exception as exc:
-        _logger.debug("PATH refresh failed: %s", exc)
-
-    # Include Homebrew even when the login shell has not configured it yet.
-    for directory in ("/opt/homebrew/bin", "/usr/local/bin", "/home/linuxbrew/.linuxbrew/bin"):
-        if not (Path(directory) / "brew").is_file():
-            continue
-
-        os.environ["PATH"] = directory + os.pathsep + os.environ.get("PATH", "")
-        break
-
-
-# =============================================================================
-# MARK: Command Execution
+# MARK: Run Commands and Queries
 # =============================================================================
 
 
 def run(
-    cmd: str,
+    cmd: str | list[str],
     *,
-    env: dict[str, str] | None = None,
-    label: str = "",
+    env: dict[str, str],
+    dry_run: bool,
     capture_output: bool = False,
-) -> subprocess.CompletedProcess[bytes]:
-    """Run a command, stream and log output, and optionally return it as bytes."""
-
-    reporting.command(cmd.replace(str(settings.home) + os.sep, "." + os.sep))
-    if settings.dry_run:
-        return subprocess.CompletedProcess(cmd, 0, stdout=b"" if capture_output else None)
-
-    # Stream the command through the platform's transport.
-    merged_env = {**os.environ, **(env or {})}
-    if is_unix:
-        rc, collected = _tee_pty(cmd, merged_env)
+    echo_output: bool = False,
+    check: bool = False,
+    powershell: bool = False,
+) -> subprocess.CompletedProcess[bytes] | None:
+    """Announce a command, then run it or skip its execution during a preview."""
+    if isinstance(cmd, str):
+        command = cmd
     else:
-        rc, collected = _tee_pipe(cmd, merged_env)
+        command = subprocess.list2cmdline(cmd) if is_windows else shlex.join(cmd)
+    display = command.replace(str(ROOT) + os.sep, "." + os.sep)
+    reporting.command(display)
+    if dry_run:
+        return None
 
-    # Log captured output line by line without ANSI escapes.
-    prefix = f"[{label}] " if label else ""
-    for line in collected.decode(errors="replace").splitlines():
-        stripped = _ANSI_RE.sub("", line).rstrip()
-        if stripped:
-            output_logger.debug("%s| %s", prefix, stripped)
+    # Prepare the current host environment before resolving commands or interpreters.
+    environment = process_env(env)
+    if powershell:
+        if isinstance(cmd, str):
+            raise ValueError("PowerShell file execution requires an argument list")
+        environment = prepare_powershell_env(cmd[0], environment)
 
-    return subprocess.CompletedProcess(cmd, rc, stdout=bytes(collected) if capture_output else None)
+    # Preserve arguments and inherit the terminal unless the caller needs output.
+    if is_windows and isinstance(cmd, str):
+        result = _run_powershell(cmd, environment, capture_output)
+    else:
+        args = cmd if isinstance(cmd, str) else [_resolve_executable(cmd[0], environment), *cmd[1:]]
+        result = subprocess.run(
+            args,
+            shell=isinstance(cmd, str),
+            env=environment,
+            stdout=subprocess.PIPE if capture_output else None,
+            stderr=subprocess.STDOUT if capture_output else None,
+        )
+
+    # Replay inspected output without changing it, then preserve failure status.
+    if echo_output and result.stdout:
+        reporting.plain(result.stdout.decode(errors="replace"), end="")
+    if check and result.returncode != 0:
+        detail = ""
+        if capture_output and not echo_output and result.stdout:
+            detail = "\n" + result.stdout.decode(errors="replace").strip()
+        raise RuntimeError(f"Command failed (exit {result.returncode}): {display}{detail}")
+    return result
 
 
-# =============================================================================
-# MARK: Unix Transport
-# =============================================================================
-
-
-def _tee_pty(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
-    if sys.platform == "win32":
-        raise RuntimeError("PTY transport is unavailable on Windows")
-
-    import pty
-    import select
-
-    # Attach command output to a pseudo-terminal.
-    primary, replica = pty.openpty()
-    proc = subprocess.Popen(
-        cmd,
-        shell=True,
-        env=env,
-        stdin=sys.stdin,
-        stdout=replica,
-        stderr=replica,
+def query(
+    cmd: list[str],
+    *,
+    env: dict[str, str],
+    timeout: float = 30,
+    check: bool = True,
+) -> subprocess.CompletedProcess[str]:
+    """Run a silent, bounded read with current host variables and explicit overrides."""
+    environment = process_env(env)
+    result = subprocess.run(
+        [_resolve_executable(cmd[0], environment), *cmd[1:]],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
     )
-    os.close(replica)  # The parent does not write to the replica side.
-
-    # Stream and collect output, closing the primary even on failure.
-    collected = bytearray()
-    try:
-        while True:
-            ready, _, _ = select.select([primary], [], [], 0.1)
-            if ready:
-                try:
-                    chunk = os.read(primary, 4096)
-                except OSError:
-                    break
-                if not chunk:
-                    break
-                sys.stdout.buffer.write(chunk)
-                sys.stdout.buffer.flush()
-                collected.extend(chunk)
-            elif proc.poll() is not None:
-                # Drain remaining output after the process exits.
-                while True:
-                    try:
-                        chunk = os.read(primary, 4096)
-                    except OSError:
-                        break
-                    if not chunk:
-                        break
-                    sys.stdout.buffer.write(chunk)
-                    sys.stdout.buffer.flush()
-                    collected.extend(chunk)
-                break
-    finally:
-        os.close(primary)
-
-    proc.wait()
-    return proc.returncode, collected
+    if check and result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip()
+        raise RuntimeError(f"Query failed (exit {result.returncode}): {cmd[0]}\n{detail}")
+    return result
 
 
 # =============================================================================
-# MARK: Windows Transport
+# MARK: Prepare Execution Environments
 # =============================================================================
 
 
-def _tee_pipe(cmd: str, env: dict[str, str]) -> tuple[int, bytearray]:
-    if sys.platform != "win32":
-        raise RuntimeError("Pipe transport is only available on Windows")
+def process_env(overrides: dict[str, str]) -> dict[str, str]:
+    """Prepare current host variables and command activation, then apply explicit overrides."""
+    # Keep a parent Git hook or diff tool from redirecting commands to its repository.
+    environment = _without_git_context(system_env(overrides))
+    if is_windows:
+        return environment
 
-    # Prefer PowerShell Core, falling back to Windows PowerShell.
-    exe = shutil.which("pwsh.exe") or shutil.which("powershell.exe")
-    if exe is None:
-        raise FileNotFoundError("Failed to find PowerShell executable")
+    # Activate installed commands in a bounded shell without loading user profiles.
+    result = subprocess.run(
+        [
+            "/bin/sh",
+            "-c",
+            'set -e; . "$1" >&2; /usr/bin/env -0',
+            "mc environment",
+            str(_ENVIRONMENT_SCRIPT),
+        ],
+        env=environment,
+        capture_output=True,
+        timeout=30,
+        check=False,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.decode(errors="replace").strip()
+        raise RuntimeError(f"Environment setup failed (exit {result.returncode}): {detail}")
 
-    # Use -File to preserve quoting and emit plain text instead of EncodedCommands.
+    # NUL separation preserves multiline values; selected-machine values remain authoritative.
+    environment = dict(
+        os.fsdecode(value).split("=", 1) for value in result.stdout.split(b"\0") if b"=" in value
+    )
+    environment.update(overrides)
+    return _without_git_context(environment)
+
+
+def find_executable(name: str, *, env: dict[str, str]) -> str | None:
+    """Find a command using the same prepared environment as execution."""
+    return shutil.which(name, path=process_env(env).get("PATH", ""))
+
+
+def powershell_executable(env: dict[str, str], *, dry_run: bool = False) -> str:
+    """Choose the platform's PowerShell interpreter without launching it in previews."""
+    if dry_run:
+        return "powershell.exe" if is_windows else "pwsh"
+    return _powershell_executable(process_env(env))
+
+
+def prepare_powershell_env(executable: str, env: dict[str, str]) -> dict[str, str]:
+    """Add bundled modules to an already prepared environment for the chosen interpreter."""
+    key = "PSModulePath"
+    if is_windows:
+        key = next((name for name in env if name.casefold() == key.casefold()), key)
+    module_path = env.get(key)
+    if module_path is None:
+        result = subprocess.run(
+            [
+                executable,
+                "-NoProfile",
+                "-Command",
+                "[Console]::OutputEncoding = [Text.UTF8Encoding]::new(); $env:PSModulePath",
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if result.returncode != 0:
+            detail = result.stderr.strip() or result.stdout.strip()
+            raise RuntimeError(f"PowerShell environment setup failed: {detail}")
+        module_path = result.stdout.strip()
+
+    paths = [str(_SCRIPTS_ROOT), *module_path.split(os.pathsep)]
+    return {**env, key: os.pathsep.join(dict.fromkeys(path for path in paths if path))}
+
+
+# =============================================================================
+# MARK: Process Helpers
+# =============================================================================
+
+_SCRIPTS_ROOT = Path(__file__).parent / "scripts"
+_ENVIRONMENT_SCRIPT = _SCRIPTS_ROOT / "environment.unix.sh"
+
+# Repository-local variables listed by `git rev-parse --local-env-vars`.
+# Keep global configuration, identity and SSH settings; discard diff-tool callbacks too.
+_GIT_CONTEXT_VARIABLES = {
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_CONFIG",
+    "GIT_CONFIG_PARAMETERS",
+    "GIT_CONFIG_COUNT",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_IMPLICIT_WORK_TREE",
+    "GIT_GRAFT_FILE",
+    "GIT_INDEX_FILE",
+    "GIT_NO_REPLACE_OBJECTS",
+    "GIT_REPLACE_REF_BASE",
+    "GIT_PREFIX",
+    "GIT_SHALLOW_FILE",
+    "GIT_COMMON_DIR",
+    "GIT_EXEC_PATH",
+    "GIT_EXTERNAL_DIFF",
+}
+
+
+def _without_git_context(env: dict[str, str]) -> dict[str, str]:
+    return {
+        name: value
+        for name, value in env.items()
+        if name.upper() not in _GIT_CONTEXT_VARIABLES
+        and not name.upper().startswith(("GIT_DIFF_", "GIT_DIFFTOOL_"))
+    }
+
+
+def _resolve_executable(name: str, env: dict[str, str]) -> str:
+    executable = shutil.which(name, path=env.get("PATH", ""))
+    if executable is None:
+        raise FileNotFoundError(f"Executable not found: {name}")
+    return executable
+
+
+def _powershell_executable(env: dict[str, str]) -> str:
+    names = ("powershell.exe",) if is_windows else ("pwsh", "pwsh-preview")
+    for name in names:
+        executable = shutil.which(name, path=env.get("PATH", ""))
+        if executable is not None:
+            return executable
+
+    # Windows PowerShell ships with Windows even when PATH omits its directory.
+    system_root = next(
+        (value for key, value in env.items() if key.casefold() == "systemroot"), None
+    )
+    if is_windows and system_root:
+        path = Path(system_root) / "System32" / "WindowsPowerShell" / "v1.0" / names[0]
+        if path.is_file():
+            return str(path)
+    raise FileNotFoundError(f"PowerShell executable not found: {' or '.join(names)}")
+
+
+def _run_powershell(
+    cmd: str,
+    env: dict[str, str],
+    capture_output: bool,
+) -> subprocess.CompletedProcess[bytes]:
+    executable = _powershell_executable(env)
+    environment = prepare_powershell_env(executable, env)
+
+    # Use -File to preserve source quoting and relay plain text and native exits.
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".ps1", encoding="utf-8-sig", delete_on_close=False
     ) as script:
         script.write(
-            "try {\n" + cmd + "\nif (-not $?) { exit 1 }\n}\n"
+            "try {\n" + cmd + "\nif (-not $?) {\n"
+            "if ($LASTEXITCODE) { exit $LASTEXITCODE }\nexit 1\n}\n}\n"
             "catch {\n[Console]::Error.WriteLine($_.Exception.Message)\nexit 1\n}\n"
         )
         script.close()
-
-        # Merge both output streams for terminal display and logging.
-        proc = subprocess.Popen(
-            [exe, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script.name],
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+        result = subprocess.run(
+            [executable, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script.name],
+            env=environment,
+            stdout=subprocess.PIPE if capture_output else None,
+            stderr=subprocess.STDOUT if capture_output else None,
         )
-        assert proc.stdout is not None
-
-        # Stream and collect output before waiting for the exit status.
-        collected = bytearray()
-        while True:
-            chunk = os.read(proc.stdout.fileno(), 4096)
-            if not chunk:
-                break
-            sys.stdout.buffer.write(chunk)
-            sys.stdout.buffer.flush()
-            collected.extend(chunk)
-
-        proc.wait()
-        return proc.returncode, collected
+        result.args = cmd
+        return result
