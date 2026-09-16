@@ -1,16 +1,20 @@
 """Live package-manager readiness, installation, presence, and maintenance."""
 
 import json
-from pathlib import Path
 
-from app.env import is_windows
+from app import reporting
+from app.env import SCRIPTS_ROOT, is_windows
 from app.models import Package, PackageSource, PkgManager
 from app.ops.scripts import run_scripts
 from app.shell import find_executable, query, run
 
-# =============================================================================
+_SETUP_SCRIPT_UNIX = SCRIPTS_ROOT / "setup_managers.sh"
+_SETUP_SCRIPT_WIN = SCRIPTS_ROOT / "setup_managers.ps1"
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Validate & Setup
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def validate_managers(
@@ -30,19 +34,20 @@ def validate_managers(
 def setup_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run: bool) -> None:
     """Install missing declared managers using the host's bundled setup script."""
     if not managers:
+        reporting.detail("No package managers declared.")
         return
     if all(find_executable(manager, env=env) for manager in managers):
+        reporting.detail("All package managers are already available.")
         return
 
-    suffix = "win.ps1" if is_windows else "unix.sh"
-    script = Path(__file__).parent / "scripts" / f"setup_managers.{suffix}"
+    script = _SETUP_SCRIPT_WIN if is_windows else _SETUP_SCRIPT_UNIX
     script_env = {**env, "MC_PKG_MANAGERS": " ".join(managers)}
     run_scripts([str(script)], env=script_env, dry_run=dry_run)
 
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Install
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def install_package(package: Package, *, env: dict[str, str], dry_run: bool) -> None:
@@ -98,9 +103,9 @@ def install_package(package: Package, *, env: dict[str, str], dry_run: bool) -> 
     raise RuntimeError(f"Winget installation failed (exit {result.returncode}): {value}")
 
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Upgrade
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def upgrade_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run: bool) -> None:
@@ -148,9 +153,9 @@ def upgrade_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run
             run(command, env=env, dry_run=dry_run, check=True)
 
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Query
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def source_installed(source: PackageSource, value: str | int, *, env: dict[str, str]) -> bool:

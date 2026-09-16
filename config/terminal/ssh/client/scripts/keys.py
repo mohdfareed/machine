@@ -42,46 +42,6 @@ def _install_files(source_dir: Path) -> None:
         _set_permissions(source, destination)
 
 
-def _set_permissions(source: Path, destination: Path) -> None:
-    # Apply standard SSH modes on Unix-like systems.
-    if os.name != "nt":
-        destination.chmod(0o644 if source.suffix == ".pub" else 0o600)
-        return
-
-    # Restrict Windows access to the current user and SYSTEM.
-    user = f"{os.environ['USERDOMAIN']}\\{os.environ['USERNAME']}"
-    commands = [
-        ["icacls", destination, "/inheritance:r"],
-        [
-            "icacls",
-            destination,
-            "/grant:r",
-            f"{user}:(F)",
-            "*S-1-5-18:(F)",
-        ],
-    ]
-
-    # Retry after replacing a destination whose ACL blocks access.
-    for attempt in range(2):
-        try:
-            for command in commands:
-                subprocess.run(
-                    command,
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                )
-            return
-        except subprocess.CalledProcessError:
-            if attempt == 1:
-                raise
-
-            # Replace the inaccessible destination before retrying.
-            destination.unlink()
-            shutil.copy2(source, destination)
-            print(f"ssh: replaced inaccessible {source.name}")
-
-
 def _load_keys(source_dir: Path) -> None:
     # Collect keys already present in the agent.
     loaded_keys = subprocess.run(
@@ -119,8 +79,53 @@ def _load_keys(source_dir: Path) -> None:
 
         # Add the key and remember successful loads.
         result = subprocess.run(command, check=False)
-        if result.returncode == 0:
-            loaded_blobs.add(key_fields[1])
+        if result.returncode != 0:
+            print(f"ssh: failed to load {private_key.name}", file=sys.stderr)
+            raise SystemExit(result.returncode)
+        loaded_blobs.add(key_fields[1])
+
+
+def _set_permissions(source: Path, destination: Path) -> None:
+    # Apply standard SSH modes on Unix-like systems.
+    if os.name != "nt":
+        destination.chmod(0o644 if source.suffix == ".pub" else 0o600)
+        return
+
+    # WINDOWS
+    # ═════════════════════════════════════════════════════════════════════════
+
+    # Restrict Windows access to the current user and SYSTEM.
+    user = f"{os.environ['USERDOMAIN']}\\{os.environ['USERNAME']}"
+    commands = [
+        ["icacls", destination, "/inheritance:r"],
+        [
+            "icacls",
+            destination,
+            "/grant:r",
+            f"{user}:(F)",
+            "*S-1-5-18:(F)",
+        ],
+    ]
+
+    # Retry after replacing a destination whose ACL blocks access.
+    for attempt in range(2):
+        try:
+            for command in commands:
+                subprocess.run(
+                    command,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+            return
+        except subprocess.CalledProcessError:
+            if attempt == 1:
+                raise
+
+            # Replace the inaccessible destination before retrying.
+            destination.unlink()
+            shutil.copy2(source, destination)
+            print(f"ssh: replaced inaccessible {source.name}")
 
 
 if __name__ == "__main__":

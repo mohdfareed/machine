@@ -72,8 +72,10 @@ proposed design and enforced rules distinct; isolated fixes do not replace this 
 Models perform field/type checks only. The loader explicitly normalizes and validates
 declarations; operations check live prerequisites. Keep loader-derived bookkeeping
 out of declaration constructors and schemas. Pass execution options and the
-selected environment explicitly. Only CLI modules and `app/shell.py` import reporting;
-other layers return facts or raise. Keep these boundaries enforced by the existing tests.
+selected environment explicitly. Keep the complete Typer command tree in
+`app/cli/entry.py`; command modules implement callbacks only. Only CLI modules and
+`app/shell.py` import reporting; other layers return facts or raise. Keep these boundaries
+enforced by the existing tests.
 
 ### Module (`config/<path>/module.py`)
 
@@ -153,7 +155,7 @@ the loader's source selection.
 selection. Every executable lookup and command prepares the current host environment,
 then applies those overrides. Subprocess environments exclude Git repository and
 diff-tool context from the caller; global Git configuration and authentication remain
-available. Internal Unix activation lives in `app/scripts/environment.unix.sh`;
+available. Internal Unix activation lives in `app/scripts/environment.sh`;
 it must be quiet, read-only, safe before tools are installed, and safe to source repeatedly.
 Windows reads registered machine/user variables without loading PowerShell profiles.
 Manager setup alone receives `MC_PKG_MANAGERS`. Shell execution prepares the chosen
@@ -209,7 +211,7 @@ or add special config entrypoints outside the module declaration system.
 - Section headers use three comment lines: an `=` border, `# MARK: <Title>`, and the same border. Each border is exactly 79 characters including indentation and the comment prefix; adjust the number of `=` characters accordingly. Preserve the section's indentation and use the language's comment syntax (`// MARK: <Title>` in JSONC). Ordinary explanatory comments, recipe-step comments, and Markdown headings do not need borders.
 - Put public interfaces before private helpers. Prefix module-private implementation details (helpers, classes, and constants) with `_`; keep intentionally shared interfaces public and do not access another module's private names in application code.
 - Document public functions, classes, and properties with concise docstrings; do not add docstrings to private helpers. Use ordinary comments for non-obvious private implementation details.
-- Keep CLI errors consistent: a short red failure summary on the error console, followed by separate dim recovery guidance when actionable. `--debug` enables exception tracebacks only. Do not configure application logging or create log files or command transcripts.
+- Keep CLI errors consistent: a short red failure summary on the error console, followed by separate dim recovery guidance when actionable. `--debug` adds dim resolution and execution traces and includes exception tracebacks. Do not configure application logging or create log files or command transcripts.
 - Operations raise at the first failure with the affected item or command; do not collect failure reports or maintain ownership maps for output. Commands inherit the terminal; capture output only when a caller needs to inspect it.
 - Route all application-owned Python output through functions in `app/reporting.py`, including plain values, prompts, captured command output, and tracebacks. Keep consoles private to that module. Use bold magenta `▶` headings, green `✓` success, yellow `!` warnings, red `✗` errors, and dim commands/details. Use terminal theme colors, no fixed-width decoration or tool-name prefixes. Leave framework-generated help/errors and subprocess terminal output to their existing handlers; keep plain-value commands undecorated. Announce dry-run mode once when a deployment command starts; keep action messages the same in previews and execution. Keep presentation minimal; no reporting framework or extra tracking solely for richer summaries.
 - Do not add scripts whose only job is printing setup reminders; put that guidance in docs unless the script performs real work

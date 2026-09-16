@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: General Settings
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 # set hostname
 target_hostname="${MC_HOSTNAME:-$MC_ID}"
@@ -23,9 +23,28 @@ fi
 # enable hush login
 [ -f "$HOME/.hushlogin" ] || touch "$HOME/.hushlogin"
 
-# =============================================================================
+echo "enabling auto-restart on power failure..."
+sudo pmset -a autorestart 1
+
+echo "enabling wake on LAN..."
+sudo pmset -a womp 1
+
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: System Defaults
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
+
+echo "enabling auto-restart on power failure..."
+sudo pmset -a autorestart 1
+
+echo "enabling wake on LAN..."
+sudo pmset -a womp 1
+
+# Enable automatic macOS security updates.
+echo "enabling automatic updates..."
+defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
+defaults write com.apple.SoftwareUpdate AutomaticDownload -bool true
+defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -bool true
+defaults write com.apple.commerce AutoUpdate -bool true # Auto-update apps.
 
 echo "setting system defaults..."
 # reduce wallpaper tinting in windows

@@ -23,6 +23,13 @@ manifest = Machine(
     ],
     packages=[
         Package(brew="go"),
-        Package(brew="ffmpeg"),
+        Package(brew="rsync"),  # file sync
+        Package(brew="7zip", winget="7zip.7zip"),  # archiving
+        Package(brew="pandoc", winget="JohnMacFarlane.Pandoc"),  # documents
+        Package(brew="imagemagick", winget="ImageMagick.Q16-HDRI"),  # images
+        Package(brew="sox", winget="ChrisBagwell.SoX"),  # audio
+        Package(brew="ffmpeg", winget="Gyan.FFmpeg"),  # video
+        Package(brew="yt-dlp", winget="yt-dlp.yt-dlp"),  # video downloader
+        Package(brew="tesseract", winget="tesseract-ocr.tesseract"),  # ocr
     ],
 )

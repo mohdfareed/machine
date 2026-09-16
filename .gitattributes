@@ -3,3 +3,4 @@
 .shellcheckrc text eol=lf
 .zshenv text eol=lf
 .zshrc text eol=lf
+.zimrc text eol=lf

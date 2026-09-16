@@ -11,37 +11,41 @@ match PLATFORM:
     case _:
         _pwsh_base = Path("~/.config/powershell")
 
-
 module = Module(
     files=[
-        # zsh (unix)
-        FileMapping(source=".zshenv", target="~/.zshenv", platforms=[Platform.UNIX]),
-        FileMapping(source=".zshrc", target="~/.zshrc", platforms=[Platform.UNIX]),
-        FileMapping(source=".zimrc", target="~/.zimrc", platforms=[Platform.UNIX]),
-        FileMapping(source=".aliases.sh", target="~/.aliases", platforms=[Platform.UNIX]),
-        # powershell (windows and unix)
-        FileMapping(source="profile.ps1", target=str(_pwsh_base / "profile.ps1")),
-        FileMapping(source="aliases.ps1", target=str(_pwsh_base / "aliases.ps1")),
+        # zsh
+        FileMapping(source="zsh/.zshenv", target="~/.zshenv", platforms=[Platform.UNIX]),
+        FileMapping(source="zsh/.zshrc", target="~/.zshrc", platforms=[Platform.UNIX]),
+        FileMapping(source="zsh/.zimrc", target="~/.zimrc", platforms=[Platform.UNIX]),
+        FileMapping(source="zsh/.aliases", target="~/.aliases", platforms=[Platform.UNIX]),
+        # powershell
+        FileMapping(source="pwsh/profile.ps1", target=str(_pwsh_base / "profile.ps1")),
+        FileMapping(source="pwsh/aliases.ps1", target=str(_pwsh_base / "aliases.ps1")),
+        # prompt
+        FileMapping(source="starship.toml", target="~/.config/starship.toml"),
+    ],
+    overrides=[
+        # zsh
+        FileMapping(source=".zshenv", target="~/.zshenv.mc", platforms=[Platform.UNIX]),
+        FileMapping(source=".zshrc", target="~/.zshrc.mc", platforms=[Platform.UNIX]),
+        # powershell
+        FileMapping(source="pwsh/profile.ps1", target=str(_pwsh_base / "profile.ps1")),
     ],
     packages=[
-        # zsh
-        Package(brew="zsh", apt="zsh"),
-        Package(brew="fzf", apt="fzf"),
-        # powershell
-        Package(
-            cask="powershell@preview",
-            snap="powershell",
-            snap_classic=True,
-            winget="microsoft.powershell",
-        ),
+        # shell
+        Package(brew="zsh"),
+        Package(brew="zimfw"),
+        Package(cask="powershell@preview", winget="microsoft.powershell"),
+        Package(brew="starship", winget="Starship.Starship"),  # prompt theme
         # utilities
-        Package(brew="eza", winget="eza-community.eza"),
-        Package(brew="bat", winget="sharkdp.bat"),
-        Package(brew="oh-my-posh", winget="JanDeDobbeleer.OhMyPosh"),
-        # tools
-        Package(apt="unzip"),
-        Package(brew="btop", snap="btop", scoop="btop-lhm"),
-        Package(brew="fastfetch", winget="fastfetch", apt="fastfetch"),
+        Package(brew="eza", winget="eza-community.eza"),  # ls replacement
+        Package(brew="bat", winget="sharkdp.bat"),  # cat replacement
+        Package(brew="fzf", winget="junegunn.fzf"),  # fuzzy finder
+        Package(brew="ripgrep", winget="BurntSushi.ripgrep.MSVC"),  # searching backend
+        Package(brew="lesspipe"),  # maps file types to less pipes for fzf preview
+        # system
+        Package(brew="btop", scoop="btop-lhm"),  # monitoring
+        Package(brew="fastfetch", winget="Fastfetch-cli.Fastfetch"),  # information
         # fonts
         Package(
             name="jetbrains-mono",

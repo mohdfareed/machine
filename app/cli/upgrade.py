@@ -12,9 +12,9 @@ from app.managers import upgrade_managers, validate_managers
 from app.ops.packages import upgrade_packages
 from app.ops.scripts import run_scripts
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Upgrade Command
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def upgrade(
@@ -40,8 +40,22 @@ def upgrade(
         raise ValueError(f"No machine selected. Select one with {cli.COMMAND} deploy.")
     env = build_env(machine_id)
     configuration = load_machine(machine_id, module_names, env=env)
+
+    # Summarize this invocation before checking live prerequisites.
+    reporting.heading(f"Machine [{machine_id}]")
+    reporting.detail(f"Managers: {' | '.join(configuration.pkg_managers) or 'none'}")
+
+    # Debug info.
+    reporting.debug(f"Command: {upgrade.__name__} ({'dry run' if dry_run else 'execute'})")
+    reporting.debug(f"Modules: {', '.join(module_names) or 'all declared modules'}")
+    reporting.debug(
+        f"Inputs: "
+        f"{len(configuration.modules)} modules, "
+        f"{len(configuration.files)} files, "
+        f"{len(configuration.scripts)} scripts, "
+        f"{len(configuration.packages)} packages."
+    )
     validate_managers(configuration.pkg_managers, env=env, for_upgrade=True)
-    reporting.heading(machine_id)
 
     # Upgrade all packages owned by the declared managers.
     reporting.heading("Upgrading declared managers and all their packages")
@@ -60,4 +74,5 @@ def upgrade(
         for package in manual:
             reporting.detail(package)
 
+    reporting.plain("")
     reporting.success("Complete.")

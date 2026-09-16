@@ -11,104 +11,35 @@ AUTO_WAKE_TIME="04:00:00"
 # unlock keychain for headless access
 echo "unlocking login keychain..."
 while true; do
-    if security unlock-keychain ~/Library/Keychains/login.keychain-db; then
-        break
-    fi
-    read -rp "try again? [Y/n] " answer
-    [[ "${answer:-y}" =~ ^[Yy]$ ]] || break
+  if security unlock-keychain ~/Library/Keychains/login.keychain-db; then
+    break
+  fi
+  read -rp "try again? [Y/n] " answer
+  [[ "${answer:-y}" =~ ^[Yy]$ ]] || break
 done
 
-# =============================================================================
-# MARK: Power & Sleep
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
+# MARK: System Defaults
+# ═════════════════════════════════════════════════════════════════════════════
 
-echo "configuring power management..."
-sudo pmset -a sleep 0           # never system-sleep
-sudo pmset -a disablesleep 1    # disable sleep entirely
-sudo pmset -a displaysleep 15   # display off after 15 min (saves energy)
-sudo pmset -a hibernatemode 0   # no hibernation (no-op on desktops)
-sudo pmset -a standby 0         # no standby
-sudo pmset -a autopoweroff 0    # no auto power-off
+echo "setting homelab defaults..."
+# Disable screen saver (headless, no screen).
+defaults -currentHost write com.apple.screensaver idleTime -int 0
 
-echo "enabling auto-restart on power failure..."
-sudo pmset -a autorestart 1
-
-echo "enabling wake on LAN..."
-sudo pmset -a womp 1
-
-echo "enabling wake on network access..."
-sudo pmset -a networkoversleep 1
-sudo pmset -a tcpkeepalive 1
-
-# =============================================================================
-# MARK: Scheduled Tasks
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
+# MARK: Scheduled Backups
+# ═════════════════════════════════════════════════════════════════════════════
 
 # Wake machine daily for maintenance.
 echo "scheduling daily wake at $AUTO_WAKE_TIME..."
 sudo pmset repeat wakeorpoweron MTWRFSU "$AUTO_WAKE_TIME"
 
-# =============================================================================
-# MARK: Security
-# =============================================================================
-
-# Enable the application firewall.
-echo "enabling firewall..."
-sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
-sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
-
-# =============================================================================
-# MARK: System Defaults
-# =============================================================================
-
-echo "setting server-oriented defaults..."
-
-# Disable App Nap so background apps keep running at full speed.
-defaults write NSGlobalDomain NSAppSleepDisabled -bool true
-
-# Enable automatic macOS security updates.
-echo "enabling automatic updates..."
-defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
-defaults write com.apple.SoftwareUpdate AutomaticDownload -bool true
-defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -bool true
-defaults write com.apple.commerce AutoUpdate -bool true
-
-# Disable screen saver (headless, no screen).
-defaults -currentHost write com.apple.screensaver idleTime -int 0
-
-# Disable Bluetooth (headless server, no peripherals needed).
-echo "disabling bluetooth..."
-sudo defaults write /Library/Preferences/com.apple.Bluetooth ControllerPowerState -int 0
-
-
-# Enable SMB without restarting active file-sharing sessions.
-echo "enabling file sharing..."
-sudo launchctl enable system/com.apple.smbd
-if ! sudo launchctl print system/com.apple.smbd >/dev/null 2>&1; then
-    sudo launchctl bootstrap system /System/Library/LaunchDaemons/com.apple.smbd.plist
-fi
-
-# =============================================================================
-# MARK: Docker
-# =============================================================================
-
-# Start Docker Desktop at login.
-DOCKER_APP="/Applications/Docker.app"
-if [[ -d "$DOCKER_APP" ]]; then
-    echo "enabling Docker auto-start..."
-    osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"$DOCKER_APP\", hidden:true}" 2>/dev/null || true
-fi
-
-# =============================================================================
-# MARK: Scheduled Backups
-# =============================================================================
-
 # Load the daily backup job.
 PLIST="$HOME/Library/LaunchAgents/com.mc.backup.plist"
 if [[ -f "$PLIST" ]]; then
-    echo "loading backup schedule..."
-    launchctl bootout "gui/$(id -u)/com.mc.backup" 2>/dev/null || true
-    launchctl bootstrap "gui/$(id -u)" "$PLIST"
+  echo "loading backup schedule..."
+  launchctl bootout "gui/$(id -u)/com.mc.backup" 2>/dev/null || true
+  launchctl bootstrap "gui/$(id -u)" "$PLIST"
 fi
 
-echo "server setup complete - reboot recommended for all changes to take effect."
+echo "homelab setup complete - reboot recommended for all changes to take effect."

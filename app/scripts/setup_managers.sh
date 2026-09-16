@@ -6,11 +6,11 @@ managers=" ${MC_PKG_MANAGERS-} "
 
 # brew
 if [[ " $managers " == *" brew "* ]]; then
-    source "$(dirname "${BASH_SOURCE[0]}")/environment.unix.sh"
+    source "$(dirname "${BASH_SOURCE[0]}")/environment.sh"
     if ! command -v brew &>/dev/null; then
         installer="$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         /bin/bash -c "$installer"
-        source "$(dirname "${BASH_SOURCE[0]}")/environment.unix.sh"
+        source "$(dirname "${BASH_SOURCE[0]}")/environment.sh"
     fi
 
     if ! command -v brew &>/dev/null; then

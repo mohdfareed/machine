@@ -16,6 +16,7 @@ module = Module(
     packages=[
         Package(name="git", brew="git", apt="git", winget="Git.Git"),
         Package(name="git-lfs", brew="git-lfs", apt="git-lfs", winget="GitHub.GitLFS"),
+        Package(name="delta", brew="git-delta", apt="git-delta", winget="dandavison.delta"),
         Package(brew="lazygit", winget="JesseDuffield.lazygit"),
     ],
 )

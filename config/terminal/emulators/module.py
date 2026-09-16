@@ -10,13 +10,15 @@ WIN_TERM_CONFIG = Path(
 
 module = Module(
     files=[
+        # Ghostty configuration file mapping.
         FileMapping(
-            source="config",
-            target="~/.config/ghostty/config",
+            source="config.ghostty",
+            target="~/.config/ghostty/config.ghostty",
             platforms=[Platform.MACOS, Platform.LINUX],
         ),
+        # Windows Terminal configuration file mapping.
         FileMapping(
-            source="settings.json",
+            source="win-term.json",
             target=str(WIN_TERM_CONFIG / "settings.json"),
             platforms=[Platform.WINDOWS],
         ),

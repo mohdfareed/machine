@@ -17,8 +17,6 @@ def run_scripts(
 ) -> None:
     """Run selected scripts in order, stopping at the first failure."""
     for script in (Path(path) for path in scripts):
-        powershell = script.suffix.lower() == ".ps1"
-
         # Select the interpreter and prepare only the environment it needs.
         match script.suffix.lower():
             case ".py":
@@ -32,7 +30,13 @@ def run_scripts(
                     script.chmod(0o755)
 
         # Let execution prepare the environment and any required PowerShell modules.
-        run(cmd, env=env, dry_run=dry_run, check=True, powershell=powershell)
+        run(
+            cmd,
+            env=env,
+            dry_run=dry_run,
+            check=True,
+            powershell=script.suffix.lower() == ".ps1",
+        )
 
 
 def _unix_command(script: Path) -> list[str]:

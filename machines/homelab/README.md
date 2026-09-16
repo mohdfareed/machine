@@ -11,10 +11,10 @@ etc.
   start with fresh configuration.
 - Finish Docker Desktop's first launch and Tailscale sign-in. After a reboot,
   check both are running in the logged-in user session; power-on alone isn't enough.
-- Select this machine with `mc deploy -m homelab`. On a fresh media install, do the
-  [first-start steps](docker/media/README.md#first-start) before the full deployment.
+  - Ensure Docker is using gRPC FUSE for volume mounts.
+- On a fresh media install, do the [first steps](docker/media/README.md#first-start)
+  before the full deployment.
 
-Power/sleep and file sharing setup are in [init_server.sh](scripts/init_server.sh).
 Once per installation, in System Settings
 
 - Grant the terminal app Full Disk Access before deploying (required to enable SSH).

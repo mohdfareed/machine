@@ -1,6 +1,6 @@
-; =============================================================================
+; ═════════════════════════════════════════════════════════════════════════════
 ; Identity
-; =============================================================================
+; ═════════════════════════════════════════════════════════════════════════════
 
 [user]
     name = Mohammed Fareed
@@ -8,15 +8,15 @@
 
 ; sign commits
 [user]
-    signingkey = ~/.ssh/personal.pub
+    signingkey = ~/.ssh/machine.pub
 [commit]
     gpgsign = true
 [gpg]
     format = ssh ; use ssh key for signing
 
-; =============================================================================
+; ═════════════════════════════════════════════════════════════════════════════
 ; Settings
-; =============================================================================
+; ═════════════════════════════════════════════════════════════════════════════
 
 ; git settings
 [init]
@@ -24,20 +24,28 @@
 [core]
     excludesfile = ~/.gitignore
     autocrlf = input ; normalize line endings to LF on commit
+    pager = delta
+[interactive]
+    diffFilter = delta --color-only
+[delta]
+    navigate = true ; navigate with n|N
+    line-numbers = true
+    side-by-side = false
 
 ; git commands
 [fetch]
     prune = true ; remove stale remote-tracking branches
 [pull]
-    rebase = true
+    rebase = true ; rebase automatically on pull
 [merge]
     autostash = true ; automatically stash before merge
+    conflictStyle = zdiff3 ; show original in conflicts and minimize markers
 [rerere]
     enabled = true ; remember conflict resolutions
 [status]
-    short = true
+    short = true ; show short status by default
 [help]
-    autoCorrect = prompt
+    autoCorrect = prompt ; prompt the user to correct typos
 
 ; lfs (large file system)
 [filter "lfs"]
@@ -46,9 +54,9 @@
     clean = git-lfs clean -- %f
     smudge = git-lfs smudge -- %f
 
-; =============================================================================
+; ═════════════════════════════════════════════════════════════════════════════
 ; Editor
-; =============================================================================
+; ═════════════════════════════════════════════════════════════════════════════
 
 ; zed editor
 [core]
@@ -62,9 +70,9 @@
 [mergetool "zed"]
     cmd = zed --wait $MERGED
 
-; =============================================================================
+; ═════════════════════════════════════════════════════════════════════════════
 ; Infrastructure
-; =============================================================================
+; ═════════════════════════════════════════════════════════════════════════════
 
 ; platform and machine overrides
 [include]

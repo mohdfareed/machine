@@ -3,7 +3,6 @@ set -Eeuo pipefail
 
 : "${MC_HOMELAB_DIR:?}"
 
-HOMELAB_DIR="$MC_HOMELAB_DIR"
 MODULE_DOCKER="$MC_HOME/config/homelab/docker"
 MACHINE_DOCKER="$MC_MACHINE/docker"
 
@@ -24,13 +23,13 @@ if ! docker info &>/dev/null; then
 fi
 
 # Link homelab service directories without replacing real paths.
-mkdir -p "$HOMELAB_DIR"
+mkdir -p "$MC_HOMELAB_DIR"
 
 link_service() {
     local svc_dir="$1"
     local name
     name="$(basename "$svc_dir")"
-    local link="$HOMELAB_DIR/$name"
+    local link="$MC_HOMELAB_DIR/$name"
 
     # Leave existing data for a separate migration.
     if [[ -e "$link" && ! -L "$link" ]]; then
@@ -55,12 +54,17 @@ for svc_dir in "$MACHINE_DOCKER"/*/; do
     link_service "$svc_dir"
 done
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Deploy
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 deploy_services() {
     local docker_dir="$1"
+    if [[ ! -d "$docker_dir" ]]; then
+        echo "docker directory $docker_dir not found"
+        return 1
+    fi
+
     for svc_dir in "$docker_dir"/*/; do
         [[ -f "$svc_dir/compose.yaml" ]] || continue
         echo "deploying $(basename "$svc_dir")..."

@@ -1,13 +1,20 @@
 """CLI registration and the application failure boundary."""
 
+import inspect
+from collections.abc import Callable
+from typing import Any
+
 import typer
 
-from app import cli, reporting
+from app import cli, env, reporting
 from app.cli import deploy, info, sync, upgrade
 
-# =============================================================================
-# MARK: App Entry Point
-# =============================================================================
+type _Callback = Callable[..., Any]
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# MARK: Entry Point
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def main(prog_name: str | None = None) -> None:
@@ -18,38 +25,42 @@ def main(prog_name: str | None = None) -> None:
 
     # Handle user interrupts.
     except KeyboardInterrupt:
-        reporting.error("Interrupted.")
+        reporting.warning("Interrupted.")
         raise SystemExit(130)
 
     # Present the failure with optional technical context.
     except Exception as exc:
         reporting.error(str(exc))
-        if options.debug:
-            reporting.exception()
-            raise SystemExit(1)
-
-        reporting.detail("Run with --debug for details.", error=True)
+        reporting.exception(options.debug)
         raise SystemExit(1)
-
-
-# =============================================================================
-# MARK: App Configuration
-# =============================================================================
 
 
 def _callback(
     context: typer.Context,
-    debug: bool = typer.Option(False, "-d", "--debug", help="Show exception tracebacks."),
+    debug: bool = typer.Option(
+        False, "-d", "--debug", help="Show diagnostic traces and exception tracebacks."
+    ),
     version: bool = typer.Option(False, "-v", "--version", help="Show version and exit."),
 ) -> None:
     # Keep execution options local to this invocation.
     options = context.ensure_object(cli.Options)
     options.debug = debug
 
+    if debug:
+        reporting.debug("Debug mode enabled.")
+        reporting.debug(f"App: {cli.NAME} {cli.VERSION}")
+        reporting.debug(f"Home: {env.ROOT}")
+        reporting.debug(f"Platform: {env.PLATFORM}")
+
     # Handle informational exits.
     if version:
         reporting.plain(f"{cli.NAME} {cli.VERSION}")
         raise typer.Exit()
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# MARK: Configuration
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def _create_app() -> typer.Typer:
@@ -59,22 +70,62 @@ def _create_app() -> typer.Typer:
         help=cli.DESCRIPTION,
         no_args_is_help=True,
         invoke_without_command=True,
-        context_settings={"help_option_names": ["-h", "--help"]},
+        context_settings=dict(
+            help_option_names=["-h", "--help"],
+        ),
     )
     app.callback()(_callback)
 
     # Register deployment commands.
-    app.command(rich_help_panel="Deployment")(deploy.deploy)
-    app.command(rich_help_panel="Deployment")(upgrade.upgrade)
-    app.command(rich_help_panel="Deployment")(sync.sync)
+    _register(app, deploy.deploy, panel="Deployment")
+    _register(app, upgrade.upgrade, panel="Deployment")
+    _register(app, sync.sync, panel="Deployment")
 
     # Group inspection commands while retaining the default configuration view.
     show = typer.Typer(invoke_without_command=True, no_args_is_help=False)
-    show.callback()(info.show)
-    show.command("id")(info.machine_id)
-    show.command()(info.home)
-    show.command()(info.private)
-    show.command()(info.status)
-    app.add_typer(show, name=info.show.__name__, rich_help_panel="Info")
-    app.command("list", rich_help_panel="Info")(info.list_all)
+    _register(show, info.machine_id, name="id")
+    _register(show, info.home)
+    _register(show, info.private)
+    _register(show, info.status)
+    _register_group(app, info.show, show, panel="Info")
+    _register(app, info.list_all, panel="Info", name="list")
+
     return app
+
+
+def _short_help(callback: _Callback) -> str:
+    if short_help := inspect.getdoc(callback):
+        return short_help
+    raise RuntimeError(f"CLI callback {callback.__name__} needs a docstring.")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# MARK: Registration
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def _register(
+    app: typer.Typer,
+    callback: _Callback,
+    *,
+    panel: str | None = None,
+    name: str | None = None,
+) -> None:
+    app.command(name, rich_help_panel=panel, short_help=_short_help(callback))(callback)
+
+
+def _register_group(
+    app: typer.Typer,
+    callback: _Callback,
+    group: typer.Typer,
+    *,
+    panel: str,
+) -> None:
+    short_help = _short_help(callback)
+    group.callback(short_help=short_help)(callback)
+    app.add_typer(
+        group,
+        name=callback.__name__,
+        rich_help_panel=panel,
+        short_help=short_help,
+    )

@@ -22,6 +22,7 @@ def sync(
 
     process_env: dict[str, str] = {}
     git = ["git", "-C", str(env.ROOT)]
+    reporting.debug(f"Canonical source: {_CANONICAL_REPO_URL} main")
 
     # Integrate canonical main without discarding local work.
     reporting.heading("Syncing repository")
@@ -52,13 +53,19 @@ def sync(
         check=True,
     )
 
-    # Refresh shell completions.
+    # Generate new shell completion.
     tool_dir = Path(query(["uv", "tool", "dir", "--bin"], env=process_env).stdout.strip())
     executable = tool_dir / (cli.COMMAND + (".exe" if env.is_windows else ""))
-    run(
-        [str(executable), "--install-completion"],
-        env=process_env,
-        dry_run=dry_run,
-        check=True,
-    )
+    result = query([str(executable), "--show-completion"], env=process_env, check=True)
+    if result.returncode != 0:
+        raise RuntimeError("Could not generate shell completions")
+
+    # Add completion to the shell (~/.zsh/completions/_mc).
+    comp_file = Path.home() / ".zsh" / "completions" / "_mc"
+    if not dry_run:
+        comp_file.mkdir(parents=True, exist_ok=True)
+        comp_file.touch(exist_ok=True)
+        comp_file.write_text(result.stdout)
+
+    reporting.plain("")
     reporting.success("Complete.")

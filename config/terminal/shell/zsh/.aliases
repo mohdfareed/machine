@@ -1,0 +1,95 @@
+#!/usr/bin/env zsh
+
+# ═════════════════════════════════════════════════════════════════════════════
+# MARK: Files and directories
+# ═════════════════════════════════════════════════════════════════════════════
+
+alias cat='bat --paging=never'
+
+if [[ "$OSTYPE" == darwin* ]]; then
+  # Add/remove hidden flag to files and directories.
+  alias hide-on='chflags hidden'
+  alias hide-on-tree='chflags -R hidden'
+  alias hide-off='chflags nohidden'
+  alias hide-off-tree='chflags -R nohidden'
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════
+# MARK: Development
+# ═════════════════════════════════════════════════════════════════════════════
+
+# Activate python virtual environment.
+venv::activate() {
+  usage="usage: $0 [venv_dir]"
+  if (($# > 1)); then echo "$usage" && return 1; fi
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "$usage" && return 0
+  fi
+  # shellcheck source=/dev/null
+  source "${1-.venv}/bin/activate"
+}
+
+# ═════════════════════════════════════════════════════════════════════════════
+# MARK: SSH and credentials
+# ═════════════════════════════════════════════════════════════════════════════
+
+# Generate random passwords and API tokens.
+alias gen-pass='openssl rand -base64 32'
+alias gen-token='openssl rand -hex 32'
+alias gen-key='ssh-keygen -t ed25519 -C'
+
+if [[ "$OSTYPE" == darwin* ]]; then
+  # Fix SSH issues by re-adding keys to keychain.
+  function ssh::fix-keychain {
+    for file in ~/.ssh/*; do
+      [[ ! -f "$file" ]] && continue
+      [[ $file == *.pub ]] && continue
+      [[ $file == */known_hosts* ]] && continue
+      [[ $file == */config ]] && continue
+      ssh-add --apple-use-keychain "$file"
+    done
+  }
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════
+# MARK: Shell and environment
+# ═════════════════════════════════════════════════════════════════════════════
+
+if [ "$TERM_PROGRAM" = "vscode" ]; then
+  alias clear='clear && clear'
+fi
+
+alias zsh::reload='exec $SHELL'
+
+# Time shell startup.
+zsh::time() {
+  usage="usage: $0 [iterations]"
+  if (($# > 1)); then echo "$usage" && return 1; fi
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "$usage" && return 0
+  fi
+  for _ in $(seq 1 "${1-1}"); do time $SHELL -i -c exit; done
+}
+
+# Check zsh script.
+zsh::check() {
+  local script=$1
+  case "$script" in
+    *.sh)
+      IFS= read -r shebang < "$script"
+      [[ "$shebang" == '#!'*zsh* ]] || return 0
+      ;;
+  esac
+  zsh -f -n "$script"
+}
+
+# Load private values into this shell on demand.
+mc::secrets() {
+  local file="${MC_PRIVATE:?}/machine.env"
+  if [[ ! -f "$file" ]]; then
+    print -u2 "No secrets file: $file"
+    return 1
+  fi
+  dotenv::load "$file"
+  echo "secrets loaded"
+}

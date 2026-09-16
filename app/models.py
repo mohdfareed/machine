@@ -5,9 +5,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Enums
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 class Platform(StrEnum):
@@ -19,7 +19,7 @@ class Platform(StrEnum):
     WSL = "wsl"
     UNIX = "unix"  # macOS, Linux, or WSL.
 
-    def is_a(self, other: "Platform") -> bool:
+    def is_a(self, other: Platform) -> bool:
         """Match this platform to itself or a broader family, never the reverse."""
         return (
             self == other
@@ -43,9 +43,9 @@ type PackageSource = Literal["brew", "cask", "apt", "snap", "winget", "scoop", "
 """Package source identifiers carried by resolved declarations."""
 
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Models
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 class FileMapping(BaseModel):

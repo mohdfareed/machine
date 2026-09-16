@@ -8,11 +8,14 @@ import tempfile
 from pathlib import Path
 
 from app import reporting
-from app.env import ROOT, is_windows, system_env
+from app.env import ROOT, SCRIPTS_ROOT, is_windows, system_env
 
-# =============================================================================
+_ENVIRONMENT_SCRIPT = SCRIPTS_ROOT / "environment.sh"
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Run Commands and Queries
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def run(
@@ -30,8 +33,8 @@ def run(
         command = cmd
     else:
         command = subprocess.list2cmdline(cmd) if is_windows else shlex.join(cmd)
-    display = command.replace(str(ROOT) + os.sep, "." + os.sep)
-    reporting.command(display)
+
+    reporting.command(command, root=ROOT)
     if dry_run:
         return None
 
@@ -62,7 +65,9 @@ def run(
         detail = ""
         if capture_output and not echo_output and result.stdout:
             detail = "\n" + result.stdout.decode(errors="replace").strip()
-        raise RuntimeError(f"Command failed (exit {result.returncode}): {display}{detail}")
+        raise RuntimeError(f"Command failed (exit {result.returncode}): {command}{detail}")
+
+    reporting.command_end(result.returncode)
     return result
 
 
@@ -74,6 +79,8 @@ def query(
     check: bool = True,
 ) -> subprocess.CompletedProcess[str]:
     """Run a silent, bounded read with current host variables and explicit overrides."""
+    command = subprocess.list2cmdline(cmd) if is_windows else shlex.join(cmd)
+    reporting.debug(f"Query: {command}")
     environment = process_env(env)
     result = subprocess.run(
         [_resolve_executable(cmd[0], environment), *cmd[1:]],
@@ -89,9 +96,9 @@ def query(
     return result
 
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Prepare Execution Environments
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def process_env(overrides: dict[str, str]) -> dict[str, str]:
@@ -129,7 +136,9 @@ def process_env(overrides: dict[str, str]) -> dict[str, str]:
 
 def find_executable(name: str, *, env: dict[str, str]) -> str | None:
     """Find a command using the same prepared environment as execution."""
-    return shutil.which(name, path=process_env(env).get("PATH", ""))
+    executable = shutil.which(name, path=process_env(env).get("PATH", ""))
+    reporting.debug(f"Executable {name}: {executable or 'not found'}")
+    return executable
 
 
 def powershell_executable(env: dict[str, str], *, dry_run: bool = False) -> str:
@@ -164,16 +173,14 @@ def prepare_powershell_env(executable: str, env: dict[str, str]) -> dict[str, st
             raise RuntimeError(f"PowerShell environment setup failed: {detail}")
         module_path = result.stdout.strip()
 
-    paths = [str(_SCRIPTS_ROOT), *module_path.split(os.pathsep)]
+    paths = [str(SCRIPTS_ROOT), *module_path.split(os.pathsep)]
     return {**env, key: os.pathsep.join(dict.fromkeys(path for path in paths if path))}
 
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Process Helpers
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
-_SCRIPTS_ROOT = Path(__file__).parent / "scripts"
-_ENVIRONMENT_SCRIPT = _SCRIPTS_ROOT / "environment.unix.sh"
 
 # Repository-local variables listed by `git rev-parse --local-env-vars`.
 # Keep global configuration, identity and SSH settings; discard diff-tool callbacks too.

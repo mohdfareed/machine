@@ -19,16 +19,16 @@ environment, and execution options; they do not infer the workflow themselves.
 
 ## Where responsibilities belong
 
-| Owner | Responsibility |
-| --- | --- |
-| [cli/](cli/) | Choose inputs, order work, and report outcomes. `entry.py` catches failures once. |
-| [models.py](models.py) | Declaration shapes and field/type checks. |
-| [machine.py](machine.py) + [discovery.py](discovery.py) | Find declarations; expand modules and dependencies; normalize paths and names; validate declarations; choose package sources. |
-| [env.py](env.py) | Build selected-machine values, read host variables, resolve paths, and save/read the default selection. |
-| [ops/](ops/) | Apply files, packages, and scripts; check live conditions and return results or raise. |
-| [managers.py](managers.py) | Own package-manager commands, installation checks, bootstrap, and upgrades. |
-| [shell.py](shell.py) + [scripts/](scripts/) | Prepare process environments and interpreters, execute commands, and handle command output. |
-| [reporting.py](reporting.py) | Render application output through private Rich consoles. |
+| Owner                                                   | Responsibility                                                                                          |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| [cli/](cli/)                                            | Choose inputs, order work, and report outcomes.                                                         |
+| [models.py](models.py)                                  | Declaration shapes and field/type checks.                                                               |
+| [machine.py](machine.py) + [discovery.py](discovery.py) | Find declarations; expand modules and dependencies; normalize; validate; choose package sources.        |
+| [env.py](env.py)                                        | Build selected-machine values, read host variables, resolve paths, and save/read the default selection. |
+| [ops/](ops/)                                            | Apply files, packages, and scripts; check live conditions and return results or raise.                  |
+| [managers.py](managers.py)                              | Own package-manager commands, installation checks, bootstrap, and upgrades.                             |
+| [shell.py](shell.py) + [scripts/](scripts/)             | Prepare process environments and interpreters, execute commands, and handle command output.             |
+| [reporting.py](reporting.py)                            | Render application output through private Rich consoles.                                                |
 
 Business validation belongs in the loader, not model validators. The loader fixes
 each package's source before execution; installed tools do not change that choice.
@@ -52,7 +52,7 @@ reach files, packages, and scripts. Only manager setup receives `MC_PKG_MANAGERS
 
 Before each executable lookup or command, `shell.process_env()` reads the host
 environment again. Unix activates installed commands through the internal
-`environment.unix.sh`; Windows reads registered user/machine variables. Explicit
+`environment.sh`; Windows reads registered user/machine variables. Explicit
 overrides win, and inherited Git repository/diff-tool context is removed.
 The script runner honors each Unix shebang and adds `-f` for Zsh to skip user
 startup files. PowerShell uses `-NoProfile` and receives the bundled `MachineAdmin`

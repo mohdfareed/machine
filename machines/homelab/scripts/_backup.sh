@@ -5,83 +5,83 @@ shopt -s nullglob
 : "${MC_HOMELAB_DIR:?}"
 : "${MC_HOMELAB_STORAGE_DIR:?}"
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Configuration
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
-# Remote host names must resolve through SSH. Add more hosts to this array.
-REMOTE_HOSTS=(rpi)
-
-# Output: <backup root>/<host>/<UTC timestamp>.tar.gz
-# Each host keeps its own newest 14 daily archives on homelab storage.
-SNAPSHOTS_TO_KEEP=14
+# Remote host to back up. Names must resolve through SSH.
+REMOTE_HOSTS=(rpi pc)
+# The backup destination.
 BACKUP_ROOT="$MC_HOMELAB_STORAGE_DIR/backups"
+# The number of snapshots to keep per host.
+SNAPSHOTS_TO_KEEP=14
+# Output: <backup root>/<host>/<UTC timestamp>.tar.gz
 TIMESTAMP="$(date -u +%Y-%m-%dT%H%M%SZ)"
 
 SSH_OPTIONS=(-o BatchMode=yes -o ConnectTimeout=10)
 RSYNC_EXCLUDES=(
-    --exclude='*.log'
-    --exclude='__pycache__/'
-    --exclude='*.sock'
-    --exclude='.DS_Store'
+  --exclude='*.log'
+  --exclude='__pycache__/'
+  --exclude='*.sock'
+  --exclude='.DS_Store'
 )
 
 if [[ "$BACKUP_ROOT" != /* || "$BACKUP_ROOT" == "/" ]]; then
-    echo "invalid backup root: $BACKUP_ROOT" >&2
-    exit 1
+  echo "invalid backup root: $BACKUP_ROOT" >&2
+  exit 1
 fi
 
 parent=$(dirname "$MC_HOMELAB_STORAGE_DIR")
 if [[ ! -d "$parent" ]]; then
-    echo "Directory not found: $parent" >&2
-    exit 1
+  echo "Directory not found: $parent" >&2
+  exit 1
 fi
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Temporary workspace
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 staging_root="$(mktemp -d "${TMPDIR:-/tmp}/mc-backup.XXXXXX")"
 trap 'rm -rf -- "$staging_root"' EXIT
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Per-host archiving and retention
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 # Compress one host, publish its archive, then prune only that host's history.
 archive_host() {
-    local host="$1"
-    local source_dir="$staging_root/$host"
+  local host="$1"
+  local source_dir="$staging_root/$host"
 
-    if [[ ! -d "$source_dir" ]]; then
-        echo "  no service data found, skipping archive"
-        return
-    fi
+  if [[ ! -d "$source_dir" ]]; then
+    echo "  no service data found, skipping archive"
+    return
+  fi
 
-    local host_backup_dir="$BACKUP_ROOT/$host"
-    local archive="$host_backup_dir/$TIMESTAMP.tar.gz"
-    local staged_archive="$staging_root/$host-$TIMESTAMP.tar.gz"
+  local host_backup_dir="$BACKUP_ROOT/$host"
+  local archive="$host_backup_dir/$TIMESTAMP.tar.gz"
+  local staged_archive="$staging_root/$host-$TIMESTAMP.tar.gz"
 
-    mkdir -p "$host_backup_dir"
-    tar -czf "$staged_archive" -C "$source_dir" .
-    mv "$staged_archive" "$archive"
+  mkdir -p "$host_backup_dir"
+  tar -czf "$staged_archive" -C "$source_dir" .
+  mv "$staged_archive" "$archive"
 
-    # ISO timestamps sort chronologically, so the first entries are the oldest.
-    local archives=("$host_backup_dir"/20??-??-??T??????Z.tar.gz)
-    local excess
-    local i
+  # ISO timestamps sort chronologically, so the first entries are the oldest.
+  local archives=("$host_backup_dir"/20??-??-??T??????Z.tar.gz)
+  local excess
+  local i
 
-    excess=$((${#archives[@]} - SNAPSHOTS_TO_KEEP))
-    for ((i = 0; i < excess; i++)); do
-        rm -f -- "${archives[$i]}"
-    done
+  excess=$((${#archives[@]} - SNAPSHOTS_TO_KEEP))
+  for ((i = 0; i < excess; i++)); do
+    rm -f -- "${archives[$i]}"
+  done
 
-    echo "  archive complete → $archive"
+  echo "  archive complete → $archive"
 }
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Current host
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 # Resolve the path here using this host's required MC_HOMELAB_DIR.
 local_host="${MC_ID:-$(hostname -s)}"
@@ -89,58 +89,58 @@ local_homelab_dir="$MC_HOMELAB_DIR"
 
 echo "backing up $local_host..."
 for data_dir in "$local_homelab_dir"/*/data/; do
-    [[ -d "$data_dir" ]] || continue
-    service="$(basename "$(dirname "$data_dir")")"
-    echo "  $service/data"
-    mkdir -p "$staging_root/$local_host/$service/data"
-    rsync -a "${RSYNC_EXCLUDES[@]}" \
-        "$data_dir" "$staging_root/$local_host/$service/data/"
+  [[ -d "$data_dir" ]] || continue
+  service="$(basename "$(dirname "$data_dir")")"
+  echo "  $service/data"
+  mkdir -p "$staging_root/$local_host/$service/data"
+  rsync -a "${RSYNC_EXCLUDES[@]}" \
+    "$data_dir" "$staging_root/$local_host/$service/data/"
 done
 archive_host "$local_host"
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Remote hosts
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 # Collect and archive each remote host independently. If a later host cannot be
 # reached, archives already completed for other hosts remain usable.
 for host in "${REMOTE_HOSTS[@]}"; do
-    echo "backing up $host..."
+  echo "backing up $host..."
 
-    # The single quotes are intentional: this expression runs on the remote
-    # host, so its required MC_HOMELAB_DIR determines the source path.
-    if ! remote_homelab_dir="$(ssh "${SSH_OPTIONS[@]}" "$host" \
-        'printf "%s" "${MC_HOMELAB_DIR:?}"' 2>/dev/null)"; then
-        echo "  unreachable or MC_HOMELAB_DIR is not configured, skipping"
-        continue
-    fi
+  # The single quotes are intentional: this expression runs on the remote
+  # host, so its required MC_HOMELAB_DIR determines the source path.
+  if ! remote_homelab_dir="$(ssh "${SSH_OPTIONS[@]}" "$host" \
+    'printf "%s" "${MC_HOMELAB_DIR:?}"' 2>/dev/null)"; then
+    echo "  unreachable or MC_HOMELAB_DIR is not configured, skipping"
+    continue
+  fi
 
-    # Ask the remote host which services currently have a data directory.
-    # NULL_GLOB prevents zsh from failing when no service directories exist;
-    # other shells ignore setopt and the directory check rejects the bare glob.
-    if ! remote_services="$(ssh "${SSH_OPTIONS[@]}" "$host" \
-        'setopt NULL_GLOB 2>/dev/null || true
-        root="${MC_HOMELAB_DIR:?}"
-        for data_dir in "$root"/*/data; do
-            [ -d "$data_dir" ] && basename "$(dirname "$data_dir")"
-        done' 2>/dev/null)"; then
-        echo "  service discovery failed, skipping"
-        continue
-    fi
+  # Ask the remote host which services currently have a data directory.
+  # NULL_GLOB prevents zsh from failing when no service directories exist;
+  # other shells ignore setopt and the directory check rejects the bare glob.
+  if ! remote_services="$(ssh "${SSH_OPTIONS[@]}" "$host" \
+    'setopt NULL_GLOB 2>/dev/null || true
+    root="${MC_HOMELAB_DIR:?}"
+    for data_dir in "$root"/*/data; do
+      [ -d "$data_dir" ] && basename "$(dirname "$data_dir")"
+    done' 2>/dev/null)"; then
+    echo "  service discovery failed, skipping"
+    continue
+  fi
 
-    while IFS= read -r service; do
-        [[ -n "$service" ]] || continue
-        echo "  $service/data"
-        mkdir -p "$staging_root/$host/$service/data"
+  while IFS= read -r service; do
+    [[ -n "$service" ]] || continue
+    echo "  $service/data"
+    mkdir -p "$staging_root/$host/$service/data"
 
-        # rsync passes its remote path through another shell. Escape the path so
-        # an MC_HOMELAB_DIR containing spaces is still treated as one argument.
-        printf -v remote_source '%q' "$remote_homelab_dir/$service/data/"
-        rsync -az -e "ssh -o BatchMode=yes -o ConnectTimeout=10" \
-            "${RSYNC_EXCLUDES[@]}" \
-            "$host:$remote_source" \
-            "$staging_root/$host/$service/data/"
-    done <<< "$remote_services"
+    # rsync passes its remote path through another shell. Escape the path so
+    # an MC_HOMELAB_DIR containing spaces is still treated as one argument.
+    printf -v remote_source '%q' "$remote_homelab_dir/$service/data/"
+    rsync -az -e "ssh -o BatchMode=yes -o ConnectTimeout=10" \
+      "${RSYNC_EXCLUDES[@]}" \
+      "$host:$remote_source" \
+      "$staging_root/$host/$service/data/"
+  done <<< "$remote_services"
 
-    archive_host "$host"
+  archive_host "$host"
 done

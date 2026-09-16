@@ -1,5 +1,7 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = 'Stop'
+# Existing repo setup script:
+# . '\\gsserver2018\GEMSProducts\GEMS Machine\Scripts\Get-Repositories.ps1'
 
 if (-not $env:GEMS_DEV) {
     throw 'GEMS_DEV is required.'
@@ -33,6 +35,3 @@ try {
 finally {
     Pop-Location
 }
-
-# existing repo setup script
-# . '\\gsserver2018\GEMSProducts\GEMS Machine\Scripts\Get-Repositories.ps1'

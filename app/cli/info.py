@@ -1,6 +1,5 @@
 """Inspect selected configuration without preparing execution."""
 
-from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -10,9 +9,9 @@ from app.discovery import list_machines, list_modules
 from app.env import build_env, get_current_machine
 from app.machine import load_machine
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Info Commands
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def machine_id() -> None:
@@ -52,9 +51,9 @@ def list_all() -> None:
             reporting.detail(name)
 
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Show Machine Command
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def show(
@@ -82,23 +81,23 @@ def show(
     machine_env = build_env(machine, include_private=False)
     configuration = load_machine(machine, env=machine_env)
 
-    # Describe selected inputs without reconstructing the execution workflow.
-    reporting.heading(f"Machine: {machine}")
-    reporting.detail(f"Managers: {', '.join(configuration.pkg_managers) or 'none'}")
-    reporting.detail(f"Modules: {', '.join(configuration.modules)}")
+    # Print report. ───────────────────────────────────────────────────────────
+
+    reporting.heading(f"Machine [{machine}]")
+    reporting.detail(f"Managers: {' | '.join(configuration.pkg_managers) or 'none'}")
+
+    reporting.heading("Modules")
+    reporting.grid(configuration.modules)
+
+    reporting.heading("Scripts")
+    for script in configuration.scripts:
+        reporting.path(script, root=env.ROOT)
+
+    reporting.heading("Packages")
+    reporting.grid([package.name for package in configuration.packages])
 
     reporting.heading("Files")
     for file in configuration.files:
-        source = Path(file.source)
-        display = source.relative_to(env.ROOT) if source.is_relative_to(env.ROOT) else source
-        reporting.detail(f"{display} → {file.target}")
-
-    reporting.heading("Packages")
-    for package in configuration.packages:
-        reporting.detail(package.name)
-
-    reporting.heading("Scripts")
-    for value in configuration.scripts:
-        script = Path(value)
-        display = script.relative_to(env.ROOT) if script.is_relative_to(env.ROOT) else script
-        reporting.detail(str(display))
+        reporting.link(file.source, file.target, root=env.ROOT)
+        reporting.plain("")
+    reporting.detail(f"Total files: {len(configuration.files)}")

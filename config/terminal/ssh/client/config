@@ -1,4 +1,4 @@
 Host *
-  IdentityFile ~/.ssh/homelab
+  IdentityFile ~/.ssh/machine
   AddKeysToAgent yes
   UseKeychain yes

@@ -8,9 +8,9 @@
   },
   // file associations
   "file_types": {
-    "JSONC": ["**/zed/settings.json", "**/vscode/settings.json", "**/*.code-snippets"],
-    "ini": ["**/ghostty/config", "**/ssh.config"],
-    "Git Config": ["**/.gitconfig.*"],
-    "Shell Script": ["**/.zshenv.*", "**/.zshrc.*", "**/.zimrc"],
+    "JSONC": ["**/zed/settings.json", "**/vscode/settings.json", ".code-snippets"],
+    "ini": [".ghostty", ".config"],
+    "Git Config": [".gitconfig.*"],
+    "Shell Script": [".zshenv.*", ".zshrc.*", ".zimrc", ".aliases"],
   },
 }

@@ -9,9 +9,9 @@ from app.env import is_windows
 from app.models import FileMapping
 from app.shell import query, run
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Deploy a File
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> Path | None:
@@ -34,22 +34,25 @@ def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> 
     if dry_run:
         return target
 
-    try:  # Create links and apply permissions, preserving existing data.
-        target.parent.mkdir(parents=True, exist_ok=True)
-
-        # Keep a backup of existing targets.
-        if not same_source:
-            if target.exists(follow_symlinks=False):
-                destination = _backup_path(target)
-                target.rename(destination)
-                backup = destination
-
-            # Create the new symbolic link.
-            _create_link(source, target)
-
-        # Reapply Windows ACLs deliberately; previews report the same permission work.
-        if permissions_changed:
+    try:  # Fix permissions and deploy the mapping, with backup and recovery.
+        if same_source:
             _set_permissions(source, target, mapping.mode, env=env)
+            return target
+
+        # Preserve a *real* target before replacing it with the configured link.
+        # This assumes symlinks are safe to overwrite, which is true for me.
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists(follow_symlinks=False) and not target.is_symlink():
+            destination = _backup_path(target)
+            target.rename(destination)
+            backup = destination
+        _create_link(source, target)
+
+        # Apply declared permissions after creating the replacement link.
+        if not permissions_changed:
+            return target
+        _set_permissions(source, target, mapping.mode, env=env)
+        return target
 
     # Report failures with recovery instructions and preserve existing data when possible.
     except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
@@ -58,32 +61,31 @@ def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> 
             recovery += f" Recreate the link {target} → {source} after resolving the failure."
         raise OSError(f"Failed to deploy {target} → {source}: {exc}.{recovery}") from exc
 
-    return target
 
-
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Inspect and Create Links
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def _points_to_source(target: Path, source: Path) -> bool:
-    try:
+    try:  # Compare filesystem identity when available.
         return target.exists() and os.path.samefile(target, source)
     except OSError:
         pass
 
-    # Compare normalized link paths when filesystem identity is unavailable.
-    try:
+    try:  # Compare normalized link paths.
         linked = target.readlink()
     except OSError:
         return False
+
+    # Compare the resolved link path to the source path.
     if not linked.is_absolute():
-        linked = target.parent / linked
+        linked = target.parent / linked  # Account for relative links.
     return os.path.normcase(str(linked.resolve())) == os.path.normcase(str(source.resolve()))
 
 
 def _create_link(source: Path, target: Path) -> None:
-    try:
+    try:  # Create a symlink to the source, overwriting any existing link or file.
         target.symlink_to(source, target_is_directory=source.is_dir())
     except OSError as exc:
         if is_windows and getattr(exc, "winerror", None) == 1314:
@@ -95,17 +97,17 @@ def _create_link(source: Path, target: Path) -> None:
 
 
 def _backup_path(target: Path) -> Path:
+    index = 1  # Generate a unique backup.
     backup = target.with_suffix(target.suffix + ".backup")
-    index = 1
     while backup.exists() or backup.is_symlink():
         backup = target.with_suffix(target.suffix + f".backup.{index}")
         index += 1
     return backup
 
 
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 # MARK: Apply Permissions
-# =============================================================================
+# ═════════════════════════════════════════════════════════════════════════════
 
 
 def _set_permissions(source: Path, target: Path, mode: int | None, *, env: dict[str, str]) -> None:
