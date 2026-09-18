@@ -1,2 +1,4 @@
 [core]
     autocrlf = true
+[gpg "ssh"]
+    program = "%LocalAppData%/1Password/app/8/op-ssh-sign.exe"

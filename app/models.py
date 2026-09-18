@@ -13,17 +13,17 @@ from pydantic import BaseModel, ConfigDict, PrivateAttr
 class Platform(StrEnum):
     """Supported platforms."""
 
-    MACOS = "macos"
-    LINUX = "linux"
-    WINDOWS = "windows"
+    MAC = "macos"
+    WIN = "windows"
     WSL = "wsl"
+    LINUX = "linux"  # Linux or WSL.
     UNIX = "unix"  # macOS, Linux, or WSL.
 
     def is_a(self, other: Platform) -> bool:
         """Match this platform to itself or a broader family, never the reverse."""
         return (
             self == other
-            or (other == Platform.UNIX and self in {Platform.MACOS, Platform.LINUX, Platform.WSL})
+            or (other == Platform.UNIX and self in {Platform.MAC, Platform.LINUX, Platform.WSL})
             or (self == Platform.WSL and other == Platform.LINUX)
         )
 

@@ -6,7 +6,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from app.models import FileMapping
 from app.ops import files as machine_files
 

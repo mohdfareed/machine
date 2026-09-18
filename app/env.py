@@ -26,17 +26,17 @@ match sys.platform:
     case _ if sys.platform.startswith("linux") and shutil.which("wslinfo"):
         PLATFORM = Platform.WSL
     case _platform if _platform.startswith("darwin"):
-        PLATFORM = Platform.MACOS
+        PLATFORM = Platform.MAC
     case _platform if _platform.startswith("linux"):
         PLATFORM = Platform.LINUX
     case _platform if _platform.startswith("win"):
-        PLATFORM = Platform.WINDOWS
+        PLATFORM = Platform.WIN
     case _:
         raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
-is_macos = PLATFORM.is_a(Platform.MACOS)
+is_macos = PLATFORM.is_a(Platform.MAC)
 is_linux = PLATFORM.is_a(Platform.LINUX)
-is_windows = PLATFORM.is_a(Platform.WINDOWS)
+is_windows = PLATFORM.is_a(Platform.WIN)
 is_wsl = PLATFORM.is_a(Platform.WSL)
 is_unix = PLATFORM.is_a(Platform.UNIX)
 

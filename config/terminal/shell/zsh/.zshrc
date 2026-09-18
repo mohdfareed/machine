@@ -10,6 +10,7 @@ setopt HIST_EXPIRE_DUPS_FIRST
 # Configure Zim modules.
 ZIM_HOME="${ZDOTDIR:-$HOME}/.zim"
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+fpath=("$HOME/.zsh/completions" $fpath)
 
 # Configure history-match highlighting.
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='fg=magenta,bold'
@@ -23,24 +24,16 @@ if [[ ! "$ZIM_HOME/init.zsh" -nt "$HOME/.zimrc" ]]; then
 fi
 source "$ZIM_HOME/init.zsh"
 
-# Add rich file previews for less and fzf-tab-source.
-if (( $+commands[lesspipe.sh] )); then
-  export LESS='-R'
-  export LESSCOLORIZER='bat'
-  export LESSOPEN='|lesspipe.sh %s'
-fi
-
 # Completions ─────────────────────────────────────────────────────────────────
-
-# Typer apps generated completions.
-fpath=("$HOME/.zfunc" $fpath)
 
 # Configure fzf-tab.
 export FZF_DEFAULT_OPTS='
   --height=100%
-  --bind=alt-ctrl-p:toggle-preview
-  --preview-window=hidden
+  --bind=alt-p:toggle-preview
+  --preview-window=bottom:hidden
 '
+
+eval "$(batpipe)"
 
 # Configure completion.
 zstyle ':completion:*' menu no
@@ -48,7 +41,7 @@ zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':fzf-tab:*' use-fzf-default-opts yes
 zstyle ':fzf-tab:*' switch-group '<' '>'
 zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
-zstyle ':fzf-tab:complete:*' fzf-preview 'lesspipe.sh $realpath'
+zstyle ':fzf-tab:complete:*' fzf-preview 'batpipe $realpath'
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Infrastructure

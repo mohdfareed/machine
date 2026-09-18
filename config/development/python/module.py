@@ -10,7 +10,7 @@ module = Module(
             name="uv",
             brew="uv",
             winget="astral-sh.uv",
-            platforms=[Platform.MACOS, Platform.WINDOWS],
+            platforms=[Platform.MAC, Platform.WIN],
         ),
         Package(
             name="uv",

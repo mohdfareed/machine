@@ -7,16 +7,18 @@ module = Module(
         FileMapping(source=".gitconfig", target="~/.gitconfig"),
         FileMapping(source=".gitignore", target="~/.gitignore"),
         FileMapping(
-            source=".gitconfig.win",
-            target="~/.gitconfig.win",
-            platforms=[Platform.WINDOWS],
+            source=".gitconfig.mac", target="~/.config/git/config.mac", platforms=[Platform.MAC]
+        ),
+        FileMapping(
+            source=".gitconfig.win", target="~/.config/git/config.win", platforms=[Platform.WIN]
+        ),
+        FileMapping(
+            source=".gitconfig.wsl", target="~/.config/git/config.wsl", platforms=[Platform.WSL]
         ),
     ],
-    overrides=[FileMapping(source=".gitconfig", target="~/.gitconfig.mc")],
+    overrides=[FileMapping(source=".gitconfig", target="~/.config/git/config.mc")],
     packages=[
         Package(name="git", brew="git", apt="git", winget="Git.Git"),
         Package(name="git-lfs", brew="git-lfs", apt="git-lfs", winget="GitHub.GitLFS"),
-        Package(name="delta", brew="git-delta", apt="git-delta", winget="dandavison.delta"),
-        Package(brew="lazygit", winget="JesseDuffield.lazygit"),
     ],
 )

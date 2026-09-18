@@ -16,7 +16,7 @@ module = Module(
             cask="docker-desktop",
             winget="Docker.DockerDesktop",
             cmd="curl -fsSL https://get.docker.com | sh",
-            platforms=[Platform.LINUX, Platform.MACOS, Platform.WINDOWS],
+            platforms=[Platform.LINUX, Platform.MAC, Platform.WIN],
         ),
     ],
 )

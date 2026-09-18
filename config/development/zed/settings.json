@@ -202,7 +202,7 @@
     "default_profile": "ask",
     "default_model": {
       "provider": "openai-subscribed",
-      "model": "gpt-5.6-terra",
+      "model": "gpt-6-astra",
       "enable_thinking": true,
       "effort": "medium",
       "speed": "standard",

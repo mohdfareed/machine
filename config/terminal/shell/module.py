@@ -6,7 +6,7 @@ from app.env import PLATFORM
 from app.models import FileMapping, Module, Package, Platform
 
 match PLATFORM:
-    case Platform.WINDOWS:
+    case Platform.WIN:
         _pwsh_base = Path("~/Documents/PowerShell")
     case _:
         _pwsh_base = Path("~/.config/powershell")
@@ -39,10 +39,10 @@ module = Module(
         Package(brew="starship", winget="Starship.Starship"),  # prompt theme
         # utilities
         Package(brew="eza", winget="eza-community.eza"),  # ls replacement
-        Package(brew="bat", winget="sharkdp.bat"),  # cat replacement
+        Package(brew="bat-extras", winget="sharkdp.bat"),  # cat replacement
+        Package(brew="fd", winget="sharkdp.fd"),  # title search
+        Package(brew="ripgrep", winget="BurntSushi.ripgrep.MSVC"),  # content search
         Package(brew="fzf", winget="junegunn.fzf"),  # fuzzy finder
-        Package(brew="ripgrep", winget="BurntSushi.ripgrep.MSVC"),  # searching backend
-        Package(brew="lesspipe"),  # maps file types to less pipes for fzf preview
         # system
         Package(brew="btop", scoop="btop-lhm"),  # monitoring
         Package(brew="fastfetch", winget="Fastfetch-cli.Fastfetch"),  # information

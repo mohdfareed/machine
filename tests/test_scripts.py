@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from app import env, shell
 from app.ops import scripts as machine_scripts
 
@@ -83,10 +82,10 @@ def test_zsh_scripts_preserve_selected_machine_and_private_values(
         pytest.skip("Zsh is unavailable")
 
     # Use the real startup file with conflicting saved and private configuration.
-    startup = Path(__file__).resolve().parents[1] / "config/terminal/shell/.zshenv"
+    startup = Path(__file__).resolve().parents[1] / "config/terminal/shell/zsh/.zshenv"
     shutil.copyfile(startup, tmp_path / ".zshenv")
     monkeypatch.setattr(env, "ROOT", tmp_path)
-    activation = tmp_path / "environment.unix.sh"
+    activation = tmp_path / "environment.sh"
     activation.write_text("")
     monkeypatch.setattr(shell, "_ENVIRONMENT_SCRIPT", activation)
     for machine_id in ("other", "selected"):

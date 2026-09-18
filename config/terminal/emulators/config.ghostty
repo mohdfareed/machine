@@ -1,11 +1,13 @@
 theme = dark:One Double Dark,light:One Double Light
-font-size = 14
 cursor-style = bar
+
+font-family = JetBrainsMono Nerd Font Mono
+font-size = 14
 
 window-width = 80
 window-height = 24
 
-background-opacity = 0.9
+background-opacity = 1
 background-blur = true
 
 env = TERM=xterm-256color

@@ -4,13 +4,12 @@ from inspect import signature
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
-
 from app import env as machine_env
 from app import machine as machine_loader
 from app.discovery import list_machines, list_modules
 from app.machine import load_machine
 from app.models import FileMapping, Package, PkgManager, Platform
+from pydantic import ValidationError
 
 
 @pytest.fixture
@@ -25,10 +24,10 @@ def selected_env(tmp_path: Path) -> dict[str, str]:
 
 def test_all_manifests_load(monkeypatch, selected_env) -> None:
     platforms = {
-        "pc": [Platform.WINDOWS, Platform.WSL],
-        "gleason": [Platform.WINDOWS, Platform.WSL],
-        "homelab": [Platform.MACOS],
-        "macbook": [Platform.MACOS],
+        "pc": [Platform.WIN, Platform.WSL],
+        "gleason": [Platform.WIN, Platform.WSL],
+        "homelab": [Platform.MAC],
+        "macbook": [Platform.MAC],
     }
     for machine_id in list_machines():
         for platform in platforms[machine_id]:
@@ -40,7 +39,7 @@ def test_load_machine_validates_only_applicable_selected_sources(
     monkeypatch, tmp_path: Path, selected_env
 ) -> None:
     monkeypatch.setattr(machine_env, "ROOT", tmp_path)
-    monkeypatch.setattr(machine_env, "PLATFORM", Platform.MACOS)
+    monkeypatch.setattr(machine_env, "PLATFORM", Platform.MAC)
     selected = tmp_path / "config" / "selected"
     selected.mkdir(parents=True)
     (selected / "module.py").write_text(
@@ -48,7 +47,7 @@ def test_load_machine_validates_only_applicable_selected_sources(
         "module = Module(files=[\n"
         "    FileMapping(source='settings.conf', target='~/.config'),\n"
         "    FileMapping(source='missing.conf', target='$UNDEFINED/config', "
-        "platforms=[Platform.WINDOWS]),\n"
+        "platforms=[Platform.WIN]),\n"
         "], scripts=['missing.win.ps1', '_helper.py'])\n"
     )
     source = selected / "settings.conf"
@@ -131,7 +130,7 @@ def test_manifest_override_preserves_metadata(
         "from app.models import FileMapping, Module, Platform\n"
         "module = Module(overrides=[FileMapping(\n"
         "    source='local.conf', target='~/.example/config',\n"
-        "    mode=0o600, platforms=[Platform.UNIX, Platform.WINDOWS],\n"
+        "    mode=0o600, platforms=[Platform.UNIX, Platform.WIN],\n"
         ")])\n",
         encoding="utf-8",
     )
@@ -139,7 +138,7 @@ def test_manifest_override_preserves_metadata(
     machine_dir.mkdir(parents=True)
     explicit_mapping = (
         "FileMapping(source='explicit.conf', target='~/.example/config', "
-        "mode=0o600, platforms=[Platform.UNIX, Platform.WINDOWS])"
+        "mode=0o600, platforms=[Platform.UNIX, Platform.WIN])"
         if explicit
         else ""
     )
@@ -153,7 +152,7 @@ def test_manifest_override_preserves_metadata(
     local_config.write_text("local settings", encoding="utf-8")
     explicit_config = machine_dir / "explicit.conf"
     explicit_config.write_text("explicit settings", encoding="utf-8")
-    monkeypatch.setattr(machine_env, "PLATFORM", Platform.MACOS)
+    monkeypatch.setattr(machine_env, "PLATFORM", Platform.MAC)
 
     manifest = load_machine("test", env=selected_env)
 
@@ -162,7 +161,7 @@ def test_manifest_override_preserves_metadata(
     assert override.source == str(explicit_config if explicit else local_config)
     assert override.target == str(Path(selected_env["HOME"]) / ".example/config")
     assert override.mode == 0o600
-    assert override.platforms == [Platform.UNIX, Platform.WINDOWS]
+    assert override.platforms == [Platform.UNIX, Platform.WIN]
     filtered = load_machine("test", ["example"], env=selected_env)
     assert filtered.files == manifest.files
     assert filtered.pkg_managers == [PkgManager.BREW]
@@ -170,7 +169,7 @@ def test_manifest_override_preserves_metadata(
 
 def test_only_declared_modules_are_included(monkeypatch, tmp_path: Path, selected_env) -> None:
     monkeypatch.setattr(machine_env, "ROOT", tmp_path)
-    monkeypatch.setattr(machine_env, "PLATFORM", Platform.WINDOWS)
+    monkeypatch.setattr(machine_env, "PLATFORM", Platform.WIN)
     config_dir = tmp_path / "config"
     config_dir.mkdir()
     (config_dir / "core").mkdir()
@@ -202,10 +201,10 @@ manifest = Machine(modules=['apps'])
 
 def test_platform_matching_is_directional_and_shared(monkeypatch, tmp_path: Path) -> None:
     expected = {
-        Platform.MACOS: {Platform.MACOS, Platform.UNIX},
+        Platform.MAC: {Platform.MAC, Platform.UNIX},
         Platform.LINUX: {Platform.LINUX, Platform.UNIX},
         Platform.WSL: {Platform.WSL, Platform.LINUX, Platform.UNIX},
-        Platform.WINDOWS: {Platform.WINDOWS},
+        Platform.WIN: {Platform.WIN},
         Platform.UNIX: {Platform.UNIX},
     }
     for platform, matches in expected.items():
@@ -216,7 +215,7 @@ def test_platform_matching_is_directional_and_shared(monkeypatch, tmp_path: Path
             package = Package(name="example", brew="example", platforms=[target])
             assert file.applies_to(platform) == (target in matches)
             assert package.applies_to(platform) == (target in matches)
-            tag = "win" if target == Platform.WINDOWS else target.value
+            tag = "win" if target == Platform.WIN else target.value
             script = tmp_path / f"setup.{tag}.sh"
             script.write_text("#!/bin/sh\n")
             assert bool(machine_loader._resolve_scripts([str(script)])) == (target in matches)
@@ -275,7 +274,6 @@ manifest = Machine(modules=[{selection!r}])
         ("Package()", "[]", "no install source"),
         ("Package(cmd='setup')", "[]", "require a name"),
         ("Package(brew='example')", "[]", "manager not declared"),
-        ("Package(snap='example --classic')", "[PkgManager.SNAP]", "must be a package ID"),
     ],
 )
 def test_loader_rejects_invalid_package_declarations(

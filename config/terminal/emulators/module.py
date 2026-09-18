@@ -14,13 +14,13 @@ module = Module(
         FileMapping(
             source="config.ghostty",
             target="~/.config/ghostty/config.ghostty",
-            platforms=[Platform.MACOS, Platform.LINUX],
+            platforms=[Platform.MAC, Platform.LINUX],
         ),
         # Windows Terminal configuration file mapping.
         FileMapping(
             source="win-term.json",
             target=str(WIN_TERM_CONFIG / "settings.json"),
-            platforms=[Platform.WINDOWS],
+            platforms=[Platform.WIN],
         ),
     ],
     packages=[

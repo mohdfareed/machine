@@ -3,8 +3,6 @@
 import subprocess
 from collections import defaultdict
 
-from rich import print
-
 from app import managers as package_managers
 from app.models import Package, PackageSource, PkgManager
 from app.shell import find_executable, run
@@ -25,7 +23,7 @@ def install_packages(
             if not (source := package.selected_source):
                 if not dry_run and find_executable(package.name, env=env):
                     reporter(f"Already installed: cmd -> {package.name}")
-                    continue  # Already on PATH (ignored during dry runs).
+                    continue  # Already on PATH (ignored during dry runs for reporting).
 
                 assert package.cmd is not None
                 reporter(f"Installing: cmd -> {package.name}")
@@ -44,9 +42,9 @@ def install_packages(
             key = (source, str(package_id))
             if not dry_run and available and key not in installed:
                 installed[key] = package_managers.source_installed(source, package_id, env=env)
-            if available and installed[key]:
+            if available and installed.get(key, False):
                 reporter(f"Already installed: {source} -> {package.name}")
-                continue  # Ignored during dry runs.
+                continue  # Ignored during dry runs for reporting.
 
             # Install the missing package.
             reporter(f"Installing: {source} -> {package.name}")

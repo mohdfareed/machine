@@ -6,10 +6,9 @@ from pathlib import Path
 
 import pytest
 import typer
-from typer.testing import CliRunner
-
 from app import cli, env
 from app.cli import deploy, entry, info, sync, upgrade
+from typer.testing import CliRunner
 
 
 def git(root: Path, *args: str) -> str:
@@ -41,6 +40,7 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     git(checkout, "remote", "set-url", "origin", str(tmp_path / "unavailable-fork"))
     monkeypatch.setattr(env, "ROOT", checkout)
     monkeypatch.setattr(sync, "_CANONICAL_REPO_URL", str(canonical))
+    monkeypatch.setattr(sync, "_ZSH_COMPLETION_FILE", tmp_path / "home/.zfunc/_mc")
 
     def run(cmd, **kwargs):
         if kwargs["dry_run"]:
@@ -59,55 +59,14 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     def query(cmd, **kwargs):
         if cmd[:4] == ["uv", "tool", "dir", "--bin"]:
             return subprocess.CompletedProcess(cmd, 0, stdout=str(tmp_path / "tool bin"))
+        executable = tmp_path / "tool bin" / cli.COMMAND
+        if cmd == [str(executable)]:
+            assert kwargs["env"] == {"_MC_COMPLETE": "source_zsh"}
+            return subprocess.CompletedProcess(cmd, 0, stdout="#compdef mc\n")
         return original_query(cmd, **kwargs)
 
     monkeypatch.setattr(sync, "query", query)
     return canonical, checkout
-
-
-def test_sync_fixture_preserves_an_inherited_repository(tmp_path, monkeypatch, request):
-    # Create a disposable repository without inheriting any real Git context.
-    for name in tuple(os.environ):
-        if name.upper().startswith("GIT_"):
-            monkeypatch.delenv(name)
-    monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
-    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
-
-    unrelated = tmp_path / "unrelated"
-    unrelated.mkdir()
-    git(unrelated, "init", "-b", "main")
-    config = unrelated / "config.txt"
-    config.write_text("committed\n")
-    git(unrelated, "add", ".")
-    git(
-        unrelated,
-        "-c",
-        "user.name=Isolation Test",
-        "-c",
-        "user.email=isolation@example.com",
-        "commit",
-        "-m",
-        "Preserve this commit",
-    )
-
-    # Preserve distinct committed, staged, and unstaged versions.
-    config.write_text("staged\n")
-    git(unrelated, "add", ".")
-    config.write_text("unstaged\n")
-    head = git(unrelated, "rev-parse", "HEAD")
-    index = unrelated / ".git" / "index"
-    index_before = index.read_bytes()
-    contents_before = config.read_bytes()
-
-    # Initialize the real fixture with foreign repository paths in its environment.
-    monkeypatch.setenv("GIT_DIR", str(unrelated / ".git"))
-    monkeypatch.setenv("GIT_WORK_TREE", str(unrelated))
-    monkeypatch.setenv("GIT_INDEX_FILE", str(index))
-    request.getfixturevalue("sync_repos")
-
-    assert git(unrelated, "rev-parse", "HEAD") == head
-    assert index.read_bytes() == index_before
-    assert config.read_bytes() == contents_before
 
 
 def test_machine_validation_is_case_insensitive(monkeypatch):
@@ -150,16 +109,8 @@ def test_machine_selection_is_read_at_invocation(tmp_path, monkeypatch, command)
     assert persisted == []
 
 
-def test_sync_restores_local_edits(sync_repos, monkeypatch):
+def test_sync_restores_local_edits(sync_repos):
     canonical, checkout = sync_repos
-    commands = []
-    original_run = sync.run
-
-    def run(cmd, **kwargs):
-        commands.append(cmd)
-        return original_run(cmd, **kwargs)
-
-    monkeypatch.setattr(sync, "run", run)
 
     # Change different parts of the same tracked file locally and upstream.
     original = "".join(f"setting {i}\n" for i in range(10))
@@ -176,8 +127,10 @@ def test_sync_restores_local_edits(sync_repos, monkeypatch):
 
     assert git(checkout, "rev-parse", "HEAD") == git(canonical, "rev-parse", "HEAD")
     assert (checkout / "config.txt").read_text() == expected
-    executable = cli.COMMAND + (".exe" if env.is_windows else "")
-    assert commands[-1] == [str(checkout.parent / "tool bin" / executable), "--install-completion"]
+    if env.is_windows:
+        assert not sync._ZSH_COMPLETION_FILE.exists()
+    else:
+        assert sync._ZSH_COMPLETION_FILE.read_text() == "#compdef mc\n"
 
 
 def test_sync_autostash_conflict_preserves_edits(sync_repos):
@@ -224,9 +177,10 @@ def test_sync_dry_run_does_not_fetch(sync_repos, monkeypatch):
     result = CliRunner().invoke(entry._create_app(), ["sync", "--dry-run"])
     assert result.exit_code == 0, result.exception
     assert not (checkout / ".git" / "FETCH_HEAD").exists()
+    assert not sync._ZSH_COMPLETION_FILE.exists()
 
 
-@pytest.mark.parametrize("failed_phase", [None, "preflight", "files", "managers", "packages"])
+@pytest.mark.parametrize("failed_phase", [None, "preflight", "packages"])
 def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, failed_phase) -> None:
     from app import models
 

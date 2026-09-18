@@ -138,9 +138,9 @@ def _load_modules(selections: list[str]) -> list[Module]:
 # ═════════════════════════════════════════════════════════════════════════════
 
 _PLATFORM_SOURCES: dict[Platform, tuple[PackageSource, ...]] = {
-    Platform.MACOS: ("cask", "brew", "mas"),
+    Platform.MAC: ("cask", "brew", "mas"),
     Platform.LINUX: ("apt", "snap", "brew"),
-    Platform.WINDOWS: ("winget", "scoop"),
+    Platform.WIN: ("winget", "scoop"),
 }
 
 
@@ -247,10 +247,10 @@ def _resolve_files(files: list[FileMapping], env: dict[str, str]) -> list[FileMa
 
 def _resolve_scripts(scripts: list[str]) -> list[str]:
     tags = {
-        ".macos": Platform.MACOS,
+        ".macos": Platform.MAC,
         ".linux": Platform.LINUX,
         ".unix": Platform.UNIX,
-        ".win": Platform.WINDOWS,
+        ".win": Platform.WIN,
         ".wsl": Platform.WSL,
     }
 

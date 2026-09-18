@@ -61,11 +61,15 @@ def upgrade(
     reporting.heading("Upgrading declared managers and all their packages")
     upgrade_managers(configuration.pkg_managers, env=env, dry_run=dry_run)
 
-    # Run custom package upgrades and maintenance scripts for the selected modules.
+    # Run custom package upgrades.
     reporting.heading("Upgrading custom packages")
-    manual = upgrade_packages(configuration.packages, env=env, dry_run=dry_run)
-    up_scripts = [script for script in configuration.scripts if Path(script).name.startswith("up_")]
+    manual = upgrade_packages(
+        configuration.packages, env=env, dry_run=dry_run, reporter=reporting.detail
+    )
+
+    # Run maintenance scripts.
     reporting.heading("Running upgrade scripts")
+    up_scripts = [script for script in configuration.scripts if Path(script).name.startswith("up_")]
     run_scripts(up_scripts, env=env, dry_run=dry_run)
 
     # Present manual work only after automated maintenance finishes.

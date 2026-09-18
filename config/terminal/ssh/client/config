@@ -2,3 +2,23 @@ Host *
   IdentityFile ~/.ssh/machine
   AddKeysToAgent yes
   UseKeychain yes
+
+# =====================================================================
+# 1. PLATFORM REGISTRATION & 1PASSWORD AGENT SETUP
+# =====================================================================
+
+Include ~/.ssh/1Password/config
+
+# ---- MAC SPECIFIC ----
+Match exec "uname | grep -q Darwin 2> /dev/null"
+    IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
+# ---- WINDOWS SPECIFIC ----
+# Windows native OpenSSH relies on the named pipe directly.
+Match exec "cmd.exe /c exit 0 2> /dev/null"
+    IdentityAgent //./pipe/openssh-ssh-agent
+
+# ---- LINUX / WSL SPECIFIC ----
+# Assumes standard Linux app path, or the socat pipe-relay layout for WSL.
+Match exec "! cmd.exe /c exit 0 2> /dev/null" && exec "! uname | grep -q Darwin 2> /dev/null"
+    IdentityAgent "~/.1password/agent.sock"

@@ -71,7 +71,7 @@ manifest = Machine(
         Package(name="Steam Rom Manager", winget="SteamGridDB.RomManager"),
         Package(
             name="Steam Input Bridge",
-            platforms=[Platform.WINDOWS],
+            platforms=[Platform.WIN],
             cmd=f"{sib_script_install_path}; irm {sib_script_url} | iex",
         ),
     ],

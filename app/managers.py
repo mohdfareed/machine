@@ -2,7 +2,6 @@
 
 import json
 
-from app import reporting
 from app.env import SCRIPTS_ROOT, is_windows
 from app.models import Package, PackageSource, PkgManager
 from app.ops.scripts import run_scripts
@@ -33,12 +32,8 @@ def validate_managers(
 
 def setup_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run: bool) -> None:
     """Install missing declared managers using the host's bundled setup script."""
-    if not managers:
-        reporting.detail("No package managers declared.")
-        return
     if all(find_executable(manager, env=env) for manager in managers):
-        reporting.detail("All package managers are already available.")
-        return
+        return  # All managers are already available.
 
     script = _SETUP_SCRIPT_WIN if is_windows else _SETUP_SCRIPT_UNIX
     script_env = {**env, "MC_PKG_MANAGERS": " ".join(managers)}

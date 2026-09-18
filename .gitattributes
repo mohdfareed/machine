@@ -1,6 +1,13 @@
-# Files consumed by Unix shells must retain Unix line endings.
+# default
+* text=auto
+
+# unix
 *.sh text eol=lf
-.shellcheckrc text eol=lf
 .zshenv text eol=lf
 .zshrc text eol=lf
 .zimrc text eol=lf
+.shellcheckrc text eol=lf
+
+# windows
+*.bat text eol=crlf
+*.cmd text eol=crlf

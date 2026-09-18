@@ -17,7 +17,11 @@ manifest = Machine(
     ],
     files=[],
     packages=[
-        # Dev languages
+        # ─────────────────────────────────────────────────────────────────────
+        # System
+        # ─────────────────────────────────────────────────────────────────────
+        # Dev tools
+        Package(name="xcode", mas=497799835),
         Package(cask="docker-desktop"),
         Package(cask="dotnet-sdk"),
         Package(brew="go"),
@@ -32,28 +36,35 @@ manifest = Machine(
         Package(brew="ffmpeg", winget="Gyan.FFmpeg"),  # video
         Package(brew="yt-dlp", winget="yt-dlp.yt-dlp"),  # video downloader
         Package(brew="tesseract", winget="tesseract-ocr.tesseract"),  # ocr
+        # ─────────────────────────────────────────────────────────────────────
         # Apps
-        Package(cask="raycast"),
-        Package(cask="iina"),
-        Package(cask="mos"),
-        Package(cask="monitorcontrol"),
-        Package(cask="swish"),
-        Package(cask="tailscale"),
-        Package(cask="craft"),
+        # ─────────────────────────────────────────────────────────────────────
+        # System
+        Package(cask="tailscale"),  # vpn
+        # Productivity
+        Package(cask="craft"),  # notes
+        Package(name="keynote", mas=409183694),
+        Package(name="numbers", mas=409203825),
+        Package(name="pages", mas=409201541),
+        # Design
         Package(cask="figma"),
         Package(cask="sf-symbols"),
-        Package(cask="betterzip"),
-        Package(cask="tablepro"),
-        # Fonts
         Package(cask="font-computer-modern"),
-        # Mac App Store
-        Package(name="Xcode", mas=497799835),
-        Package(name="Keynote", mas=409183694),
-        Package(name="Numbers", mas=409203825),
-        Package(name="Pages", mas=409201541),
-        Package(name="Infuse", mas=1136220934),
-        Package(name="Noir", mas=1592917505),
-        Package(name="AdGuard", mas=1440147259),
-        Package(name="Peek", mas=1554235898),
+        # Tools
+        Package(cask="raycast"),  # spotlight
+        Package(cask="macpacker"),  # archives
+        Package(cask="tablepro"),  # databases
+        Package(cask="iina"),  # local media player
+        Package(name="infuse", mas=1136220934),  # media player
+        # Utilities
+        Package(cask="mos"),  # mouse settings
+        Package(cask="swish"),  # trackpad gestures
+        Package(cask="monitorcontrol"),  # external monitors
+        Package(cask="adguard"),
+        Package(name="noir", mas=1592917505),
+        # QuickLook
+        Package(name="unfold", cask="flewgg/tap/unfold"),  # plain files
+        Package(name="folder-preview", mas=6698876601),  # folders
+        # Package(cask="betterzip"), # archives
     ],
 )

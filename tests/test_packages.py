@@ -4,7 +4,6 @@ import json
 import subprocess
 
 import pytest
-
 from app import managers as machine_managers
 from app.models import Package, PkgManager
 from app.ops import packages as machine_packages
@@ -52,7 +51,7 @@ def test_install_only_when_selected_manager_lacks_package(monkeypatch, commands,
         return subprocess.CompletedProcess(command, 0, stdout=output)
 
     monkeypatch.setattr(machine_managers, "query", query)
-    manager = PkgManager.BREW if source == "cask" else PkgManager(source)
+
     skipped = machine_packages.install_packages(
         [package, package], env={"PATH": "chosen"}, dry_run=False
     )
@@ -103,6 +102,20 @@ def test_source_choice_does_not_fall_back_to_an_available_manager(monkeypatch, c
     package.selected_source = "winget"
     with pytest.raises(RuntimeError, match="Selected manager is unavailable: winget"):
         machine_packages.install_packages([package], env={}, dry_run=False)
+    assert commands == []
+
+
+def test_preview_checks_available_package_presence(monkeypatch, commands):
+    managed = Package(name="managed", brew="managed")
+    managed.selected_source = "brew"
+    custom = Package(name="custom", cmd="setup-custom")
+    monkeypatch.setattr(machine_managers, "source_installed", lambda *args, **kwargs: True)
+    monkeypatch.setattr(machine_packages, "find_executable", lambda name, **kwargs: name)
+
+    assert machine_packages.install_packages([managed, custom], env={}, dry_run=True) == [
+        "managed",
+        "custom",
+    ]
     assert commands == []
 
 

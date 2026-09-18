@@ -7,12 +7,23 @@
 export SHELL_SESSIONS_DISABLE=1    # macOS - disable per-session history.
 export PIP_REQUIRE_VIRTUALENV=true # Python - require virtualenv.
 
+# WSL
+if [ -f /proc/version ] && grep -qi microsoft /proc/version; then
+  WSL=true
+fi
+
+# PATH
+# ─────────────────────────────────────────────────────────────────────────────
+
 typeset -U path
 path=(
-  "$HOME/.local/bin"        # User-installed binaries.
-  "${GOPATH:-$HOME/go}/bin" # Go binaries.
-  "$HOME/.docker/bin"       # Docker binaries.
-  /snap/bin                 # Snap binaries.
+  "$HOME/.local/bin"        # User binaries.
+  "$HOME/.docker/bin"       # Docker.
+  "${GOPATH:-$HOME/go}/bin" # Go.
+  /snap/bin                 # Snap.
+  # 1Password.
+  "/mnt/c/Users/$(whoami)/AppData/Local/Microsoft/WindowsApps"
+  "/Applications/1Password.app/Contents/MacOS"
   $path
 )
 

@@ -6,9 +6,9 @@ from app.env import PLATFORM
 from app.models import FileMapping, Module, Package, Platform
 
 match PLATFORM:
-    case Platform.MACOS:
+    case Platform.MAC:
         _base = Path("~") / "Library" / "Application Support" / "Code" / "User"
-    case Platform.WINDOWS:
+    case Platform.WIN:
         _base = Path(r"%APPDATA%") / "Code" / "User"
     case _:
         _base = Path("~/.config/Code/User")

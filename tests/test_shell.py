@@ -7,14 +7,13 @@ import subprocess
 import sys
 
 import pytest
-
 from app import shell
 
 
 @pytest.fixture(autouse=True)
 def isolated_activation(tmp_path, monkeypatch):
     monkeypatch.setattr(shell, "ROOT", tmp_path)
-    activation = tmp_path / "environment.unix.sh"
+    activation = tmp_path / "environment.sh"
     activation.write_text("")
     monkeypatch.setattr(shell, "_ENVIRONMENT_SCRIPT", activation)
 
@@ -296,11 +295,11 @@ def test_powershell_preparation_does_not_leak_defaults_between_interpreters(monk
 
     assert environment == {"PATH": "selected-path"}
     assert first["PSModulePath"].split(os.pathsep) == [
-        str(shell._SCRIPTS_ROOT),
+        str(shell.SCRIPTS_ROOT),
         "first-interpreter",
     ]
     assert second["PSModulePath"].split(os.pathsep) == [
-        str(shell._SCRIPTS_ROOT),
+        str(shell.SCRIPTS_ROOT),
         "second-interpreter",
     ]
     assert all("-NoProfile" in command for command in commands)

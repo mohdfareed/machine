@@ -6,7 +6,7 @@ from app.env import PLATFORM
 from app.models import FileMapping, Module, Package, Platform
 
 match PLATFORM:
-    case Platform.WINDOWS:
+    case Platform.WIN:
         _base = Path(r"%APPDATA%") / "Zed"
     case _:  # macos/linux
         _base = Path("~/.config/zed")
@@ -23,7 +23,7 @@ module = Module(
         Package(
             cask="zed",
             winget="ZedIndustries.Zed",
-            platforms=[Platform.MACOS, Platform.WINDOWS],
+            platforms=[Platform.MAC, Platform.WIN],
         ),
         Package(
             name="zed",
