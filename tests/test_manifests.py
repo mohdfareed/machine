@@ -1,5 +1,6 @@
 """Manifest dependency and override behavior tests."""
 
+import sys
 from inspect import signature
 from pathlib import Path
 
@@ -10,6 +11,24 @@ from app.discovery import list_machines, list_modules
 from app.machine import load_machine
 from app.models import FileMapping, Package, PkgManager, Platform
 from pydantic import ValidationError
+
+
+@pytest.fixture(autouse=True)
+def isolate_config_imports(monkeypatch, tmp_path: Path):
+    # Load each temporary catalog without retaining imported folders from another test.
+    saved = {
+        name: module
+        for name, module in sys.modules.items()
+        if name == "config" or name.startswith("config.")
+    }
+    for name in saved:
+        del sys.modules[name]
+    monkeypatch.syspath_prepend(str(tmp_path))
+    yield
+    for name in list(sys.modules):
+        if name == "config" or name.startswith("config."):
+            del sys.modules[name]
+    sys.modules.update(saved)
 
 
 @pytest.fixture
@@ -42,6 +61,7 @@ def test_load_machine_validates_only_applicable_selected_sources(
     monkeypatch.setattr(machine_env, "PLATFORM", Platform.MAC)
     selected = tmp_path / "config" / "selected"
     selected.mkdir(parents=True)
+    (selected.parent / "__init__.py").touch()
     (selected / "module.py").write_text(
         "from pathlib import Path\n"
         "from app.models import FileMapping, Module, Platform\n"
@@ -63,7 +83,8 @@ def test_load_machine_validates_only_applicable_selected_sources(
     machine.mkdir(parents=True)
     (machine / "machine.py").write_text(
         "from app.models import Machine\n"
-        "manifest = Machine(modules=['selected', 'other'], scripts=['missing.sh'])\n"
+        "from config import selected, other\n"
+        "manifest = Machine(modules=[selected, other], scripts=['missing.sh'])\n"
     )
 
     configuration = load_machine("test", ["selected"], env=selected_env)
@@ -81,6 +102,7 @@ def test_module_dependencies_loaded_once(monkeypatch, tmp_path: Path, cycle, sel
     monkeypatch.setattr(machine_env, "ROOT", tmp_path)
     config_dir = tmp_path / "config"
     config_dir.mkdir()
+    (config_dir / "__init__.py").touch()
     machine_dir = tmp_path / "machines" / "test"
     machine_dir.mkdir(parents=True)
     for name, dependencies in {
@@ -92,13 +114,16 @@ def test_module_dependencies_loaded_once(monkeypatch, tmp_path: Path, cycle, sel
     }.items():
         (config_dir / name).mkdir(parents=True, exist_ok=True)
         (config_dir / name / "module.py").write_text(
-            f"from app.models import Module\nmodule = Module(depends={dependencies!r})\n",
+            "from app.models import Module\n"
+            + (f"from config import {', '.join(dependencies)}\n" if dependencies else "")
+            + f"module = Module(depends=[{', '.join(dependencies)}])\n",
             encoding="utf-8",
         )
     (machine_dir / "machine.py").write_text(
         """
 from app.models import Machine
-manifest = Machine(modules=['server', 'client'])
+from config import server, client
+manifest = Machine(modules=[server, client])
 """,
         encoding="utf-8",
     )
@@ -131,6 +156,7 @@ def test_manifest_override_preserves_metadata(
     monkeypatch.setattr(machine_env, "ROOT", tmp_path)
     config_dir = tmp_path / "config"
     config_dir.mkdir()
+    (config_dir / "__init__.py").touch()
     (config_dir / "example").mkdir()
     (config_dir / "example" / "module.py").write_text(
         "from app.models import FileMapping, Module, Platform\n"
@@ -150,7 +176,8 @@ def test_manifest_override_preserves_metadata(
     )
     (machine_dir / "machine.py").write_text(
         "from app.models import FileMapping, Machine, PkgManager, Platform\n"
-        "manifest = Machine(modules=['example'], pkg_managers=[PkgManager.BREW], "
+        "from config import example\n"
+        "manifest = Machine(modules=[example], pkg_managers=[PkgManager.BREW], "
         f"files=[{explicit_mapping}])\n",
         encoding="utf-8",
     )
@@ -178,6 +205,7 @@ def test_only_declared_modules_are_included(monkeypatch, tmp_path: Path, selecte
     monkeypatch.setattr(machine_env, "PLATFORM", Platform.WIN)
     config_dir = tmp_path / "config"
     config_dir.mkdir()
+    (config_dir / "__init__.py").touch()
     (config_dir / "core").mkdir()
     (config_dir / "core" / "module.py").write_text(
         "from app.models import Module\nmodule = Module()\n"
@@ -192,7 +220,8 @@ def test_only_declared_modules_are_included(monkeypatch, tmp_path: Path, selecte
     (machines_dir / "empty" / "machine.py").write_text(
         """
 from app.models import Machine
-manifest = Machine(modules=['apps'])
+from config import apps
+manifest = Machine(modules=[apps])
 """
     )
     (machines_dir / "declared").mkdir()
@@ -244,10 +273,12 @@ def test_nested_modules_discovery_and_resolution(
         directory = config / name
         directory.mkdir(parents=True, exist_ok=True)
         (directory / "module.py").write_text("from app.models import Module\nmodule = Module()\n")
+    (config / "__init__.py").touch()
     editor = config / "tools" / "editor"
     (editor / "module.py").write_text(
         "from app.models import Module, FileMapping\n"
-        "module = Module(depends=['tools.base'], "
+        "from config.tools import base\n"
+        "module = Module(depends=[base], "
         "files=[FileMapping(source='settings.json', target='~/.editor.json')])\n"
     )
     (editor / "settings.json").write_text("{}\n")
@@ -260,7 +291,8 @@ def test_nested_modules_discovery_and_resolution(
     (machines / "test" / "machine.py").write_text(
         f"""
 from app.models import Machine
-manifest = Machine(modules=[{selection!r}])
+import config.{selection}
+manifest = Machine(modules=[config.{selection}])
 """
     )
 
@@ -283,25 +315,31 @@ manifest = Machine(modules=[{selection!r}])
 
 def test_same_leaf_modules_keep_distinct_inputs(monkeypatch, tmp_path, selected_env):
     monkeypatch.setattr(machine_env, "ROOT", tmp_path)
+    monkeypatch.setattr(machine_env, "PLATFORM", Platform.MAC)
     machine = tmp_path / "machines" / "test"
     machine.mkdir(parents=True)
     (machine / "machine.py").write_text(
-        "from app.models import Machine\n"
-        "manifest = Machine(modules=['work.editor', 'home.editor'])\n"
+        "from app.env import PLATFORM\n"
+        "from app.models import Machine, PkgManager, Platform\n"
+        "from config.work import editor as work_editor\n"
+        "from config.home import editor as home_editor\n"
+        "manifest = Machine(modules=[work_editor, home_editor], "
+        "pkg_managers=[PkgManager.BREW if PLATFORM == Platform.MAC else PkgManager.WINGET])\n"
     )
     for group in ["work", "home"]:
         directory = tmp_path / "config" / group / "editor"
         directory.mkdir(parents=True)
         (directory / "module.py").write_text(
             "from app.models import FileMapping, Module, Package\n"
-            "module = Module(name='editor', files=[\n"
+            "module = Module(files=[\n"
             f"    FileMapping(source='settings', target='~/{group}/settings')\n"
             "], overrides=[\n"
             f"    FileMapping(source='{group}.local', target='~/{group}/local')\n"
-            "], packages=[Package(name=__name__, cmd='setup')])\n"
+            "], packages=[Package(name=__name__, brew='editor', winget='Editor.App')])\n"
         )
         (directory / "settings").write_text(group)
         (machine / f"{group}.local").write_text(group)
+    (tmp_path / "config" / "__init__.py").touch()
 
     configuration = load_machine("test", env=selected_env)
     assert configuration.modules == ["work.editor", "home.editor"]
@@ -319,6 +357,52 @@ def test_same_leaf_modules_keep_distinct_inputs(monkeypatch, tmp_path, selected_
         assert {file.target.parent for file in filtered.files} == {
             Path(selected_env["HOME"]) / group
         }
+
+    # Cached folder imports must not reuse previously resolved paths or package sources.
+    monkeypatch.setattr(machine_env, "PLATFORM", Platform.WIN)
+    next_env = selected_env | {"HOME": str(tmp_path / "next-home")}
+    reloaded = load_machine("test", env=next_env)
+    assert [package.selected_source for package in reloaded.packages] == ["winget", "winget"]
+    assert [package.selected_source for package in configuration.packages] == ["brew", "brew"]
+    assert {file.target.parent for file in reloaded.files} == {
+        Path(next_env["HOME"]) / group for group in ["work", "home"]
+    }
+    assert {file.target.parent for file in configuration.files} == {
+        Path(selected_env["HOME"]) / group for group in ["work", "home"]
+    }
+
+
+@pytest.mark.parametrize(
+    "reference,error",
+    [
+        ("config.plain", "Expected an imported config folder"),
+        ("xml.etree", "Expected an imported config folder"),
+        ("config.external", "outside this repository"),
+    ],
+)
+def test_loader_rejects_references_outside_config_folders(
+    monkeypatch, tmp_path, selected_env, reference, error
+):
+    monkeypatch.setattr(machine_env, "ROOT", tmp_path)
+    config = tmp_path / "config"
+    config.mkdir()
+    (config / "__init__.py").touch()
+    (config / "plain.py").write_text("")
+    external = tmp_path / "external"
+    (external / "config" / "external").mkdir(parents=True)
+    if reference == "config.external":
+        (external / "config" / "__init__.py").touch()
+    monkeypatch.syspath_prepend(str(external))
+    machine = tmp_path / "machines" / "test"
+    machine.mkdir(parents=True)
+    (machine / "machine.py").write_text(
+        "from app.models import Machine\n"
+        f"import {reference}\n"
+        f"manifest = Machine(modules=[{reference}])\n"
+    )
+
+    with pytest.raises(ValueError, match=error):
+        load_machine("test", env=selected_env)
 
 
 def test_discovery_rejects_case_collisions(monkeypatch, tmp_path):

@@ -22,7 +22,7 @@ environment, and execution options; they do not infer the workflow themselves.
 | Owner                                                   | Responsibility                                                                                          |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | [cli/](cli/)                                            | Choose inputs, order work, and report outcomes.                                                         |
-| [models.py](models.py)                                  | Declaration shapes and field/type checks.                                                               |
+| [models.py](models.py)                                  | Declaration and resolved configuration shapes; field/type checks.                                       |
 | [machine.py](machine.py) + [discovery.py](discovery.py) | Find declarations; expand modules and dependencies; normalize; validate; choose package sources.        |
 | [env.py](env.py)                                        | Build selected-machine values, read host variables, resolve paths, and save/read the default selection. |
 | [ops/](ops/)                                            | Apply files, packages, and scripts; check live conditions and return results or raise.                  |

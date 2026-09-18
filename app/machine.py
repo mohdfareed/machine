@@ -2,10 +2,20 @@
 
 import importlib.util
 from pathlib import Path
+from types import ModuleType
 
 from app import env as machine_env
 from app.discovery import SCRIPT_SUFFIXES, list_modules, list_scripts
-from app.models import FileMapping, Machine, Module, Package, PackageSource, PkgManager, Platform
+from app.models import (
+    Configuration,
+    FileMapping,
+    Machine,
+    Module,
+    Package,
+    PackageSource,
+    PkgManager,
+    Platform,
+)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Machine Configuration
@@ -17,7 +27,7 @@ def load_machine(
     module_names: list[str] | None = None,
     *,
     env: dict[str, str],
-) -> Machine:
+) -> Configuration:
     """Resolve selected declarations into validated inputs for the current platform."""
     # Load the machine declaration and resolve its local paths.
     machine_dir = machine_env.ROOT / "machines" / machine_id
@@ -30,21 +40,21 @@ def load_machine(
     # Load each module once, retaining prerequisites of selected modules.
     modules = _load_modules(machine.modules)
     if module_names:
-        by_name = {module.name: module for module in modules}
-        pending = _expand_modules(module_names, list(by_name))
+        pending = _expand_modules(module_names, list(modules))
         selected = set(pending)
         while pending:
-            for dependency in by_name[pending.pop()].depends:
+            dependencies = _reference_names(modules[pending.pop()].depends)
+            for dependency in _expand_modules(dependencies, list(modules)):
                 if dependency in selected:
                     continue
                 selected.add(dependency)
                 pending.append(dependency)
-        modules = [module for module in modules if module.name in selected]
+        modules = {name: module for name, module in modules.items() if name in selected}
 
     # Keep selected modules' overrides, with explicit machine mappings taking precedence.
     overrides: list[FileMapping] = []
     override_targets: set[Path] = set()
-    for module in modules:
+    for module in modules.values():
         for override in module.overrides:
             if not override.applies_to(machine_env.PLATFORM):
                 continue
@@ -64,19 +74,19 @@ def load_machine(
     # Combine applicable inputs and validate them before any execution.
     managers = list(dict.fromkeys(machine.pkg_managers))
     _validate_managers(managers)
-    files = [file for module in modules for file in module.files] + overrides
+    files = [file for module in modules.values() for file in module.files] + overrides
     files.extend(
         file for file in machine.files if not module_names or file.target in override_targets
     )
-    packages = [package for module in modules for package in module.packages]
-    scripts = [script for module in modules for script in module.scripts]
+    packages = [package for module in modules.values() for package in module.packages]
+    scripts = [script for module in modules.values() for script in module.scripts]
     if not module_names:
         packages.extend(machine.packages)
         scripts.extend(machine.scripts)
 
-    return Machine(
+    return Configuration(
         pkg_managers=managers,
-        modules=[module.name for module in modules],
+        modules=list(modules),
         files=_resolve_files(files, env),
         packages=_resolve_packages(packages, managers),
         scripts=_resolve_scripts(scripts),
@@ -88,7 +98,7 @@ def load_machine(
 # ═════════════════════════════════════════════════════════════════════════════
 
 
-def _load_modules(selections: list[str]) -> list[Module]:
+def _load_modules(selections: list[ModuleType]) -> dict[str, Module]:
     available = list_modules()
     resolved: dict[str, Module] = {}
     visiting: list[str] = []
@@ -105,22 +115,44 @@ def _load_modules(selections: list[str]) -> list[Module]:
         module = getattr(_import_py(path), "module", None)
         if not isinstance(module, Module):
             raise TypeError(f"{path} must export 'module' as {Module.__name__}")
-        module.name = name
         _resolve_paths(module, directory)
 
         # Resolve prerequisites before recording this module.
         visiting.append(name)
-        module.depends = _expand_modules(module.depends, available)
-        for dependency in module.depends:
+        for dependency in _expand_modules(_reference_names(module.depends), available):
             _add(dependency)
         visiting.pop()
         resolved[name] = module
 
     # Expand selections before resolving their dependencies.
-    for name in _expand_modules(selections, available):
+    for name in _expand_modules(_reference_names(selections), available):
         _add(name)
 
-    return list(resolved.values())
+    return resolved
+
+
+def _reference_names(references: list[ModuleType]) -> list[str]:
+    names: list[str] = []
+    for reference in references:
+        # Accept imported config folders, not declaration files or unrelated Python modules.
+        spec = reference.__spec__
+        if (
+            not reference.__name__.startswith("config.")
+            or spec is None
+            or spec.submodule_search_locations is None
+        ):
+            raise ValueError(f"Expected an imported config folder: {reference.__name__}")
+
+        # Resolve against this checkout even when Python can see another config namespace.
+        name = reference.__name__.removeprefix("config.")
+        directory = (machine_env.ROOT / "config" / Path(*name.split("."))).resolve()
+        if not any(
+            Path(location).resolve() == directory for location in spec.submodule_search_locations
+        ):
+            raise ValueError(f"Config reference is outside this repository: {reference.__name__}")
+        names.append(name)
+
+    return names
 
 
 def _expand_modules(selections: list[str], available: list[str]) -> list[str]:
@@ -296,7 +328,7 @@ def _resolve_paths(config: Machine | Module, directory: Path) -> None:
     )
 
 
-def _import_py(path: Path) -> object:
+def _import_py(path: Path) -> ModuleType:
     if not path.is_file():
         raise FileNotFoundError(f"No declaration: {path}")
 

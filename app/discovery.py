@@ -1,5 +1,6 @@
 """Discover machines, modules, and their scripts."""
 
+from keyword import iskeyword
 from pathlib import Path
 
 from app import env
@@ -43,8 +44,8 @@ def list_modules() -> list[str]:
             continue
 
         parts = directory.relative_to(modules_dir).parts
-        if any("." in part for part in parts):
-            raise ValueError(f"Module directory names cannot contain dots: {directory}")
+        if any(not part.isidentifier() or iskeyword(part) for part in parts):
+            raise ValueError(f"Module directory names must be Python identifiers: {directory}")
 
         names.add(".".join(parts))
         dirs.clear()

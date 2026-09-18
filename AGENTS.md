@@ -81,17 +81,21 @@ enforced by the existing tests.
 
 Module names are dotted paths relative to `config/`: `terminal/git/module.py`
 is `terminal.git`. Discovery recurses through grouping folders, stopping at
-module directories; folder names cannot contain dots. `FileMapping` accepts strings
+module directories; folder names must be valid Python identifiers, not keywords. `FileMapping` accepts strings
 or `Path` values and stores paths internally. Script lists use `Path`; sources
 and scripts resolve relative to the module directory.
 The loader expands target variables and `~`, not model construction.
 Module code must locate bundled resources relative to its own files, never by
 reconstructing its `config/...` location from `MC_HOME` or the working directory.
 
-Exports a `Module(files, packages, scripts, depends)`. All fields use simple
-types - `depends` and manifest `modules` are `list[str]` (module names).
+Exports a `Module(files, packages, scripts, depends)`. `depends` and manifest
+`modules` contain imported config folders (`list[ModuleType]`), including groups.
+Use grouped folder imports such as `from config.terminal import git, shell`.
+Keep an empty `__init__.py` in `config/` and each module/group folder so Python and
+editors recognize them as packages. Keep these markers empty; declarations stay
+in `module.py` and are loaded by the app.
 Scripts under `scripts/` are auto-discovered; explicit `scripts=` list
-is only needed for files outside that directory. `depends=["other"]`
+is only needed for files outside that directory. `depends=[other]`
 auto-includes prerequisite modules in manifests (deduped, ordered before
 the dependent).
 
@@ -103,12 +107,15 @@ selected `development.python` module.
 ### Manifest (`machines/<id>/machine.py`)
 
 Exports a `Machine(pkg_managers, modules, files, packages, scripts)`.
-Composes modules and adds machine-specific overrides. Manifest selections, CLI
-filters and `depends` match a full module name or its dotted descendants:
-`terminal` matches `terminal` and `terminal.*`, not `terminal-extra`. Expansion uses discovery
+Composes imported modules and adds machine-specific overrides. The loader derives
+full names from folder references; CLI filters use dotted strings. Both select the
+module or its dotted descendants: `terminal` matches `terminal` and `terminal.*`,
+not `terminal_extra`. Expansion uses discovery
 order, then existing dependency ordering and deduplication; no matches is an error.
-`load_machine(machine_id, module_names=None, *, env)` returns applicable, normalized
-files/packages/scripts with fixed package sources. Filters include selected modules
+`load_machine(machine_id, module_names=None, *, env)` returns a `Configuration` with
+full module names and applicable, normalized files/packages/scripts with fixed package
+sources. Declaration files execute afresh on each load; cached folder imports carry
+no resolved state. Filters include selected modules
 and their prerequisites and related overrides, excluding unrelated machine extras.
 Package managers remain machine-wide; installed-tool availability never changes
 the loader's source selection.

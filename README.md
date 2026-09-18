@@ -71,10 +71,11 @@ Create `machines/<id>/machine.py`:
 
 ```python
 from app.models import Machine, PkgManager
+from config.terminal import shell
 
 manifest = Machine(
     pkg_managers=[PkgManager.BREW],
-    modules=["terminal.shell"],
+    modules=[shell],
 )
 ```
 
@@ -85,8 +86,8 @@ The deployed machine is stored in `MC_ID` at `~/.env`; the CLI and shell
 startup use that file. Scripts launched by `mc` preserve the environment
 prepared for their selected machine.
 
-Use `mc list` to find module names to add.
-Replace `<id>` below with the module name:
+Use `mc list` to find modules to import.
+Replace `<id>` below with the machine name:
 
 ```sh
 mc show -m <id>    # Inspect the resolved manifest
@@ -95,7 +96,7 @@ mc deploy -m <id>  # Select, remember, and deploy it
 
 ### Modules
 
-Create `config/<name>/module.py`:
+Create `config/<name>/module.py` and an empty `__init__.py` beside it:
 
 ```python
 from app.models import Module
@@ -103,14 +104,15 @@ from app.models import Module
 module = Module()
 ```
 
-Add its name to the manifest's `modules` list, then `mc deploy <name>` to
-set up on that module on the selected machine. Nested modules use dotted names:
+Import its folder into the manifest's `modules` list, then `mc deploy <name>` to
+set up that module on the selected machine. CLI arguments use dotted names:
 `config/terminal/git/module.py` becomes `terminal.git`.
 Discovery descends through grouping folders and stops at each `module.py`;
-**folder names cannot contain dots.**
+**folder names must be valid Python identifiers.**
 
-In manifests, `modules=["terminal"]` includes all modules under that grouping
-folder, including newly added ones.
+With `from config import terminal`, `modules=[terminal]` includes all modules under
+that grouping folder, including newly added ones. Grouping folders also need an
+empty `__init__.py`. Import folders, not their `module.py` files.
 Files and scripts declared in the modules remain relative to their module folder.
 
 ### Scripts

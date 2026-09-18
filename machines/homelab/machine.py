@@ -1,19 +1,22 @@
 """Homelab (macOS) machine manifest."""
 
 from app.models import FileMapping, Machine, Package, PkgManager
+from config import homelab, system
+from config.development import agents, python, vscode
+from config.terminal import emulators, git, shell, ssh
 
 manifest = Machine(
     pkg_managers=[PkgManager.BREW, PkgManager.MAS],
     modules=[
-        "system",
-        "homelab",
-        "terminal.git",
-        "terminal.shell",
-        "terminal.ssh",
-        "terminal.emulators",
-        "development.python",
-        "development.agents",
-        "development.vscode",
+        system,
+        homelab,
+        git,
+        shell,
+        ssh,
+        emulators,
+        python,
+        agents,
+        vscode,
     ],
     files=[
         FileMapping(

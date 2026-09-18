@@ -240,7 +240,7 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
     from app import models
 
     managers = [models.PkgManager.WINGET]
-    configuration = models.Machine(
+    configuration = models.Configuration(
         pkg_managers=managers,
         modules=["apps"],
         files=[models.FileMapping(source=Path("/source"), target=Path("/target"))],
@@ -342,10 +342,12 @@ def test_preview_uses_requested_machine_without_saving_or_running(tmp_path, monk
 
 
 def test_upgrade_passes_selected_environment_and_stops_on_failure(monkeypatch):
-    from app.models import Machine
+    from app.models import Configuration
 
     selected_env = {"MC_ID": "test"}
-    configuration = Machine(scripts=[Path("init_setup.py"), Path("setup.py"), Path("up_setup.py")])
+    configuration = Configuration(
+        scripts=[Path("init_setup.py"), Path("setup.py"), Path("up_setup.py")]
+    )
     events = []
     monkeypatch.setattr(upgrade, "get_current_machine", lambda: "test")
     monkeypatch.setattr(upgrade, "build_env", lambda machine_id: selected_env)

@@ -1,19 +1,23 @@
 """Personal laptop (macOS) machine manifest."""
 
 from app.models import Machine, Package, PkgManager
+from config import system
+from config.development import agents, python, vscode, zed
+from config.terminal import emulators, git, shell
+from config.terminal.ssh import client
 
 manifest = Machine(
     pkg_managers=[PkgManager.BREW, PkgManager.MAS],
     modules=[
-        "system",
-        "terminal.git",
-        "terminal.shell",
-        "terminal.ssh.client",
-        "terminal.emulators",
-        "development.python",
-        "development.agents",
-        "development.vscode",
-        "development.zed",
+        system,
+        git,
+        shell,
+        client,
+        emulators,
+        python,
+        agents,
+        vscode,
+        zed,
     ],
     files=[],
     packages=[

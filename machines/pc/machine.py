@@ -2,6 +2,10 @@
 
 from app.env import PLATFORM
 from app.models import Machine, Package, PkgManager, Platform
+from config import system
+from config.development import agents, python, vscode
+from config.terminal import emulators, git, shell, ssh
+from config.terminal.ssh import client
 
 sib_script_install_path = '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\steam-input-bridge"'
 sib_script_url = (
@@ -16,22 +20,22 @@ manifest = Machine(
     ),
     modules=(
         [
-            "terminal.git",
-            "terminal.shell",
-            "terminal.ssh.client",
-            "development.python",
-            "development.agents",
+            git,
+            shell,
+            client,
+            python,
+            agents,
         ]
         if PLATFORM == Platform.WSL
         else [
-            "system",
-            "terminal.git",
-            "terminal.shell",
-            "terminal.ssh",
-            "terminal.emulators",
-            "development.python",
-            "development.agents",
-            "development.vscode",
+            system,
+            git,
+            shell,
+            ssh,
+            emulators,
+            python,
+            agents,
+            vscode,
         ]
     ),
     packages=[

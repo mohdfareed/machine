@@ -2,6 +2,7 @@
 
 from enum import StrEnum
 from pathlib import Path
+from types import ModuleType
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
@@ -134,8 +135,9 @@ class Package(BaseModel):
 class Module(BaseModel):
     """A composable unit of configuration."""
 
-    name: str = ""
-    depends: list[str] = []
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    depends: list[ModuleType] = []
     scripts: list[Path] = []
     files: list[FileMapping] = []
     overrides: list[FileMapping] = []
@@ -143,7 +145,19 @@ class Module(BaseModel):
 
 
 class Machine(BaseModel):
-    """Machine declaration, or combined configuration returned by load_machine()."""
+    """Machine declaration with imported module or grouping folders."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    pkg_managers: list[PkgManager] = []
+    modules: list[ModuleType] = []
+    scripts: list[Path] = []
+    files: list[FileMapping] = []
+    packages: list[Package] = []
+
+
+class Configuration(BaseModel):
+    """Resolved machine inputs, with full module names and fixed package sources."""
 
     pkg_managers: list[PkgManager] = []
     modules: list[str] = []
