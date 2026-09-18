@@ -50,8 +50,8 @@ never expose credentials or secret values in output.
 
 ## Commands
 
-- `./scripts/check.sh` - Non-mutating validation entrypoint (always use this to validate)
-- `./scripts/fix.sh` - Fix unambiguous spelling without renaming files, format, auto-fix lint, and normalize script permissions before re-running checks
+- `./scripts/check.sh` (Windows: `./scripts/check.ps1`) - Non-mutating native validation entrypoint (always use this to validate)
+- `./scripts/fix.sh` (Windows: `./scripts/fix.ps1`) - Complete pre-commit preparation: upgrade and sync dependencies, fix unambiguous spelling without renaming files, format, auto-fix lint, and normalize Unix script permissions before re-running checks
 - `uv run mc --help` - Run CLI in dev
 - `--dry-run`/`-n` belongs only to `deploy`, `upgrade` and `sync`, after the command name.
   Information commands live under `show` (`id`, `home`, `private`, `status`);
@@ -103,6 +103,9 @@ the dependent).
 the server depends on the client. Machines select `terminal.ssh` for both or
 `terminal.ssh.client` alone. Python runtimes and uv belong to the separately
 selected `development.python` module.
+
+1Password owns interactive SSH keys and agent authentication. Deployment must not
+copy private keys, load them into another agent, or sign in to 1Password.
 
 ### Manifest (`machines/<id>/machine.py`)
 
@@ -233,11 +236,11 @@ or add special config entrypoints outside the module declaration system.
 ## Homelab
 
 - Every macOS homelab deployment requires a manual review of System Settings → General → Sharing; the owner configures shared folders, permissions, and remote access there. Keep this requirement in the shared homelab setup notes, not reminder scripts.
-- Windows homelab nodes must support Windows containers and recover their services after reboot without interactive login. Verify this with the chosen runtime before treating a node as ready.
+- Windows homelab nodes must support Windows containers and recover their services after reboot without manual intervention; automatic login is acceptable. Verify this with the chosen runtime before treating a node as ready.
 - Do not SSH to, deploy to, or otherwise mutate the homelab until the user has
   reviewed the repository changes and explicitly approved deployment
-- `MC_HOMELAB_DIR` is required for homelab scripts and is declared in the
-  machine's committed `machine.env`; never silently fall back to `~/.homelab`
+- Compose projects run from their repository directories; do not maintain a
+  parallel tree of service links or a custom backup engine.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - Keep path/configuration changes minimal: no new tests or storage machinery; simple parent-directory checks are sufficient for interactive setup
 - Use `${VAR:?}` for required shell/Compose variables, without custom error messages

@@ -2,11 +2,10 @@
 set -Eeuo pipefail
 
 cd "$(dirname "$0")/.."
-echo "==> Checking dependency updates..."
+echo "==> Checking dependencies..."
 # ═════════════════════════════════════════════════════════════════════════════
 
 uv lock --check
-uv lock --upgrade --dry-run
 
 # ═════════════════════════════════════════════════════════════════════════════
 echo
@@ -20,17 +19,17 @@ echo
 echo "==> Checking Python files..."
 # ═════════════════════════════════════════════════════════════════════════════
 
-uv run ruff format --check .
-uv run ruff check .
-uv run pyright
-uv run pytest -q
+uv run --no-sync ruff format --check .
+uv run --no-sync ruff check .
+uv run --no-sync pyright
+uv run --no-sync pytest -q
 
 # ═════════════════════════════════════════════════════════════════════════════
 echo
 echo "==> Checking spelling..."
 # ═════════════════════════════════════════════════════════════════════════════
 
-uv run typos
+uv run --no-sync typos
 
 # ═════════════════════════════════════════════════════════════════════════════
 echo
@@ -40,7 +39,7 @@ echo "==> Checking shell scripts..."
 find . \
   \( -path './.git' -o -path './.venv' \) -prune -o \
   -type f -name '*.sh' \
-  -exec uv run shellcheck --severity=error {} +
+  -exec uv run --no-sync shellcheck --severity=error {} +
 
 # ═════════════════════════════════════════════════════════════════════════════
 echo

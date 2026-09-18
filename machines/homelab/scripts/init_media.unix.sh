@@ -3,7 +3,6 @@ set -Eeuo pipefail
 
 : "${MC_HOMELAB_STORAGE_DIR:?}"
 : "${MC_HOMELAB_MEDIA_DIR:?}"
-: "${MC_HOMELAB_CACHE_DIR:?}"
 
 create_directory() (
   directory="$1"
@@ -20,7 +19,6 @@ create_directory() (
 
 mkdir -p  "$MC_HOMELAB_STORAGE_DIR"
 mkdir -p  "$MC_HOMELAB_MEDIA_DIR"
-mkdir -p  "$MC_HOMELAB_CACHE_DIR"
 
 mkdir -p  "$MC_HOMELAB_MEDIA_DIR/movies"
 mkdir -p  "$MC_HOMELAB_MEDIA_DIR/series"

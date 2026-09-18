@@ -12,12 +12,6 @@ if [ -z "$_mc_brew" ]; then
     done
 fi
 
-if [ -x "$_mc_brew" ]; then
-    # Discover the prefix without shellenv, which can create the Homebrew paths file.
-    HOMEBREW_PREFIX=$("$_mc_brew" --prefix) || return
-    export HOMEBREW_PREFIX
-fi
-
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Commands
 # ═════════════════════════════════════════════════════════════════════════════
@@ -31,15 +25,11 @@ for _mc_bin in "$HOME/.local/bin" "${GOBIN:-${_mc_go_path%%:*}/bin}" /snap/bin; 
     esac
 done
 
-# Expose Homebrew's linked commands.
-if [ -n "${HOMEBREW_PREFIX-}" ]; then
-    for _mc_bin in "$HOMEBREW_PREFIX/sbin" "$HOMEBREW_PREFIX/bin"; do
-        case ":${PATH-}:" in
-            *":$_mc_bin:"*) ;;
-            *) PATH="$_mc_bin${PATH:+:$PATH}" ;;
-        esac
-    done
+# Activate Homebrew using its own shell environment.
+if [ -x "$_mc_brew" ]; then
+    _mc_shellenv=$("$_mc_brew" shellenv sh) || return
+    eval "$_mc_shellenv"
 fi
 
 export PATH
-unset _mc_brew _mc_bin _mc_go_path
+unset _mc_brew _mc_bin _mc_go_path _mc_shellenv

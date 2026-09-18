@@ -176,22 +176,18 @@ def test_winget_absence_is_distinct_from_query_failure(monkeypatch):
                 machine_managers.source_installed("winget", "Example.App", env={})
 
 
-@pytest.mark.parametrize("success", [False, True])
-def test_winget_install_interprets_its_nonzero_result(monkeypatch, success):
-    output = (
-        b"Found an existing package already installed. No available upgrade found"
-        if success
-        else b"failed"
-    )
-
+@pytest.mark.parametrize("code", [0, 0x8A150061, 0x8A150061 - 2**32, 1, 0x8A15002B])
+def test_winget_install_interprets_its_status_without_capturing_output(monkeypatch, code):
     def run(command, **kwargs):
-        assert kwargs["capture_output"] and kwargs["echo_output"]
-        return subprocess.CompletedProcess(command, 1, stdout=output)
+        assert "--no-upgrade" in command
+        assert not kwargs.get("capture_output") and not kwargs.get("echo_output")
+        assert not kwargs["check"]
+        return subprocess.CompletedProcess(command, code)
 
     monkeypatch.setattr(machine_managers, "run", run)
     package = Package(name="example", winget="Example.App")
     package.selected_source = "winget"
-    if success:
+    if code in (0, 0x8A150061, 0x8A150061 - 2**32):
         machine_managers.install_package(package, env={}, dry_run=False)
     else:
         with pytest.raises(RuntimeError):

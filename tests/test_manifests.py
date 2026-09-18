@@ -268,6 +268,7 @@ def test_nested_modules_discovery_and_resolution(
     monkeypatch, tmp_path: Path, selection: str, selected_env
 ) -> None:
     monkeypatch.setattr(machine_env, "ROOT", tmp_path)
+    monkeypatch.setattr(machine_env, "PLATFORM", Platform.MAC)
     config = tmp_path / "config"
     for name in ["core", "tools/base", "tools/editor", "toolsmith/editor", "tools/editor/assets"]:
         directory = config / name
@@ -360,7 +361,10 @@ def test_same_leaf_modules_keep_distinct_inputs(monkeypatch, tmp_path, selected_
 
     # Cached folder imports must not reuse previously resolved paths or package sources.
     monkeypatch.setattr(machine_env, "PLATFORM", Platform.WIN)
-    next_env = selected_env | {"HOME": str(tmp_path / "next-home")}
+    next_env = selected_env | {
+        "HOME": str(tmp_path / "next-home"),
+        "USERPROFILE": str(tmp_path / "next-home"),
+    }
     reloaded = load_machine("test", env=next_env)
     assert [package.selected_source for package in reloaded.packages] == ["winget", "winget"]
     assert [package.selected_source for package in configuration.packages] == ["brew", "brew"]

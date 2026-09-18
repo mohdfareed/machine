@@ -62,19 +62,9 @@ fi
 MC_HOME="$(eval echo "${MC_HOME:-$HOME/.machine}")"
 export MC_HOME
 
-# Resolve python version from .python-version file if it exists.
-repo="https://raw.githubusercontent.com/mohdfareed/machine/main"
-python_version=$(curl -LsSf $repo/.python-version)
-
 # ═════════════════════════════════════════════════════════════════════════════
 # Bootstrap
 # ═════════════════════════════════════════════════════════════════════════════
-
-# Install system dependencies.
-if ! uv python list --only-installed | grep -q "$python_version"; then
-  echo "Installing Python $python_version..."
-  uv python install "$python_version"
-fi
 
 # Clone repo if needed.
 if ! [ -d "$MC_HOME/.git" ]; then

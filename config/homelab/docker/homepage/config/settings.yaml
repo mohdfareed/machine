@@ -17,18 +17,9 @@ quicklaunch:
   provider: google
 
 layout:
-  Machines:
-    style: column
-    rows: 1
   Services:
     style: column
     rows: 1
   Media:
-    style: column
-    rows: 1
-  Media Automation:
-    style: row
-    columns: 4
-  MCP Servers:
     style: column
     rows: 1

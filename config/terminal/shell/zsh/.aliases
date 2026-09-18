@@ -38,19 +38,6 @@ alias gen-pass='openssl rand -base64 32'
 alias gen-token='openssl rand -hex 32'
 alias gen-key='ssh-keygen -t ed25519 -C'
 
-if [[ "$OSTYPE" == darwin* ]]; then
-  # Fix SSH issues by re-adding keys to keychain.
-  function ssh::fix-keychain {
-    for file in ~/.ssh/*; do
-      [[ ! -f "$file" ]] && continue
-      [[ $file == *.pub ]] && continue
-      [[ $file == */known_hosts* ]] && continue
-      [[ $file == */config ]] && continue
-      ssh-add --apple-use-keychain "$file"
-    done
-  }
-fi
-
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Shell and environment
 # ═════════════════════════════════════════════════════════════════════════════

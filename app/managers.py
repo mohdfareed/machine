@@ -67,6 +67,7 @@ def install_package(package: Package, *, env: dict[str, str], dry_run: bool) -> 
                 "install",
                 "--id",
                 value,
+                "--no-upgrade",
                 "--accept-source-agreements",
                 "--accept-package-agreements",
             ]
@@ -80,20 +81,12 @@ def install_package(package: Package, *, env: dict[str, str], dry_run: bool) -> 
         command,
         env=env,
         dry_run=dry_run,
-        capture_output=source == "winget",
-        echo_output=source == "winget",
         check=source != "winget",
     )
     if result is None or source != "winget" or result.returncode == 0:
         return
-    output = (result.stdout or b"").decode(errors="replace").lower()
-    if "found an existing package already installed" in output and any(
-        message in output
-        for message in (
-            "no available upgrade found",
-            "no newer package versions are available from the configured sources",
-        )
-    ):
+    # APPINSTALLER_CLI_ERROR_PACKAGE_ALREADY_INSTALLED, including signed Windows exits.
+    if result.returncode & 0xFFFFFFFF == 0x8A150061:
         return
     raise RuntimeError(f"Winget installation failed (exit {result.returncode}): {value}")
 

@@ -1,6 +1,6 @@
 """Homelab (macOS) machine manifest."""
 
-from app.models import FileMapping, Machine, Package, PkgManager
+from app.models import Machine, Package, PkgManager
 from config import homelab, system
 from config.development import agents, python, vscode
 from config.terminal import emulators, git, shell, ssh
@@ -17,12 +17,6 @@ manifest = Machine(
         python,
         agents,
         vscode,
-    ],
-    files=[
-        FileMapping(
-            source="com.mc.backup.plist",
-            target="~/Library/LaunchAgents/com.mc.backup.plist",
-        ),
     ],
     packages=[
         Package(brew="go"),

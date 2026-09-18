@@ -114,7 +114,7 @@ def test_captured_output_is_replayed_only_when_requested(capfd):
             echo_output=echo,
         )
         assert result is not None
-        assert result.stdout == b"raw-output\n"
+        assert result.stdout == f"raw-output{os.linesep}".encode()
         assert ("raw-output" in capfd.readouterr().out.splitlines()) is echo
 
 

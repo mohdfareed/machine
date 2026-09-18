@@ -6,12 +6,10 @@ from app.env import PLATFORM
 from app.models import FileMapping, Module, Package, Platform
 
 match PLATFORM:
-    case Platform.MAC:
-        _1pass_path = "~/Library/Application Support/1Password/ssh"
     case Platform.WIN:
         _1pass_path = "%LOCALAPPDATA%/1Password/config/ssh"
-    case _:  # Linux
-        _1pass_path = "~/.config/1password/ssh"
+    case _:  # Unix
+        _1pass_path = "~/.config/1Password/ssh"
 
 module = Module(
     files=[

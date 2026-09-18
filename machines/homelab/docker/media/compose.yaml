@@ -37,7 +37,7 @@ services:
     volumes:
       - <<: *media-volume
       - ./data/plex:/config
-      - ${MC_HOMELAB_CACHE_DIR}/plex-transcode:/transcode
+      - plex-transcode:/transcode
     labels:
       homepage.group: Media
       homepage.name: Plex
@@ -113,3 +113,6 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+volumes:
+  plex-transcode:

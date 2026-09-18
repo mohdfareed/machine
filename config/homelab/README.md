@@ -24,11 +24,15 @@ and configure or verify access for that machine:
 Grant required Full Disk Access under Privacy & Security. Share selection and
 permissions are manual; deployment does not infer them.
 
+Configure macOS updates in **System Settings → General → Software Update →
+Automatic Updates**. OS updates and restarts follow those settings, independently
+of `mc upgrade`.
+
 ## Tailscale
 
-- Create Auth and API keys at
+- Create an auth key at
   [Tailscale Console](https://console.tailscale.com/admin/settings/keys)
-  and store them in `$MC_PRIVATE/machine.env` below.
+  and store it in `$MC_PRIVATE/machine.env` below.
 - Auth key properties:
   - Reusable,
   - ephemeral (optional),
@@ -38,7 +42,6 @@ permissions are manual; deployment does not infer them.
 ```env
 # `$MC_PRIVATE/machine.env`
 TAILNET_NAME=<tailnet-name-without-.ts.net>
-TAILSCALE_API_KEY=tskey-api-<id>-<secret>
 TS_DOCKER_AUTHKEY=tskey-client-<id>-<secret>
 ```
 
@@ -78,15 +81,13 @@ using one of three patterns:
 
 ## Docker
 
-Docker is automatically installed, but should be started for the first time and
-configured to run on boot.
+Finish Docker Desktop's first launch, then enable **Settings → General → Start
+Docker Desktop when you sign in to your computer**. After reboot, its user must
+sign in before Docker Desktop starts.
 
-The deployment script links `$MC_HOMELAB_DIR/<service>` to repository service
-directories (symlinks on Unix, junctions on Windows), then run `docker compose up`.
-Existing real paths are left untouched; move or migrate them separately before
-deploying. Compose defines the runtime data locations; relative bind mounts live
-inside the repository service directory. Example backup script at
-[`_backup.sh`](../../machines/homelab/scripts/_backup.sh).
+The deployment script runs Docker Compose directly from repository service
+directories. Compose defines the runtime data locations; relative bind mounts live
+inside the repository service directory.
 
 ### Add a service
 
@@ -99,8 +100,7 @@ Create a `<service>/compose.yaml` file per service at:
 flowchart TD
     Shared["config/homelab/docker/service"] --> Deploy["mc deploy homelab"]
     Machine["machines/id/docker/service"] --> Deploy
-    Deploy --> Link["$MC_HOMELAB_DIR/service → repo"]
-    Link --> Compose["Docker Compose"]
+    Deploy --> Compose["Docker Compose"]
 ```
 
 ### Deploy or update
@@ -112,7 +112,7 @@ mc deploy homelab
 ```
 
 This pulls/builds and starts **all** its Compose stacks.
-For an individual service, open its directory under `$MC_HOMELAB_DIR`:
+For an individual service, open its repository directory:
 
 ```sh
 mc::secrets # alias to load private env vars

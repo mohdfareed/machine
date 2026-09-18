@@ -18,17 +18,3 @@ etc.
 Grant the terminal app Full Disk Access before deploying (required to enable SSH).
 After every deployment, complete the Sharing review in the
 [shared homelab setup notes](../../config/homelab/README.md).
-
-## Backup
-
-Daily at **04:30**, keeping **14 snapshots per host**:
-`$MC_HOMELAB_STORAGE_DIR/Backups/<host>/<timestamp>.tar.gz`
-
-```sh
-mc::backup # start backup
-# log: `/tmp/mc-backup.log`
-```
-
-For backups to the external drive, enable `/bin/zsh` in **System Settings →
-Privacy & Security → Full Disk Access**. Without this, scheduled backups can
-fail with `Operation not permitted`.

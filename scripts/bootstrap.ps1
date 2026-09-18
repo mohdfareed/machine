@@ -39,19 +39,9 @@ else {
     "$HOME\.machine"
 }
 
-# Resolve python version from .python-version file if it exists.
-$repo = "https://raw.githubusercontent.com/mohdfareed/machine/main"
-$pythonVersion = Invoke-RestMethod $repo/.python-version
-
 # ═════════════════════════════════════════════════════════════════════════════
 # Bootstrap
 # ═════════════════════════════════════════════════════════════════════════════
-
-# Install system dependencies.
-if (-not (uv python list --only-installed | Select-String $pythonVersion)) {
-    Write-Host "Installing Python $pythonVersion..."
-    uv python install $pythonVersion
-}
 
 # Clone repo if needed.
 if (-not (Test-Path "$env:MC_HOME\.git")) {

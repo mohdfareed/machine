@@ -168,8 +168,8 @@ Application responsibilities and enforced boundaries are in [app/README.md](app/
 ```sh
 uv sync --dev           # Install dev dependencies
 uv run mc --help        # Run dev CLI without installing
-./scripts/fix.sh        # Format and auto-fix problems
-./scripts/check.sh      # Validate before committing
+./scripts/fix.sh        # Upgrade dependencies, auto-fix, and validate
+./scripts/check.sh      # Validate without changing files
 ./scripts/bootstrap.sh  # Install the dev build (symlinked)
 ```
 
