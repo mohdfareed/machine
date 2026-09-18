@@ -91,10 +91,13 @@ Remove-Variable f -ErrorAction SilentlyContinue
 # MARK: Configuration
 # ═════════════════════════════════════════════════════════════════════════════
 
+# Load user-defined completions.
+$completionDirectory = Join-Path (Split-Path -Parent $PROFILE.CurrentUserAllHosts) 'completions'
+Get-ChildItem -LiteralPath $completionDirectory -Filter '*.ps1' -File -ErrorAction SilentlyContinue |
+    ForEach-Object { . $_.FullName }
+Remove-Variable completionDirectory
+
 # Tool completions.
-if (Get-Command mc -ErrorAction SilentlyContinue) {
-    mc --show-completion | Out-String | Invoke-Expression
-}
 if (Get-Command uv -ErrorAction SilentlyContinue) {
     uv generate-shell-completion powershell | Out-String | Invoke-Expression
 }

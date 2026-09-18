@@ -10,13 +10,13 @@ from app.shell import powershell_executable, run
 
 
 def run_scripts(
-    scripts: list[str],
+    scripts: list[Path],
     *,
     env: dict[str, str],
     dry_run: bool,
 ) -> None:
     """Run selected scripts in order, stopping at the first failure."""
-    for script in (Path(path) for path in scripts):
+    for script in scripts:
         # Select the interpreter and prepare only the environment it needs.
         match script.suffix.lower():
             case ".py":

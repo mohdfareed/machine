@@ -1,5 +1,7 @@
 """1Password client module."""
 
+from pathlib import Path
+
 from app.env import PLATFORM
 from app.models import FileMapping, Module, Package, Platform
 
@@ -13,7 +15,7 @@ match PLATFORM:
 
 module = Module(
     files=[
-        FileMapping(source="agent.toml", target=f"{_1pass_path}/agent.toml"),
+        FileMapping(source="agent.toml", target=Path(_1pass_path) / "agent.toml"),
     ],
     packages=[
         Package(name="1password", cask="1password", winget="AgileBits.1Password"),

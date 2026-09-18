@@ -31,10 +31,8 @@ def load_machine(
     modules = _load_modules(machine.modules)
     if module_names:
         by_name = {module.name: module for module in modules}
-        if unknown := set(module_names) - by_name.keys():
-            raise ValueError(f"Unknown modules: {', '.join(sorted(unknown))}")
-        selected = set(module_names)
-        pending = list(module_names)
+        pending = _expand_modules(module_names, list(by_name))
+        selected = set(pending)
         while pending:
             for dependency in by_name[pending.pop()].depends:
                 if dependency in selected:
@@ -45,7 +43,7 @@ def load_machine(
 
     # Keep selected modules' overrides, with explicit machine mappings taking precedence.
     overrides: list[FileMapping] = []
-    override_targets: set[str] = set()
+    override_targets: set[Path] = set()
     for module in modules:
         for override in module.overrides:
             if not override.applies_to(machine_env.PLATFORM):
@@ -56,7 +54,7 @@ def load_machine(
                 continue
             overrides.append(
                 FileMapping(
-                    source=str(local_file),
+                    source=local_file,
                     target=override.target,
                     mode=override.mode,
                     platforms=override.platforms,
@@ -91,6 +89,7 @@ def load_machine(
 
 
 def _load_modules(selections: list[str]) -> list[Module]:
+    available = list_modules()
     resolved: dict[str, Module] = {}
     visiting: list[str] = []
 
@@ -101,10 +100,7 @@ def _load_modules(selections: list[str]) -> list[Module]:
             raise ValueError(f"Circular module dependency: {' → '.join([*visiting, name])}")
 
         # Locate and load the module declaration.
-        parts = name.split(".")
-        if any(not part or any(char in part for char in "/\\:") for part in parts):
-            raise ValueError(f"Invalid module name: {name}")
-        directory = machine_env.ROOT / "config" / Path(*parts)
+        directory = machine_env.ROOT / "config" / Path(*name.split("."))
         path = directory / "module.py"
         module = getattr(_import_py(path), "module", None)
         if not isinstance(module, Module):
@@ -114,23 +110,35 @@ def _load_modules(selections: list[str]) -> list[Module]:
 
         # Resolve prerequisites before recording this module.
         visiting.append(name)
+        module.depends = _expand_modules(module.depends, available)
         for dependency in module.depends:
             _add(dependency)
         visiting.pop()
         resolved[name] = module
 
-    # Expand machine groups before resolving dependencies.
-    available = list_modules()
+    # Expand selections before resolving their dependencies.
+    for name in _expand_modules(selections, available):
+        _add(name)
+
+    return list(resolved.values())
+
+
+def _expand_modules(selections: list[str], available: list[str]) -> list[str]:
+    expanded: list[str] = []
     for selection in selections:
+        parts = selection.split(".")
+        if any(not part or any(char in part for char in "/\\:") for part in parts):
+            raise ValueError(f"Invalid module name: {selection}")
+
         matches = [
             name for name in available if name == selection or name.startswith(selection + ".")
         ]
+
         if not matches:
             raise FileNotFoundError(f"No module or group: {selection}")
-        for name in matches:
-            _add(name)
+        expanded.extend(matches)
 
-    return list(resolved.values())
+    return list(dict.fromkeys(expanded))
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -231,32 +239,31 @@ def _resolve_packages(packages: list[Package], managers: list[PkgManager]) -> li
 
 def _resolve_files(files: list[FileMapping], env: dict[str, str]) -> list[FileMapping]:
     # Later overrides replace earlier mappings before source validation.
-    targets: dict[str, FileMapping] = {}
+    targets: dict[Path, FileMapping] = {}
     for file in files:
         if not file.applies_to(machine_env.PLATFORM):
             continue
 
-        file.target = str(machine_env.resolve_path(file.target, env))
+        file.target = machine_env.resolve_path(file.target, env)
         targets[file.target] = file
 
     for file in targets.values():
-        if not Path(file.source).exists():
+        if not file.source.exists():
             raise ValueError(f"File source missing: {file.source}")
     return list(targets.values())
 
 
-def _resolve_scripts(scripts: list[str]) -> list[str]:
+def _resolve_scripts(scripts: list[Path]) -> list[Path]:
     tags = {
-        ".macos": Platform.MAC,
+        ".mac": Platform.MAC,
         ".linux": Platform.LINUX,
         ".unix": Platform.UNIX,
         ".win": Platform.WIN,
         ".wsl": Platform.WSL,
     }
 
-    resolved: list[str] = []
-    for script in dict.fromkeys(scripts):
-        path = Path(script)
+    resolved: list[Path] = []
+    for path in dict.fromkeys(scripts):
         if path.suffix.lower() not in SCRIPT_SUFFIXES or path.stem.startswith("_"):
             continue
 
@@ -265,9 +272,9 @@ def _resolve_scripts(scripts: list[str]) -> list[str]:
             continue
 
         if not path.is_file():
-            raise ValueError(f"Script missing: {script}")
+            raise ValueError(f"Script missing: {path}")
 
-        resolved.append(script)
+        resolved.append(path)
     return resolved
 
 
@@ -279,8 +286,8 @@ def _resolve_scripts(scripts: list[str]) -> list[str]:
 def _resolve_paths(config: Machine | Module, directory: Path) -> None:
     # Resolve explicit paths relative to the declaration directory.
     for file in config.files:
-        file.source = str(directory / file.source)
-    config.scripts = [str(directory / script) for script in config.scripts]
+        file.source = directory / file.source
+    config.scripts = [directory / script for script in config.scripts]
 
     # Discover additional scripts without repeating explicit entries.
     existing = set(config.scripts)
@@ -293,7 +300,8 @@ def _import_py(path: Path) -> object:
     if not path.is_file():
         raise FileNotFoundError(f"No declaration: {path}")
 
-    spec = importlib.util.spec_from_file_location(path.stem, path)
+    name = ".".join(path.relative_to(machine_env.ROOT).with_suffix("").parts)
+    spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
         raise ImportError(f"Cannot load: {path}")
 

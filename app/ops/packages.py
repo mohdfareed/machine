@@ -15,7 +15,7 @@ from app.shell import find_executable, run
 def install_packages(
     packages: list[Package], *, env: dict[str, str], dry_run: bool, reporter=print
 ) -> None:
-    """Install missing packages and return skipped names, stopping at the first failure."""
+    """Install missing packages, stopping at the first failure."""
     installed: defaultdict[tuple[PackageSource, str], bool] = defaultdict(bool)
     for package in packages:
         try:

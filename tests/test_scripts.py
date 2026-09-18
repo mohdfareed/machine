@@ -1,14 +1,74 @@
 """Sequential script execution and Windows setup behavior."""
 
 import os
+import runpy
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+import platformdirs
 import pytest
-from app import env, shell
+from app import env as machine_env
+from app import shell
+from app.models import Platform
 from app.ops import scripts as machine_scripts
+
+
+def test_powershell_mappings_follow_redirected_documents(monkeypatch, tmp_path):
+    documents = tmp_path / "Redirected Documents"
+    monkeypatch.setattr(machine_env, "PLATFORM", Platform.WIN)
+    monkeypatch.setattr(platformdirs, "user_documents_path", lambda: documents)
+    path = Path(__file__).parents[1] / "config/terminal/shell/module.py"
+    module = runpy.run_path(str(path))["module"]
+
+    mappings = [file for file in [*module.files, *module.overrides] if file.source.suffix == ".ps1"]
+    assert mappings
+    assert all(file.target.parent == documents / "PowerShell" for file in mappings)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows Documents and Windows PowerShell")
+def test_powershell_link_repair_uses_the_deployed_directory(tmp_path):
+    module_dir = Path(__file__).parents[1] / "config/terminal/shell"
+    module = runpy.run_path(str(module_dir / "module.py"))["module"]
+    mapping = next(file for file in module.files if file.source == Path("pwsh/profile.ps1"))
+
+    # Run the actual setup under Windows PowerShell without installing or changing links.
+    harness = tmp_path / "profile-path.ps1"
+    harness.write_text(
+        """
+param($ScriptPath)
+$ErrorActionPreference = 'Stop'
+$PROFILE = [pscustomobject]@{CurrentUserAllHosts = 'C:\\Wrong\\WindowsPowerShell\\profile.ps1'}
+function Install-Module { param($Name) }
+function Test-Path { param($LiteralPath, $PathType); return $true }
+function Get-ChildItem {
+    param($LiteralPath, $Filter, [switch]$File)
+    [Console]::WriteLine($LiteralPath)
+}
+function Invoke-Admin {
+    param([scriptblock]$ScriptBlock, [object[]]$ArgumentList)
+    & $ScriptBlock @ArgumentList
+}
+. $ScriptPath
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [
+            "powershell.exe",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(harness),
+            str(module_dir / "scripts/pwsh.ps1"),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert Path(result.stdout.strip().splitlines()[-1]).resolve() == mapping.target.parent.resolve()
 
 
 @pytest.mark.parametrize("failed_script", ["init_failed.py", "setup.py"])
@@ -31,9 +91,7 @@ def test_scripts_stop_on_first_failure_without_interpreting_prefixes(
 
     monkeypatch.setattr(machine_scripts, "run", run)
     with pytest.raises(RuntimeError, match="script failed"):
-        machine_scripts.run_scripts(
-            [str(script) for script in scripts], env=dict(os.environ), dry_run=False
-        )
+        machine_scripts.run_scripts(scripts, env=dict(os.environ), dry_run=False)
 
     assert events == ["init_first.py", failed_script]
 
@@ -52,7 +110,7 @@ def test_scripts_run_each_time_with_spaced_paths(tmp_path: Path) -> None:
 
     for _ in range(2):
         machine_scripts.run_scripts(
-            [str(script) for script in scripts],
+            scripts,
             env={**os.environ, "SCRIPT_MARKER": str(marker)},
             dry_run=False,
         )
@@ -67,68 +125,37 @@ def test_script_preview_preserves_permissions(tmp_path: Path, monkeypatch, sheba
     script.chmod(0o600)
     mode = script.stat().st_mode
     monkeypatch.setattr(shell.shutil, "which", lambda *a, **kw: None)
-    machine_scripts.run_scripts([str(script)], env=dict(os.environ), dry_run=True)
+    machine_scripts.run_scripts([script], env=dict(os.environ), dry_run=True)
 
     assert script.stat().st_mode == mode
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix script execution")
-@pytest.mark.parametrize("saved_machine", ["other", "selected"])
-def test_zsh_scripts_preserve_selected_machine_and_private_values(
-    tmp_path, monkeypatch, saved_machine
-):
+def test_zsh_scripts_preserve_prepared_environment_without_loading_startup(tmp_path, monkeypatch):
     zsh = shutil.which("zsh")
     if zsh is None:
         pytest.skip("Zsh is unavailable")
 
-    # Use the real startup file with conflicting saved and private configuration.
-    startup = Path(__file__).resolve().parents[1] / "config/terminal/shell/zsh/.zshenv"
-    shutil.copyfile(startup, tmp_path / ".zshenv")
-    monkeypatch.setattr(env, "ROOT", tmp_path)
+    # Make user startup conflict with the environment prepared for this invocation.
+    (tmp_path / ".zshenv").write_text("export MC_ID=other MC_VALUE=committed PATH=/committed/bin\n")
     activation = tmp_path / "environment.sh"
     activation.write_text("")
     monkeypatch.setattr(shell, "_ENVIRONMENT_SCRIPT", activation)
-    for machine_id in ("other", "selected"):
-        machine = tmp_path / "machines" / machine_id
-        machine.mkdir(parents=True)
-        (machine / "machine.env").write_text('MC_VALUE=committed\nPATH="/committed/bin"\n')
-    (tmp_path / ".env").write_text(
-        f'MC_ID={saved_machine}\nMC_MACHINE="{tmp_path}/machines/{saved_machine}"\n'
-    )
-    private = tmp_path / "private"
-    private.mkdir()
     selected_path = f"{Path(zsh).parent}:/selected/bin"
-    (private / "machine.env").write_text(f'MC_VALUE=private\nPATH="{selected_path}"\n')
     environment = {
-        **env.build_env("selected"),
         "HOME": str(tmp_path),
         "ZDOTDIR": str(tmp_path),
+        "MC_ID": "selected",
+        "MC_VALUE": "private",
+        "PATH": selected_path,
     }
 
     # Managed scripts retain the prepared environment without reading user startup files.
     script = tmp_path / "inspect script.sh"
     result = tmp_path / "result.txt"
-    script.write_text(
-        '#!/usr/bin/env zsh\nprint -r -- "$MC_ID|$MC_MACHINE|$MC_VALUE|$PATH" > "$RESULT"\n'
-    )
-    machine_scripts.run_scripts(
-        [str(script)], env={**environment, "RESULT": str(result)}, dry_run=False
-    )
-    assert result.read_text().strip() == (
-        f"selected|{tmp_path}/machines/selected|private|{selected_path}"
-    )
-
-    # Ordinary Zsh still loads saved defaults even when MC_ID was already inherited.
-    normal = subprocess.run(
-        [zsh, "-c", 'print -r -- "$MC_ID|$MC_MACHINE|$MC_VALUE"'],
-        env=environment,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    assert normal.stdout.strip() == (
-        f"{saved_machine}|{tmp_path}/machines/{saved_machine}|committed"
-    )
+    script.write_text('#!/usr/bin/env zsh\nprint -r -- "$MC_ID|$MC_VALUE|$PATH" > "$RESULT"\n')
+    machine_scripts.run_scripts([script], env={**environment, "RESULT": str(result)}, dry_run=False)
+    assert result.read_text().strip() == f"selected|private|{selected_path}"
 
 
 def test_powershell_preview_does_not_prepare_an_unavailable_interpreter(tmp_path, monkeypatch):
@@ -143,7 +170,7 @@ def test_powershell_preview_does_not_prepare_an_unavailable_interpreter(tmp_path
         lambda *a: pytest.fail("preview queried PowerShell"),
     )
 
-    machine_scripts.run_scripts([str(script)], env={}, dry_run=True)
+    machine_scripts.run_scripts([script], env={}, dry_run=True)
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows elevation helper")

@@ -2,6 +2,7 @@
 
 import sys
 from contextlib import nullcontext
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -142,11 +143,11 @@ def test_machine_selection_reads_env_file_instead_of_shell(tmp_path, monkeypatch
 
 def test_paths_use_supplied_environment_and_reject_unresolved_targets(tmp_path, monkeypatch):
     values = {"DEV": str(tmp_path), "HOME": str(tmp_path), "USERPROFILE": str(tmp_path)}
-    assert env.resolve_path("$DEV/config", values) == tmp_path / "config"
-    assert env.resolve_path("~/.config", values) == tmp_path / ".config"
+    assert env.resolve_path(Path("$DEV/config"), values) == tmp_path / "config"
+    assert env.resolve_path(Path("~/.config"), values) == tmp_path / ".config"
     with pytest.raises(ValueError, match="Unresolved path variable"):
-        env.resolve_path("$MISSING/config", values)
+        env.resolve_path(Path("$MISSING/config"), values)
     with pytest.raises(ValueError, match="must be absolute"):
-        env.resolve_path("relative/config", values)
+        env.resolve_path(Path("relative/config"), values)
     monkeypatch.setattr(env, "is_windows", True)
-    assert env.resolve_path("%Dev%/config", values) == tmp_path / "config"
+    assert env.resolve_path(Path("%Dev%/config"), values) == tmp_path / "config"

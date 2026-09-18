@@ -37,7 +37,7 @@ def setup_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run: 
 
     script = _SETUP_SCRIPT_WIN if is_windows else _SETUP_SCRIPT_UNIX
     script_env = {**env, "MC_PKG_MANAGERS": " ".join(managers)}
-    run_scripts([str(script)], env=script_env, dry_run=dry_run)
+    run_scripts([script], env=script_env, dry_run=dry_run)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

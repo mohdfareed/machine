@@ -40,7 +40,10 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     git(checkout, "remote", "set-url", "origin", str(tmp_path / "unavailable-fork"))
     monkeypatch.setattr(env, "ROOT", checkout)
     monkeypatch.setattr(sync, "_CANONICAL_REPO_URL", str(canonical))
-    monkeypatch.setattr(sync, "_ZSH_COMPLETION_FILE", tmp_path / "home/.zfunc/_mc")
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setattr(sync, "user_documents_path", lambda: tmp_path / "documents")
 
     def run(cmd, **kwargs):
         if kwargs["dry_run"]:
@@ -59,10 +62,15 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     def query(cmd, **kwargs):
         if cmd[:4] == ["uv", "tool", "dir", "--bin"]:
             return subprocess.CompletedProcess(cmd, 0, stdout=str(tmp_path / "tool bin"))
-        executable = tmp_path / "tool bin" / cli.COMMAND
+        executable = tmp_path / "tool bin" / (cli.COMMAND + (".exe" if env.is_windows else ""))
         if cmd == [str(executable)]:
-            assert kwargs["env"] == {"_MC_COMPLETE": "source_zsh"}
-            return subprocess.CompletedProcess(cmd, 0, stdout="#compdef mc\n")
+            scripts = {
+                "source_zsh": "\n#compdef mc\n",
+                "source_powershell": "Register-ArgumentCompleter -Native -CommandName mc\n",
+            }
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout=scripts[kwargs["env"]["_MC_COMPLETE"]]
+            )
         return original_query(cmd, **kwargs)
 
     monkeypatch.setattr(sync, "query", query)
@@ -75,6 +83,19 @@ def test_machine_validation_is_case_insensitive(monkeypatch):
     assert cli.validate_machine("HOMELAB") == "homelab"
     with pytest.raises(typer.BadParameter):
         cli.validate_machine("unknown")
+
+
+def test_module_completion_uses_qualified_names_and_groups(monkeypatch):
+    monkeypatch.setattr(
+        cli, "list_modules", lambda: ["home.editor", "work.editor", "work.terminal.shell"]
+    )
+    assert [name for name, _ in cli.complete_modules("work")] == [
+        "work",
+        "work.editor",
+        "work.terminal",
+        "work.terminal.shell",
+    ]
+    assert cli.complete_modules("editor") == []
 
 
 @pytest.mark.parametrize("command", ["deploy", "show"])
@@ -109,8 +130,10 @@ def test_machine_selection_is_read_at_invocation(tmp_path, monkeypatch, command)
     assert persisted == []
 
 
-def test_sync_restores_local_edits(sync_repos):
+@pytest.mark.parametrize("windows", [False, True], ids=["unix", "windows"])
+def test_sync_restores_local_edits(sync_repos, monkeypatch, windows):
     canonical, checkout = sync_repos
+    monkeypatch.setattr(env, "is_windows", windows)
 
     # Change different parts of the same tracked file locally and upstream.
     original = "".join(f"setting {i}\n" for i in range(10))
@@ -127,10 +150,19 @@ def test_sync_restores_local_edits(sync_repos):
 
     assert git(checkout, "rev-parse", "HEAD") == git(canonical, "rev-parse", "HEAD")
     assert (checkout / "config.txt").read_text() == expected
+    completion = Path.home() / ".zsh/completions/_mc"
     if env.is_windows:
-        assert not sync._ZSH_COMPLETION_FILE.exists()
+        assert not completion.exists()
     else:
-        assert sync._ZSH_COMPLETION_FILE.read_text() == "#compdef mc\n"
+        assert completion.read_text() == "#compdef mc\n"
+    powershell_dir = (
+        canonical.parent / "documents/PowerShell"
+        if windows
+        else canonical.parent / "config/powershell"
+    )
+    assert (powershell_dir / "completions/mc.ps1").read_text() == (
+        "Register-ArgumentCompleter -Native -CommandName mc\n"
+    )
 
 
 def test_sync_autostash_conflict_preserves_edits(sync_repos):
@@ -172,12 +204,35 @@ def test_sync_fetch_failure_preserves_checkout(sync_repos, monkeypatch):
     assert git(checkout, "rev-parse", "HEAD") == before
 
 
-def test_sync_dry_run_does_not_fetch(sync_repos, monkeypatch):
+@pytest.mark.parametrize("windows", [False, True], ids=["unix", "windows"])
+def test_sync_dry_run_does_not_fetch(sync_repos, monkeypatch, windows):
     _, checkout = sync_repos
+    monkeypatch.setattr(env, "is_windows", windows)
     result = CliRunner().invoke(entry._create_app(), ["sync", "--dry-run"])
     assert result.exit_code == 0, result.exception
     assert not (checkout / ".git" / "FETCH_HEAD").exists()
-    assert not sync._ZSH_COMPLETION_FILE.exists()
+    assert not (Path.home() / ".zsh/completions/_mc").exists()
+    assert not (checkout.parent / "documents").exists()
+    assert not (checkout.parent / "config").exists()
+
+
+def test_sync_completion_failure_preserves_existing_file(sync_repos, monkeypatch):
+    _, checkout = sync_repos
+    monkeypatch.setattr(env, "is_windows", False)
+    completion = checkout.parent / "config/powershell/completions/mc.ps1"
+    completion.parent.mkdir(parents=True)
+    completion.write_text("existing completion\n")
+    original_query = sync.query
+
+    def query(cmd, **kwargs):
+        if "_MC_COMPLETE" in kwargs["env"]:
+            raise RuntimeError("Completion generation failed")
+        return original_query(cmd, **kwargs)
+
+    monkeypatch.setattr(sync, "query", query)
+    with pytest.raises(RuntimeError, match="Completion generation failed"):
+        sync.sync()
+    assert completion.read_text() == "existing completion\n"
 
 
 @pytest.mark.parametrize("failed_phase", [None, "preflight", "packages"])
@@ -188,8 +243,8 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
     configuration = models.Machine(
         pkg_managers=managers,
         modules=["apps"],
-        files=[models.FileMapping(source="/source", target="/target")],
-        scripts=["init_apps.ps1", "apps.ps1", "up_apps.ps1"],
+        files=[models.FileMapping(source=Path("/source"), target=Path("/target"))],
+        scripts=[Path("init_apps.ps1"), Path("apps.ps1"), Path("up_apps.ps1")],
         packages=[models.Package(name="Example.App", winget="Example.App")],
     )
     configuration.packages[0].selected_source = "winget"
@@ -220,9 +275,9 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
 
     def run_scripts(scripts, *, env, dry_run):
         assert env is selected_env
-        events.extend(scripts)
+        events.extend(script.name for script in scripts)
 
-    def install_packages(packages, *, env, dry_run):
+    def install_packages(packages, *, env, dry_run, reporter):
         assert env is selected_env
         assert [package.selected_source for package in packages] == ["winget"]
         record("packages")
@@ -290,7 +345,7 @@ def test_upgrade_passes_selected_environment_and_stops_on_failure(monkeypatch):
     from app.models import Machine
 
     selected_env = {"MC_ID": "test"}
-    configuration = Machine(scripts=["init_setup.py", "setup.py", "up_setup.py"])
+    configuration = Machine(scripts=[Path("init_setup.py"), Path("setup.py"), Path("up_setup.py")])
     events = []
     monkeypatch.setattr(upgrade, "get_current_machine", lambda: "test")
     monkeypatch.setattr(upgrade, "build_env", lambda machine_id: selected_env)
@@ -303,7 +358,7 @@ def test_upgrade_passes_selected_environment_and_stops_on_failure(monkeypatch):
 
     monkeypatch.setattr(upgrade, "upgrade_managers", managers)
 
-    def packages(packages, *, env, dry_run):
+    def packages(packages, *, env, dry_run, reporter):
         assert env is selected_env and dry_run
         events.append("packages")
         raise RuntimeError("upgrade failed")

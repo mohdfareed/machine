@@ -1,6 +1,5 @@
 """Deploy the selected machine configuration."""
 
-from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -95,9 +94,7 @@ def deploy(
 
     # Run initialization scripts before installing packages.
     reporting.heading(f"Running init scripts")
-    for script in [
-        script for script in configuration.scripts if Path(script).name.startswith("init_")
-    ]:
+    for script in [script for script in configuration.scripts if script.name.startswith("init_")]:
         run_scripts([script], env=env, dry_run=dry_run)
 
     # Install missing packages.
@@ -107,9 +104,7 @@ def deploy(
     # Run the deployment scripts.
     reporting.heading("Running scripts")
     post_scripts = [
-        script
-        for script in configuration.scripts
-        if not Path(script).name.startswith(("init_", "up_"))
+        script for script in configuration.scripts if not script.name.startswith(("init_", "up_"))
     ]
     run_scripts(post_scripts, env=env, dry_run=dry_run)
 

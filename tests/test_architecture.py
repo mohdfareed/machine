@@ -31,6 +31,7 @@ def test_application_import_boundaries() -> None:
         "app.cli": {"app.discovery", "app.env"},
         "app.cli.entry": {
             "app.cli",
+            "app.env",
             "app.reporting",
             *(f"app.cli.{name}" for name in ("deploy", "upgrade", "sync", "info")),
         },

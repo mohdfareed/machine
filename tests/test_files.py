@@ -13,7 +13,7 @@ from app.ops import files as machine_files
 def test_missing_source_fails_before_target_changes(tmp_path):
     target = tmp_path / "target"
     target.write_text("existing")
-    mapping = FileMapping(source=str(tmp_path / "missing"), target=str(target))
+    mapping = FileMapping(source=str(tmp_path / "missing"), target=target)
     with pytest.raises(FileNotFoundError):
         machine_files.deploy_file(mapping, env={}, dry_run=False)
     assert target.read_text() == "existing"
@@ -38,9 +38,7 @@ def test_failed_link_preserves_data_and_reports_backup(monkeypatch, tmp_path, is
 
     monkeypatch.setattr(machine_files, "_create_link", deny_link)
     with pytest.raises(OSError) as error:
-        machine_files.deploy_file(
-            FileMapping(source=str(source), target=str(target)), env={}, dry_run=False
-        )
+        machine_files.deploy_file(FileMapping(source=source, target=target), env={}, dry_run=False)
     assert str(backup) in str(error.value)
     assert backup_data.read_text() == "existing"
     assert source_data.read_text() == "new"
@@ -53,9 +51,7 @@ def test_existing_hard_link_is_unchanged(tmp_path):
     source.write_text("settings")
     os.link(source, target)
     assert (
-        machine_files.deploy_file(
-            FileMapping(source=str(source), target=str(target)), env={}, dry_run=False
-        )
+        machine_files.deploy_file(FileMapping(source=source, target=target), env={}, dry_run=False)
         is None
     )
     assert not (tmp_path / "target.backup").exists()
@@ -68,7 +64,7 @@ def test_permission_preview_matches_real_change(tmp_path):
     source.write_text("settings")
     source.chmod(0o644)
     target.symlink_to(source)
-    mapping = FileMapping(source=str(source), target=str(target), mode=0o600)
+    mapping = FileMapping(source=source, target=target, mode=0o600)
     assert machine_files.deploy_file(mapping, env={}, dry_run=True) == target
     assert stat.S_IMODE(source.stat().st_mode) == 0o644
     assert machine_files.deploy_file(mapping, env={}, dry_run=False) == target
@@ -81,7 +77,7 @@ def test_windows_acl_reset_clears_explicit_grants_and_preview_does_not_write(mon
     target = tmp_path / "target"
     source.write_text("settings")
     target.symlink_to(source)
-    mapping = FileMapping(source=str(source), target=str(target), mode=0o600)
+    mapping = FileMapping(source=source, target=target, mode=0o600)
     env = {"PATH": "chosen-path"}
     commands = []
     monkeypatch.setattr(machine_files, "is_windows", True)
@@ -125,7 +121,7 @@ def test_numbered_backups_are_preserved(tmp_path):
     source.write_text("new")
     target.write_text("existing")
     (tmp_path / "settings.json.backup").write_text("older")
-    mapping = FileMapping(source=str(source), target=str(target))
+    mapping = FileMapping(source=source, target=target)
     assert machine_files.deploy_file(mapping, env={}, dry_run=True) == target
     assert target.read_text() == "existing"
     assert machine_files.deploy_file(mapping, env={}, dry_run=False) == target

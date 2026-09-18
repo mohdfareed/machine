@@ -43,9 +43,10 @@ def test_load_machine_validates_only_applicable_selected_sources(
     selected = tmp_path / "config" / "selected"
     selected.mkdir(parents=True)
     (selected / "module.py").write_text(
+        "from pathlib import Path\n"
         "from app.models import FileMapping, Module, Platform\n"
         "module = Module(files=[\n"
-        "    FileMapping(source='settings.conf', target='~/.config'),\n"
+        "    FileMapping(source=Path('settings.conf'), target='~/.config'),\n"
         "    FileMapping(source='missing.conf', target='$UNDEFINED/config', "
         "platforms=[Platform.WIN]),\n"
         "], scripts=['missing.win.ps1', '_helper.py'])\n"
@@ -66,7 +67,8 @@ def test_load_machine_validates_only_applicable_selected_sources(
     )
 
     configuration = load_machine("test", ["selected"], env=selected_env)
-    assert [file.source for file in configuration.files] == [str(source)]
+    assert [file.source for file in configuration.files] == [source]
+    assert configuration.files[0].target == Path(selected_env["HOME"]) / ".config"
     assert configuration.scripts == []
 
     source.unlink()
@@ -83,11 +85,12 @@ def test_module_dependencies_loaded_once(monkeypatch, tmp_path: Path, cycle, sel
     machine_dir.mkdir(parents=True)
     for name, dependencies in {
         "core": [],
-        "base": ["server"] if cycle else [],
+        "base/common": ["server"] if cycle else [],
+        "base/network": [],
         "client": ["base"],
         "server": ["client"],
     }.items():
-        (config_dir / name).mkdir()
+        (config_dir / name).mkdir(parents=True, exist_ok=True)
         (config_dir / name / "module.py").write_text(
             f"from app.models import Module\nmodule = Module(depends={dependencies!r})\n",
             encoding="utf-8",
@@ -113,9 +116,12 @@ manifest = Machine(modules=['server', 'client'])
             load_machine("test", env=selected_env)
     else:
         manifest = load_machine("test", env=selected_env)
-        assert manifest.modules == ["base", "client", "server"]
+        assert manifest.modules == ["base.common", "base.network", "client", "server"]
+        assert load_machine("test", ["server"], env=selected_env).modules == manifest.modules
 
-    assert len(imported) == len(set(imported)) == 4
+    expected = 4 if cycle else 5
+    assert len(set(imported)) == expected
+    assert len(imported) == expected * (1 if cycle else 2)
 
 
 @pytest.mark.parametrize("explicit", [False, True], ids=["module-override", "explicit-mapping"])
@@ -158,8 +164,8 @@ def test_manifest_override_preserves_metadata(
 
     assert len(manifest.files) == 1
     override = manifest.files[0]
-    assert override.source == str(explicit_config if explicit else local_config)
-    assert override.target == str(Path(selected_env["HOME"]) / ".example/config")
+    assert override.source == (explicit_config if explicit else local_config)
+    assert override.target == Path(selected_env["HOME"]) / ".example/config"
     assert override.mode == 0o600
     assert override.platforms == [Platform.UNIX, Platform.WIN]
     filtered = load_machine("test", ["example"], env=selected_env)
@@ -211,19 +217,21 @@ def test_platform_matching_is_directional_and_shared(monkeypatch, tmp_path: Path
         monkeypatch.setattr(machine_env, "PLATFORM", platform)
         for target in Platform:
             assert platform.is_a(target) == (target in matches)
-            file = FileMapping(source="source", target="target", platforms=[target])
+            file = FileMapping(source=Path("source"), target=Path("target"), platforms=[target])
             package = Package(name="example", brew="example", platforms=[target])
             assert file.applies_to(platform) == (target in matches)
             assert package.applies_to(platform) == (target in matches)
-            tag = "win" if target == Platform.WIN else target.value
+            tag = {Platform.MAC: "mac", Platform.WIN: "win"}.get(target, target.value)
             script = tmp_path / f"setup.{tag}.sh"
             script.write_text("#!/bin/sh\n")
-            assert bool(machine_loader._resolve_scripts([str(script)])) == (target in matches)
-        assert FileMapping(source="source", target="target").applies_to(platform)
-        assert not FileMapping(source="source", target="target", platforms=[]).applies_to(platform)
+            assert bool(machine_loader._resolve_scripts([script])) == (target in matches)
+        assert FileMapping(source=Path("source"), target=Path("target")).applies_to(platform)
+        assert not FileMapping(
+            source=Path("source"), target=Path("target"), platforms=[]
+        ).applies_to(platform)
         script = tmp_path / "setup.sh"
         script.write_text("#!/bin/sh\n")
-        assert machine_loader._resolve_scripts([str(script)]) == [str(script)]
+        assert machine_loader._resolve_scripts([script]) == [script]
 
 
 @pytest.mark.parametrize("selection", ["tools.editor", "tools"])
@@ -259,13 +267,68 @@ manifest = Machine(modules=[{selection!r}])
     assert list_modules() == ["core", "tools.base", "tools.editor", "toolsmith.editor"]
     manifest = load_machine("test", env=selected_env)
     assert manifest.modules == ["tools.base", "tools.editor"]
-    assert manifest.files[0].source == str(editor / "settings.json")
-    assert manifest.scripts == [str(script)]
+    assert manifest.files[0].source == editor / "settings.json"
+    assert manifest.scripts == [script]
 
-    filtered = load_machine("test", ["tools.editor"], env=selected_env)
-    assert filtered.modules == ["tools.base", "tools.editor"]
-    assert filtered.files == manifest.files
-    assert filtered.scripts == manifest.scripts
+    for module_filter in [["tools.editor"], ["tools"], ["tools", "tools.editor"]]:
+        filtered = load_machine("test", module_filter, env=selected_env)
+        assert filtered.modules == ["tools.base", "tools.editor"]
+        assert filtered.files == manifest.files
+        assert filtered.scripts == manifest.scripts
+
+    for unknown in ["editor", "tool", "toolsmith"]:
+        with pytest.raises(FileNotFoundError, match="No module or group"):
+            load_machine("test", [unknown], env=selected_env)
+
+
+def test_same_leaf_modules_keep_distinct_inputs(monkeypatch, tmp_path, selected_env):
+    monkeypatch.setattr(machine_env, "ROOT", tmp_path)
+    machine = tmp_path / "machines" / "test"
+    machine.mkdir(parents=True)
+    (machine / "machine.py").write_text(
+        "from app.models import Machine\n"
+        "manifest = Machine(modules=['work.editor', 'home.editor'])\n"
+    )
+    for group in ["work", "home"]:
+        directory = tmp_path / "config" / group / "editor"
+        directory.mkdir(parents=True)
+        (directory / "module.py").write_text(
+            "from app.models import FileMapping, Module, Package\n"
+            "module = Module(name='editor', files=[\n"
+            f"    FileMapping(source='settings', target='~/{group}/settings')\n"
+            "], overrides=[\n"
+            f"    FileMapping(source='{group}.local', target='~/{group}/local')\n"
+            "], packages=[Package(name=__name__, cmd='setup')])\n"
+        )
+        (directory / "settings").write_text(group)
+        (machine / f"{group}.local").write_text(group)
+
+    configuration = load_machine("test", env=selected_env)
+    assert configuration.modules == ["work.editor", "home.editor"]
+    assert [package.name for package in configuration.packages] == [
+        "config.work.editor.module",
+        "config.home.editor.module",
+    ]
+    for group in ["work", "home"]:
+        filtered = load_machine("test", [group], env=selected_env)
+        assert filtered.modules == [f"{group}.editor"]
+        assert [file.source for file in filtered.files] == [
+            tmp_path / "config" / group / "editor" / "settings",
+            machine / f"{group}.local",
+        ]
+        assert {file.target.parent for file in filtered.files} == {
+            Path(selected_env["HOME"]) / group
+        }
+
+
+def test_discovery_rejects_case_collisions(monkeypatch, tmp_path):
+    monkeypatch.setattr(machine_env, "ROOT", tmp_path)
+    config = tmp_path / "config"
+    config.mkdir()
+    # Simulate a case-sensitive host so this regression also runs on Windows and macOS.
+    monkeypatch.setattr(Path, "walk", lambda path: iter([(path, ["Tools", "tools"], [])]))
+    with pytest.raises(ValueError, match="differ only by case"):
+        list_modules()
 
 
 @pytest.mark.parametrize(

@@ -59,11 +59,11 @@ def set_current_machine(machine_id: str) -> None:
     _ENV_FILE.write_text(contents, encoding="utf-8")
 
 
-def resolve_path(value: str, env: dict[str, str]) -> Path:
+def resolve_path(value: Path, env: dict[str, str]) -> Path:
     """Expand a configured path using the selected environment and require an absolute path."""
     # Expand references before resolving the current user's home directory.
     variables = {**os.environ, **env}
-    expanded = _expand(value, variables)
+    expanded = _expand(str(value), variables)
     if reference := _ENV_REFERENCE.search(expanded):
         raise ValueError(f"Unresolved path variable: {reference.group(0)}")
 
@@ -84,7 +84,7 @@ def build_env(machine_id: str, *, include_private: bool = True) -> dict[str, str
     env = {**base, **_read_env(Path(base["MC_MACHINE"]) / "machine.env", {**os.environ, **base})}
     for key in ("MC_HOME", "MC_ID", "MC_MACHINE"):
         env[key] = base[key]
-    env["MC_PRIVATE"] = str(resolve_path(env["MC_PRIVATE"], env))
+    env["MC_PRIVATE"] = str(resolve_path(Path(env["MC_PRIVATE"]), env))
     if not include_private:
         return env
 

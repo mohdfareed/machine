@@ -7,8 +7,9 @@ with machine-specific configuration and overrides.
 The `mc` CLI deploys configuration, installs missing packages, runs maintenance,
 and syncs repository changes across machines.
 
-The [homelab](config/homelab/README.md) configuration extends this to self-hosted services.
-It manages a Docker-based server setup and configuration and service deployment.
+The [homelab](config/homelab/README.md) configuration extends this to
+self-hosted services. It manages a Docker-based server setup and configuration
+and service deployment.
 
 ## Bootstrap
 
@@ -59,6 +60,11 @@ mc show              # Inspect resolved configuration
 completion. Local edits are preserved. Conflicts stop the sync; use Git to
 resolve them manually then re-run.
 
+`mc show` lists configured files, packages, and scripts for the platform.
+`mc deploy -n` previews deployment without making changes. `-n`/`--dry-run`
+also applies to `upgrade` and `sync`.
+Add `--debug` to show exception tracebacks.
+
 ### Machines
 
 Create `machines/<id>/machine.py`:
@@ -75,10 +81,12 @@ manifest = Machine(
 > **NOTE:** A Windows machine's manifest is also used during the WSL deployment.
 > Ensure the manifest configures WSL using the appropriate platform flags.
 
-The default machine is `MC_ID` in `~/.env`; the CLI and shell startup use that file.
-Scripts launched by `mc` preserve the environment prepared for their selected machine.
-With no saved selection, deployment prompts for a machine.
-Use `mc list` to find module names to add. Replace `<id>` below with the directory name:
+The deployed machine is stored in `MC_ID` at `~/.env`; the CLI and shell
+startup use that file. Scripts launched by `mc` preserve the environment
+prepared for their selected machine.
+
+Use `mc list` to find module names to add.
+Replace `<id>` below with the module name:
 
 ```sh
 mc show -m <id>    # Inspect the resolved manifest
@@ -95,19 +103,20 @@ from app.models import Module
 module = Module()
 ```
 
-Add its name to the manifest's `modules` list, then `mc deploy <name>` for just
-that module on the selected machine. Nested modules use dotted names:
-`config/terminal/git/module.py` becomes `terminal.git`, including in `depends`.
+Add its name to the manifest's `modules` list, then `mc deploy <name>` to
+set up on that module on the selected machine. Nested modules use dotted names:
+`config/terminal/git/module.py` becomes `terminal.git`.
 Discovery descends through grouping folders and stops at each `module.py`;
 **folder names cannot contain dots.**
-Files and scripts remain relative to their module folder.
-In manifests, `modules=["terminal"]` includes all modules under that grouping folder,
-including newly added ones. CLI filters and `depends` still use exact module names.
+
+In manifests, `modules=["terminal"]` includes all modules under that grouping
+folder, including newly added ones.
+Files and scripts declared in the modules remain relative to their module folder.
 
 ### Scripts
 
 Drop scripts directly in `config/<name>/scripts/` or `machines/<id>/scripts/`.
-Top-level `.sh`, `.py`, and `.ps1` files are auto-discovered; no list needed.
+Top-level `.sh`, `.py`, and `.ps1` files are auto-discovered.
 Use explicit `scripts=` only for files outside those directories.
 
 Platform tags go before the extension, e.g. `setup.unix.sh`.
@@ -115,7 +124,7 @@ No tag means all platforms, so tag shell-specific scripts.
 
 | Tag      | Runs on           |
 | -------- | ----------------- |
-| `.macos` | macOS             |
+| `.mac`   | macOS             |
 | `.linux` | Linux, WSL        |
 | `.unix`  | macOS, Linux, WSL |
 | `.win`   | Windows           |
@@ -128,18 +137,11 @@ No tag means all platforms, so tag shell-specific scripts.
 | `_`     | Helper; never auto-executed                        |
 | None    | Every deployment, after packages                   |
 
-Scripts check existing setup themselves; there is no saved run history.
-The first failed operation stops deployment or upgrade. Fix the reported error,
-then rerun. Dependencies control ordering, not failure isolation.
+The first failed operation stops deployment or upgrade.
 Before each command, `mc` prepares current host variables and tool activation,
-then applies the selected machine's variables and secrets. Declare machine-specific
-values in `machine.env`; environment refresh is handled internally by the app.
-
-`mc show` lists configured files, packages, and scripts for the current platform.
-`mc deploy -n` previews operations against the current setup. `-n`/`--dry-run`
-also applies to `upgrade` and `sync`. Commands use the
-terminal directly. Add `--debug` to show exception tracebacks;
-the CLI does not write log files.
+then applies the selected machine's variables and secrets.
+Declare machine-specific values in `machine.env`; environment refresh is
+handled internally by the app.
 
 ### Secrets
 

@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from platformdirs import user_documents_path
+from platformdirs.unix import Unix
 
 from app import cli, env, reporting
 from app.shell import query, run
@@ -53,19 +55,40 @@ def sync(
         check=True,
     )
 
-    # Generate new shell completion.
-    tool_dir = Path(query(["uv", "tool", "dir", "--bin"], env=process_env).stdout.strip())
-    executable = tool_dir / (cli.COMMAND + (".exe" if env.is_windows else ""))
-    result = query([str(executable), "--show-completion"], env=process_env, check=True)
-    if result.returncode != 0:
-        raise RuntimeError("Could not generate shell completions")
-
-    # Add completion to the shell (~/.zsh/completions/_mc).
-    comp_file = Path.home() / ".zsh" / "completions" / "_mc"
+    # Generate completion files after installing the command they invoke.
     if not dry_run:
-        comp_file.mkdir(parents=True, exist_ok=True)
-        comp_file.touch(exist_ok=True)
-        comp_file.write_text(result.stdout)
+        generate_completions(process_env)
 
     reporting.plain("")
     reporting.success("Complete.")
+
+
+def generate_completions(process_env: dict[str, str]):
+    """Generate shell completions for the CLI."""
+    tool_dir = Path(query(["uv", "tool", "dir", "--bin"], env=process_env).stdout.strip())
+    executable = tool_dir / (cli.COMMAND + (".exe" if env.is_windows else ""))
+
+    # Powershell stores completion files in the user's documents directory on Windows.
+    powershell_dir = (
+        user_documents_path() / "PowerShell"
+        if env.is_windows
+        else Unix("powershell").user_config_path
+    )
+
+    # Resolve shell completion file paths.
+    completions = {
+        "powershell": powershell_dir / "completions" / f"{cli.COMMAND}.ps1",
+    }
+    if not env.is_windows:
+        completions["zsh"] = Path.home() / ".zsh" / "completions" / f"_{cli.COMMAND}"
+
+    # Generate shell completions for the CLI.
+    for shell, comp_file in completions.items():
+        result = query(
+            [str(executable)],
+            env={**process_env, f"_{cli.COMMAND.upper()}_COMPLETE": f"source_{shell}"},
+        )
+
+        # Zsh discovers completions from the first-line #compdef declaration.
+        comp_file.parent.mkdir(parents=True, exist_ok=True)
+        comp_file.write_text(result.stdout.lstrip("\r\n"), encoding="utf-8")

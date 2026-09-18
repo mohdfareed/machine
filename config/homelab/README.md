@@ -10,6 +10,20 @@ Tailscale networking.
 [macOS setup](../../machines/homelab/README.md) ·
 [Media setup](../../machines/homelab/docker/media/README.md)
 
+## macOS Sharing
+
+After every macOS homelab deployment, open **System Settings → General → Sharing**
+and configure or verify access for that machine:
+
+- Remote Login: check allowed users and remote-user Full Disk Access as needed.
+- Remote Management: choose your account and its required privileges.
+- File Sharing: choose shared folders and read/write permissions; enable your
+  account under Options → Windows File Sharing. Configure the Time Machine
+  backup-destination option on its share if used.
+
+Grant required Full Disk Access under Privacy & Security. Share selection and
+permissions are manual; deployment does not infer them.
+
 ## Tailscale
 
 - Create Auth and API keys at
@@ -67,7 +81,7 @@ using one of three patterns:
 Docker is automatically installed, but should be started for the first time and
 configured to run on boot.
 
-The deploy scripts link `$MC_HOMELAB_DIR/<service>` to repository service
+The deployment script links `$MC_HOMELAB_DIR/<service>` to repository service
 directories (symlinks on Unix, junctions on Windows), then run `docker compose up`.
 Existing real paths are left untouched; move or migrate them separately before
 deploying. Compose defines the runtime data locations; relative bind mounts live

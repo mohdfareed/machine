@@ -58,5 +58,11 @@ def complete_machines(incomplete: str) -> list[tuple[str, str]]:
 
 
 def complete_modules(incomplete: str) -> list[tuple[str, str]]:
-    """Complete discovered module names."""
-    return [(name, "") for name in list_modules() if name.startswith(incomplete)]
+    """Complete full module names and their groups."""
+    names: set[str] = set()
+
+    for module in list_modules():
+        parts = module.split(".")
+        names.update(".".join(parts[:count]) for count in range(1, len(parts) + 1))
+
+    return [(name, "") for name in sorted(names) if name.startswith(incomplete)]

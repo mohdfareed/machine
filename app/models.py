@@ -1,7 +1,8 @@
 """Machine configuration data shapes."""
 
 from enum import StrEnum
-from typing import Literal
+from pathlib import Path
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
 
@@ -51,14 +52,28 @@ type PackageSource = Literal["brew", "cask", "apt", "snap", "winget", "scoop", "
 class FileMapping(BaseModel):
     """A config file or directory to symlink."""
 
-    source: str
-    target: str
+    source: Path
+    target: Path
     mode: int | None = None
     platforms: list[Platform] | None = None
 
     def applies_to(self, platform: Platform) -> bool:
         """Return True when this file mapping should be considered on *platform*."""
         return self.platforms is None or any(platform.is_a(target) for target in self.platforms)
+
+    # Let editors accept the same path inputs that Pydantic already converts.
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            *,
+            source: str | Path,
+            target: str | Path,
+            mode: int | None = None,
+            platforms: list[Platform] | None = None,
+        ) -> None:
+            """Accept strings or paths, storing both fields as Path values."""
+            ...
 
 
 class Package(BaseModel):
@@ -121,7 +136,7 @@ class Module(BaseModel):
 
     name: str = ""
     depends: list[str] = []
-    scripts: list[str] = []
+    scripts: list[Path] = []
     files: list[FileMapping] = []
     overrides: list[FileMapping] = []
     packages: list[Package] = []
@@ -132,6 +147,6 @@ class Machine(BaseModel):
 
     pkg_managers: list[PkgManager] = []
     modules: list[str] = []
-    scripts: list[str] = []
+    scripts: list[Path] = []
     files: list[FileMapping] = []
     packages: list[Package] = []

@@ -14,10 +14,10 @@ match PLATFORM:
 
 module = Module(
     files=[
-        FileMapping(source="keymap.json", target=str(_base / "keymap.json")),
-        FileMapping(source="settings.json", target=str(_base / "settings.json")),
-        FileMapping(source="snippets.json", target=str(_base / "snippets" / "snippets.json")),
-        FileMapping(source="tasks.json", target=str(_base / "tasks.json")),
+        FileMapping(source="keymap.json", target=_base / "keymap.json"),
+        FileMapping(source="settings.json", target=_base / "settings.json"),
+        FileMapping(source="snippets.json", target=_base / "snippets" / "snippets.json"),
+        FileMapping(source="tasks.json", target=_base / "tasks.json"),
     ],
     packages=[
         Package(

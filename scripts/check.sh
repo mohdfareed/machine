@@ -49,7 +49,11 @@ echo "==> Checking zsh scripts..."
 
 # Check Zsh scripts and startup files with their own parser.
 while IFS= read -r -d '' script; do
-  zsh::check "$script"
+  if [[ "$script" == *.sh ]]; then
+    IFS= read -r shebang < "$script" || true
+    [[ "$shebang" == '#!'*zsh* ]] || continue
+  fi
+  zsh -f -n "$script"
 done < <(find . \
   \( -path './.git' -o -path './.venv' \) -prune -o \
   -type f \( -name '*.sh' -o -name '*.zsh' -o -name '.zshrc*' \
@@ -60,13 +64,14 @@ echo
 echo "==> Checking script permissions..."
 # ═════════════════════════════════════════════════════════════════════════════
 
-find . \
+non_executable=$(find . \
   \( -path './.git' -o -path './.venv' \) -prune -o \
   -type f \( -path '*/scripts/*.sh' -o -path '*/scripts/*.py' \) \
-  -exec test -x {} \; -o -print | grep -q . && {
-    echo "Error: Some scripts are not executable." >&2
-    exit 1
-  }
+  ! -exec test -x {} \; -print -quit)
+if [[ -n "$non_executable" ]]; then
+  echo "Error: Script is not executable: $non_executable" >&2
+  exit 1
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════
 echo

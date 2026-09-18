@@ -81,8 +81,12 @@ enforced by the existing tests.
 
 Module names are dotted paths relative to `config/`: `terminal/git/module.py`
 is `terminal.git`. Discovery recurses through grouping folders, stopping at
-module directories; folder names cannot contain dots. Files and scripts resolve
-relative to the module directory.
+module directories; folder names cannot contain dots. `FileMapping` accepts strings
+or `Path` values and stores paths internally. Script lists use `Path`; sources
+and scripts resolve relative to the module directory.
+The loader expands target variables and `~`, not model construction.
+Module code must locate bundled resources relative to its own files, never by
+reconstructing its `config/...` location from `MC_HOME` or the working directory.
 
 Exports a `Module(files, packages, scripts, depends)`. All fields use simple
 types - `depends` and manifest `modules` are `list[str]` (module names).
@@ -99,11 +103,10 @@ selected `development.python` module.
 ### Manifest (`machines/<id>/machine.py`)
 
 Exports a `Machine(pkg_managers, modules, files, packages, scripts)`.
-Composes modules and adds machine-specific overrides. Manifest `modules` entries
-match an exact module name or all dotted descendants of a grouping name:
+Composes modules and adds machine-specific overrides. Manifest selections, CLI
+filters and `depends` match a full module name or its dotted descendants:
 `terminal` matches `terminal` and `terminal.*`, not `terminal-extra`. Expansion uses discovery
 order, then existing dependency ordering and deduplication; no matches is an error.
-CLI filters and module `depends` still use exact module names.
 `load_machine(machine_id, module_names=None, *, env)` returns applicable, normalized
 files/packages/scripts with fixed package sources. Filters include selected modules
 and their prerequisites and related overrides, excluding unrelated machine extras.
@@ -129,11 +132,13 @@ the loader's source selection.
 - Use `cask=` for Homebrew casks; package source selection is platform-aware and should replace package-level `if PLATFORM ...` conditionals in manifests/modules
 - Use package `platforms=` only when a package is intentionally restricted or command-backed; normal multi-manager package selection should not need manifest-level platform conditionals
 - `mc deploy` only installs missing packages; upgrades belong to `mc upgrade`. Report skipped packages as already installed using dim CLI output. If a package exists but is not managed by the requested manager, `mc deploy` should still install it with that manager
+- Package dry runs skip installed-package and custom-command presence checks so
+  every selected installation is reported, even when already installed.
 - Command-backed packages use `Package.name` as the installed-command check during `mc deploy`; `mc upgrade` runs `up_cmd`, reuses `cmd` when `up_cmd=True`, or lists the package for manual maintenance. Manager sources take precedence over custom commands on platforms where they apply
 
 ### Script Pipeline and Environment
 
-- Platform tags on scripts: `name.macos.sh`, `name.unix.sh`, `name.win.ps1`
+- Platform tags on scripts: `name.mac.sh`, `name.unix.sh`, `name.win.ps1`
 - Script prefixes: `init_` = run before packages, `up_` = run only during `mc upgrade`, `_` = helper (never auto-executed, sourced by other scripts)
 - Execution order: files → declared manager setup → remaining `init_*` scripts → packages → remaining scripts
 - `~/.env` stores `MC_HOME`, `MC_ID`, `MC_MACHINE`, and `MC_PRIVATE`. `mc deploy` writes it; the CLI reads the selected machine directly from this file, not the inherited shell environment or a separate state file.
@@ -145,7 +150,9 @@ the loader's source selection.
 
 - `mc` loads all three tiers into every script subprocess - scripts should NOT re-source them
 - Shell profiles load saved base variables and committed machine values without app-specific guards. The script runner honors Unix shebangs and starts Zsh with `-f` to skip user startup files; scripts inherit the app's prepared environment. Zsh `mc::secrets` and PowerShell `Import-Secrets` load the private tier on demand.
-- Zim owns interactive Zsh plugins, Homebrew activation, and completion initialization. Declare plugins in `config/terminal/shell/.zimrc`; install and update them through the `terminal.shell` module's deployment and upgrade scripts. Shell configuration must not source application helpers.
+- Zim owns interactive Zsh plugins, Homebrew activation, and completion initialization. Declare plugins in `config/terminal/shell/zsh/.zimrc`; install and update them through the `terminal.shell` module's deployment and upgrade scripts. Shell configuration must not source application helpers.
+- Shell setup owns PowerShell profile-link compatibility with Windows SSH; SSH
+  setup must not maintain shell filenames or profile-directory assumptions.
 - `machine.env` uses plain `KEY=VALUE` (no `export`); values may reference earlier vars
 - `MC_PRIVATE` defaults to `<repository>/private`; committed `machine.env` may override it (e.g. `$ICLOUD/.machine`). Its `machine.env` is the only private dotenv file; do not add alternate layouts, fallbacks, or migration handling.
 - Scripts skip gracefully when `MC_PRIVATE` directory doesn't exist
@@ -218,6 +225,8 @@ or add special config entrypoints outside the module declaration system.
 
 ## Homelab
 
+- Every macOS homelab deployment requires a manual review of System Settings → General → Sharing; the owner configures shared folders, permissions, and remote access there. Keep this requirement in the shared homelab setup notes, not reminder scripts.
+- Windows homelab nodes must support Windows containers and recover their services after reboot without interactive login. Verify this with the chosen runtime before treating a node as ready.
 - Do not SSH to, deploy to, or otherwise mutate the homelab until the user has
   reviewed the repository changes and explicitly approved deployment
 - `MC_HOMELAB_DIR` is required for homelab scripts and is declared in the

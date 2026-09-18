@@ -79,14 +79,14 @@ def plain(message: str, *, error: bool = False, end: str = "\n") -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def path(value: str | Path, *, root: Path | None = None, prefix: str = "") -> None:
+def path(value: Path, *, root: Path | None = None, prefix: str = "") -> None:
     """Show a prefixed path with its final component emphasized and common roots abbreviated."""
     text = Text(prefix, style="dim")
     text.append_text(_path_text(value, root=root))
     detail(text)
 
 
-def link(source: str | Path, target: str | Path, *, root: Path | None = None) -> None:
+def link(source: Path, target: Path, *, root: Path | None = None) -> None:
     """Show a source-to-target file mapping with common roots abbreviated."""
     detail(_path_text(source, root=root))
 
@@ -148,8 +148,8 @@ def _display_text(value: str, *, root: Path | None = None) -> str:
     return value.replace(str(Path.home()) + os.sep, "~" + os.sep)
 
 
-def _path_text(value: str | Path, *, root: Path | None = None) -> Text:
-    path = Path(value)
+def _path_text(value: Path, *, root: Path | None = None) -> Text:
+    path = value
     if root is not None and path.is_relative_to(root):
         path = Path("$MC_HOME") / path.relative_to(root)
     elif path.is_relative_to(Path.home()):

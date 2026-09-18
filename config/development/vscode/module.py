@@ -16,10 +16,10 @@ match PLATFORM:
 
 module = Module(
     files=[
-        FileMapping(source="snippets", target=str(_base / "snippets")),
-        FileMapping(source="settings.json", target=str(_base / "settings.json")),
-        FileMapping(source="keybindings.json", target=str(_base / "keybindings.json")),
-        FileMapping(source="mcp.json", target=str(_base / "mcp.json")),
+        FileMapping(source="snippets", target=_base / "snippets"),
+        FileMapping(source="settings.json", target=_base / "settings.json"),
+        FileMapping(source="keybindings.json", target=_base / "keybindings.json"),
+        FileMapping(source="mcp.json", target=_base / "mcp.json"),
     ],
     packages=[
         Package(

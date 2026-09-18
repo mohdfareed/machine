@@ -9,39 +9,6 @@ Invoke-Admin {
     Get-Service -Name ssh-agent | Set-Service -StartupType Automatic
 }
 
-Write-Host 'making PowerShell profile links trusted for SSH...'
-Invoke-Admin {
-    # RedirectionGuard in SSH sessions rejects links created without elevation.
-    param($profileDirectory)
-    foreach ($name in 'profile.ps1', 'aliases.ps1', 'profile.local.ps1') {
-        $path = Join-Path $profileDirectory $name
-        $link = Get-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue
-        if ($null -eq $link -or $link.LinkType -ne 'SymbolicLink' -or $link.PSIsContainer) {
-            continue
-        }
-
-        $target = @($link.Target)[0]
-        if (-not [IO.Path]::IsPathRooted($target)) {
-            $target = Join-Path $profileDirectory $target
-        }
-        if (-not (Test-Path -LiteralPath $target -PathType Leaf)) {
-            throw "Profile link target is missing: $target"
-        }
-
-        # Preserve the original link until its elevated replacement is created.
-        $backup = "$path.$([guid]::NewGuid().ToString('N')).backup"
-        Move-Item -LiteralPath $path -Destination $backup
-        try {
-            New-Item -ItemType SymbolicLink -Path $path -Target $target | Out-Null
-        }
-        catch {
-            Move-Item -LiteralPath $backup -Destination $path
-            throw
-        }
-        Remove-Item -LiteralPath $backup -Force
-    }
-} -ArgumentList (Join-Path $HOME 'Documents\PowerShell')
-
 # Configure OpenSSH to use the PowerShell MSIX executable as the default shell.
 # This is the new windows default distribution for PowerShell.
 $powerShellPackage = Get-AppxPackage -Name Microsoft.PowerShell

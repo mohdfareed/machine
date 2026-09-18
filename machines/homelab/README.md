@@ -15,16 +15,9 @@ etc.
 - On a fresh media install, do the [first steps](docker/media/README.md#first-start)
   before the full deployment.
 
-Once per installation, in System Settings
-
-- Grant the terminal app Full Disk Access before deploying (required to enable SSH).
-- Under General → Sharing → Remote Login, verify only Administrators have access;
-  setup preserves existing memberships. Enable remote-user Full Disk Access if needed.
-- Enable Remote Management for your account and choose its privileges and menu-bar
-  options. Set a VNC password only if your client needs legacy VNC.
-- Under File Sharing, choose shared folders and permissions, enable your account
-  under Options → Windows File Sharing. **NOTE:** You must provide Full Disk Access.
-  Configure the Time Machine backup-destination option on its share if used.
+Grant the terminal app Full Disk Access before deploying (required to enable SSH).
+After every deployment, complete the Sharing review in the
+[shared homelab setup notes](../../config/homelab/README.md).
 
 ## Backup
 

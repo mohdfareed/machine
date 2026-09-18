@@ -52,10 +52,7 @@ def test_install_only_when_selected_manager_lacks_package(monkeypatch, commands,
 
     monkeypatch.setattr(machine_managers, "query", query)
 
-    skipped = machine_packages.install_packages(
-        [package, package], env={"PATH": "chosen"}, dry_run=False
-    )
-    assert skipped == (["example", "example"] if installed else ["example"])
+    machine_packages.install_packages([package, package], env={"PATH": "chosen"}, dry_run=False)
     assert len(queries) == 1
     assert len(commands) == (0 if installed else 1)
 
@@ -105,18 +102,32 @@ def test_source_choice_does_not_fall_back_to_an_available_manager(monkeypatch, c
     assert commands == []
 
 
-def test_preview_checks_available_package_presence(monkeypatch, commands):
+def test_preview_shows_installation_without_presence_checks(monkeypatch, commands):
     managed = Package(name="managed", brew="managed")
     managed.selected_source = "brew"
     custom = Package(name="custom", cmd="setup-custom")
-    monkeypatch.setattr(machine_managers, "source_installed", lambda *args, **kwargs: True)
-    monkeypatch.setattr(machine_packages, "find_executable", lambda name, **kwargs: name)
+    monkeypatch.setattr(
+        machine_managers,
+        "source_installed",
+        lambda *args, **kwargs: pytest.fail("queried package presence during preview"),
+    )
+    monkeypatch.setattr(
+        machine_packages,
+        "find_executable",
+        lambda name, **kwargs: (
+            name if name == "brew" else pytest.fail("queried custom command during preview")
+        ),
+    )
 
-    assert machine_packages.install_packages([managed, custom], env={}, dry_run=True) == [
-        "managed",
-        "custom",
-    ]
-    assert commands == []
+    def preview(command, **kwargs):
+        assert kwargs["dry_run"] is True
+        commands.append(command)
+
+    monkeypatch.setattr(machine_managers, "run", preview)
+    monkeypatch.setattr(machine_packages, "run", preview)
+
+    machine_packages.install_packages([managed, custom], env={}, dry_run=True)
+    assert commands == [["brew", "install", "managed"], "setup-custom"]
 
 
 def test_preview_missing_manager_skips_presence_queries(monkeypatch, commands):
@@ -126,7 +137,7 @@ def test_preview_missing_manager_skips_presence_queries(monkeypatch, commands):
     )
     package = Package(name="example", brew="example")
     package.selected_source = "brew"
-    assert machine_packages.install_packages([package], env={}, dry_run=True) == []
+    machine_packages.install_packages([package], env={}, dry_run=True)
     assert commands == [["brew", "install", "example"]]
 
 
@@ -205,7 +216,7 @@ def test_custom_packages_check_availability_again_after_install(monkeypatch, com
     monkeypatch.setattr(machine_packages, "run", run)
     first = Package(name="first", cmd="setup-first", up_cmd=True)
     later = Package(name="later", cmd="setup-later")
-    assert machine_packages.install_packages([first, later], env=env, dry_run=False) == ["later"]
+    machine_packages.install_packages([first, later], env=env, dry_run=False)
     assert seen == [("setup-first", {"DEV": "selected-machine"})]
     assert machine_packages.upgrade_packages([first, later], env=env, dry_run=False) == ["later"]
     assert seen[-1] == ("setup-first", env)

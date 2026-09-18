@@ -19,7 +19,7 @@ module = Module(
         # Windows Terminal configuration file mapping.
         FileMapping(
             source="win-term.json",
-            target=str(WIN_TERM_CONFIG / "settings.json"),
+            target=WIN_TERM_CONFIG / "settings.json",
             platforms=[Platform.WIN],
         ),
     ],

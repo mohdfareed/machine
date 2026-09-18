@@ -262,6 +262,12 @@
   // MARK: MCP Servers
   // ══════════════════════════════════════════════════════════════════════════
   "context_servers": {
+    "1password": {
+      "enabled": true,
+      "remote": false,
+      "command": "1password-mcp",
+      "args": []
+    },
     "craft-docs": {
       "url": "https://mcp.craft.do/links/Ll1BPMqendN/mcp",
     },

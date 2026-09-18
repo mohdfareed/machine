@@ -16,16 +16,19 @@ from app.shell import query, run
 
 def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> Path | None:
     """Deploy a resolved mapping and return its changed target, preserving existing data."""
-    source = Path(mapping.source)
-    target = Path(mapping.target)
+    target = mapping.target
     backup: Path | None = None
-    if not source.exists():
-        raise FileNotFoundError(f"Source not found: {source}")
+
+    # Validate the source file.
+    if not mapping.source.exists():
+        raise FileNotFoundError(f"Source not found: {mapping.source}")
+    if not mapping.source.is_file() and not mapping.source.is_dir():
+        raise FileNotFoundError(f"Source is not a file or directory: {mapping.source}")
 
     # Inspect live identity and permissions before the preview boundary.
-    same_source = _points_to_source(target, source)
+    same_source = _points_to_source(target, mapping.source)
     permissions_changed = mapping.mode is not None and (
-        is_windows or stat.S_IMODE(source.stat().st_mode) != mapping.mode
+        is_windows or stat.S_IMODE(mapping.source.stat().st_mode) != mapping.mode
     )
 
     # Preserve existing file if no changed detected or in dry-run mode.
@@ -36,7 +39,7 @@ def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> 
 
     try:  # Fix permissions and deploy the mapping, with backup and recovery.
         if same_source:
-            _set_permissions(source, target, mapping.mode, env=env)
+            _set_permissions(mapping.source, target, mapping.mode, env=env)
             return target
 
         # Preserve a *real* target before replacing it with the configured link.
@@ -46,20 +49,23 @@ def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> 
             destination = _backup_path(target)
             target.rename(destination)
             backup = destination
-        _create_link(source, target)
+        _create_link(mapping.source, target)
 
         # Apply declared permissions after creating the replacement link.
         if not permissions_changed:
             return target
-        _set_permissions(source, target, mapping.mode, env=env)
+        _set_permissions(mapping.source, target, mapping.mode, env=env)
         return target
 
     # Report failures with recovery instructions and preserve existing data when possible.
     except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
         recovery = f" Existing data is preserved at {backup}." if backup is not None else ""
         if not target.exists() and not target.is_symlink():
-            recovery += f" Recreate the link {target} → {source} after resolving the failure."
-        raise OSError(f"Failed to deploy {target} → {source}: {exc}.{recovery}") from exc
+            recovery += (
+                f" Recreate the link {target} → {mapping.source} after resolving the failure."
+            )
+
+        raise OSError(f"Failed to deploy {target} → {mapping.source}: {exc}.{recovery}") from exc
 
 
 # ═════════════════════════════════════════════════════════════════════════════

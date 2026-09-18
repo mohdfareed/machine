@@ -1,6 +1,5 @@
 """Upgrade packages and run maintenance for the selected machine."""
 
-from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -69,7 +68,7 @@ def upgrade(
 
     # Run maintenance scripts.
     reporting.heading("Running upgrade scripts")
-    up_scripts = [script for script in configuration.scripts if Path(script).name.startswith("up_")]
+    up_scripts = [script for script in configuration.scripts if script.name.startswith("up_")]
     run_scripts(up_scripts, env=env, dry_run=dry_run)
 
     # Present manual work only after automated maintenance finishes.

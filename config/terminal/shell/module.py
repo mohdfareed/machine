@@ -4,10 +4,11 @@ from pathlib import Path
 
 from app.env import PLATFORM
 from app.models import FileMapping, Module, Package, Platform
+from platformdirs import user_documents_path
 
 match PLATFORM:
     case Platform.WIN:
-        _pwsh_base = Path("~/Documents/PowerShell")
+        _pwsh_base = user_documents_path() / "PowerShell"
     case _:
         _pwsh_base = Path("~/.config/powershell")
 
@@ -19,8 +20,8 @@ module = Module(
         FileMapping(source="zsh/.zimrc", target="~/.zimrc", platforms=[Platform.UNIX]),
         FileMapping(source="zsh/.aliases", target="~/.aliases", platforms=[Platform.UNIX]),
         # powershell
-        FileMapping(source="pwsh/profile.ps1", target=str(_pwsh_base / "profile.ps1")),
-        FileMapping(source="pwsh/aliases.ps1", target=str(_pwsh_base / "aliases.ps1")),
+        FileMapping(source="pwsh/profile.ps1", target=_pwsh_base / "profile.ps1"),
+        FileMapping(source="pwsh/aliases.ps1", target=_pwsh_base / "aliases.ps1"),
         # prompt
         FileMapping(source="starship.toml", target="~/.config/starship.toml"),
     ],
@@ -29,7 +30,7 @@ module = Module(
         FileMapping(source=".zshenv", target="~/.zshenv.mc", platforms=[Platform.UNIX]),
         FileMapping(source=".zshrc", target="~/.zshrc.mc", platforms=[Platform.UNIX]),
         # powershell
-        FileMapping(source="pwsh/profile.ps1", target=str(_pwsh_base / "profile.ps1")),
+        FileMapping(source="pwsh/profile.ps1", target=_pwsh_base / "profile.ps1"),
     ],
     packages=[
         # shell
