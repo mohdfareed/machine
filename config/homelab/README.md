@@ -1,9 +1,5 @@
 # Homelab deployment
 
-A homelab is a personal server setup for self-hosting Docker services.
-The dashboard uses the host's Tailscale HTTPS address;
-`tailscale serve status` shows it.
-
 Installs Docker (Linux) and Tailscale, deploys services, and configures
 Tailscale networking.
 
@@ -32,17 +28,19 @@ of `mc upgrade`.
 
 - Create an auth key at
   [Tailscale Console](https://console.tailscale.com/admin/settings/keys)
-  and store it in `$MC_PRIVATE/machine.env` below.
+  and store it in a 1Password vault item.
 - Auth key properties:
   - Reusable,
   - ephemeral (optional),
   - pre-approved (optional),
   - tags (`tag:container`)
 
+Use the tailnet name without `.ts.net` for `TAILNET_NAME`.
+
 ```env
-# `$MC_PRIVATE/machine.env`
-TAILNET_NAME=<tailnet-name-without-.ts.net>
-TS_DOCKER_AUTHKEY=tskey-client-<id>-<secret>
+# Compose project's secrets.env (references, never secret values)
+TAILNET_NAME="op://<vault-id>/<item-id>/<field-id>"
+TS_DOCKER_AUTHKEY="op://<vault-id>/<item-id>/<field-id>"
 ```
 
 After starting containers, approve their devices in
@@ -76,7 +74,7 @@ using one of three patterns:
 | Pattern               | How                                        | Example    |
 | --------------------- | ------------------------------------------ | ---------- |
 | **Internet (funnel)** | Tailscale sidecar with `AllowFunnel: true` | Public app |
-| **Tailnet only**      | Host loopback port + `tailscale serve`     | Homepage   |
+| **Tailnet only**      | Host loopback port + `tailscale serve`     | Dashboard  |
 | **Internal**          | No sidecar, no ports - container-only      | Worker bot |
 
 ## Docker
@@ -88,6 +86,35 @@ sign in before Docker Desktop starts.
 The deployment script runs Docker Compose directly from repository service
 directories. Compose defines the runtime data locations; relative bind mounts live
 inside the repository service directory.
+
+Put each project's `op://` references in a committed `secrets.env` beside
+`compose.yaml`. Deployment uses `op run --env-file=secrets.env -- docker compose`
+on every platform. Dashboard runs only on the homelab machine and reads its mounted
+Tailscale Environment from `~/tailscale.env` through Compose.
+
+Use vault, item, section, and field IDs in references to survive renaming; add a
+short comment identifying the credential. Updating the existing field's secret
+needs no reference change. Moving an item to another vault or deleting and
+recreating it requires updating the reference.
+
+Approve access in 1Password when deploying. Container restarts reuse their
+existing configuration and do not need a new 1Password login; applying changed
+secrets requires deployment again. No service account is needed for this
+interactive deployment workflow.
+
+### Windows
+
+Use Docker Desktop's **WSL 2 engine** and **Linux containers** for the current
+services. Windows containers require Windows Pro/Enterprise and Docker Desktop's
+all-users installation. Switching to that engine stops the Linux services.
+
+Docker uses explicit WinGet installer arguments because the default package
+disables Windows containers. Its normal WinGet pin excludes bulk upgrades;
+`mc upgrade` upgrades it separately with the same arguments.
+
+Enable Docker's startup setting above and configure Windows automatic sign-in
+with [Microsoft Autologon](https://learn.microsoft.com/en-us/sysinternals/downloads/autologon)
+if services must recover without someone signing in. Verify recovery after a reboot.
 
 ### Add a service
 
@@ -112,10 +139,8 @@ mc deploy homelab
 ```
 
 This pulls/builds and starts **all** its Compose stacks.
-For an individual service, open its repository directory:
+For direct Compose commands, run from the project's directory:
 
 ```sh
-mc::secrets # alias to load private env vars
-docker compose up -d --build
-docker compose logs --follow
+op run --env-file=secrets.env -- docker compose up -d
 ```

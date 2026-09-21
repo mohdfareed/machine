@@ -31,6 +31,7 @@ module = Module(
             up_cmd=True,
             platforms=[Platform.LINUX],
         ),
+        # Extension dependencies.
         Package(
             brew="shellcheck",
             apt="shellcheck",

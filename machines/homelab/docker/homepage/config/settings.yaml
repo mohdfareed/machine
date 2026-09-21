@@ -17,6 +17,9 @@ quicklaunch:
   provider: google
 
 layout:
+  Machines:
+    style: column
+    rows: 1
   Services:
     style: column
     rows: 1

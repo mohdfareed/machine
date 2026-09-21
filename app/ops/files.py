@@ -19,16 +19,11 @@ def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> 
     target = mapping.target
     backup: Path | None = None
 
-    # Validate the source file.
-    if not mapping.source.exists():
-        raise FileNotFoundError(f"Source not found: {mapping.source}")
-    if not mapping.source.is_file() and not mapping.source.is_dir():
-        raise FileNotFoundError(f"Source is not a file or directory: {mapping.source}")
-
     # Inspect live identity and permissions before the preview boundary.
+    source_mode = mapping.source.stat().st_mode
     same_source = _points_to_source(target, mapping.source)
     permissions_changed = mapping.mode is not None and (
-        is_windows or stat.S_IMODE(mapping.source.stat().st_mode) != mapping.mode
+        is_windows or stat.S_IMODE(source_mode) != mapping.mode
     )
 
     # Preserve existing file if no changed detected or in dry-run mode.
@@ -43,9 +38,11 @@ def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> 
             return target
 
         # Preserve a *real* target before replacing it with the configured link.
-        # This assumes symlinks are safe to overwrite, which is true for me.
+        # This assumes symlinks are safe to overwrite.
         target.parent.mkdir(parents=True, exist_ok=True)
-        if target.exists(follow_symlinks=False) and not target.is_symlink():
+        if target.is_symlink():
+            target.unlink()
+        if target.exists(follow_symlinks=False):
             destination = _backup_path(target)
             target.rename(destination)
             backup = destination
@@ -91,7 +88,7 @@ def _points_to_source(target: Path, source: Path) -> bool:
 
 
 def _create_link(source: Path, target: Path) -> None:
-    try:  # Create a symlink to the source, overwriting any existing link or file.
+    try:  # Create a symlink to the source at the prepared target.
         target.symlink_to(source, target_is_directory=source.is_dir())
     except OSError as exc:
         if is_windows and getattr(exc, "winerror", None) == 1314:

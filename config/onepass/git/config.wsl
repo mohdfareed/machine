@@ -1,0 +1,10 @@
+[core]
+    sshCommand = "ssh.exe"
+[user]
+    signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP/kmdZaBRFDeBPSbI9hWH8FFnmKb5aZJHmt1jB4g7i+
+[commit]
+    gpgsign = true
+[gpg]
+    format = ssh
+[gpg "ssh"]
+    program = "op-ssh-sign-wsl.exe"

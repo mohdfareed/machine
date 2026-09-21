@@ -144,14 +144,17 @@ def _print(
 
 def _display_text(value: str, *, root: Path | None = None) -> str:
     if root is not None:
-        value = value.replace(str(root) + os.sep, "$MC_HOME" + os.sep)
+        value = value.replace(str(root) + os.sep, "<root>" + os.sep)
+
+    # Abbreviate the current working directory and home directory.
+    value = value.replace(str(Path.cwd()) + os.sep, "." + os.sep)
     return value.replace(str(Path.home()) + os.sep, "~" + os.sep)
 
 
 def _path_text(value: Path, *, root: Path | None = None) -> Text:
     path = value
     if root is not None and path.is_relative_to(root):
-        path = Path("$MC_HOME") / path.relative_to(root)
+        path = path.relative_to(root)
     elif path.is_relative_to(Path.home()):
         path = Path("~") / path.relative_to(Path.home())
 

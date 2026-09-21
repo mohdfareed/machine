@@ -9,35 +9,30 @@ import pytest
 from app import env
 
 
-def test_build_env_resolves_private_path_without_saving_selection(tmp_path, monkeypatch):
+def test_build_env_resolves_committed_values_without_saving_selection(tmp_path, monkeypatch):
     root = tmp_path / "root"
-    private = tmp_path / "private"
     machine_dir = root / "machines" / "test"
     machine_dir.mkdir(parents=True)
-    private.mkdir()
     env_file = tmp_path / ".env"
     env_file.write_text("MC_ID=previous\n")
     monkeypatch.setattr(env, "_ENV_FILE", env_file)
     monkeypatch.setattr(env, "ROOT", root)
     monkeypatch.setenv("MC_ID", "inherited")
-    monkeypatch.setenv("PRIVATE_SOURCE", str(private))
+    monkeypatch.setenv("WORKSPACE", str(tmp_path))
     monkeypatch.setenv("CALLER_ONLY", "inherited")
-    monkeypatch.delenv("TAILNET_NAME", raising=False)
     (machine_dir / "machine.env").write_text(
-        'PRIVATE_ROOT="$PRIVATE_SOURCE"\nMC_PRIVATE="$PRIVATE_ROOT"\n'
+        'DEV="$WORKSPACE/Dev"\nDEV_BIN="$DEV/bin"\nMC_ID=wrong\n'
     )
-    (private / "machine.env").write_text('TAILNET_NAME="example"\nMC_ID=wrong\nMC_PRIVATE=/wrong\n')
 
     result = env.build_env("test")
 
-    assert result["MC_PRIVATE"] == str(private)
+    assert result["DEV_BIN"] == str(tmp_path / "Dev" / "bin")
     assert result["MC_ID"] == "test"
-    assert result["TAILNET_NAME"] == "example"
-    assert "PRIVATE_SOURCE" not in result
+    assert "MC_MACHINE" not in result
+    assert "WORKSPACE" not in result
     assert "CALLER_ONLY" not in result
     assert "PATH" not in result
     assert env_file.read_text() == "MC_ID=previous\n"
-    assert "TAILNET_NAME" not in env.build_env("test", include_private=False)
 
 
 def test_build_env_keeps_explicit_path_and_windows_base_precedence(tmp_path, monkeypatch):
@@ -52,7 +47,7 @@ mc_id=wrong
 """
     )
 
-    result = env.build_env("test", include_private=False)
+    result = env.build_env("test")
 
     assert result["PATH"] == "configured"
     assert result["MC_ID"] == "test"
@@ -133,10 +128,11 @@ def test_machine_selection_reads_env_file_instead_of_shell(tmp_path, monkeypatch
     assert env.get_current_machine() is None
     env_file.write_text('# Machine selection\nMC_ID="current"\n')
     assert env.get_current_machine() == "current"
-    assert env.build_env("current")["MC_MACHINE"] == str(tmp_path / "machines" / "current")
+    assert env.build_env("current") == {"MC_ID": "current"}
 
     env.set_current_machine("next")
     assert env.get_current_machine() == "next"
+    assert env_file.read_text() == 'MC_ID="next"\n'
     env_file.write_text("MC_ID=\n")
     assert env.get_current_machine() is None
 

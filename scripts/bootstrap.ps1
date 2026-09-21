@@ -1,10 +1,5 @@
 #!/usr/bin/env pwsh
-param([switch]$Deploy)
 $ErrorActionPreference = "Stop"
-
-# ═════════════════════════════════════════════════════════════════════════════
-# Helpers
-# ═════════════════════════════════════════════════════════════════════════════
 
 # Update the PATH for the current session.
 function Update-Path {
@@ -29,9 +24,10 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 }
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Initialization
+# Bootstrap
 # ═════════════════════════════════════════════════════════════════════════════
 
+# Resolve machine repo directory.
 $env:MC_HOME = if ($env:MC_HOME) {
     [System.IO.Path]::GetFullPath($env:MC_HOME.Replace("~", $HOME))
 }
@@ -39,19 +35,11 @@ else {
     "$HOME\.machine"
 }
 
-# ═════════════════════════════════════════════════════════════════════════════
-# Bootstrap
-# ═════════════════════════════════════════════════════════════════════════════
-
 # Clone repo if needed.
 if (-not (Test-Path "$env:MC_HOME\.git")) {
     git clone https://github.com/mohdfareed/machine.git "$env:MC_HOME"
 }
 
-# Sync the repo and install the CLI.
+# Sync and deploy the repo.
 uv run --project $env:MC_HOME mc sync
-
-# Deploy only when requested.
-if ($Deploy -or $env:MC_BOOTSTRAP_DEPLOY -in @("1", "true")) {
-    uv run --project $env:MC_HOME mc deploy
-}
+uv run --project $env:MC_HOME mc deploy

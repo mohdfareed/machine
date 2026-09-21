@@ -1,11 +1,11 @@
 ---
 - Bookmarks:
-    - Apple TV Admin Console:
-        - icon: mdi-television
-          href: http://apple-tv.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net:5252
     - Tailscale Admin Console:
         - icon: mdi-router-network
           href: https://login.tailscale.com/admin
+    - Apple TV Admin Console:
+        - icon: mdi-television
+          href: http://apple-tv.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net:5252
     - Machine Repository:
         - icon: mdi-source-repository
           href: https://github.com/mohdfareed/machine

@@ -24,14 +24,6 @@ def home() -> None:
     reporting.plain(str(env.ROOT))
 
 
-def private() -> None:
-    """Print the private storage path."""
-    machine_id = get_current_machine()
-    if not machine_id:
-        raise ValueError(f"No machine selected. Select one with {cli.COMMAND} deploy.")
-    reporting.plain(build_env(machine_id, include_private=False)["MC_PRIVATE"])
-
-
 def status() -> None:
     """Show the selected machine, repo and CLI version."""
     reporting.heading(f"{cli.NAME} {cli.VERSION}")
@@ -78,7 +70,7 @@ def show(
     machine = cli.validate_machine(machine)
     if machine is None:
         raise ValueError("No machine selected.")
-    machine_env = build_env(machine, include_private=False)
+    machine_env = build_env(machine)
     configuration = load_machine(machine, env=machine_env)
 
     # Print report. ───────────────────────────────────────────────────────────

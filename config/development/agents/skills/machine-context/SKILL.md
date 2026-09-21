@@ -27,7 +27,7 @@ Use these commands as needed:
 - `mc show status`: see the CLI version, selection, and repository location.
 
 The saved selection is not proof of host identity. Status is not a health check.
-If `mc` is unavailable, use inherited `MC_HOME` or the current workspace as locator
+If `mc` is unavailable, use the current workspace as locator
 hints and verify the candidate repository. Do not assume a fixed checkout path,
 scan the whole home directory, or install tools just to orient yourself. Report
 missing access rather than inventing machine facts.
@@ -43,7 +43,7 @@ against this skill's directory or the current workspace.
 - `config/` contains shared tool configuration and module declarations.
 - `mc list` lists available machines and modules.
 - `mc show` displays resolved packages, scripts, and file mappings without loading
-  the private dotenv tier. Check the saved selection first to avoid a prompt;
+  secrets. Check the saved selection first to avoid a prompt;
   use `mc show -m <id>` for an explicitly chosen machine.
 
 These views resolve configuration for the current platform, not a remote host.
@@ -64,9 +64,7 @@ stale. Commands launched directly by an agent do not automatically receive the
 selected-machine environment that `mc` prepares for deployment scripts. Do not
 source arbitrary environment files to imitate that setup.
 
-`mc show private` resolves the private storage location without loading its
-private dotenv values. Use it only when the task needs that location. Never dump
-whole environments, private dotenv files, credentials, or keys. Use established
+Never dump whole environments, private dotenv files, credentials, or keys. Use established
 secret integrations without displaying values; do not load secrets for discovery.
 
 ## Follow the existing operational workflow

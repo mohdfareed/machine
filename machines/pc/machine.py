@@ -2,7 +2,7 @@
 
 from app.env import PLATFORM
 from app.models import Machine, Package, PkgManager, Platform
-from config import system
+from config import homelab, onepass, system
 from config.development import agents, python, vscode
 from config.terminal import emulators, git, shell, ssh
 from config.terminal.ssh import client
@@ -13,13 +13,10 @@ sib_script_url = (
 )
 
 manifest = Machine(
-    pkg_managers=(
-        [PkgManager.APT, PkgManager.BREW]
-        if PLATFORM == Platform.WSL
-        else [PkgManager.WINGET, PkgManager.SCOOP]
-    ),
+    pkg_managers=[] if PLATFORM == Platform.WSL else [PkgManager.SCOOP],
     modules=(
         [
+            onepass,
             git,
             shell,
             client,
@@ -29,6 +26,7 @@ manifest = Machine(
         if PLATFORM == Platform.WSL
         else [
             system,
+            homelab,
             git,
             shell,
             ssh,
@@ -40,10 +38,8 @@ manifest = Machine(
     ),
     packages=[
         # Dev tools
-        Package(name="tailscale", winget="tailscale.tailscale"),
         Package(name="dotnet", winget="Microsoft.DotNet.SDK.10"),
         Package(name="sys-internals", winget="Microsoft.Sysinternals.Suite"),
-        Package(name="docker", winget="docker.DockerDesktop"),
         Package(name="power-toys", winget="microsoft.PowerToys"),
         Package(name="go", brew="go", winget="golang.Go"),
         # File Processing

@@ -1,18 +1,19 @@
 """Personal laptop (macOS) machine manifest."""
 
 from app.models import Machine, Package, PkgManager
-from config import system
+from config import onepass, system
 from config.development import agents, python, vscode, zed
 from config.terminal import emulators, git, shell
 from config.terminal.ssh import client
 
 manifest = Machine(
-    pkg_managers=[PkgManager.BREW, PkgManager.MAS],
+    pkg_managers=[PkgManager.MAS],
     modules=[
         system,
         git,
         shell,
         client,
+        onepass,
         emulators,
         python,
         agents,
@@ -25,6 +26,7 @@ manifest = Machine(
         # System
         # ─────────────────────────────────────────────────────────────────────
         # Dev tools
+        Package(brew="gh"),
         Package(name="xcode", mas=497799835),
         Package(cask="docker-desktop"),
         Package(cask="dotnet-sdk"),
@@ -45,6 +47,7 @@ manifest = Machine(
         # ─────────────────────────────────────────────────────────────────────
         # System
         Package(cask="tailscale"),  # vpn
+        Package(cask="windows-app"),  # win remote desktop
         # Productivity
         Package(cask="craft"),  # notes
         Package(name="keynote", mas=409183694),
@@ -61,6 +64,8 @@ manifest = Machine(
         Package(cask="iina"),  # local media player
         Package(name="infuse", mas=1136220934),  # media player
         # Utilities
+        Package(cask="dockdoor"),  # alt-tab
+        Package(cask="alcove"),  # dynamic island
         Package(cask="mos"),  # mouse settings
         Package(cask="swish"),  # trackpad gestures
         Package(cask="monitorcontrol"),  # external monitors

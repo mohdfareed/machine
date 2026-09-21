@@ -82,20 +82,20 @@ def deploy(
     if not dry_run:
         set_current_machine(machine)
 
-    # Deploy files and prepare the declared package managers.
-    reporting.heading("Deploying files")
-    for mapping in configuration.files:
-        status = "Deployed" if deploy_file(mapping, env=env, dry_run=dry_run) else "Skipped"
-        reporting.path(mapping.source, root=app_env.ROOT, prefix=f"{status}: ")
-
     # Set up the declared package managers.
     reporting.heading("Preparing package managers")
     setup_managers(configuration.pkg_managers, env=env, dry_run=dry_run)
 
-    # Run initialization scripts before installing packages.
-    reporting.heading(f"Running init scripts")
-    for script in [script for script in configuration.scripts if script.name.startswith("init_")]:
-        run_scripts([script], env=env, dry_run=dry_run)
+    # Prepare the host before linking files or installing packages.
+    reporting.heading("Running init scripts")
+    init_scripts = [script for script in configuration.scripts if script.name.startswith("init_")]
+    run_scripts(init_scripts, env=env, dry_run=dry_run)
+
+    # Deploy files after initialization has prepared their prerequisites.
+    reporting.heading("Deploying files")
+    for mapping in configuration.files:
+        status = "Deployed" if deploy_file(mapping, env=env, dry_run=dry_run) else "Skipped"
+        reporting.path(mapping.source, root=app_env.ROOT, prefix=f"{status}: ")
 
     # Install missing packages.
     reporting.heading("Installing packages")

@@ -235,7 +235,7 @@ def test_sync_completion_failure_preserves_existing_file(sync_repos, monkeypatch
     assert completion.read_text() == "existing completion\n"
 
 
-@pytest.mark.parametrize("failed_phase", [None, "preflight", "packages"])
+@pytest.mark.parametrize("failed_phase", [None, "preflight", "init_apps.ps1", "files", "packages"])
 def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, failed_phase) -> None:
     from app import models
 
@@ -244,7 +244,11 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
         pkg_managers=managers,
         modules=["apps"],
         files=[models.FileMapping(source=Path("/source"), target=Path("/target"))],
-        scripts=[Path("init_apps.ps1"), Path("apps.ps1"), Path("up_apps.ps1")],
+        scripts=[
+            Path("init_apps.ps1"),
+            Path("apps.ps1"),
+            Path("up_apps.ps1"),
+        ],
         packages=[models.Package(name="Example.App", winget="Example.App")],
     )
     configuration.packages[0].selected_source = "winget"
@@ -275,7 +279,8 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
 
     def run_scripts(scripts, *, env, dry_run):
         assert env is selected_env
-        events.extend(script.name for script in scripts)
+        for script in scripts:
+            record(script.name)
 
     def install_packages(packages, *, env, dry_run, reporter):
         assert env is selected_env
@@ -293,9 +298,9 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
         "validated",
         "preflight",
         "selected",
-        "files",
         "managers",
         "init_apps.ps1",
+        "files",
         "packages",
         "apps.ps1",
     ]
@@ -383,17 +388,14 @@ def test_show_subcommands_skip_configuration_loading(tmp_path, monkeypatch):
         info.reporting, "prompt", lambda *a, **kw: pytest.fail("subcommand prompted for a machine")
     )
 
-    def build_env(machine_id, *, include_private):
-        assert machine_id == "saved-machine" and not include_private
-        return {"MC_PRIVATE": str(tmp_path / "private")}
-
-    monkeypatch.setattr(info, "build_env", build_env)
+    monkeypatch.setattr(
+        info, "build_env", lambda *a, **kw: pytest.fail("subcommand loaded environment")
+    )
     app = entry._create_app()
     runner = CliRunner()
     for command, expected in (
         ("id", "saved-machine"),
         ("home", str(tmp_path)),
-        ("private", str(tmp_path / "private")),
         ("status", "saved-machine"),
     ):
         result = runner.invoke(app, ["show", command])

@@ -9,8 +9,8 @@
   // file associations
   "file_types": {
     "JSONC": ["**/zed/settings.json", "**/vscode/settings.json", ".code-snippets"],
-    "ini": ["**/ssh/client/config.*", ".config", ".ghostty"],
-    "Git Config": [".gitconfig.*"],
-    "Shell Script": [".zshenv.*", ".zshrc.*", ".zimrc", ".aliases"],
+    "ini": ["**/ssh/client/config*", ".config", ".ghostty"],
+    "Git Config": [".gitconfig*", "**/git/config*"],
+    "Shell Script": [".zshenv*", ".zshrc*", ".zimrc", ".aliases"],
   },
 }

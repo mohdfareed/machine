@@ -1,6 +1,10 @@
 #!/usr/bin/env zsh
 set -Eeo pipefail
 
+# Install declared Zim modules and generate their startup script.
+ZIM_HOME="${ZDOTDIR:-$HOME}/.zim"
+source "$(brew --prefix zimfw)/share/zimfw.zsh" install
+
 # Add zsh to /etc/shells if not already present.
 zsh_path=$(command -v zsh)
 if ! grep -Fxq "$zsh_path" /etc/shells; then

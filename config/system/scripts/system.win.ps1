@@ -24,11 +24,8 @@ Invoke-Admin {
     Install-Feature -Feature 'VirtualMachinePlatform'
     # remote desktop
     Install-Feature -Feature 'Microsoft-RemoteDesktopConnection'
-    # docker
-    Install-Feature -Feature 'Containers'
     # virtualization
     Install-Feature -Feature 'HypervisorPlatform'
-    Install-Feature -Feature 'Microsoft-Hyper-V-All'
     # windows sandbox
     Install-Feature -Feature 'Containers-DisposableClientVM'
 

@@ -16,12 +16,14 @@ fpath=("$HOME/.zsh/completions" $fpath)
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='fg=magenta,bold'
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='fg=red,bold'
 
+# Load credentials integrations from 1Password plugins.
+if [[ -f "$HOME/.config/op/plugins.sh" ]]; then
+  source "$HOME/.config/op/plugins.sh"
+fi
+
 # Zim ─────────────────────────────────────────────────────────────────────────
 
-# Initialize and load Zim.
-if [[ ! "$ZIM_HOME/init.zsh" -nt "$HOME/.zimrc" ]]; then
-  source $(brew --prefix zimfw)/share/zimfw.zsh init
-fi
+# Load the startup script generated during deployment.
 source "$ZIM_HOME/init.zsh"
 
 # Completions ─────────────────────────────────────────────────────────────────

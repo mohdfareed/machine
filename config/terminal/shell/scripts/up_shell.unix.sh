@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 set -eu
 
-# Update the framework and its declared modules.
-zimfw update
+# Update declared Zim modules and rebuild their startup script.
+ZIM_HOME="${ZDOTDIR:-$HOME}/.zim"
+source "$(brew --prefix zimfw)/share/zimfw.zsh" update

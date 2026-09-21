@@ -1,7 +1,6 @@
 [user]
     name = Mohammed Fareed
     email = mfareed@gleason.com
-    signingkey = ~/.ssh/machine.pub
 
 ; disable commit signing
 [commit]
@@ -9,4 +8,4 @@
 
 ; restore config for personal projects
 [includeIf "gitdir/i:~/Dev/personal/"]
-    path = ~/.gitconfig
+    path = ~/.config/git/config.personal

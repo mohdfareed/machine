@@ -43,7 +43,7 @@ never expose credentials or secret values in output.
 - `app/shell.py` - Explicit command execution/preview, bounded queries, and fresh execution environments
 - `app/managers.py` - Package-manager setup, presence checks, installation, and maintenance
 - `app/ops/` - File, package, and script deployment
-- `app/scripts/` - Internal command activation, declared-manager bootstrap, and PowerShell module root
+- `app/scripts/` - Internal command activation and PowerShell module root
 - `config/` - Shared dotfiles and configs
 - `machines/` - Per-host configurations
 - `scripts/bootstrap.sh` / `scripts/bootstrap.ps1` - Bare-machine bootstrap
@@ -54,7 +54,7 @@ never expose credentials or secret values in output.
 - `./scripts/fix.sh` (Windows: `./scripts/fix.ps1`) - Complete pre-commit preparation: upgrade and sync dependencies, fix unambiguous spelling without renaming files, format, auto-fix lint, and normalize Unix script permissions before re-running checks
 - `uv run mc --help` - Run CLI in dev
 - `--dry-run`/`-n` belongs only to `deploy`, `upgrade` and `sync`, after the command name.
-  Information commands live under `show` (`id`, `home`, `private`, `status`);
+  Information commands live under `show` (`id`, `home`, `status`);
   bare `show` inspects resolved configuration and `list` stays at the root.
 - `mc sync` fetches canonical `mohdfareed/machine` main, integrates with Git's
   fast-forward-only merge with autostash, then refreshes the installed CLI and shell
@@ -101,11 +101,16 @@ the dependent).
 
 `terminal.ssh.client` and `terminal.ssh.server` share the `terminal.ssh` group;
 the server depends on the client. Machines select `terminal.ssh` for both or
-`terminal.ssh.client` alone. Python runtimes and uv belong to the separately
-selected `development.python` module.
+`terminal.ssh.client` alone. Python runtimes belong to the separately selected
+`development.python` module; bootstrap supplies uv through Homebrew on Unix and
+WinGet on Windows. Homebrew is a Unix bootstrap prerequisite.
 
-1Password owns interactive SSH keys and agent authentication. Deployment must not
-copy private keys, load them into another agent, or sign in to 1Password.
+The optional `onepass` module owns its desktop app, CLI, SSH integration, and Git
+signing. Ordinary SSH and Git must work without selecting it; Gleason's IT policy
+prohibits 1Password. Deployment must not
+copy private keys or load them into another agent. Track the shared public-key
+allowlist in the SSH server module and deploy it through `FileMapping`. Scripts
+that need credentials may authenticate through the CLI; do not automate account enrollment.
 
 ### Manifest (`machines/<id>/machine.py`)
 
@@ -120,8 +125,8 @@ full module names and applicable, normalized files/packages/scripts with fixed p
 sources. Declaration files execute afresh on each load; cached folder imports carry
 no resolved state. Filters include selected modules
 and their prerequisites and related overrides, excluding unrelated machine extras.
-Package managers remain machine-wide; installed-tool availability never changes
-the loader's source selection.
+Package managers remain machine-wide: the loader adds platform prerequisites to
+the optional declarations. Installed-tool availability never changes source selection.
 
 ### Cross-Platform Requirements
 
@@ -134,7 +139,7 @@ the loader's source selection.
 
 ### Packages and Files
 
-- Machines include only declared modules and their dependencies. OS settings and features belong in the explicitly selected `system` module. Machine manifests explicitly declare `pkg_managers: list[PkgManager]`; never infer or install managers from package usage or PATH. `BREW` includes casks. Validate manager platform compatibility and declaration dependencies in Python before running the bundled manager setup scripts; those scripts only install missing declared managers. Package installation and manager maintenance may use only declared managers; custom scripts must follow the same policy.
+- Machines include only declared modules and their dependencies. OS settings and features belong in the explicitly selected `system` module. Platform managers are fixed prerequisites: Homebrew on macOS, WinGet on Windows, and APT plus Homebrew on Linux/WSL. Manifests declare only optional MAS, Scoop, or Snap in `pkg_managers`; never infer managers from packages or PATH. Bootstrap supplies Homebrew and uv on Unix; WinGet supplies uv on Windows. `BREW` includes casks. The loader validates optional manager compatibility, and `app/managers.py` installs missing optional managers directly. Installation and maintenance use the complete resolved manager list; custom scripts follow the same policy.
 
 - Define packages with `Package(...)` directly; package helper constructors (`brew(...)`, `apt(...)`, etc.) are removed
 - `FileMapping(mode=...)` owns mapped-file permissions; owner-only modes use a current-user and SYSTEM ACL on Windows
@@ -145,27 +150,24 @@ the loader's source selection.
 - Package dry runs skip installed-package and custom-command presence checks so
   every selected installation is reported, even when already installed.
 - Command-backed packages use `Package.name` as the installed-command check during `mc deploy`; `mc upgrade` runs `up_cmd`, reuses `cmd` when `up_cmd=True`, or lists the package for manual maintenance. Manager sources take precedence over custom commands on platforms where they apply
+- Bundled installers belong in ordinary setup and `up_` scripts, not shell-quoted script paths inside package declarations.
 
 ### Script Pipeline and Environment
 
 - Platform tags on scripts: `name.mac.sh`, `name.unix.sh`, `name.win.ps1`
-- Script prefixes: `init_` = run before packages, `up_` = run only during `mc upgrade`, `_` = helper (never auto-executed, sourced by other scripts)
-- Execution order: files → declared manager setup → remaining `init_*` scripts → packages → remaining scripts
-- `~/.env` stores `MC_HOME`, `MC_ID`, `MC_MACHINE`, and `MC_PRIVATE`. `mc deploy` writes it; the CLI reads the selected machine directly from this file, not the inherited shell environment or a separate state file.
-- Three-tier script environment (`app.env.build_env`):
-
-  1. Base variables derived in memory from the selected ID; `~/.env` saves the same defaults for login shells
-  2. `$MC_MACHINE/machine.env` - committed config vars (paths, hostname, ...)
-  3. `$MC_PRIVATE/machine.env` - private dotenv values
-
-- `mc` loads all three tiers into every script subprocess - scripts should NOT re-source them
-- Shell profiles load saved base variables and committed machine values without app-specific guards. The script runner honors Unix shebangs and starts Zsh with `-f` to skip user startup files; scripts inherit the app's prepared environment. Zsh `mc::secrets` and PowerShell `Import-Secrets` load the private tier on demand.
+- Script prefixes: `init_` = prepare host settings and package prerequisites before files and packages, `up_` = run only during `mc upgrade`, `_` = helper (never auto-executed, sourced by other scripts)
+- Execution order: optional manager setup → `init_*` scripts → files → packages → remaining scripts
+- `~/.env` stores `MC_ID`. `mc deploy` writes it; the CLI reads the selected machine directly from this file, not the inherited shell environment or a separate state file. The app derives its root from its code; `MC_HOME` is only a bootstrap destination option.
+- `app.env.build_env` combines the selected machine's base variables with its committed `machine.env`; the selected identity and machine path take precedence. Scripts inherit these public values and do not re-source them.
+- Secrets belong to 1Password and the consuming application. The app does not load private dotenv files or manage private SSH keys. Compose projects commit reference-only `secrets.env` files; the homelab script uses `op run --env-file=secrets.env` on every platform. Homepage (dashboard) stays on the homelab machine and consumes its mounted Tailscale Environment through Compose. Prefer vault, item, and field IDs so renaming them does not break references. Keep secret values out of Python and the general deployment environment.
+- Shell profiles load `~/.env` and the selected machine's committed `machine.env` through the `~/.env.mc` symlink. Shell-specific extras use `.zshenv.mc`, `.zshrc.mc`, and profile-relative `profile.mc.ps1` links. The script runner honors Unix shebangs and starts Zsh with `-f` to skip user startup files; scripts inherit the app's prepared environment.
 - Zim owns interactive Zsh plugins, Homebrew activation, and completion initialization. Declare plugins in `config/terminal/shell/zsh/.zimrc`; install and update them through the `terminal.shell` module's deployment and upgrade scripts. Shell configuration must not source application helpers.
-- Shell setup owns PowerShell profile-link compatibility with Windows SSH; SSH
-  setup must not maintain shell filenames or profile-directory assumptions.
+- Windows SSH uses the same PowerShell 7 and profile as local terminals. Elevate
+  system changes through `Invoke-Admin`; do not require the whole deployment to
+  run as Administrator or add recurring link-repair scripts. Scoop owns PowerShell
+  installation and upgrades; configure `no_junction` before packages install and
+  register its stable executable launcher as the SSH login shell.
 - `machine.env` uses plain `KEY=VALUE` (no `export`); values may reference earlier vars
-- `MC_PRIVATE` defaults to `<repository>/private`; committed `machine.env` may override it (e.g. `$ICLOUD/.machine`). Its `machine.env` is the only private dotenv file; do not add alternate layouts, fallbacks, or migration handling.
-- Scripts skip gracefully when `MC_PRIVATE` directory doesn't exist
 - Scripts check their own prerequisites and existing setup before changing anything; there is no script-run history. Package presence is determined from the requested package manager at deployment time.
 
 `build_env(machine_id)` prepares explicit machine overrides without reading the saved
@@ -175,7 +177,7 @@ diff-tool context from the caller; global Git configuration and authentication r
 available. Internal Unix activation lives in `app/scripts/environment.sh`;
 it must be quiet, read-only, safe before tools are installed, and safe to source repeatedly.
 Windows reads registered machine/user variables without loading PowerShell profiles.
-Manager setup alone receives `MC_PKG_MANAGERS`. Shell execution prepares the chosen
+Shell execution prepares the chosen
 PowerShell interpreter with `-NoProfile`, `-File`, and the bundled
 `MachineAdmin` module under `app/scripts/` while preserving existing module paths,
 immediately before real use. PowerShell modules use the standard `<Name>/<Name>.psm1`
@@ -232,6 +234,7 @@ or add special config entrypoints outside the module declaration system.
 - Operations raise at the first failure with the affected item or command; do not collect failure reports or maintain ownership maps for output. Commands inherit the terminal; capture output only when a caller needs to inspect it.
 - Route all application-owned Python output through functions in `app/reporting.py`, including plain values, prompts, captured command output, and tracebacks. Keep consoles private to that module. Use bold magenta `▶` headings, green `✓` success, yellow `!` warnings, red `✗` errors, and dim commands/details. Use terminal theme colors, no fixed-width decoration or tool-name prefixes. Leave framework-generated help/errors and subprocess terminal output to their existing handlers; keep plain-value commands undecorated. Announce dry-run mode once when a deployment command starts; keep action messages the same in previews and execution. Keep presentation minimal; no reporting framework or extra tracking solely for richer summaries.
 - Do not add scripts whose only job is printing setup reminders; put that guidance in docs unless the script performs real work
+- Keep one-time repairs of previously deployed configuration manual; do not add migration or repair steps to routine deployment.
 
 ## Homelab
 
@@ -241,6 +244,8 @@ or add special config entrypoints outside the module declaration system.
   reviewed the repository changes and explicitly approved deployment
 - Compose projects run from their repository directories; do not maintain a
   parallel tree of service links or a custom backup engine.
+- Keep service selection and storage paths in configuration. Moving a Compose
+  project between supported hosts must not require application or launcher edits.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - Keep path/configuration changes minimal: no new tests or storage machinery; simple parent-directory checks are sufficient for interactive setup
 - Use `${VAR:?}` for required shell/Compose variables, without custom error messages
@@ -263,5 +268,6 @@ add a new convention for every fix or feature, or record completed work here.
 - Use Mermaid for useful diagrams, not ASCII art; avoid introductions, exhaustive inventories, generic tutorials, and repeated guidance across READMEs
 - Do not add README navigation blocks or section-anchor cross-links; keep notes about using the system, not implementation details
 - Do not turn discussion questions into documentation changes; edit docs when requested or when implementation changes invalidate existing instructions
+- Keep bootstrap prerequisites limited to actions the owner must perform manually before running the command; automate supported setup in its existing owner instead of documenting extra manual work.
 - Never add inline spellchecker directives to Markdown; keep spelling exceptions in `.typos.toml`, shared by the Typos CLI and editor extensions
 - Before sending, remove every bullet whose deletion would not change the reader's understanding or next action

@@ -1,5 +1,6 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
 
 if (-not (Get-Command tailscale -ErrorAction SilentlyContinue)) {
     throw 'tailscale not found'
@@ -14,9 +15,6 @@ if ($LASTEXITCODE -ne 0) {
     }
 }
 
-Write-Host 'configuring tailscale serve (Homepage dashboard)...'
-tailscale serve --bg http://127.0.0.1:3000
-if ($LASTEXITCODE -ne 0) {
-    throw 'tailscale serve configuration failed'
-}
-tailscale serve status
+# Keep remote access available after logout and before automatic sign-in completes.
+tailscale set --unattended=true
+if ($LASTEXITCODE -ne 0) { throw 'tailscale unattended setup failed' }

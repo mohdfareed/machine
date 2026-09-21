@@ -1,18 +1,14 @@
 """Gleason work machine manifest."""
 
 from app.env import PLATFORM
-from app.models import Machine, Package, PkgManager, Platform
+from app.models import FileMapping, Machine, Package, PkgManager, Platform
 from config import system
 from config.development import agents, python, vscode, zed
 from config.terminal import emulators, git, shell
 from config.terminal.ssh import client
 
 manifest = Machine(
-    pkg_managers=(
-        [PkgManager.APT, PkgManager.SNAP, PkgManager.BREW]
-        if PLATFORM == Platform.WSL
-        else [PkgManager.WINGET, PkgManager.SCOOP]
-    ),
+    pkg_managers=[PkgManager.SNAP] if PLATFORM == Platform.WSL else [PkgManager.SCOOP],
     modules=(
         [
             git,
@@ -33,6 +29,9 @@ manifest = Machine(
             zed,
         ]
     ),
+    files=[
+        FileMapping(source=".gitconfig.personal", target="~/.config/git/config.personal"),
+    ],
     packages=[
         Package(name="raycast", cask="raycast", winget="raycast"),
         Package(name="vs-professional", winget="microsoft.visualstudio.professional"),

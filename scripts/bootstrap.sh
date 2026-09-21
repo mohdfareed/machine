@@ -1,70 +1,40 @@
 #!/usr/bin/env sh
 set -eu
 
-# Create a bootstrap temporary directory.
-tmpdir="$(mktemp -d)"
-trap 'rm -rf "$tmpdir"' EXIT
-
-# ═════════════════════════════════════════════════════════════════════════════
-# Args Parsing
-# ═════════════════════════════════════════════════════════════════════════════
-
-# Select optional deployment.
-deploy=false
-case "${MC_BOOTSTRAP_DEPLOY:-}" in
-    1 | true) deploy=true ;;
-esac
-case "${1-}" in
-    --deploy | -d) deploy=true ;;
-    "--help" | "-h")
-        echo "Usage: $0 [options]"
-        echo "Options:"
-        echo "  --deploy, -d    Deploy the machine after bootstrap"
-        echo "  --help,   -h    Show this help message"
-        exit 0
-        ;;
-    "") ;;
-    *) echo "Unknown option: $1" >&2 && exit 1 ;;
-esac
-
 # ═════════════════════════════════════════════════════════════════════════════
 # Dependencies
 # ═════════════════════════════════════════════════════════════════════════════
 
-# Ensure git is available
-if ! command -v git >/dev/null 2>&1; then
-  if [ "$(uname)" = "Darwin" ]; then
-    echo "Error: git is not installed. Install Xcode CLT and try again." >&2
-    xcode-select --install
-    exit 1
-  elif ! command -v apt >/dev/null 2>&1; then
-    echo "Error: git is not installed. Install git and try again." >&2
-    exit 1
-  fi
-
-  echo "Installing git..."
-  sudo apt update && sudo apt install git
+# Locate Homebrew before shell configuration has been deployed.
+brew_command="$(command -v brew || true)"
+if [ -z "$brew_command" ]; then
+  case "$(uname -s):$(uname -m)" in
+    Darwin:arm64) brew_command=/opt/homebrew/bin/brew ;;
+    Darwin:*) brew_command=/usr/local/bin/brew ;;
+    *) brew_command=/home/linuxbrew/.linuxbrew/bin/brew ;;
+  esac
 fi
 
-# Ensure uv is available.
-if ! command -v uv >/dev/null 2>&1; then
-  echo "Installing uv..."
-  curl -LsSf https://astral.sh/uv/install.sh | \
-  UV_INSTALL_DIR="$tmpdir" UV_NO_MODIFY_PATH=1 sh
-  export PATH="$tmpdir:$PATH"
+# Install Homebrew with its normal terminal prompts, including piped bootstrap.
+if ! [ -x "$brew_command" ]; then
+  echo "Installing Homebrew..."
+  installer="$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  /bin/bash -c "$installer" </dev/tty
 fi
+
+# Keep uv owned and updated by Homebrew, independent of selected modules.
+brew_env="$("$brew_command" shellenv sh)"
+eval "$brew_env"
+"$brew_command" install uv
+uv_command="$("$brew_command" --prefix uv)/bin/uv"
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Initialization
+# Bootstrap
 # ═════════════════════════════════════════════════════════════════════════════
 
 # Resolve machine repo directory.
 MC_HOME="$(eval echo "${MC_HOME:-$HOME/.machine}")"
 export MC_HOME
-
-# ═════════════════════════════════════════════════════════════════════════════
-# Bootstrap
-# ═════════════════════════════════════════════════════════════════════════════
 
 # Clone repo if needed.
 if ! [ -d "$MC_HOME/.git" ]; then
@@ -72,10 +42,6 @@ if ! [ -d "$MC_HOME/.git" ]; then
   git clone https://github.com/mohdfareed/machine.git "$MC_HOME"
 fi
 
-# Sync the repo and install the CLI.
-uv run --project "$MC_HOME" mc sync
-
-# Deploy only when requested.
-if [ "$deploy" = true ]; then
-  uv run --project "$MC_HOME" mc deploy
-fi
+# Sync and deploy the repo.
+"$uv_command" run --project "$MC_HOME" mc sync
+"$uv_command" run --project "$MC_HOME" mc deploy

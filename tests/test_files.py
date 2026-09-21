@@ -57,6 +57,28 @@ def test_existing_hard_link_is_unchanged(tmp_path):
     assert not (tmp_path / "target.backup").exists()
 
 
+@pytest.mark.parametrize("dangling", [False, True], ids=["existing", "dangling"])
+def test_replaces_other_symlink_without_changing_its_source(tmp_path, dangling):
+    source = tmp_path / "source"
+    previous_source = tmp_path / "previous"
+    target = tmp_path / "target"
+    source.write_text("new")
+    if not dangling:
+        previous_source.write_text("existing")
+    target.symlink_to(previous_source)
+    mapping = FileMapping(source=source, target=target)
+
+    assert machine_files.deploy_file(mapping, env={}, dry_run=True) == target
+    assert target.readlink() == previous_source
+    assert machine_files.deploy_file(mapping, env={}, dry_run=False) == target
+    assert target.readlink() == source
+    assert target.read_text() == "new"
+    assert not (tmp_path / "target.backup").exists()
+    if not dangling:
+        assert previous_source.read_text() == "existing"
+    assert previous_source.exists() is not dangling
+
+
 @pytest.mark.skipif(os.name == "nt", reason="Windows uses ACLs instead of POSIX modes")
 def test_permission_preview_matches_real_change(tmp_path):
     source = tmp_path / "source"

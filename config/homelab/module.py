@@ -2,7 +2,10 @@
 
 from app.models import Module, Package, Platform
 
+from config import onepass
+
 module = Module(
+    depends=[onepass],
     packages=[
         Package(
             name="tailscale",
@@ -14,9 +17,9 @@ module = Module(
         Package(
             name="docker",
             cask="docker-desktop",
-            winget="Docker.DockerDesktop",
             cmd="curl -fsSL https://get.docker.com | sh",
-            platforms=[Platform.LINUX, Platform.MAC, Platform.WIN],
+            platforms=[Platform.LINUX, Platform.MAC],
         ),
+        # Windows Docker is installed by docker.win.ps1 and upgraded by up_docker.win.ps1.
     ],
 )

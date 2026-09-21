@@ -31,7 +31,7 @@ class Platform(StrEnum):
 
 
 class PkgManager(StrEnum):
-    """Package managers explicitly enabled by a machine manifest."""
+    """Supported platform and optional package managers."""
 
     BREW = "brew"
     MAS = "mas"
@@ -72,14 +72,13 @@ class FileMapping(BaseModel):
             target: str | Path,
             mode: int | None = None,
             platforms: list[Platform] | None = None,
-        ) -> None:
-            """Accept strings or paths, storing both fields as Path values."""
-            ...
+        ) -> None: ...
 
 
 class Package(BaseModel):
     """A package with optional per-manager install names."""
 
+    _selected_source: PackageSource | None = PrivateAttr(default=None)
     model_config = ConfigDict(extra="forbid")
 
     name: str = ""
@@ -129,8 +128,6 @@ class Package(BaseModel):
         """Return True when this package should be considered on *platform*."""
         return self.platforms is None or any(platform.is_a(target) for target in self.platforms)
 
-    _selected_source: PackageSource | None = PrivateAttr(default=None)
-
 
 class Module(BaseModel):
     """A composable unit of configuration."""
@@ -149,7 +146,8 @@ class Machine(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    pkg_managers: list[PkgManager] = []
+    # Add optional managers to the platform's built-in package managers.
+    pkg_managers: list[Literal[PkgManager.MAS, PkgManager.SNAP, PkgManager.SCOOP]] = []
     modules: list[ModuleType] = []
     scripts: list[Path] = []
     files: list[FileMapping] = []

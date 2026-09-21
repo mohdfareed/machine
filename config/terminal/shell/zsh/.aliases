@@ -33,6 +33,12 @@ venv::activate() {
 # MARK: SSH and credentials
 # ═════════════════════════════════════════════════════════════════════════════
 
+# Use the Windows SSH client and agent from WSL.
+if [[ -n "${WSL:-}" ]]; then
+  alias ssh='ssh.exe'
+  alias ssh-add='ssh-add.exe'
+fi
+
 # Generate random passwords and API tokens.
 alias gen-pass='openssl rand -base64 32'
 alias gen-token='openssl rand -hex 32'
@@ -68,15 +74,4 @@ zsh::check() {
       ;;
   esac
   zsh -f -n "$script"
-}
-
-# Load private values into this shell on demand.
-mc::secrets() {
-  local file="${MC_PRIVATE:?}/machine.env"
-  if [[ ! -f "$file" ]]; then
-    print -u2 "No secrets file: $file"
-    return 1
-  fi
-  dotenv::load "$file"
-  echo "secrets loaded"
 }

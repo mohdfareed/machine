@@ -1,6 +1,18 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = 'Stop'
 
+# Allow the deployed PowerShell profile to load.
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+
+# Enable dotfile links before file deployment.
+Write-Host 'enabling developer mode...'
+Invoke-Admin {
+    $path = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+    New-Item -Path $path -Force | Out-Null
+    New-ItemProperty -Path $path -Name AllowDevelopmentWithoutDevLicense `
+        -PropertyType DWord -Value 1 -Force | Out-Null
+}
+
 # resolve hostname
 $hostname = if ($env:MC_HOSTNAME) {
     $env:MC_HOSTNAME
@@ -16,19 +28,6 @@ if ($hostname -and $env:COMPUTERNAME -ine $hostname) {
         param($hostname)
         Rename-Computer -NewName $hostname -Force
     } -ArgumentList $hostname
-}
-
-# enable developer mode
-Write-Host "enabling developer mode..."
-Invoke-Admin {
-    $developerMode = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
-    New-Item -Path $developerMode -Force | Out-Null
-    New-ItemProperty `
-        -Path $developerMode `
-        -Name AllowDevelopmentWithoutDevLicense `
-        -Value 1 `
-        -PropertyType DWord `
-        -Force | Out-Null
 }
 
 # wsl

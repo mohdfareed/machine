@@ -8,9 +8,9 @@ validation does it save the default selection and apply the resolved configurati
 
 ```mermaid
 flowchart LR
-    Files[Link files] --> Managers[Prepare declared managers]
-    Managers --> Init[Run init scripts]
-    Init --> Packages[Install missing packages]
+    Managers[Prepare optional managers] --> Init[Run initialization scripts]
+    Init --> Files[Link files]
+    Files --> Packages[Install missing packages]
     Packages --> Scripts[Run setup scripts]
 ```
 
@@ -40,15 +40,13 @@ implementation. [test_architecture.py](../tests/test_architecture.py) enforces t
 
 ## How the environment reaches a command
 
-`env.build_env(id)` builds explicit overrides in this order:
+`env.build_env(id)` combines the selected machine's identity and path with its
+committed `machine.env`. The selected identity and path take precedence.
 
-1. Base paths and identity derived from the selected machine.
-2. Its committed `machine.env`.
-3. `$MC_PRIVATE/machine.env`, preserving the resolved identity and base paths.
-
-This does not read or change the saved selection. `~/.env` stores the default for
+This does not read or change the saved selection. `~/.env` stores only `MC_ID` for
 future invocations; `set_current_machine()` writes it separately. The same overrides
-reach files, packages, and scripts. Only manager setup receives `MC_PKG_MANAGERS`.
+reach files, packages, and scripts. Initialization scripts prepare prerequisites
+such as Developer Mode and APT repositories before files or packages are deployed.
 
 Before each executable lookup or command, `shell.process_env()` reads the host
 environment again. Unix activates installed commands through the internal
@@ -61,11 +59,11 @@ shell with profiles can replace it.
 
 Interactive Zsh activation belongs to Zim and `.zshrc`, independently of the app.
 Normal Zsh startup loads saved and committed values and ordinary PATH settings
-from `.zshenv`, without an app-specific guard.
+from `.zshenv`. Both shells read machine values through the `~/.env.mc` symlink.
 
 ## Other command flows
 
-- [upgrade](cli/upgrade.py) upgrades declared managers and all their packages,
+- [upgrade](cli/upgrade.py) upgrades package managers and all their packages,
   then selected custom packages and `up_` scripts. Module filters limit custom
   maintenance, not manager-wide upgrades.
 - [sync](cli/sync.py) fetches canonical main, merges with `--ff-only --autostash`,

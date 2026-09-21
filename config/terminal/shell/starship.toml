@@ -62,11 +62,11 @@ style = "bold bright-black"
 [git_state]
 style = "bright-black"
 rebase = "rebasing"
-merge	 = "merging"
-revert	 = "reverting"
+merge = "merging"
+revert = "reverting"
 cherry_pick = "cherry-pickign"
 bisect = "bisecting"
-am	 = "AM"
+am = "AM"
 am_or_rebase = "AM/rebase"
 
 [git_status]

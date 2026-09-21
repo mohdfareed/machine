@@ -2,14 +2,8 @@
 
 import json
 
-from app.env import SCRIPTS_ROOT, is_windows
 from app.models import Package, PackageSource, PkgManager
-from app.ops.scripts import run_scripts
 from app.shell import find_executable, query, run
-
-_SETUP_SCRIPT_UNIX = SCRIPTS_ROOT / "setup_managers.sh"
-_SETUP_SCRIPT_WIN = SCRIPTS_ROOT / "setup_managers.ps1"
-
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Validate & Setup
@@ -20,24 +14,38 @@ def validate_managers(
     managers: list[PkgManager], *, env: dict[str, str], for_upgrade: bool = False
 ) -> None:
     """Require live prerequisites that the requested workflow cannot install."""
-    available = {manager for manager in managers if find_executable(manager, env=env)}
     for manager in managers:
-        if manager in available:
+        if not for_upgrade and manager not in {PkgManager.BREW, PkgManager.APT, PkgManager.WINGET}:
             continue
-        if for_upgrade or manager in {PkgManager.APT, PkgManager.WINGET}:
+        if not find_executable(manager, env=env):
             raise FileNotFoundError(f"{manager} must already be installed and available on PATH")
-        if manager == PkgManager.SNAP and PkgManager.APT not in available:
-            raise FileNotFoundError("Installing snap requires declared apt available on PATH")
 
 
 def setup_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run: bool) -> None:
-    """Install missing declared managers using the host's bundled setup script."""
-    if all(find_executable(manager, env=env) for manager in managers):
-        return  # All managers are already available.
+    """Install missing optional managers using their native setup commands."""
+    for manager in (PkgManager.MAS, PkgManager.SNAP, PkgManager.SCOOP):
+        if manager not in managers or find_executable(manager, env=env):
+            continue
 
-    script = _SETUP_SCRIPT_WIN if is_windows else _SETUP_SCRIPT_UNIX
-    script_env = {**env, "MC_PKG_MANAGERS": " ".join(managers)}
-    run_scripts([script], env=script_env, dry_run=dry_run)
+        # Run the selected manager's installer directly.
+        match manager:
+            case PkgManager.MAS:
+                run(["brew", "install", "mas"], env=env, dry_run=dry_run, check=True)
+            case PkgManager.SNAP:
+                run(["sudo", "apt", "update", "-y"], env=env, dry_run=dry_run, check=True)
+                run(["sudo", "apt", "install", "-y", "snapd"], env=env, dry_run=dry_run, check=True)
+            case PkgManager.SCOOP:
+                run(
+                    "$installer = Invoke-RestMethod -Uri https://get.scoop.sh\n"
+                    "& ([scriptblock]::Create($installer))",
+                    env=env,
+                    dry_run=dry_run,
+                    check=True,
+                )
+
+        # Require the installed manager on the refreshed PATH before continuing.
+        if not dry_run and not find_executable(manager, env=env):
+            raise FileNotFoundError(f"Installation did not make {manager} available on PATH")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -97,7 +105,7 @@ def install_package(package: Package, *, env: dict[str, str], dry_run: bool) -> 
 
 
 def upgrade_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run: bool) -> None:
-    """Upgrade and clean up all packages belonging to the declared managers."""
+    """Upgrade and clean up all packages belonging to the resolved managers."""
     for manager in managers:
         match manager:
             case PkgManager.BREW:

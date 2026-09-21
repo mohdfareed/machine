@@ -29,7 +29,7 @@ def upgrade(
         bool, typer.Option("-n", "--dry-run", help="Preview changes without applying them.")
     ] = False,
 ) -> None:
-    """Upgrade declared managers globally, then run selected custom maintenance."""
+    """Upgrade configured managers globally, then run selected custom maintenance."""
     if dry_run:
         reporting.heading("Dry run: no changes will be made.")
 
@@ -56,8 +56,8 @@ def upgrade(
     )
     validate_managers(configuration.pkg_managers, env=env, for_upgrade=True)
 
-    # Upgrade all packages owned by the declared managers.
-    reporting.heading("Upgrading declared managers and all their packages")
+    # Upgrade all packages owned by the platform and optional managers.
+    reporting.heading("Upgrading managers and all their packages")
     upgrade_managers(configuration.pkg_managers, env=env, dry_run=dry_run)
 
     # Run custom package upgrades.

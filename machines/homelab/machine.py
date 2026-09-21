@@ -6,7 +6,7 @@ from config.development import agents, python, vscode
 from config.terminal import emulators, git, shell, ssh
 
 manifest = Machine(
-    pkg_managers=[PkgManager.BREW, PkgManager.MAS],
+    pkg_managers=[PkgManager.MAS],
     modules=[
         system,
         homelab,

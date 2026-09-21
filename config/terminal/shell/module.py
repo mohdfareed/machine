@@ -26,17 +26,19 @@ module = Module(
         FileMapping(source="starship.toml", target="~/.config/starship.toml"),
     ],
     overrides=[
+        # environment
+        FileMapping(source="machine.env", target="~/.env.mc"),
         # zsh
         FileMapping(source=".zshenv", target="~/.zshenv.mc", platforms=[Platform.UNIX]),
         FileMapping(source=".zshrc", target="~/.zshrc.mc", platforms=[Platform.UNIX]),
         # powershell
-        FileMapping(source="pwsh/profile.ps1", target=_pwsh_base / "profile.ps1"),
+        FileMapping(source="profile.ps1", target=_pwsh_base / "profile.mc.ps1"),
     ],
     packages=[
         # shell
         Package(brew="zsh"),
         Package(brew="zimfw"),
-        Package(cask="powershell@preview", winget="microsoft.powershell"),
+        Package(cask="powershell@preview", scoop="pwsh"),
         Package(brew="starship", winget="Starship.Starship"),  # prompt theme
         # utilities
         Package(brew="eza", winget="eza-community.eza"),  # ls replacement

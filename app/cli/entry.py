@@ -85,7 +85,6 @@ def _create_app() -> typer.Typer:
     show = typer.Typer(invoke_without_command=True, no_args_is_help=False)
     _register(show, info.machine_id, name="id")
     _register(show, info.home)
-    _register(show, info.private)
     _register(show, info.status)
     _register_group(app, info.show, show, panel="Info")
     _register(app, info.list_all, panel="Info", name="list")

@@ -15,4 +15,6 @@ lazy-lock.json
 **/docker/**/logs/
 
 # machine deployment
+.env
+.env.*
 private/

@@ -26,10 +26,8 @@ for _mc_bin in "$HOME/.local/bin" "${GOBIN:-${_mc_go_path%%:*}/bin}" /snap/bin; 
 done
 
 # Activate Homebrew using its own shell environment.
-if [ -x "$_mc_brew" ]; then
-    _mc_shellenv=$("$_mc_brew" shellenv sh) || return
-    eval "$_mc_shellenv"
-fi
+_mc_shellenv=$("$_mc_brew" shellenv sh) || return
+eval "$_mc_shellenv"
 
 export PATH
 unset _mc_brew _mc_bin _mc_go_path _mc_shellenv

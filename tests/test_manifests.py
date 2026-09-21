@@ -54,6 +54,50 @@ def test_all_manifests_load(monkeypatch, selected_env) -> None:
             load_machine(machine_id, env=selected_env)
 
 
+@pytest.mark.parametrize(
+    "platform,additions,expected,source",
+    [
+        (Platform.MAC, "PkgManager.MAS, PkgManager.MAS", [PkgManager.BREW, PkgManager.MAS], "cask"),
+        (Platform.WIN, "PkgManager.SCOOP", [PkgManager.WINGET, PkgManager.SCOOP], "winget"),
+        (Platform.LINUX, "", [PkgManager.APT, PkgManager.BREW], "apt"),
+        (
+            Platform.WSL,
+            "PkgManager.SNAP",
+            [PkgManager.APT, PkgManager.BREW, PkgManager.SNAP],
+            "apt",
+        ),
+    ],
+)
+def test_platform_managers_and_optional_additions(
+    monkeypatch, tmp_path, selected_env, platform, additions, expected, source
+):
+    monkeypatch.setattr(machine_env, "ROOT", tmp_path)
+    monkeypatch.setattr(machine_env, "PLATFORM", platform)
+    monkeypatch.setattr(
+        machine_env.shutil, "which", lambda *args: pytest.fail("loader queried installed tools")
+    )
+    directory = tmp_path / "machines" / "test"
+    directory.mkdir(parents=True)
+    (directory / "machine.py").write_text(
+        "from app.models import Machine, Package, PkgManager\n"
+        f"manifest = Machine(pkg_managers=[{additions}], packages=[\n"
+        "    Package(brew='example', cask='example', apt='example', winget='Example.App'),\n"
+        "])\n"
+    )
+
+    configuration = load_machine("test", env=selected_env)
+    assert configuration.pkg_managers == expected
+    assert configuration.packages[0].selected_source == source
+
+    unsupported = PkgManager.MAS if platform == Platform.WIN else PkgManager.SCOOP
+    (directory / "machine.py").write_text(
+        "from app.models import Machine, PkgManager\n"
+        f"manifest = Machine(pkg_managers=[PkgManager.{unsupported.name}])\n"
+    )
+    with pytest.raises(ValueError, match="is not supported"):
+        load_machine("test", env=selected_env)
+
+
 def test_load_machine_validates_only_applicable_selected_sources(
     monkeypatch, tmp_path: Path, selected_env
 ) -> None:
@@ -175,9 +219,9 @@ def test_manifest_override_preserves_metadata(
         else ""
     )
     (machine_dir / "machine.py").write_text(
-        "from app.models import FileMapping, Machine, PkgManager, Platform\n"
+        "from app.models import FileMapping, Machine, Platform\n"
         "from config import example\n"
-        "manifest = Machine(modules=[example], pkg_managers=[PkgManager.BREW], "
+        "manifest = Machine(modules=[example], "
         f"files=[{explicit_mapping}])\n",
         encoding="utf-8",
     )
@@ -226,9 +270,8 @@ manifest = Machine(modules=[apps])
     )
     (machines_dir / "declared").mkdir()
     (machines_dir / "declared" / "machine.py").write_text(
-        "from app.models import Machine, Package, PkgManager\n"
-        "manifest = Machine(pkg_managers=[PkgManager.WINGET], "
-        "packages=[Package(winget='Example.App')])\n"
+        "from app.models import Machine, Package\n"
+        "manifest = Machine(packages=[Package(winget='Example.App')])\n"
     )
     assert load_machine("empty", env=selected_env).modules == ["apps"]
     assert load_machine("declared", env=selected_env).modules == []
@@ -320,12 +363,10 @@ def test_same_leaf_modules_keep_distinct_inputs(monkeypatch, tmp_path, selected_
     machine = tmp_path / "machines" / "test"
     machine.mkdir(parents=True)
     (machine / "machine.py").write_text(
-        "from app.env import PLATFORM\n"
-        "from app.models import Machine, PkgManager, Platform\n"
+        "from app.models import Machine\n"
         "from config.work import editor as work_editor\n"
         "from config.home import editor as home_editor\n"
-        "manifest = Machine(modules=[work_editor, home_editor], "
-        "pkg_managers=[PkgManager.BREW if PLATFORM == Platform.MAC else PkgManager.WINGET])\n"
+        "manifest = Machine(modules=[work_editor, home_editor])\n"
     )
     for group in ["work", "home"]:
         directory = tmp_path / "config" / group / "editor"
@@ -424,7 +465,7 @@ def test_discovery_rejects_case_collisions(monkeypatch, tmp_path):
     [
         ("Package()", "[]", "no install source"),
         ("Package(cmd='setup')", "[]", "require a name"),
-        ("Package(brew='example')", "[]", "manager not declared"),
+        ("Package(snap='example')", "[]", "manager not declared"),
     ],
 )
 def test_loader_rejects_invalid_package_declarations(
@@ -459,7 +500,7 @@ def test_loader_resolves_package_sources_without_querying_installed_tools(
     directory.mkdir(parents=True)
     (directory / "machine.py").write_text(
         "from app.models import Machine, Package, PkgManager\n"
-        "manifest = Machine(pkg_managers=[PkgManager.SNAP, PkgManager.APT], packages=[\n"
+        "manifest = Machine(pkg_managers=[PkgManager.SNAP], packages=[\n"
         "    Package(apt='example', snap='example'),\n"
         "    Package(snap='classic-example', snap_classic=True),\n"
         "    Package(name='custom', cmd='setup', up_cmd=True),\n"

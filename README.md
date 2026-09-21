@@ -13,7 +13,13 @@ and service deployment.
 
 ## Bootstrap
 
-Run the following to install the repository and CLI on a new machine:
+On macOS, grant the terminal **Full Disk Access** before deploying system settings
+or the SSH server.
+
+The Windows `system` module sets Developer Mode and PowerShell execution policy
+before dotfiles are linked; system changes request elevation when needed.
+
+Install the repository and CLI:
 
 ```sh
 # unix
@@ -25,7 +31,7 @@ curl -LsSf $repo/scripts/bootstrap.sh | sh -s -- --deploy
 # powershell
 $repo = "https://raw.githubusercontent.com/mohdfareed/machine/main"
 $script = irm $repo/scripts/bootstrap.ps1
-& ([scriptblock]::Create($script) -Deploy
+& ([scriptblock]::Create($script)) -Deploy
 ```
 
 Restart the shell afterward to make `mc` available on `PATH`.
@@ -42,7 +48,7 @@ bootstrapping to change it. To re-deploy at a different path and reinstall `mc`:
 To set up WSL, run the following after a Windows machine is deployed:
 
 ```powershell
-cd $env:MC_HOME
+cd (mc show home)
 wsl -- bash ./scripts/bootstrap.sh --deploy
 ```
 
@@ -70,11 +76,10 @@ Add `--debug` to show exception tracebacks.
 Create `machines/<id>/machine.py`:
 
 ```python
-from app.models import Machine, PkgManager
+from app.models import Machine
 from config.terminal import shell
 
 manifest = Machine(
-    pkg_managers=[PkgManager.BREW],
     modules=[shell],
 )
 ```
@@ -87,6 +92,8 @@ startup use that file. Scripts launched by `mc` preserve the environment
 prepared for their selected machine.
 
 Use `mc list` to find modules to import.
+Homebrew on Unix, WinGet on Windows, and APT on Linux/WSL are prerequisites;
+`pkg_managers` only adds optional MAS, Scoop, or Snap.
 Replace `<id>` below with the machine name:
 
 ```sh
@@ -132,34 +139,32 @@ No tag means all platforms, so tag shell-specific scripts.
 | `.win`   | Windows           |
 | `.wsl`   | WSL               |
 
-| Prefix  | When it runs                                       |
-| ------- | -------------------------------------------------- |
-| `init_` | During deployment, after files and before packages |
-| `up_`   | Only during `mc upgrade`                           |
-| `_`     | Helper; never auto-executed                        |
-| None    | Every deployment, after packages                   |
+| Prefix  | When it runs                                                                 |
+| ------- | ---------------------------------------------------------------------------- |
+| `init_` | Before dotfiles and packages; prepare host settings and package repositories |
+| `up_`   | Only during `mc upgrade`                                                     |
+| `_`     | Helper; never auto-executed                                                  |
+| None    | Every deployment, after packages                                             |
 
 The first failed operation stops deployment or upgrade.
 Before each command, `mc` prepares current host variables and tool activation,
-then applies the selected machine's variables and secrets.
+then applies the selected machine's public variables.
 Declare machine-specific values in `machine.env`; environment refresh is
 handled internally by the app.
 
 ### Secrets
 
-Set `MC_PRIVATE` in `machines/<id>/machine.env` to my private storage;
-it defaults to `<repository>/private`. Keep secret values out of
-committed machine files and the generated `~/.env`.
+On machines selecting `onepass`, sign in and enable **SSH agent**, **Generate SSH config files with
+bookmarked hosts**, and **CLI integration** in Developer settings. On an existing
+Windows installation, stop and disable Windows' `ssh-agent` service if enabled.
+Register the public keys with SSH destinations and Git hosting, and add hosts as
+SSH Bookmarks in 1Password.
 
-The app, Zsh `mc::secrets`, and PowerShell `Import-Secrets` read
-`$MC_PRIVATE/machine.env`, plain `KEY=VALUE`.
+Keep secrets in 1Password, separate from committed `machine.env` and generated
+`~/.env`. Compose projects commit only `op://` references in `secrets.env`.
 
-```sh
-mc show private  # Resolve the selected machine's private directory
-mc::secrets      # Load private env into this shell (shell module helper)
-```
-
-`mc` already loads its private env file for scripts; don't source it again there.
+Sign in to Tailscale and authorize VS Code Remote Tunnels if selected. Docker's
+first-launch and service prerequisites are in the [homelab notes](config/homelab/README.md).
 
 ## Development
 

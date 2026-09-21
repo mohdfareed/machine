@@ -7,13 +7,15 @@ import subprocess
 import time
 from pathlib import Path
 
+from app.env import ROOT
+
 
 def main() -> None:
-    """Deploy the shared and selected machine's services using the inherited environment."""
-    # Locate shared and machine-specific service directories.
+    """Deploy all shared and selected machine Compose projects."""
+    # Locate the shared and machine-specific services.
     docker_directories = [
         Path(__file__).resolve().parent.parent / "docker",
-        Path(os.environ["MC_MACHINE"]) / "docker",
+        ROOT / "machines" / os.environ["MC_ID"] / "docker",
     ]
 
     services = [
@@ -33,11 +35,13 @@ def main() -> None:
             continue
 
         print(f"deploying {service.name}...", flush=True)
+        command = ["docker", "compose"]
+        if (service / "secrets.env").is_file():
+            command = ["op", "run", "--env-file=secrets.env", "--", *command]
+
+        subprocess.run([*command, "pull", "--ignore-pull-failures"], cwd=service, check=True)
         subprocess.run(
-            ["docker", "compose", "pull", "--ignore-pull-failures"], cwd=service, check=True
-        )
-        subprocess.run(
-            ["docker", "compose", "up", "-d", "--build", "--remove-orphans"],
+            [*command, "up", "-d", "--build", "--remove-orphans"],
             cwd=service,
             check=True,
         )

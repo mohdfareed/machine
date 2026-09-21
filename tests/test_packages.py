@@ -257,13 +257,42 @@ def test_first_command_failure_stops_remaining_work(monkeypatch, commands, opera
 
 def test_preflight_checks_only_live_prerequisites(monkeypatch):
     monkeypatch.setattr(machine_managers, "find_executable", lambda name, **kwargs: None)
-    machine_managers.validate_managers([PkgManager.BREW, PkgManager.MAS, PkgManager.SCOOP], env={})
-    for managers in ([PkgManager.WINGET], [PkgManager.APT], [PkgManager.SNAP]):
+    machine_managers.validate_managers([PkgManager.MAS, PkgManager.SNAP, PkgManager.SCOOP], env={})
+    for managers in ([PkgManager.BREW], [PkgManager.WINGET], [PkgManager.APT]):
         with pytest.raises(FileNotFoundError):
             machine_managers.validate_managers(managers, env={})
     with pytest.raises(FileNotFoundError):
-        machine_managers.validate_managers([PkgManager.BREW], env={}, for_upgrade=True)
+        machine_managers.validate_managers([PkgManager.SNAP], env={}, for_upgrade=True)
     monkeypatch.setattr(
         machine_managers, "find_executable", lambda name, **kwargs: name if name == "apt" else None
     )
     machine_managers.validate_managers([PkgManager.APT, PkgManager.SNAP], env={})
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_manager_setup_installs_only_missing_declared_managers(monkeypatch, dry_run):
+    installed = {PkgManager.BREW, PkgManager.APT, PkgManager.SCOOP}
+    selected_env = {"MC_ID": "test"}
+    commands = []
+    monkeypatch.setattr(
+        machine_managers, "find_executable", lambda name, **kwargs: name in installed
+    )
+
+    def run(command, *, env, dry_run, check):
+        assert env is selected_env and check
+        commands.append(command)
+        if not dry_run:
+            installed.add(PkgManager.MAS)
+
+    monkeypatch.setattr(machine_managers, "run", run)
+    machine_managers.setup_managers(
+        [PkgManager.BREW, PkgManager.MAS, PkgManager.SCOOP], env=selected_env, dry_run=dry_run
+    )
+    assert commands == [["brew", "install", "mas"]]
+
+
+def test_manager_setup_stops_when_installation_does_not_provide_the_command(monkeypatch):
+    monkeypatch.setattr(machine_managers, "find_executable", lambda *args, **kwargs: None)
+    monkeypatch.setattr(machine_managers, "run", lambda *args, **kwargs: None)
+    with pytest.raises(FileNotFoundError, match="mas"):
+        machine_managers.setup_managers([PkgManager.MAS], env={}, dry_run=False)

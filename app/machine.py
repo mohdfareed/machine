@@ -1,6 +1,7 @@
 """Load ready-to-use machine configuration."""
 
 import importlib.util
+from collections.abc import Sequence
 from pathlib import Path
 from types import ModuleType
 
@@ -72,8 +73,7 @@ def load_machine(
             )
 
     # Combine applicable inputs and validate them before any execution.
-    managers = list(dict.fromkeys(machine.pkg_managers))
-    _validate_managers(managers)
+    managers = _resolve_managers(machine.pkg_managers)
     files = [file for module in modules.values() for file in module.files] + overrides
     files.extend(
         file for file in machine.files if not module_names or file.target in override_targets
@@ -184,19 +184,27 @@ _PLATFORM_SOURCES: dict[Platform, tuple[PackageSource, ...]] = {
 }
 
 
-def _validate_managers(managers: list[PkgManager]) -> None:
+def _resolve_managers(additions: Sequence[PkgManager]) -> list[PkgManager]:
+    # Start with the native managers and Unix bootstrap's Homebrew.
+    if machine_env.PLATFORM.is_a(Platform.LINUX):
+        managers = [PkgManager.APT, PkgManager.BREW]
+    elif machine_env.PLATFORM.is_a(Platform.WIN):
+        managers = [PkgManager.WINGET]
+    else:
+        managers = [PkgManager.BREW]
+
+    # Validate optional additions without consulting packages or installed tools.
     supported = {
         PkgManager.BREW if source == "cask" else PkgManager(source)
         for platform, sources in _PLATFORM_SOURCES.items()
         if machine_env.PLATFORM.is_a(platform)
         for source in sources
     }
-    for manager in managers:
+    for manager in additions:
         if manager not in supported:
             raise ValueError(f"{manager} is not supported on {machine_env.PLATFORM}")
 
-    if PkgManager.MAS in managers and PkgManager.BREW not in managers:
-        raise ValueError("mas requires brew in the machine's declared package managers")
+    return list(dict.fromkeys([*managers, *additions]))
 
 
 def _resolve_packages(packages: list[Package], managers: list[PkgManager]) -> list[Package]:
@@ -234,7 +242,7 @@ def _resolve_packages(packages: list[Package], managers: list[PkgManager]) -> li
             if isinstance(value, int) and value <= 0:
                 raise ValueError(f"Package '{name}': {source} must be a positive ID")
 
-        # Select a declared source by platform preference, independently of installed tools.
+        # Select a configured source by platform preference, independently of installed tools.
         applicable: list[PackageSource] = [source for source in preferred if source in sources]
         package.selected_source = None
         if applicable:
@@ -244,7 +252,7 @@ def _resolve_packages(packages: list[Package], managers: list[PkgManager]) -> li
                     package.selected_source = source
                     break
 
-            # Require a declared manager for any applicable source.
+            # Require an enabled manager for any applicable source.
             if package.selected_source is None:
                 raise ValueError(
                     f"Package '{name}': manager not declared for " + ", ".join(applicable)

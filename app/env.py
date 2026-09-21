@@ -52,11 +52,9 @@ def get_current_machine() -> str | None:
 
 
 def set_current_machine(machine_id: str) -> None:
-    """Save the selected machine and base variables for login shells."""
-    values = _machine_values(machine_id)
-    contents = "\n".join(f'{key}="{value}"' for key, value in values.items()) + "\n"
+    """Save the selected machine ID for future invocations and login shells."""
     _ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
-    _ENV_FILE.write_text(contents, encoding="utf-8")
+    _ENV_FILE.write_text(f'MC_ID="{machine_id}"\n', encoding="utf-8")
 
 
 def resolve_path(value: Path, env: dict[str, str]) -> Path:
@@ -77,22 +75,13 @@ def resolve_path(value: Path, env: dict[str, str]) -> Path:
     return path
 
 
-def build_env(machine_id: str, *, include_private: bool = True) -> dict[str, str]:
+def build_env(machine_id: str) -> dict[str, str]:
     """Build explicit machine overrides, using inherited values only for expansion."""
     # Resolve committed values without retaining unrelated inherited variables.
-    base = _machine_values(machine_id)
-    env = {**base, **_read_env(Path(base["MC_MACHINE"]) / "machine.env", {**os.environ, **base})}
-    for key in ("MC_HOME", "MC_ID", "MC_MACHINE"):
-        env[key] = base[key]
-    env["MC_PRIVATE"] = str(resolve_path(Path(env["MC_PRIVATE"]), env))
-    if not include_private:
-        return env
-
-    # Load this machine's secrets without letting them relocate its base paths.
-    selected = {key: env[key] for key in base}
-    private_file = Path(env["MC_PRIVATE"]) / "machine.env"
-    env.update(_read_env(private_file, {**os.environ, **env}))
-    env.update(selected)
+    base = {"MC_ID": machine_id}
+    path = ROOT / "machines" / machine_id / "machine.env"
+    env = _read_env(path, {**os.environ, **base})
+    env.update(base)
     return env
 
 
@@ -168,15 +157,6 @@ _ENV_REFERENCE = re.compile(
     r"|%(?P<windows>[A-Za-z_][A-Za-z0-9_]*)%"
 )
 _WINDOWS_REFERENCE = re.compile(r"%([^%]+)%")
-
-
-def _machine_values(machine_id: str) -> dict[str, str]:
-    return {
-        "MC_HOME": str(ROOT),
-        "MC_ID": machine_id,
-        "MC_MACHINE": str(ROOT / "machines" / machine_id),
-        "MC_PRIVATE": str(ROOT / "private"),
-    }
 
 
 def _read_env(path: Path, base: dict[str, str]) -> dict[str, str]:

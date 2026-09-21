@@ -49,15 +49,3 @@ if ($env:TERM_PROGRAM -eq 'vscode') {
         Clear-Host; Clear-Host
     }
 }
-
-# Load private values into this shell on demand
-function Import-Secrets {
-    $file = Join-Path $env:MC_PRIVATE 'machine.env' -ErrorAction Stop
-    if (-not (Test-Path $file)) {
-        Write-Error "no secrets file found"
-        return
-    }
-
-    Import-DotEnv $file
-    Write-Host "secrets loaded for this shell"
-}

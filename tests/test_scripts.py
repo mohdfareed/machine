@@ -27,50 +27,6 @@ def test_powershell_mappings_follow_redirected_documents(monkeypatch, tmp_path):
     assert all(file.target.parent == documents / "PowerShell" for file in mappings)
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows Documents and Windows PowerShell")
-def test_powershell_link_repair_uses_the_deployed_directory(tmp_path):
-    module_dir = Path(__file__).parents[1] / "config/terminal/shell"
-    module = runpy.run_path(str(module_dir / "module.py"))["module"]
-    mapping = next(file for file in module.files if file.source == Path("pwsh/profile.ps1"))
-
-    # Run the actual setup under Windows PowerShell without installing or changing links.
-    harness = tmp_path / "profile-path.ps1"
-    harness.write_text(
-        """
-param($ScriptPath)
-$ErrorActionPreference = 'Stop'
-$PROFILE = [pscustomobject]@{CurrentUserAllHosts = 'C:\\Wrong\\WindowsPowerShell\\profile.ps1'}
-function Install-Module { param($Name) }
-function Test-Path { param($LiteralPath, $PathType); return $true }
-function Get-ChildItem {
-    param($LiteralPath, $Filter, [switch]$File)
-    [Console]::WriteLine($LiteralPath)
-}
-function Invoke-Admin {
-    param([scriptblock]$ScriptBlock, [object[]]$ArgumentList)
-    & $ScriptBlock @ArgumentList
-}
-. $ScriptPath
-""",
-        encoding="utf-8",
-    )
-    result = subprocess.run(
-        [
-            "powershell.exe",
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-File",
-            str(harness),
-            str(module_dir / "scripts/pwsh.ps1"),
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    assert Path(result.stdout.strip().splitlines()[-1]).resolve() == mapping.target.parent.resolve()
-
-
 @pytest.mark.parametrize("failed_script", ["init_failed.py", "setup.py"])
 def test_scripts_stop_on_first_failure_without_interpreting_prefixes(
     tmp_path: Path, monkeypatch, failed_script: str

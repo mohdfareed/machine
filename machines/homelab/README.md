@@ -5,8 +5,9 @@ etc.
 
 ## Set up
 
-- Download the private env from iCloud (or any cloud service),
-  and mount the [media](./docker/media/README.md) storage before deploying.
+- Mount the [media](./docker/media/README.md) storage before deploying.
+- In 1Password, mount the `tailscale` Environment at `~/tailscale.env`.
+  Compose reads it directly; no beta CLI is needed.
 - Restore any service `data/` backups before starting the apps; otherwise they
   start with fresh configuration.
 - Finish Docker Desktop's first launch and Tailscale sign-in. After a reboot,
@@ -18,3 +19,6 @@ etc.
 Grant the terminal app Full Disk Access before deploying (required to enable SSH).
 After every deployment, complete the Sharing review in the
 [shared homelab setup notes](../../config/homelab/README.md).
+
+Run `mc deploy` for the complete machine setup, including Dashboard's Tailscale
+HTTPS address. `tailscale serve status` shows that address.

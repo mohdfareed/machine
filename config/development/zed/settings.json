@@ -204,7 +204,7 @@
       "provider": "openai-subscribed",
       "model": "gpt-6-astra",
       "enable_thinking": true,
-      "effort": "medium",
+      "effort": "high",
       "speed": "standard",
     },
     "profiles": {
@@ -266,7 +266,7 @@
       "enabled": true,
       "remote": false,
       "command": "1password-mcp",
-      "args": []
+      "args": [],
     },
     "craft-docs": {
       "url": "https://mcp.craft.do/links/Ll1BPMqendN/mcp",
