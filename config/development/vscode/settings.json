@@ -69,8 +69,8 @@
   "accessibility.signals.terminalBell": {
     "sound": "on",
   },
-  "terminal.integrated.defaultProfile.osx": "zsh",
-  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.defaultProfile.osx": "fish",
+  "terminal.integrated.defaultProfile.linux": "fish",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
   // MARK: font
   // ══════════════════════════════════════════════════════════════════════════

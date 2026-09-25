@@ -24,9 +24,8 @@ Use these commands as needed:
 
 - `mc show home`: locate the repository backing the installed CLI.
 - `mc show id`: read the saved machine selection; blank means none is selected.
-- `mc show status`: see the CLI version, selection, and repository location.
 
-The saved selection is not proof of host identity. Status is not a health check.
+The saved selection is not proof of host identity or a health check.
 If `mc` is unavailable, use the current workspace as locator
 hints and verify the candidate repository. Do not assume a fixed checkout path,
 scan the whole home directory, or install tools just to orient yourself. Report
@@ -37,11 +36,10 @@ missing access rather than inventing machine facts.
 Resolve repository paths below against the root returned by `mc show home`, not
 against this skill's directory or the current workspace.
 
-- `machines/<id>/machine.py` selects modules and machine-specific overrides.
-- `machines/<id>/machine.env` contains committed values, including workspace or
-  service paths when declared. Check only the values needed for the task.
+- `machines/<id>/machine.py` selects modules, overrides, and public `env` values,
+  including workspace or service paths.
 - `config/` contains shared tool configuration and module declarations.
-- `mc list` lists available machines and modules.
+- `mc show machines` and `mc show modules` list available machines and modules.
 - `mc show` displays resolved packages, scripts, and file mappings without loading
   secrets. Check the saved selection first to avoid a prompt;
   use `mc show -m <id>` for an explicitly chosen machine.
@@ -59,7 +57,7 @@ once located; ordinary application code belongs there, not in this repository.
 Verify relevant executable paths, versions, active configuration, or service
 state. Declared packages and scripts do not prove installation or execution.
 
-The CLI reads its saved selection from `~/.env`; inherited `MC_*` values can be
+The CLI reads its own saved selection; inherited `MC_*` values can be
 stale. Commands launched directly by an agent do not automatically receive the
 selected-machine environment that `mc` prepares for deployment scripts. Do not
 source arbitrary environment files to imitate that setup.

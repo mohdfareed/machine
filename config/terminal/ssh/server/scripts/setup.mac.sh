@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
+#!/bin/sh
+set -eu
 
 # Preserve existing access memberships while allowing administrators.
 echo "allowing administrators remote login..."

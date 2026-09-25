@@ -2,11 +2,19 @@
 
 from app.models import Module, Package, Platform
 
-from config import onepass
+from config import onepass, system
+from config.terminal import git, shell, ssh
 
 module = Module(
-    depends=[onepass],
+    depends=[
+        system,
+        onepass,
+        git,
+        shell,
+        ssh,
+    ],
     packages=[
+        # Networking
         Package(
             name="tailscale",
             cask="tailscale",
@@ -14,12 +22,14 @@ module = Module(
             cmd="curl -fsSL https://tailscale.com/install.sh | sh",
             up_cmd=True,
         ),
+        # Services
         Package(
             name="docker",
             cask="docker-desktop",
             cmd="curl -fsSL https://get.docker.com | sh",
+            up_cmd=True,
             platforms=[Platform.LINUX, Platform.MAC],
-        ),
-        # Windows Docker is installed by docker.win.ps1 and upgraded by up_docker.win.ps1.
+        ),  # Windows Docker is handled by scripts.
+        Package(brew="rsync"),  # file sync
     ],
 )

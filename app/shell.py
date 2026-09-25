@@ -24,11 +24,21 @@ def run(
     env: dict[str, str],
     dry_run: bool,
     capture_output: bool = False,
-    echo_output: bool = False,
     check: bool = False,
     powershell: bool = False,
 ) -> subprocess.CompletedProcess[bytes] | None:
-    """Announce a command, then run it or skip its execution during a preview."""
+    """Run or preview a command; powershell lists contain a script path and its arguments."""
+    if powershell:
+        if isinstance(cmd, str):
+            raise ValueError("PowerShell file execution requires an argument list")
+        cmd = [
+            "powershell.exe" if is_windows else "pwsh",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            *cmd,
+        ]
     if isinstance(cmd, str):
         command = cmd
     else:
@@ -40,16 +50,21 @@ def run(
 
     # Prepare the current host environment before resolving commands or interpreters.
     environment = process_env(env)
-    if powershell:
-        if isinstance(cmd, str):
-            raise ValueError("PowerShell file execution requires an argument list")
-        environment = prepare_powershell_env(cmd[0], environment)
 
     # Preserve arguments and inherit the terminal unless the caller needs output.
     if is_windows and isinstance(cmd, str):
-        result = _run_powershell(cmd, environment, capture_output)
+        result = _run_powershell(
+            cmd, _powershell_executable(environment), environment, capture_output
+        )
     else:
-        args = cmd if isinstance(cmd, str) else [_resolve_executable(cmd[0], environment), *cmd[1:]]
+        args = cmd
+        if isinstance(cmd, list):
+            executable = (
+                _powershell_executable(environment)
+                if powershell
+                else _resolve_executable(cmd[0], environment)
+            )
+            args = [executable, *cmd[1:]]
         result = subprocess.run(
             args,
             shell=isinstance(cmd, str),
@@ -58,14 +73,12 @@ def run(
             stderr=subprocess.STDOUT if capture_output else None,
         )
 
-    # Replay inspected output without changing it, then preserve failure status.
-    if echo_output and result.stdout:
-        reporting.plain(result.stdout.decode(errors="replace"), end="")
-    if check and result.returncode != 0:
-        detail = ""
-        if capture_output and not echo_output and result.stdout:
-            detail = "\n" + result.stdout.decode(errors="replace").strip()
-        raise RuntimeError(f"Command failed (exit {result.returncode}): {command}{detail}")
+    # Preserve failure status and include captured diagnostics when available.
+    if check:
+        if capture_output and result.returncode != 0:
+            detail = "\n" + result.stdout.decode(errors="replace").strip() if result.stdout else ""
+            raise RuntimeError(f"Command failed (exit {result.returncode}): {command}{detail}")
+        result.check_returncode()
 
     reporting.command_end(result.returncode)
     return result
@@ -141,42 +154,6 @@ def find_executable(name: str, *, env: dict[str, str]) -> str | None:
     return executable
 
 
-def powershell_executable(env: dict[str, str], *, dry_run: bool = False) -> str:
-    """Choose the platform's PowerShell interpreter without launching it in previews."""
-    if dry_run:
-        return "powershell.exe" if is_windows else "pwsh"
-    return _powershell_executable(process_env(env))
-
-
-def prepare_powershell_env(executable: str, env: dict[str, str]) -> dict[str, str]:
-    """Add bundled modules to an already prepared environment for the chosen interpreter."""
-    key = "PSModulePath"
-    if is_windows:
-        key = next((name for name in env if name.casefold() == key.casefold()), key)
-    module_path = env.get(key)
-    if module_path is None:
-        result = subprocess.run(
-            [
-                executable,
-                "-NoProfile",
-                "-Command",
-                "[Console]::OutputEncoding = [Text.UTF8Encoding]::new(); $env:PSModulePath",
-            ],
-            env=env,
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-        if result.returncode != 0:
-            detail = result.stderr.strip() or result.stdout.strip()
-            raise RuntimeError(f"PowerShell environment setup failed: {detail}")
-        module_path = result.stdout.strip()
-
-    paths = [str(SCRIPTS_ROOT), *module_path.split(os.pathsep)]
-    return {**env, key: os.pathsep.join(dict.fromkeys(path for path in paths if path))}
-
-
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Process Helpers
 # ═════════════════════════════════════════════════════════════════════════════
@@ -215,10 +192,10 @@ def _without_git_context(env: dict[str, str]) -> dict[str, str]:
 
 
 def _resolve_executable(name: str, env: dict[str, str]) -> str:
-    executable = shutil.which(name, path=env.get("PATH", ""))
-    if executable is None:
-        raise FileNotFoundError(f"Executable not found: {name}")
-    return executable
+    # Windows shell=False does not use the supplied environment's PATH for lookup.
+    if is_windows:
+        return shutil.which(name, path=env.get("PATH", "")) or name
+    return name
 
 
 def _powershell_executable(env: dict[str, str]) -> str:
@@ -241,12 +218,10 @@ def _powershell_executable(env: dict[str, str]) -> str:
 
 def _run_powershell(
     cmd: str,
+    executable: str,
     env: dict[str, str],
     capture_output: bool,
 ) -> subprocess.CompletedProcess[bytes]:
-    executable = _powershell_executable(env)
-    environment = prepare_powershell_env(executable, env)
-
     # Use -File to preserve source quoting and relay plain text and native exits.
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".ps1", encoding="utf-8-sig", delete_on_close=False
@@ -259,7 +234,7 @@ def _run_powershell(
         script.close()
         result = subprocess.run(
             [executable, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script.name],
-            env=environment,
+            env=env,
             stdout=subprocess.PIPE if capture_output else None,
             stderr=subprocess.STDOUT if capture_output else None,
         )

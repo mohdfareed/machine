@@ -1,47 +1,58 @@
 #!/usr/bin/env sh
 set -eu
+deploy=false
+
+for arg in "$@"; do case "$arg" in
+  "-d"|"--deploy") deploy=true ;;
+esac; done
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Dependencies
 # ═════════════════════════════════════════════════════════════════════════════
 
 # Locate Homebrew before shell configuration has been deployed.
-brew_command="$(command -v brew || true)"
-if [ -z "$brew_command" ]; then
+brew="$(command -v brew || true)"
+if [ -z "$brew" ]; then
   case "$(uname -s):$(uname -m)" in
-    Darwin:arm64) brew_command=/opt/homebrew/bin/brew ;;
-    Darwin:*) brew_command=/usr/local/bin/brew ;;
-    *) brew_command=/home/linuxbrew/.linuxbrew/bin/brew ;;
+    Darwin:arm64) brew=/opt/homebrew/bin/brew ;;
+    Darwin:*) brew=/usr/local/bin/brew ;;
+    *) brew=/home/linuxbrew/.linuxbrew/bin/brew ;;
   esac
 fi
 
 # Install Homebrew with its normal terminal prompts, including piped bootstrap.
-if ! [ -x "$brew_command" ]; then
+if ! [ -x "$brew" ]; then
   echo "Installing Homebrew..."
   installer="$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   /bin/bash -c "$installer" </dev/tty
 fi
 
-# Keep uv owned and updated by Homebrew, independent of selected modules.
-brew_env="$("$brew_command" shellenv sh)"
+# Activate Homebrew environment for this shell session.
+brew_env="$("$brew" shellenv sh)"
 eval "$brew_env"
-"$brew_command" install uv
-uv_command="$("$brew_command" --prefix uv)/bin/uv"
+
+# Install uv and git.
+"$brew" install uv
+uv="$("$brew" --prefix uv)/bin/uv"
+"$brew" install git
+git="$(command -v git || true)"
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Bootstrap
 # ═════════════════════════════════════════════════════════════════════════════
 
 # Resolve machine repo directory.
-MC_HOME="$(eval echo "${MC_HOME:-$HOME/.machine}")"
+MC_HOME="${MC_HOME:-$HOME/.machine}"
 export MC_HOME
 
 # Clone repo if needed.
 if ! [ -d "$MC_HOME/.git" ]; then
   echo "Cloning machine repo to $MC_HOME..."
-  git clone https://github.com/mohdfareed/machine.git "$MC_HOME"
+  "$git" clone https://github.com/mohdfareed/machine.git "$MC_HOME"
 fi
 
-# Sync and deploy the repo.
-"$uv_command" run --project "$MC_HOME" mc sync
-"$uv_command" run --project "$MC_HOME" mc deploy
+# Install `mc` with uv, forcing an update if already installed.
+"$uv" tool install "$MC_HOME" --editable --force
+if [ "$deploy" = true ]; then
+  "$uv" run --project "$MC_HOME" mc deploy
+fi

@@ -1,4 +1,4 @@
-"""Live package-manager readiness, installation, presence, and maintenance."""
+"""Package-manager setup, installation, presence, and maintenance."""
 
 import json
 
@@ -6,19 +6,8 @@ from app.models import Package, PackageSource, PkgManager
 from app.shell import find_executable, query, run
 
 # ═════════════════════════════════════════════════════════════════════════════
-# MARK: Validate & Setup
+# MARK: Setup
 # ═════════════════════════════════════════════════════════════════════════════
-
-
-def validate_managers(
-    managers: list[PkgManager], *, env: dict[str, str], for_upgrade: bool = False
-) -> None:
-    """Require live prerequisites that the requested workflow cannot install."""
-    for manager in managers:
-        if not for_upgrade and manager not in {PkgManager.BREW, PkgManager.APT, PkgManager.WINGET}:
-            continue
-        if not find_executable(manager, env=env):
-            raise FileNotFoundError(f"{manager} must already be installed and available on PATH")
 
 
 def setup_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run: bool) -> None:
@@ -42,10 +31,6 @@ def setup_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run: 
                     dry_run=dry_run,
                     check=True,
                 )
-
-        # Require the installed manager on the refreshed PATH before continuing.
-        if not dry_run and not find_executable(manager, env=env):
-            raise FileNotFoundError(f"Installation did not make {manager} available on PATH")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -155,7 +140,7 @@ def upgrade_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run
 
 
 def source_installed(source: PackageSource, value: str | int, *, env: dict[str, str]) -> bool:
-    """Find the exact installed package identity; failed queries raise."""
+    """Check exact installed identity; WinGet defers to its no-upgrade installer."""
     identity = str(value)
     match source:
         case "brew" | "cask":
@@ -189,9 +174,4 @@ def source_installed(source: PackageSource, value: str | int, *, env: dict[str, 
                 app["Name"].casefold() == identity.rsplit("/", 1)[-1].casefold() for app in apps
             )
         case "winget":
-            result = query(["winget", "list", "--id", identity], env=env, check=False)
-            # APPINSTALLER_CLI_ERROR_NO_APPLICATIONS_FOUND, including signed Windows exits.
-            if result.returncode & 0xFFFFFFFF == 0x8A150014:
-                return False
-            result.check_returncode()
-            return identity.casefold() in {field.casefold() for field in result.stdout.split()}
+            return False

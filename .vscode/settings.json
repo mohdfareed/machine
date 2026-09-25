@@ -7,8 +7,6 @@
   "files.associations": {
     "**/ghostty/config": "ini",
     ".gitconfig.*": "properties",
-    ".zshenv.*": "shellscript",
-    ".zshrc.*": "shellscript",
     "ssh.config": "ssh_config",
   },
   "material-icon-theme.files.associations": {

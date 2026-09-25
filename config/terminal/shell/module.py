@@ -1,24 +1,34 @@
 """Shell configuration module."""
 
-from pathlib import Path
-
 from app.env import PLATFORM
 from app.models import FileMapping, Module, Package, Platform
 from platformdirs import user_documents_path
+from platformdirs.unix import Unix
 
 match PLATFORM:
     case Platform.WIN:
         _pwsh_base = user_documents_path() / "PowerShell"
     case _:
-        _pwsh_base = Path("~/.config/powershell")
+        _pwsh_base = Unix("powershell").user_config_path
 
 module = Module(
     files=[
-        # zsh
-        FileMapping(source="zsh/.zshenv", target="~/.zshenv", platforms=[Platform.UNIX]),
-        FileMapping(source="zsh/.zshrc", target="~/.zshrc", platforms=[Platform.UNIX]),
-        FileMapping(source="zsh/.zimrc", target="~/.zimrc", platforms=[Platform.UNIX]),
-        FileMapping(source="zsh/.aliases", target="~/.aliases", platforms=[Platform.UNIX]),
+        # fish
+        FileMapping(
+            source="fish/config.fish",
+            target=Unix("fish").user_config_path / "config.fish",
+            platforms=[Platform.UNIX],
+        ),
+        FileMapping(
+            source="fish/aliases.fish",
+            target=Unix("fish").user_config_path / "aliases.fish",
+            platforms=[Platform.UNIX],
+        ),
+        FileMapping(
+            source="fish/fish_plugins",
+            target=Unix("fish").user_config_path / "fish_plugins",
+            platforms=[Platform.UNIX],
+        ),
         # powershell
         FileMapping(source="pwsh/profile.ps1", target=_pwsh_base / "profile.ps1"),
         FileMapping(source="pwsh/aliases.ps1", target=_pwsh_base / "aliases.ps1"),
@@ -26,18 +36,19 @@ module = Module(
         FileMapping(source="starship.toml", target="~/.config/starship.toml"),
     ],
     overrides=[
-        # environment
-        FileMapping(source="machine.env", target="~/.env.mc"),
-        # zsh
-        FileMapping(source=".zshenv", target="~/.zshenv.mc", platforms=[Platform.UNIX]),
-        FileMapping(source=".zshrc", target="~/.zshrc.mc", platforms=[Platform.UNIX]),
+        # fish
+        FileMapping(
+            source="config.fish",
+            target=Unix("fish").user_config_path / "config.mc.fish",
+            platforms=[Platform.UNIX],
+        ),
         # powershell
         FileMapping(source="profile.ps1", target=_pwsh_base / "profile.mc.ps1"),
     ],
     packages=[
         # shell
-        Package(brew="zsh"),
-        Package(brew="zimfw"),
+        Package(brew="fish"),
+        Package(brew="fisher"),
         Package(cask="powershell@preview", scoop="pwsh"),
         Package(brew="starship", winget="Starship.Starship"),  # prompt theme
         # utilities

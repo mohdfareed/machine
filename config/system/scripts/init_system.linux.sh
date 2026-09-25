@@ -1,11 +1,11 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
+#!/bin/sh
+set -eu
 
 # set hostname
 target_hostname="${MC_HOSTNAME:-$MC_ID}"
-if [[ -n "$target_hostname" && "$(hostname)" != "$target_hostname" ]]; then
+if [ -n "$target_hostname" ] && [ "$(hostname)" != "$target_hostname" ]; then
     echo "setting hostname..."
-    if command -v hostnamectl &>/dev/null; then
+    if command -v hostnamectl >/dev/null 2>&1; then
         sudo hostnamectl set-hostname "$target_hostname"
     else
         sudo hostname "$target_hostname"

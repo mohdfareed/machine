@@ -46,7 +46,7 @@ def error(message: str) -> None:
 
 def command(cmd: str, *, root: Path | None = None) -> None:
     """Announce a command with common roots abbreviated."""
-    display = _display_text(cmd, root=root)
+    display = _command_text(cmd, root=root)
     _print(display, prefix=" ", style="magenta")
     if display != cmd:
         debug(f"Exec: {cmd}")
@@ -102,6 +102,7 @@ def exception(debug: bool) -> None:
 
 def prompt(message: str, choices: list[str]) -> str:
     """Prompt for one of the allowed values, accepting any casing."""
+    message = message + f" [{', '.join(choices)}]"
     # return typer.prompt(f"? {message}", type=click.Choice(choices, case_sensitive=False))
     return typer.prompt(f" {message}", type=click.Choice(choices, case_sensitive=False))
 
@@ -142,7 +143,7 @@ def _print(
     output.print(text)
 
 
-def _display_text(value: str, *, root: Path | None = None) -> str:
+def _command_text(value: str, *, root: Path | None = None) -> str:
     if root is not None:
         value = value.replace(str(root) + os.sep, "<root>" + os.sep)
 

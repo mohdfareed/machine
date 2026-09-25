@@ -8,19 +8,16 @@ Tailscale networking.
 
 ## macOS Sharing
 
-After every macOS homelab deployment, open **System Settings → General → Sharing**
+After every macOS homelab deployment, open **System Settings -> General -> Sharing**
 and configure or verify access for that machine:
 
 - Remote Login: check allowed users and remote-user Full Disk Access as needed.
 - Remote Management: choose your account and its required privileges.
 - File Sharing: choose shared folders and read/write permissions; enable your
-  account under Options → Windows File Sharing. Configure the Time Machine
+  account under Options -> Windows File Sharing. Configure the Time Machine
   backup-destination option on its share if used.
 
-Grant required Full Disk Access under Privacy & Security. Share selection and
-permissions are manual; deployment does not infer them.
-
-Configure macOS updates in **System Settings → General → Software Update →
+Configure macOS updates in **System Settings -> General -> Software Update ->
 Automatic Updates**. OS updates and restarts follow those settings, independently
 of `mc upgrade`.
 
@@ -79,9 +76,10 @@ using one of three patterns:
 
 ## Docker
 
-Finish Docker Desktop's first launch, then enable **Settings → General → Start
-Docker Desktop when you sign in to your computer**. After reboot, its user must
-sign in before Docker Desktop starts.
+Finish Docker Desktop's first launch, then enable **Settings -> General -> Start
+Docker Desktop when you sign in to your computer**. On macOS, Ensure Docker is
+using gRPC FUSE for volume mounts. After reboot, its user must sign in before
+Docker Desktop starts.
 
 The deployment script runs Docker Compose directly from repository service
 directories. Compose defines the runtime data locations; relative bind mounts live
@@ -92,25 +90,11 @@ Put each project's `op://` references in a committed `secrets.env` beside
 on every platform. Dashboard runs only on the homelab machine and reads its mounted
 Tailscale Environment from `~/tailscale.env` through Compose.
 
-Use vault, item, section, and field IDs in references to survive renaming; add a
-short comment identifying the credential. Updating the existing field's secret
-needs no reference change. Moving an item to another vault or deleting and
-recreating it requires updating the reference.
-
-Approve access in 1Password when deploying. Container restarts reuse their
-existing configuration and do not need a new 1Password login; applying changed
-secrets requires deployment again. No service account is needed for this
-interactive deployment workflow.
-
 ### Windows
 
 Use Docker Desktop's **WSL 2 engine** and **Linux containers** for the current
 services. Windows containers require Windows Pro/Enterprise and Docker Desktop's
 all-users installation. Switching to that engine stops the Linux services.
-
-Docker uses explicit WinGet installer arguments because the default package
-disables Windows containers. Its normal WinGet pin excludes bulk upgrades;
-`mc upgrade` upgrades it separately with the same arguments.
 
 Enable Docker's startup setting above and configure Windows automatic sign-in
 with [Microsoft Autologon](https://learn.microsoft.com/en-us/sysinternals/downloads/autologon)
@@ -118,7 +102,8 @@ if services must recover without someone signing in. Verify recovery after a reb
 
 ### Add a service
 
-Create a `<service>/compose.yaml` file per service at:
+Create a `<service>/compose.yaml` file per service at
+(ignoring services prefixed with `.` or `_`):
 
 - `machines/<id>/docker/`; or
 - `config/homelab/docker/` for shared services (for multiple deployments).

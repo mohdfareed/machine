@@ -1,21 +1,14 @@
 #!/usr/bin/env pwsh
+param([switch]$Admin, [string]$DefaultShell)
 $ErrorActionPreference = 'Stop'
 
-# Use Scoop's stable launcher, which follows package upgrades without a junction.
-$shimDirectory = Split-Path -Parent (Get-Command scoop -ErrorAction Stop).Source
-$defaultShell = Join-Path $shimDirectory 'pwsh.exe'
-if (-not (Test-Path -LiteralPath $defaultShell -PathType Leaf)) {
-    throw "PowerShell executable not found: $defaultShell"
-}
-
-Write-Host "configuring OpenSSH PowerShell..."
-Invoke-Admin {
+if ($Admin) {
+    Write-Host "configuring OpenSSH PowerShell..."
     # Set the default shell for OpenSSH to PowerShell 7.
-    param($defaultShell)
     New-ItemProperty `
         -Path "HKLM:\SOFTWARE\OpenSSH" `
         -Name DefaultShell `
-        -Value $defaultShell `
+        -Value $DefaultShell `
         -PropertyType String `
         -Force | Out-Null
 
@@ -26,4 +19,21 @@ Invoke-Admin {
 
     Set-Content $sshdConfig
     Restart-Service sshd
-} -ArgumentList $defaultShell
+    return
+}
+
+# Use Scoop's stable launcher, which follows package upgrades without a junction.
+$shimDirectory = Split-Path -Parent (Get-Command scoop -ErrorAction Stop).Source
+$DefaultShell = Join-Path $shimDirectory 'pwsh.exe'
+if (-not (Test-Path -LiteralPath $DefaultShell -PathType Leaf)) {
+    throw "PowerShell executable not found: $DefaultShell"
+}
+
+# Resolve the user's launcher before UAC; an alternate admin may have a different home.
+$arguments = @(
+    '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"", '-Admin',
+    '-DefaultShell', "`"$DefaultShell`""
+)
+$process = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList $arguments `
+    -Verb RunAs -Wait -PassThru
+if ($process.ExitCode -ne 0) { exit $process.ExitCode }

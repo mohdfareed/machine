@@ -1,7 +1,5 @@
 """File deployment, preservation, and permissions."""
 
-import os
-import stat
 import subprocess
 from pathlib import Path
 
@@ -10,115 +8,79 @@ from app.models import FileMapping
 from app.shell import query, run
 
 # ═════════════════════════════════════════════════════════════════════════════
-# MARK: Deploy a File
+# MARK: Deployment
 # ═════════════════════════════════════════════════════════════════════════════
 
 
-def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> Path | None:
-    """Deploy a resolved mapping and return its changed target, preserving existing data."""
+def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> bool:
+    """Deploy a resolved mapping and its permissions, preserving existing data."""
     target = mapping.target
     backup: Path | None = None
+    same_file = target.exists() and target.samefile(mapping.source)
 
-    # Inspect live identity and permissions before the preview boundary.
-    source_mode = mapping.source.stat().st_mode
-    same_source = _points_to_source(target, mapping.source)
-    permissions_changed = mapping.mode is not None and (
-        is_windows or stat.S_IMODE(source_mode) != mapping.mode
-    )
-
-    # Preserve existing file if no changed detected or in dry-run mode.
-    if same_source and not permissions_changed:
-        return None
+    # Require the source before any target mutation; previews never write.
+    mapping.source.stat()
     if dry_run:
-        return target
+        return not same_file
+    if same_file:  # Already deployed.
+        _set_permissions(mapping.source, target, mapping.mode, env=env)
+        return False
 
-    try:  # Fix permissions and deploy the mapping, with backup and recovery.
-        if same_source:
-            _set_permissions(mapping.source, target, mapping.mode, env=env)
-            return target
-
-        # Preserve a *real* target before replacing it with the configured link.
-        # This assumes symlinks are safe to overwrite.
+    try:  # Deploy the mapping, with backup and recovery.
         target.parent.mkdir(parents=True, exist_ok=True)
+
+        # Deploy the file, backing up only *real* targets.
         if target.is_symlink():
             target.unlink()
         if target.exists(follow_symlinks=False):
-            destination = _backup_path(target)
-            target.rename(destination)
-            backup = destination
-        _create_link(mapping.source, target)
+            backup = _create_backup(target)
+        target.symlink_to(mapping.source, target_is_directory=mapping.source.is_dir())
 
         # Apply declared permissions after creating the replacement link.
-        if not permissions_changed:
-            return target
         _set_permissions(mapping.source, target, mapping.mode, env=env)
-        return target
+        return True
 
-    # Report failures with recovery instructions and preserve existing data when possible.
+    # Add recovery context only when existing data has moved to a backup.
     except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
-        recovery = f" Existing data is preserved at {backup}." if backup is not None else ""
-        if not target.exists() and not target.is_symlink():
-            recovery += (
-                f" Recreate the link {target} → {mapping.source} after resolving the failure."
-            )
-
-        raise OSError(f"Failed to deploy {target} → {mapping.source}: {exc}.{recovery}") from exc
+        if backup is None:
+            raise
+        raise OSError(
+            f"Failed to deploy {target} -> {mapping.source}: {exc}. "
+            f"Existing data is preserved at {backup}."
+        ) from exc
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# MARK: Inspect and Create Links
+# MARK: Backup
 # ═════════════════════════════════════════════════════════════════════════════
 
 
-def _points_to_source(target: Path, source: Path) -> bool:
-    try:  # Compare filesystem identity when available.
-        return target.exists() and os.path.samefile(target, source)
-    except OSError:
-        pass
-
-    try:  # Compare normalized link paths.
-        linked = target.readlink()
-    except OSError:
-        return False
-
-    # Compare the resolved link path to the source path.
-    if not linked.is_absolute():
-        linked = target.parent / linked  # Account for relative links.
-    return os.path.normcase(str(linked.resolve())) == os.path.normcase(str(source.resolve()))
-
-
-def _create_link(source: Path, target: Path) -> None:
-    try:  # Create a symlink to the source at the prepared target.
-        target.symlink_to(source, target_is_directory=source.is_dir())
-    except OSError as exc:
-        if is_windows and getattr(exc, "winerror", None) == 1314:
-            raise OSError(
-                "Symlink creation requires Developer Mode. "
-                "Enable it in Settings → System → For developers."
-            ) from exc
-        raise
-
-
-def _backup_path(target: Path) -> Path:
+def _create_backup(target: Path) -> Path:
     index = 1  # Generate a unique backup.
     backup = target.with_suffix(target.suffix + ".backup")
     while backup.exists() or backup.is_symlink():
         backup = target.with_suffix(target.suffix + f".backup.{index}")
         index += 1
+
+    # Rename the existing target to the backup path, preserving its data.
+    target.rename(backup)
     return backup
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# MARK: Apply Permissions
+# MARK: Permissions
 # ═════════════════════════════════════════════════════════════════════════════
 
 
 def _set_permissions(source: Path, target: Path, mode: int | None, *, env: dict[str, str]) -> None:
     if mode is None:
         return
-    source.chmod(mode)
+    source.chmod(mode)  # Symlink security requires restricting the source.
+
+    # MARK: Windows
+    # ─────────────────────────────────────────────────────────────────────────
     if not is_windows or mode & 0o077:
-        return
+        return  # Skip group/other permissions.
 
     # Clear explicit grants as well as inherited access on owner-only mappings.
     user = query(["whoami"], env=env).stdout.strip()
@@ -126,13 +88,7 @@ def _set_permissions(source: Path, target: Path, mode: int | None, *, env: dict[
     if not target.is_symlink():
         return
 
-    # Recreate an existing link when its old ACL prevents resetting it.
-    try:
-        _restrict(target, user, env=env, link=True)
-    except OSError, RuntimeError:
-        target.unlink()
-        _create_link(source, target)
-        _restrict(target, user, env=env, link=True)
+    _restrict(target, user, env=env, link=True)
 
 
 def _restrict(path: Path, user: str, *, env: dict[str, str], link: bool = False) -> None:

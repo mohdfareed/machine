@@ -15,12 +15,6 @@ function ll { ListFiles -l @args }
 function l { ll -a @args }
 function lr { ll -T @args }
 
-# Enable ls git status only when this eza build supports it.
-eza --git $PSCommandPath *> $null
-if ($LASTEXITCODE -eq 0) {
-    function ll { ListFiles -l --git @args }
-}
-
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Development
 # ═════════════════════════════════════════════════════════════════════════════

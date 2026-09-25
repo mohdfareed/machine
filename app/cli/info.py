@@ -6,12 +6,28 @@ import typer
 
 from app import cli, env, reporting
 from app.discovery import list_machines, list_modules
-from app.env import build_env, get_current_machine
+from app.env import get_current_machine
 from app.machine import load_machine
+from app.validation import validate_managers
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Info Commands
 # ═════════════════════════════════════════════════════════════════════════════
+
+
+def validate(
+    machine: Annotated[
+        str | None,
+        typer.Option("-m", "--machine", autocompletion=cli.complete_machines),
+    ] = None,
+) -> None:
+    """Check configuration, inputs, and manager availability without deploying."""
+    machine = cli.validate_machine(machine or get_current_machine())
+    if machine is None:
+        raise ValueError("No machine selected. Pass --machine to validate a configuration.")
+    configuration = load_machine(machine, validate=True)
+    validate_managers(configuration.pkg_managers, env=configuration.env)
+    reporting.success(f"Configuration valid: {machine} ({env.PLATFORM})")
 
 
 def machine_id() -> None:
@@ -24,23 +40,26 @@ def home() -> None:
     reporting.plain(str(env.ROOT))
 
 
-def status() -> None:
-    """Show the selected machine, repo and CLI version."""
-    reporting.heading(f"{cli.NAME} {cli.VERSION}")
-    reporting.detail(f"Machine: {get_current_machine() or 'none'}")
-    reporting.detail(f"Home: {env.ROOT}")
+def list_mc() -> None:
+    """List available machines."""
+    if not (machines := list_machines()):
+        reporting.detail("No machines found.")
+        return
+
+    reporting.heading("Machines")
+    for mc in machines:
+        reporting.detail(mc)
 
 
-def list_all() -> None:
-    """List available machines and modules."""
-    for label, names in [("Machines", list_machines()), ("Modules", list_modules())]:
-        if not names:
-            reporting.detail(f"No {label.lower()} found.")
-            continue
+def list_mod() -> None:
+    """List available modules."""
+    if not (modules := list_modules()):
+        reporting.detail("No modules found.")
+        return
 
-        reporting.heading(label)
-        for name in names:
-            reporting.detail(name)
+    reporting.heading("Modules")
+    for mod in modules:
+        reporting.detail(mod)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -61,25 +80,20 @@ def show(
         ),
     ] = None,
 ) -> None:
-    """Inspect machine information; without a subcommand, show resolved configuration."""
+    """Inspect machine configuration and deployment."""
     if context.invoked_subcommand is not None:
         return
 
-    # Resolve the selection and applicable declarations without loading secrets.
+    # Resolve the selection and applicable declarations.
     machine = machine or get_current_machine() or reporting.prompt("Machine", list_machines())
     machine = cli.validate_machine(machine)
     if machine is None:
         raise ValueError("No machine selected.")
-    machine_env = build_env(machine)
-    configuration = load_machine(machine, env=machine_env)
+    configuration = load_machine(machine)
 
-    # Print report. ───────────────────────────────────────────────────────────
+    # Report. ─────────────────────────────────────────────────────────────────
 
     reporting.heading(f"Machine [{machine}]")
-    reporting.detail(f"Managers: {' | '.join(configuration.pkg_managers) or 'none'}")
-
-    reporting.heading("Modules")
-    reporting.grid(configuration.modules)
 
     reporting.heading("Scripts")
     for script in configuration.scripts:

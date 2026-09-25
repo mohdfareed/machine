@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
+#!/bin/sh
+set -eu
 
 echo "configuring ssh server..."
 sudo systemctl enable ssh

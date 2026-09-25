@@ -14,36 +14,76 @@ jobs:
   check:
     name: Check (${{ matrix.os }})
 
+    # MARK: Setup
+    # ═══════════════════════════════════════════════════════════════════════
+
     # Check all supported platforms in parallel.
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     # Run the check on each platform.
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v7
+      - name: Check out repository
+        id: checkout
+        uses: actions/checkout@v7
+
+      - name: Set up uv
+        id: uv_setup
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          cache-python: true
 
-      # Cache the virtual environment.
-      - uses: actions/cache@v6
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('uv.lock', 'scripts/check.*') }}
-      - run: uv sync --dev --locked
+      - name: Set up dependencies
+        id: dependencies_setup
+        run: uv sync --dev --locked
 
-      # Unix-based checks.
-      - if: runner.os == 'Linux'
+      - name: Set up Linux tools
+        id: linux_tools
+        if: ${{ !cancelled() && steps.dependencies_setup.outcome == 'success' && runner.os == 'Linux' }}
         run: |
           sudo apt-get update
-          sudo apt-get install --yes zsh
-          ./scripts/check.sh
+          sudo apt-get install --yes fish
 
-      # Windows-based checks.
-      - if: runner.os == 'Windows'
-        shell: pwsh
-        run: ./scripts/check.ps1
+      - name: Set up macOS tools
+        id: macos_tools
+        if: ${{ !cancelled() && steps.dependencies_setup.outcome == 'success' && runner.os == 'macOS' }}
+        run: brew install fish
+
+      # MARK: Checks
+      # ═══════════════════════════════════════════════════════════════════════
+
+      - name: Check dependencies
+        id: dependencies
+        if: ${{ !cancelled() && steps.dependencies_setup.outcome == 'success' }}
+        run: uv run --no-sync python scripts/checks/dependencies.py
+
+      - name: Check code, tests, and spelling
+        id: code
+        if: ${{ !cancelled() && steps.dependencies_setup.outcome == 'success' }}
+        env:
+          RUFF_OUTPUT_FORMAT: github
+          PYTEST_ADDOPTS: --junitxml=.reports/pytest.xml
+        run: uv run --no-sync python scripts/checks/code.py
+
+      - name: Check shell scripts
+        id: scripts
+        if: >-
+          ${{ !cancelled() && steps.dependencies_setup.outcome == 'success' &&
+              (runner.os == 'Windows' || steps.linux_tools.outcome == 'success' ||
+               steps.macos_tools.outcome == 'success') }}
+        run: uv run --no-sync python scripts/checks/scripts.py
+
+      # MARK: Reporting
+      # ═══════════════════════════════════════════════════════════════════════
+
+      - name: Upload test report
+        id: test_report
+        if: ${{ always() && hashFiles('.reports/pytest.xml') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-${{ runner.os }}
+          path: .reports/pytest.xml
+          include-hidden-files: true

@@ -1,5 +1,5 @@
-#!/usr/bin/env zsh
-set -Eeuo pipefail
+#!/bin/sh
+set -eu
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Security

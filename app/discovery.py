@@ -23,33 +23,20 @@ def list_scripts(directory: Path) -> list[Path]:
 
 def list_modules() -> list[str]:
     """List available module names by scanning ``config/``."""
-    modules_dir = env.ROOT / "config"
-    if not modules_dir.exists():
-        return []
+    root = env.ROOT / "config"
+    names: list[str] = []
+    for path in root.rglob("module.py"):
+        parts = path.parent.relative_to(root).parts
 
-    # Traverse grouping folders, stopping at each module directory.
-    names: set[str] = set()
-    for directory, dirs, files in modules_dir.walk():
-        if directory == modules_dir or "module.py" not in files:
-            dirs[:] = [name for name in dirs if not name.startswith(".") and name != "__pycache__"]
-            # Reject names that collapse to one directory on case-insensitive filesystems.
-            by_case: dict[str, str] = {}
-            for name in dirs:
-                if previous := by_case.get(name.casefold()):
-                    raise ValueError(
-                        f"Module directory names differ only by case: "
-                        f"{directory / previous}, {directory / name}"
-                    )
-                by_case[name.casefold()] = name
-            continue
-
-        parts = directory.relative_to(modules_dir).parts
+        # Validation.
+        if not parts or not path.is_file():
+            continue  # Not a module.
+        if any(part.startswith(".") or part == "__pycache__" for part in parts):
+            continue  # Skip hidden or cache directories.
         if any(not part.isidentifier() or iskeyword(part) for part in parts):
-            raise ValueError(f"Module directory names must be Python identifiers: {directory}")
+            raise ValueError(f"Module directory names must be Python identifiers: {path.parent}")
 
-        names.add(".".join(parts))
-        dirs.clear()
-
+        names.append(".".join(parts))
     return sorted(names)
 
 

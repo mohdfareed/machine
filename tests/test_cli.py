@@ -6,9 +6,72 @@ from pathlib import Path
 
 import pytest
 import typer
-from app import cli, env
+from app import cli, env, validation
 from app.cli import deploy, entry, info, sync, upgrade
 from typer.testing import CliRunner
+
+
+@pytest.fixture(autouse=True)
+def isolate_disk_access_probe(monkeypatch):
+    monkeypatch.setattr(entry, "validate_full_disk_access", lambda: None)
+
+
+@pytest.mark.parametrize("state", ["allowed", "missing", "denied"])
+def test_full_disk_access_probe_does_not_read_contents(monkeypatch, state):
+    from unittest.mock import mock_open
+
+    monkeypatch.setattr(env, "is_macos", True)
+    probe = mock_open()
+    if state == "missing":
+        probe.side_effect = FileNotFoundError
+    if state == "denied":
+        probe.side_effect = PermissionError
+    monkeypatch.setattr(Path, "open", probe)
+
+    if state == "denied":
+        with pytest.raises(PermissionError, match="Full Disk Access"):
+            validation.validate_full_disk_access()
+    else:
+        validation.validate_full_disk_access()
+
+    probe.assert_called_once_with("rb")
+    probe.return_value.read.assert_not_called()
+
+
+def test_full_disk_access_probe_skips_other_platforms(monkeypatch):
+    monkeypatch.setattr(env, "is_macos", False)
+    monkeypatch.setattr(Path, "open", lambda *a, **kw: pytest.fail("opened macOS file"))
+    validation.validate_full_disk_access()
+
+
+def test_startup_denial_blocks_commands_but_not_help_or_version(monkeypatch):
+    def denied():
+        raise PermissionError("Access denied")
+
+    monkeypatch.setattr(entry, "validate_full_disk_access", denied)
+    monkeypatch.setattr(
+        info, "get_current_machine", lambda: pytest.fail("command ran before probe")
+    )
+    runner = CliRunner()
+    app = entry._create_app()
+    result = runner.invoke(app, ["show", "id"])
+    assert isinstance(result.exception, PermissionError)
+    assert runner.invoke(app, ["--help"]).exit_code == 0
+    assert runner.invoke(app, ["--version"]).exit_code == 0
+
+
+def test_startup_denial_exits_without_traceback(monkeypatch):
+    def denied():
+        raise PermissionError("Access denied")
+
+    monkeypatch.setattr(entry, "validate_full_disk_access", denied)
+    monkeypatch.setattr("sys.argv", ["mc", "show", "id"])
+    monkeypatch.setattr(
+        entry.reporting, "exception", lambda *a: pytest.fail("unexpected traceback")
+    )
+    with pytest.raises(SystemExit) as failure:
+        entry.main()
+    assert failure.value.code == 1
 
 
 def git(root: Path, *args: str) -> str:
@@ -43,7 +106,6 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
-    monkeypatch.setattr(sync, "user_documents_path", lambda: tmp_path / "documents")
 
     def run(cmd, **kwargs):
         if kwargs["dry_run"]:
@@ -57,23 +119,6 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         return result
 
     monkeypatch.setattr(sync, "run", run)
-    original_query = sync.query
-
-    def query(cmd, **kwargs):
-        if cmd[:4] == ["uv", "tool", "dir", "--bin"]:
-            return subprocess.CompletedProcess(cmd, 0, stdout=str(tmp_path / "tool bin"))
-        executable = tmp_path / "tool bin" / (cli.COMMAND + (".exe" if env.is_windows else ""))
-        if cmd == [str(executable)]:
-            scripts = {
-                "source_zsh": "\n#compdef mc\n",
-                "source_powershell": "Register-ArgumentCompleter -Native -CommandName mc\n",
-            }
-            return subprocess.CompletedProcess(
-                cmd, 0, stdout=scripts[kwargs["env"]["_MC_COMPLETE"]]
-            )
-        return original_query(cmd, **kwargs)
-
-    monkeypatch.setattr(sync, "query", query)
     return canonical, checkout
 
 
@@ -100,8 +145,9 @@ def test_module_completion_uses_qualified_names_and_groups(monkeypatch):
 
 @pytest.mark.parametrize("command", ["deploy", "show"])
 def test_machine_selection_is_read_at_invocation(tmp_path, monkeypatch, command):
-    env_file = tmp_path / ".env"
-    monkeypatch.setattr(env, "_ENV_FILE", env_file)
+    env_file = tmp_path / "mc" / "machine"
+    env_file.parent.mkdir()
+    monkeypatch.setattr(env, "config_dir", lambda: env_file.parent)
     monkeypatch.setenv("MC_ID", "stale")
     monkeypatch.setattr(cli, "list_machines", lambda: ["first", "second"])
     monkeypatch.setattr(info, "list_machines", lambda: ["first", "second"])
@@ -109,21 +155,21 @@ def test_machine_selection_is_read_at_invocation(tmp_path, monkeypatch, command)
     monkeypatch.setattr(env, "ROOT", tmp_path)
     selected = []
 
-    def load_machine(machine_id, module_names=None, *, env):
+    def load_machine(machine_id, module_names=None):
         selected.append(machine_id)
         raise RuntimeError("Stop before deployment")
 
     monkeypatch.setattr(deploy, "load_machine", load_machine)
     monkeypatch.setattr(info, "load_machine", load_machine)
     persisted = []
-    monkeypatch.setattr(deploy, "set_current_machine", persisted.append)
+    monkeypatch.setattr(deploy, "save_machine", lambda machine, env: persisted.append(machine))
     app = entry._create_app()
     runner = CliRunner()
 
     # A new machine can be selected, then a changed file supplies the next default.
     result = runner.invoke(app, [command], input="FIRST\n")
     assert isinstance(result.exception, RuntimeError)
-    env_file.write_text("MC_ID=second\n")
+    env_file.write_text("second\n")
     result = runner.invoke(app, [command], input="\n")
     assert isinstance(result.exception, RuntimeError)
     assert selected == ["first", "second"]
@@ -150,19 +196,6 @@ def test_sync_restores_local_edits(sync_repos, monkeypatch, windows):
 
     assert git(checkout, "rev-parse", "HEAD") == git(canonical, "rev-parse", "HEAD")
     assert (checkout / "config.txt").read_text() == expected
-    completion = Path.home() / ".zsh/completions/_mc"
-    if env.is_windows:
-        assert not completion.exists()
-    else:
-        assert completion.read_text() == "#compdef mc\n"
-    powershell_dir = (
-        canonical.parent / "documents/PowerShell"
-        if windows
-        else canonical.parent / "config/powershell"
-    )
-    assert (powershell_dir / "completions/mc.ps1").read_text() == (
-        "Register-ArgumentCompleter -Native -CommandName mc\n"
-    )
 
 
 def test_sync_autostash_conflict_preserves_edits(sync_repos):
@@ -211,31 +244,49 @@ def test_sync_dry_run_does_not_fetch(sync_repos, monkeypatch, windows):
     result = CliRunner().invoke(entry._create_app(), ["sync", "--dry-run"])
     assert result.exit_code == 0, result.exception
     assert not (checkout / ".git" / "FETCH_HEAD").exists()
-    assert not (Path.home() / ".zsh/completions/_mc").exists()
+    assert not (checkout.parent / "config/fish/completions/mc.fish").exists()
     assert not (checkout.parent / "documents").exists()
     assert not (checkout.parent / "config").exists()
 
 
-def test_sync_completion_failure_preserves_existing_file(sync_repos, monkeypatch):
-    _, checkout = sync_repos
-    monkeypatch.setattr(env, "is_windows", False)
-    completion = checkout.parent / "config/powershell/completions/mc.ps1"
-    completion.parent.mkdir(parents=True)
-    completion.write_text("existing completion\n")
-    original_query = sync.query
+def test_validate_checks_configuration_and_managers_without_deployment(tmp_path, monkeypatch):
+    machine = tmp_path / "machines" / "test"
+    machine.mkdir(parents=True)
+    declaration = machine / "machine.py"
+    declaration.write_text("from app.models import Machine\nmanifest = Machine()\n")
+    monkeypatch.setattr(env, "ROOT", tmp_path)
+    monkeypatch.setattr(env, "config_dir", lambda: tmp_path / "state")
+    monkeypatch.setattr(
+        info.reporting, "prompt", lambda *a, **kw: pytest.fail("validation prompted")
+    )
+    checked = []
 
-    def query(cmd, **kwargs):
-        if "_MC_COMPLETE" in kwargs["env"]:
-            raise RuntimeError("Completion generation failed")
-        return original_query(cmd, **kwargs)
+    def find_executable(name, *, env):
+        assert env == {"MC_ID": "test"}
+        checked.append(name)
+        return name
 
-    monkeypatch.setattr(sync, "query", query)
-    with pytest.raises(RuntimeError, match="Completion generation failed"):
-        sync.sync()
-    assert completion.read_text() == "existing completion\n"
+    monkeypatch.setattr(validation, "find_executable", find_executable)
+    runner = CliRunner()
+    app = entry._create_app()
+    assert runner.invoke(app, ["validate"]).exit_code != 0
+    assert runner.invoke(app, ["validate", "-m", "test"]).exit_code == 0
+    assert checked
+    assert not (tmp_path / "state").exists()
+
+    (tmp_path / "state").mkdir()
+    (tmp_path / "state" / "machine").write_text("test\n")
+    assert runner.invoke(app, ["validate"]).exit_code == 0
+    monkeypatch.setattr(validation, "find_executable", lambda *a, **kw: None)
+    result = runner.invoke(app, ["validate"])
+    assert isinstance(result.exception, FileNotFoundError)
+    declaration.write_text(
+        "from app.models import Machine, Package\nmanifest = Machine(packages=[Package()])\n"
+    )
+    assert runner.invoke(app, ["validate"]).exit_code != 0
 
 
-@pytest.mark.parametrize("failed_phase", [None, "preflight", "init_apps.ps1", "files", "packages"])
+@pytest.mark.parametrize("failed_phase", [None, "init_apps.ps1", "files", "packages"])
 def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, failed_phase) -> None:
     from app import models
 
@@ -255,23 +306,18 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
     events = []
     selected_env = {"MC_ID": "test"}
     monkeypatch.setattr(cli, "list_machines", lambda: ["test"])
-    monkeypatch.setattr(deploy, "build_env", lambda machine_id: selected_env)
-    monkeypatch.setattr(deploy, "set_current_machine", lambda machine_id: events.append("selected"))
+    configuration.env = selected_env
+    monkeypatch.setattr(deploy, "save_machine", lambda machine_id, env: events.append("selected"))
 
-    def load_machine(machine_id, module_names, *, env):
+    def load_machine(machine_id, module_names):
         assert machine_id == "test" and module_names == ["apps"]
-        assert env is selected_env
-        events.append("validated")
+        events.append("resolved")
         return configuration
 
     def record(phase):
         events.append(phase)
         if phase == failed_phase:
             raise RuntimeError(f"{phase} failed")
-
-    def validate_managers(declared, *, env):
-        assert declared == managers and env is selected_env
-        record("preflight")
 
     def setup_managers(declared, *, env, dry_run):
         assert declared == managers and env is selected_env
@@ -282,21 +328,19 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
         for script in scripts:
             record(script.name)
 
-    def install_packages(packages, *, env, dry_run, reporter):
+    def install_packages(packages, *, env, dry_run):
         assert env is selected_env
         assert [package.selected_source for package in packages] == ["winget"]
         record("packages")
         return []
 
     monkeypatch.setattr(deploy, "load_machine", load_machine)
-    monkeypatch.setattr(deploy, "validate_managers", validate_managers)
     monkeypatch.setattr(deploy, "deploy_file", lambda mapping, **kwargs: record("files"))
     monkeypatch.setattr(deploy, "setup_managers", setup_managers)
     monkeypatch.setattr(deploy, "run_scripts", run_scripts)
     monkeypatch.setattr(deploy, "install_packages", install_packages)
     expected = [
-        "validated",
-        "preflight",
+        "resolved",
         "selected",
         "managers",
         "init_apps.ps1",
@@ -317,16 +361,17 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
 def test_preview_uses_requested_machine_without_saving_or_running(tmp_path, monkeypatch):
     # Keep the real loader and environment builder connected to the command.
     monkeypatch.setattr(env, "ROOT", tmp_path)
-    env_file = tmp_path / ".env"
-    env_file.write_text("MC_ID=first\n")
-    monkeypatch.setattr(env, "_ENV_FILE", env_file)
+    env_file = tmp_path / "mc" / "machine"
+    env_file.parent.mkdir()
+    env_file.write_text("first\n")
+    monkeypatch.setattr(env, "config_dir", lambda: env_file.parent)
     machine_dir = tmp_path / "machines" / "second"
     machine_dir.mkdir(parents=True)
     (machine_dir / "config").write_text("new config")
-    (machine_dir / "machine.env").write_text(f"DEV={tmp_path / 'selected'}\n")
     (machine_dir / "machine.py").write_text(
         "from app.models import Machine, FileMapping, Package\n"
-        "manifest = Machine(files=[FileMapping(source='config', target='$DEV/config')], "
+        f"manifest = Machine(env={{'DEV': {str(tmp_path / 'selected')!r}}}, "
+        "files=[FileMapping(source='config', target='$DEV/config')], "
         "packages=[Package(name='mc-test-missing-command', cmd='echo selected-env')])\n"
     )
     seen = []
@@ -342,7 +387,8 @@ def test_preview_uses_requested_machine_without_saving_or_running(tmp_path, monk
     assert result.exit_code == 0, result.exception
     assert seen and seen[0]["MC_ID"] == "second"
     assert seen[0]["DEV"] == str(tmp_path / "selected")
-    assert env_file.read_text() == "MC_ID=first\n"
+    assert env_file.read_text() == "first\n"
+    assert sorted(path.name for path in env_file.parent.iterdir()) == ["machine"]
     assert not (tmp_path / "selected").exists()
 
 
@@ -355,9 +401,8 @@ def test_upgrade_passes_selected_environment_and_stops_on_failure(monkeypatch):
     )
     events = []
     monkeypatch.setattr(upgrade, "get_current_machine", lambda: "test")
-    monkeypatch.setattr(upgrade, "build_env", lambda machine_id: selected_env)
+    configuration.env = selected_env
     monkeypatch.setattr(upgrade, "load_machine", lambda *args, **kwargs: configuration)
-    monkeypatch.setattr(upgrade, "validate_managers", lambda *args, **kwargs: None)
 
     def managers(managers, *, env, dry_run):
         assert env is selected_env and dry_run
@@ -365,7 +410,7 @@ def test_upgrade_passes_selected_environment_and_stops_on_failure(monkeypatch):
 
     monkeypatch.setattr(upgrade, "upgrade_managers", managers)
 
-    def packages(packages, *, env, dry_run, reporter):
+    def packages(packages, *, env, dry_run):
         assert env is selected_env and dry_run
         events.append("packages")
         raise RuntimeError("upgrade failed")
@@ -388,15 +433,11 @@ def test_show_subcommands_skip_configuration_loading(tmp_path, monkeypatch):
         info.reporting, "prompt", lambda *a, **kw: pytest.fail("subcommand prompted for a machine")
     )
 
-    monkeypatch.setattr(
-        info, "build_env", lambda *a, **kw: pytest.fail("subcommand loaded environment")
-    )
     app = entry._create_app()
     runner = CliRunner()
     for command, expected in (
         ("id", "saved-machine"),
         ("home", str(tmp_path)),
-        ("status", "saved-machine"),
     ):
         result = runner.invoke(app, ["show", command])
         assert result.exit_code == 0, result.exception
@@ -408,7 +449,8 @@ def test_preview_flag_is_rejected_outside_deployment_commands():
     app = entry._create_app()
     for arguments in (
         ["--dry-run", "deploy"],
-        ["list", "--dry-run"],
+        ["show", "modules", "--dry-run"],
+        ["validate", "--dry-run"],
         ["show", "--dry-run"],
         ["show", "id", "--dry-run"],
     ):

@@ -8,6 +8,7 @@ import typer
 
 from app import cli, env, reporting
 from app.cli import deploy, info, sync, upgrade
+from app.validation import validate_full_disk_access
 
 type _Callback = Callable[..., Any]
 
@@ -31,8 +32,9 @@ def main(prog_name: str | None = None) -> None:
     # Present the failure with optional technical context.
     except Exception as exc:
         reporting.error(str(exc))
-        reporting.exception(options.debug)
-        raise SystemExit(1)
+        if options.debug:
+            reporting.exception(options.debug)
+        raise SystemExit(1) from None
 
 
 def _callback(
@@ -55,7 +57,9 @@ def _callback(
     # Handle informational exits.
     if version:
         reporting.plain(f"{cli.NAME} {cli.VERSION}")
-        raise typer.Exit()
+        raise SystemExit()
+
+    validate_full_disk_access()
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -77,17 +81,18 @@ def _create_app() -> typer.Typer:
     app.callback()(_callback)
 
     # Register deployment commands.
-    _register(app, deploy.deploy, panel="Deployment")
-    _register(app, upgrade.upgrade, panel="Deployment")
-    _register(app, sync.sync, panel="Deployment")
+    _register(app, deploy.deploy)
+    _register(app, upgrade.upgrade)
+    _register(app, sync.sync)
+    _register(app, info.validate)
 
     # Group inspection commands while retaining the default configuration view.
     show = typer.Typer(invoke_without_command=True, no_args_is_help=False)
-    _register(show, info.machine_id, name="id")
     _register(show, info.home)
-    _register(show, info.status)
-    _register_group(app, info.show, show, panel="Info")
-    _register(app, info.list_all, panel="Info", name="list")
+    _register(show, info.machine_id, name="id")
+    _register(show, info.list_mc, name="machines")
+    _register(show, info.list_mod, name="modules")
+    _register_group(app, info.show, show)
 
     return app
 
@@ -118,7 +123,7 @@ def _register_group(
     callback: _Callback,
     group: typer.Typer,
     *,
-    panel: str,
+    panel: str | None = None,
 ) -> None:
     short_help = _short_help(callback)
     group.callback(short_help=short_help)(callback)

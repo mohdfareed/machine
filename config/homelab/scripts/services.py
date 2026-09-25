@@ -23,7 +23,7 @@ def main() -> None:
         for directory in docker_directories
         if directory.is_dir()
         for service in sorted(directory.iterdir())
-        if service.is_dir() and not service.name.startswith(".")
+        if service.is_dir() and not service.name.startswith((".", "_"))
     ]
 
     # Wait for Docker daemon to be ready (Docker Desktop can be slow to start).

@@ -1,3 +1,0 @@
-include:
-  - path: homepage.yaml
-    env_file: ${HOME:?}/tailscale.env

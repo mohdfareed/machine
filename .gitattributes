@@ -3,10 +3,7 @@
 
 # unix
 *.sh text eol=lf
-.zshenv text eol=lf
-.zshrc text eol=lf
-.zimrc text eol=lf
-.shellcheckrc text eol=lf
+*.fish text eol=lf
 
 # windows
 *.bat text eol=crlf

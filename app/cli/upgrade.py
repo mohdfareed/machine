@@ -5,9 +5,9 @@ from typing import Annotated
 import typer
 
 from app import cli, reporting
-from app.env import build_env, get_current_machine
+from app.env import get_current_machine
 from app.machine import load_machine
-from app.managers import upgrade_managers, validate_managers
+from app.managers import upgrade_managers
 from app.ops.packages import upgrade_packages
 from app.ops.scripts import run_scripts
 
@@ -29,18 +29,18 @@ def upgrade(
         bool, typer.Option("-n", "--dry-run", help="Preview changes without applying them.")
     ] = False,
 ) -> None:
-    """Upgrade configured managers globally, then run selected custom maintenance."""
+    """Upgrade configured managers and run custom maintenance."""
     if dry_run:
         reporting.heading("Dry run: no changes will be made.")
 
-    # Prepare the selected configuration and check installed managers before upgrades.
+    # Resolve the selected configuration.
     machine_id = get_current_machine()
     if not machine_id:
         raise ValueError(f"No machine selected. Select one with {cli.COMMAND} deploy.")
-    env = build_env(machine_id)
-    configuration = load_machine(machine_id, module_names, env=env)
+    configuration = load_machine(machine_id, module_names)
+    env = configuration.env
 
-    # Summarize this invocation before checking live prerequisites.
+    # Summarize this invocation.
     reporting.heading(f"Machine [{machine_id}]")
     reporting.detail(f"Managers: {' | '.join(configuration.pkg_managers) or 'none'}")
 
@@ -54,7 +54,6 @@ def upgrade(
         f"{len(configuration.scripts)} scripts, "
         f"{len(configuration.packages)} packages."
     )
-    validate_managers(configuration.pkg_managers, env=env, for_upgrade=True)
 
     # Upgrade all packages owned by the platform and optional managers.
     reporting.heading("Upgrading managers and all their packages")
@@ -62,9 +61,7 @@ def upgrade(
 
     # Run custom package upgrades.
     reporting.heading("Upgrading custom packages")
-    manual = upgrade_packages(
-        configuration.packages, env=env, dry_run=dry_run, reporter=reporting.detail
-    )
+    manual = upgrade_packages(configuration.packages, env=env, dry_run=dry_run)
 
     # Run maintenance scripts.
     reporting.heading("Running upgrade scripts")

@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
+#!/bin/sh
+set -eu
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: General Settings
@@ -7,7 +7,7 @@ set -Eeuo pipefail
 
 # set hostname
 target_hostname="${MC_HOSTNAME:-$MC_ID}"
-if [[ -n "$target_hostname" && "$(scutil --get LocalHostName)" != "$target_hostname" ]]; then
+if [ -n "$target_hostname" ] && [ "$(scutil --get LocalHostName)" != "$target_hostname" ]; then
     echo "setting hostname..."
     sudo scutil --set LocalHostName "$target_hostname"
 fi

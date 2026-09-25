@@ -132,24 +132,24 @@ class Package(BaseModel):
 class Module(BaseModel):
     """A composable unit of configuration."""
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     depends: list[ModuleType] = []
-    scripts: list[Path] = []
-    files: list[FileMapping] = []
     overrides: list[FileMapping] = []
+
+    files: list[FileMapping] = []
     packages: list[Package] = []
 
 
 class Machine(BaseModel):
     """Machine declaration with imported module or grouping folders."""
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
-    # Add optional managers to the platform's built-in package managers.
+    env: dict[str, str | Path] = {}
     pkg_managers: list[Literal[PkgManager.MAS, PkgManager.SNAP, PkgManager.SCOOP]] = []
     modules: list[ModuleType] = []
-    scripts: list[Path] = []
+
     files: list[FileMapping] = []
     packages: list[Package] = []
 
@@ -157,8 +157,10 @@ class Machine(BaseModel):
 class Configuration(BaseModel):
     """Resolved machine inputs, with full module names and fixed package sources."""
 
+    env: dict[str, str] = {}
     pkg_managers: list[PkgManager] = []
     modules: list[str] = []
+
     scripts: list[Path] = []
     files: list[FileMapping] = []
     packages: list[Package] = []

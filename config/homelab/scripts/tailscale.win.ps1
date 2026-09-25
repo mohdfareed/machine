@@ -18,3 +18,8 @@ if ($LASTEXITCODE -ne 0) {
 # Keep remote access available after logout and before automatic sign-in completes.
 tailscale set --unattended=true
 if ($LASTEXITCODE -ne 0) { throw 'tailscale unattended setup failed' }
+
+# Enable dashboard through tailscale.
+Write-Host 'configuring tailscale serve (Dashboard)...'
+tailscale serve --bg http://127.0.0.1:3000
+tailscale serve status

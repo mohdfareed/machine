@@ -7,6 +7,9 @@ import shutil
 import sys
 from pathlib import Path
 
+from platformdirs import user_config_path
+from platformdirs.unix import Unix
+
 from app.models import Platform
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -46,15 +49,44 @@ is_unix = PLATFORM.is_a(Platform.UNIX)
 # ═════════════════════════════════════════════════════════════════════════════
 
 
+def config_dir() -> Path:
+    """Return the app configuration directory shared with shell startup files."""
+    return user_config_path("mc", appauthor=False) if is_windows else Unix("mc").user_config_path
+
+
 def get_current_machine() -> str | None:
     """Read the saved machine ID independently of the inherited shell environment."""
-    return _read_env(_ENV_FILE, {}).get("MC_ID") or None
+    path = config_dir() / "machine"
+    if not path.is_file():
+        return None
+    return path.read_text(encoding="utf-8").strip() or None
 
 
-def set_current_machine(machine_id: str) -> None:
-    """Save the selected machine ID for future invocations and login shells."""
-    _ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
-    _ENV_FILE.write_text(f'MC_ID="{machine_id}"\n', encoding="utf-8")
+def save_machine(machine_id: str, values: dict[str, str]) -> None:
+    """Save the selected machine and its literal environment for shell startup."""
+    directory = config_dir()
+    directory.mkdir(parents=True, exist_ok=True)
+
+    # Write native assignments without evaluating declared values in either shell.
+    powershell = []
+    fish = []
+    for name, value in values.items():
+        # PowerShell also treats typographic apostrophes as string delimiters.
+        quoted = value
+        for quote in ("'", "\u2018", "\u2019", "\u201a", "\u201b"):
+            quoted = quoted.replace(quote, quote * 2)
+
+        powershell.append(f"$env:{name} = '{quoted}'\n")
+        quoted = value.replace("\\", "\\\\").replace("'", "\\'")
+        fish.append(f"set -gx {name} '{quoted}'\n")
+
+    # Write literal shell assignments.
+    (directory / "env.ps1").write_text("".join(powershell), encoding="utf-8", newline="\n")
+    if not is_windows:
+        (directory / "env.fish").write_text("".join(fish), encoding="utf-8", newline="\n")
+
+    # Record the selection after both shell files are ready.
+    (directory / "machine").write_text(f"{machine_id}\n", encoding="utf-8")
 
 
 def resolve_path(value: Path, env: dict[str, str]) -> Path:
@@ -62,8 +94,6 @@ def resolve_path(value: Path, env: dict[str, str]) -> Path:
     # Expand references before resolving the current user's home directory.
     variables = {**os.environ, **env}
     expanded = _expand(str(value), variables)
-    if reference := _ENV_REFERENCE.search(expanded):
-        raise ValueError(f"Unresolved path variable: {reference.group(0)}")
 
     if expanded == "~" or expanded.startswith(("~/", "~\\")):
         home = variables.get("USERPROFILE") if is_windows else variables.get("HOME")
@@ -75,13 +105,19 @@ def resolve_path(value: Path, env: dict[str, str]) -> Path:
     return path
 
 
-def build_env(machine_id: str) -> dict[str, str]:
-    """Build explicit machine overrides, using inherited values only for expansion."""
-    # Resolve committed values without retaining unrelated inherited variables.
-    base = {"MC_ID": machine_id}
-    path = ROOT / "machines" / machine_id / "machine.env"
-    env = _read_env(path, {**os.environ, **base})
-    env.update(base)
+def build_env(machine_id: str, values: dict[str, str | Path]) -> dict[str, str]:
+    """Validate declared variables and normalize paths without expanding their content."""
+    env: dict[str, str] = {}
+    for name, value in values.items():
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+            raise ValueError(f"Invalid environment variable name: {name!r}")
+
+        if "\0" in str(value):
+            raise ValueError(f"Environment variable {name} contains a null character")
+        env[name.upper() if is_windows else name] = str(value)
+
+    # The selected identity always overrides a declaration or inherited shell value.
+    env["MC_ID"] = machine_id
     return env
 
 
@@ -151,51 +187,11 @@ def system_env(overrides: dict[str, str] | None = None) -> dict[str, str]:
 # MARK: Environment Helpers
 # ═════════════════════════════════════════════════════════════════════════════
 
-_ENV_FILE = Path.home() / ".env"
 _ENV_REFERENCE = re.compile(
     r"\$(?:{(?P<braced>[A-Za-z_][A-Za-z0-9_]*)}|(?P<plain>[A-Za-z_][A-Za-z0-9_]*))"
     r"|%(?P<windows>[A-Za-z_][A-Za-z0-9_]*)%"
 )
 _WINDOWS_REFERENCE = re.compile(r"%([^%]+)%")
-
-
-def _read_env(path: Path, base: dict[str, str]) -> dict[str, str]:
-    env = dict(base)
-    if not path.is_file():
-        return {}
-
-    # Read plain dotenv assignments, preserving references for the expansion pass.
-    values: dict[str, str] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        key, separator, value = line.partition("=")
-        if not key.strip() or not separator:
-            continue
-
-        value = value.strip()
-        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
-            value = value[1:-1]
-
-        name = key.strip().upper() if is_windows else key.strip()
-        values[name] = value
-    env.update(values)
-
-    # Resolve references within this file without rewriting inherited shell values.
-    for _ in range(len(values)):
-        changed = False
-        for key in values:
-            expanded = _expand(env[key], env)
-
-            if expanded != env[key]:
-                env[key] = expanded
-                changed = True
-
-        if not changed:
-            break
-    return {key: env[key] for key in values}
 
 
 def _expand_registered(value: str, env: dict[str, str], seen: set[str]) -> str:
@@ -214,6 +210,9 @@ def _expand(value: str, env: dict[str, str]) -> str:
 
     def _replace(match: re.Match[str]) -> str:
         name = next(group for group in match.groups() if group is not None)
-        return variables.get(name.casefold() if is_windows else name, match.group(0))
+        name = name.casefold() if is_windows else name
+        if name not in variables:
+            raise ValueError(f"Unresolved path variable: {match.group(0)}")
+        return variables[name]
 
     return _ENV_REFERENCE.sub(_replace, value)

@@ -34,7 +34,6 @@ module = Module(
         # Extension dependencies.
         Package(
             brew="shellcheck",
-            apt="shellcheck",
             winget="koalaman.shellcheck",
         ),
     ],

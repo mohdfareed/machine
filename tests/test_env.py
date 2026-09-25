@@ -1,5 +1,7 @@
 """Selected environment construction and saved-default behavior."""
 
+import shutil
+import subprocess
 import sys
 from contextlib import nullcontext
 from pathlib import Path
@@ -9,48 +11,62 @@ import pytest
 from app import env
 
 
-def test_build_env_resolves_committed_values_without_saving_selection(tmp_path, monkeypatch):
-    root = tmp_path / "root"
-    machine_dir = root / "machines" / "test"
-    machine_dir.mkdir(parents=True)
-    env_file = tmp_path / ".env"
-    env_file.write_text("MC_ID=previous\n")
-    monkeypatch.setattr(env, "_ENV_FILE", env_file)
-    monkeypatch.setattr(env, "ROOT", root)
+def test_build_env_uses_literal_declarations_without_saving_or_inheriting(tmp_path, monkeypatch):
+    directory = tmp_path / "mc"
+    monkeypatch.setattr(env, "config_dir", lambda: directory)
     monkeypatch.setenv("MC_ID", "inherited")
-    monkeypatch.setenv("WORKSPACE", str(tmp_path))
-    monkeypatch.setenv("CALLER_ONLY", "inherited")
-    (machine_dir / "machine.env").write_text(
-        'DEV="$WORKSPACE/Dev"\nDEV_BIN="$DEV/bin"\nMC_ID=wrong\n'
-    )
+    monkeypatch.setenv("CALLER_SECRET", "not-declared")
+    values = {"DEV": tmp_path / "Dev", "LITERAL": "$DEV/bin", "MC_ID": "wrong"}
 
-    result = env.build_env("test")
+    result = env.build_env("test", values)
 
-    assert result["DEV_BIN"] == str(tmp_path / "Dev" / "bin")
-    assert result["MC_ID"] == "test"
-    assert "MC_MACHINE" not in result
-    assert "WORKSPACE" not in result
-    assert "CALLER_ONLY" not in result
-    assert "PATH" not in result
-    assert env_file.read_text() == "MC_ID=previous\n"
+    assert result == {"DEV": str(tmp_path / "Dev"), "LITERAL": "$DEV/bin", "MC_ID": "test"}
+    assert values["MC_ID"] == "wrong"
+    assert not directory.exists()
 
 
-def test_build_env_keeps_explicit_path_and_windows_base_precedence(tmp_path, monkeypatch):
-    machine_dir = tmp_path / "machines" / "test"
-    machine_dir.mkdir(parents=True)
-    monkeypatch.setattr(env, "ROOT", tmp_path)
+def test_build_env_keeps_explicit_path_and_windows_base_precedence(monkeypatch):
     monkeypatch.setattr(env, "is_windows", True)
     monkeypatch.setenv("PATH", "inherited")
-    (machine_dir / "machine.env").write_text(
-        """Path="configured"
-mc_id=wrong
-"""
+
+    assert env.build_env("test", {"Path": "configured", "mc_id": "wrong"}) == {
+        "PATH": "configured",
+        "MC_ID": "test",
+    }
+
+
+@pytest.mark.parametrize("shell", ["fish", "pwsh"])
+def test_saved_shell_environment_round_trips_literal_values(tmp_path, monkeypatch, shell):
+    executable = shutil.which(shell)
+    if executable is None:
+        pytest.skip(f"{shell} is not installed")
+    directory = tmp_path / "mc"
+    monkeypatch.setattr(env, "config_dir", lambda: directory)
+    monkeypatch.setattr(env, "is_windows", False)
+    monkeypatch.setenv("CALLER_SECRET", "not-declared")
+    value = (
+        "quotes: '\u2018\u2019\u201a\u201b \"; dollar: $HOME $(echo injected); slash: \\\n"
+        "second line\r\n"
     )
+    values = env.build_env("test", {"PUBLIC": value})
+    env.save_machine("test", values)
 
-    result = env.build_env("test")
+    if shell == "fish":
+        script = tmp_path / "read.fish"
+        script.write_text("source $argv[1]\nprintf '%s' \"$PUBLIC\"\n")
+        arguments = [executable, "--no-config", str(script), str(directory / "env.fish")]
+    else:
+        script = tmp_path / "read.ps1"
+        script.write_text(
+            "param($EnvironmentFile)\n. $EnvironmentFile\n[Console]::Write($env:PUBLIC)"
+        )
+        arguments = [executable, "-NoProfile", "-File", str(script), str(directory / "env.ps1")]
 
-    assert result["PATH"] == "configured"
-    assert result["MC_ID"] == "test"
+    result = subprocess.run(arguments, capture_output=True, check=True)
+    assert result.stdout.decode("utf-8") == value
+    assert env.get_current_machine() == "test"
+    for path in directory.iterdir():
+        assert "CALLER_SECRET" not in path.read_text()
 
 
 @pytest.mark.parametrize(
@@ -119,21 +135,19 @@ def test_system_env_on_unix_applies_overrides_without_changing_caller_state(monk
     assert env.os.environ["PATH"] == "/caller/bin"
 
 
-def test_machine_selection_reads_env_file_instead_of_shell(tmp_path, monkeypatch):
-    env_file = tmp_path / ".env"
-    monkeypatch.setattr(env, "_ENV_FILE", env_file)
-    monkeypatch.setattr(env, "ROOT", tmp_path)
+def test_machine_selection_reads_saved_file_instead_of_shell(tmp_path, monkeypatch):
+    directory = tmp_path / "mc"
+    monkeypatch.setattr(env, "config_dir", lambda: directory)
+    monkeypatch.setattr(env, "is_windows", True)
     monkeypatch.setenv("MC_ID", "stale")
 
     assert env.get_current_machine() is None
-    env_file.write_text('# Machine selection\nMC_ID="current"\n')
-    assert env.get_current_machine() == "current"
-    assert env.build_env("current") == {"MC_ID": "current"}
-
-    env.set_current_machine("next")
+    env.save_machine("next", env.build_env("next", {}))
     assert env.get_current_machine() == "next"
-    assert env_file.read_text() == 'MC_ID="next"\n'
-    env_file.write_text("MC_ID=\n")
+    assert (directory / "machine").read_text() == "next\n"
+    assert (directory / "env.ps1").is_file()
+    assert not (directory / "env.fish").exists()
+    (directory / "machine").write_text("")
     assert env.get_current_machine() is None
 
 
@@ -147,3 +161,5 @@ def test_paths_use_supplied_environment_and_reject_unresolved_targets(tmp_path, 
         env.resolve_path(Path("relative/config"), values)
     monkeypatch.setattr(env, "is_windows", True)
     assert env.resolve_path(Path("%Dev%/config"), values) == tmp_path / "config"
+    values["DEV"] = str(tmp_path / "$literal")
+    assert env.resolve_path(Path("$DEV/config"), values) == tmp_path / "$literal" / "config"

@@ -3,14 +3,13 @@
 from typing import Annotated
 
 import typer
-from rich.text import Text
 
 from app import cli, reporting
 from app import env as app_env
 from app.discovery import list_machines
-from app.env import build_env, get_current_machine, set_current_machine
+from app.env import get_current_machine, save_machine
 from app.machine import load_machine
-from app.managers import setup_managers, validate_managers
+from app.managers import setup_managers
 from app.ops.files import deploy_file
 from app.ops.packages import install_packages
 from app.ops.scripts import run_scripts
@@ -54,11 +53,11 @@ def deploy(
     if machine is None:
         raise ValueError("No machine selected.")
 
-    # Load and validate the machine and its environment.
-    env = build_env(machine)
-    configuration = load_machine(machine, module_names, env=env)
+    # Resolve the configuration and environment.
+    configuration = load_machine(machine, module_names)
+    env = configuration.env
 
-    # Summarize this invocation before checking live prerequisites.
+    # Summarize this invocation.
     reporting.heading(f"Machine [{machine}]")
     reporting.detail(f"Managers: {' | '.join(configuration.pkg_managers) or 'none'}")
 
@@ -77,10 +76,9 @@ def deploy(
     reporting.heading("Modules")
     reporting.grid(configuration.modules)
 
-    # Save the default machine only after validation.
-    validate_managers(configuration.pkg_managers, env=env)
+    # Save the default machine and shell environment.
     if not dry_run:
-        set_current_machine(machine)
+        save_machine(machine, env)
 
     # Set up the declared package managers.
     reporting.heading("Preparing package managers")
@@ -94,12 +92,12 @@ def deploy(
     # Deploy files after initialization has prepared their prerequisites.
     reporting.heading("Deploying files")
     for mapping in configuration.files:
-        status = "Deployed" if deploy_file(mapping, env=env, dry_run=dry_run) else "Skipped"
-        reporting.path(mapping.source, root=app_env.ROOT, prefix=f"{status}: ")
+        if deploy_file(mapping, env=env, dry_run=dry_run):
+            reporting.link(mapping.source, mapping.target, root=app_env.ROOT)
 
     # Install missing packages.
     reporting.heading("Installing packages")
-    install_packages(configuration.packages, env=env, dry_run=dry_run, reporter=reporting.detail)
+    install_packages(configuration.packages, env=env, dry_run=dry_run)
 
     # Run the deployment scripts.
     reporting.heading("Running scripts")

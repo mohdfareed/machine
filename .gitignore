@@ -6,15 +6,15 @@ __pycache__/
 .venv/
 .pytest_cache/
 .ruff_cache/
+.reports/
 dist/
 lazy-lock.json
-
-# runtime data (container generated)
-**/docker/**/cache/
-**/docker/**/data/
-**/docker/**/logs/
 
 # machine deployment
 .env
 .env.*
-private/
+
+# homelab deployment
+**/docker/**/cache/
+**/docker/**/data/
+**/docker/**/logs/

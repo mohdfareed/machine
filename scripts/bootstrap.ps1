@@ -1,5 +1,10 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
+param([switch]$Deploy)
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Dependencies
+# ═════════════════════════════════════════════════════════════════════════════
 
 # Update the PATH for the current session.
 function Update-Path {
@@ -7,9 +12,17 @@ function Update-Path {
     [System.Environment]::GetEnvironmentVariable("Path", "User")
 }
 
-# ═════════════════════════════════════════════════════════════════════════════
-# Dependencies
-# ═════════════════════════════════════════════════════════════════════════════
+# Ensure winget is available.
+if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+    if (-not (Get-Command Add-AppxPackage -ErrorAction SilentlyContinue)) {
+        Write-Error "App Installer is missing."
+        Write-Host "Install from: https://apps.microsoft.com/detail/9nblggh4nns1"
+        exit 1
+    }
+
+    Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
+    Update-Path
+}
 
 # Ensure git is available.
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
@@ -40,6 +53,8 @@ if (-not (Test-Path "$env:MC_HOME\.git")) {
     git clone https://github.com/mohdfareed/machine.git "$env:MC_HOME"
 }
 
-# Sync and deploy the repo.
-uv run --project $env:MC_HOME mc sync
-uv run --project $env:MC_HOME mc deploy
+# Install `mc` with uv, forcing an update if already installed.
+uv tool install $env:MC_HOME --editable --force
+if ($Deploy) {
+    uv run --project $env:MC_HOME mc deploy
+}

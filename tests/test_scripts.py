@@ -10,9 +10,19 @@ from pathlib import Path
 import platformdirs
 import pytest
 from app import env as machine_env
+from app import machine as machine_loader
 from app import shell
 from app.models import Platform
 from app.ops import scripts as machine_scripts
+
+
+@pytest.mark.parametrize("platform", [Platform.WIN, Platform.MAC, Platform.WSL])
+def test_script_selection_excludes_shell_on_windows(monkeypatch, platform):
+    monkeypatch.setattr(machine_env, "PLATFORM", platform)
+    names = ["setup.py", "setup.ps1", "setup.sh", "setup.win.sh", "_helper.py", "setup.txt"]
+    scripts = [Path(name) for name in names]
+    expected = scripts[:2] if platform == Platform.WIN else scripts[:3]
+    assert machine_loader._resolve_scripts(scripts) == expected
 
 
 def test_powershell_mappings_follow_redirected_documents(monkeypatch, tmp_path):
@@ -40,6 +50,7 @@ def test_scripts_stop_on_first_failure_without_interpreting_prefixes(
         assert not powershell
         assert check is True
         assert dry_run is False
+        assert cmd[0] == sys.executable
         name = Path(cmd[-1]).name
         events.append(name)
         if name == failed_script:
@@ -74,7 +85,7 @@ def test_scripts_run_each_time_with_spaced_paths(tmp_path: Path) -> None:
     assert marker.read_text().splitlines() == ["ran"] * 4
 
 
-@pytest.mark.parametrize("shebang", ["#!/bin/sh", "#!/usr/bin/env zsh"])
+@pytest.mark.parametrize("shebang", ["#!/bin/sh", "#!/bin/bash"])
 def test_script_preview_preserves_permissions(tmp_path: Path, monkeypatch, shebang) -> None:
     script = tmp_path / "init_preview.sh"
     script.write_text(f"{shebang}\nexit 1\n")
@@ -86,125 +97,98 @@ def test_script_preview_preserves_permissions(tmp_path: Path, monkeypatch, sheba
     assert script.stat().st_mode == mode
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Unix script execution")
-def test_zsh_scripts_preserve_prepared_environment_without_loading_startup(tmp_path, monkeypatch):
-    zsh = shutil.which("zsh")
-    if zsh is None:
-        pytest.skip("Zsh is unavailable")
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix executable permissions")
+def test_script_execution_does_not_repair_permissions(tmp_path):
+    script = tmp_path / "not-executable.sh"
+    script.write_text("#!/bin/sh\nexit 0\n")
+    script.chmod(0o600)
+    with pytest.raises(PermissionError):
+        machine_scripts.run_scripts([script], env={}, dry_run=False)
+    assert script.stat().st_mode & 0o777 == 0o600
 
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix script execution")
+def test_scripts_preserve_prepared_environment_without_loading_startup(tmp_path, monkeypatch):
     # Make user startup conflict with the environment prepared for this invocation.
-    (tmp_path / ".zshenv").write_text("export MC_ID=other MC_VALUE=committed PATH=/committed/bin\n")
+    (tmp_path / ".profile").write_text(
+        "export MC_ID=other MC_VALUE=committed PATH=/committed/bin\n"
+    )
     activation = tmp_path / "environment.sh"
     activation.write_text("")
     monkeypatch.setattr(shell, "_ENVIRONMENT_SCRIPT", activation)
-    selected_path = f"{Path(zsh).parent}:/selected/bin"
+    selected_path = "/selected/bin"
     environment = {
         "HOME": str(tmp_path),
-        "ZDOTDIR": str(tmp_path),
         "MC_ID": "selected",
         "MC_VALUE": "private",
         "PATH": selected_path,
     }
 
-    # Managed scripts retain the prepared environment without reading user startup files.
+    # The OS executes the declared shebang; the runner does not reinterpret it.
     script = tmp_path / "inspect script.sh"
     result = tmp_path / "result.txt"
-    script.write_text('#!/usr/bin/env zsh\nprint -r -- "$MC_ID|$MC_VALUE|$PATH" > "$RESULT"\n')
+    script.write_text('#!/bin/sh\nprintf "%s\\n" "$MC_ID|$MC_VALUE|$PATH" > "$RESULT"\n')
+    script.chmod(0o755)
     machine_scripts.run_scripts([script], env={**environment, "RESULT": str(result)}, dry_run=False)
     assert result.read_text().strip() == f"selected|private|{selected_path}"
 
 
 def test_powershell_preview_does_not_prepare_an_unavailable_interpreter(tmp_path, monkeypatch):
-    from app import shell
-
     script = tmp_path / "setup.ps1"
     script.write_text("throw 'preview executed'\n")
     monkeypatch.setattr(shell.shutil, "which", lambda *a, **kw: None)
     monkeypatch.setattr(
-        shell,
-        "prepare_powershell_env",
-        lambda *a: pytest.fail("preview queried PowerShell"),
+        shell, "process_env", lambda *a: pytest.fail("preview prepared environment")
     )
 
     machine_scripts.run_scripts([script], env={}, dry_run=True)
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows elevation helper")
-@pytest.mark.parametrize("already_admin", [False, True])
-@pytest.mark.parametrize("mode,exit_code", [("success", 0), ("throw", 1), ("native", 7)])
-def test_admin_output_and_failure_status(tmp_path: Path, already_admin, mode, exit_code):
-    shell = shutil.which("powershell.exe")
-    if shell is None:
-        pytest.skip("Windows PowerShell is unavailable")
-    source = Path(__file__).parents[1] / "app/scripts/MachineAdmin/MachineAdmin.psm1"
-    module = tmp_path / "MachineAdmin.psm1"
-    # Exercise either branch without elevation or any machine changes.
-    module.write_text(
-        source.read_text().replace(
-            "if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))",
-            "if ($true)" if already_admin else "if ($false)",
-        ),
-        encoding="utf-8",
-    )
-    script = tmp_path / "relay.ps1"
-    script.write_text(
-        "param($ModulePath, $Mode)\n"
-        "$ErrorActionPreference = 'Stop'\n"
-        "$module = Import-Module $ModulePath -PassThru\n"
-        + r"""
-& $module {
-    function script:Start-Process {
-        param($FilePath, $Verb, $WindowStyle, $ArgumentList, [switch]$PassThru, $ErrorAction)
-        if ($Verb -ne 'RunAs' -or $WindowStyle -ne 'Hidden') { throw 'unexpected launch options' }
-        Microsoft.PowerShell.Management\Start-Process -FilePath $FilePath `
-            -WindowStyle Hidden -ArgumentList $ArgumentList -PassThru -ErrorAction Stop
+@pytest.mark.parametrize("exit_code", [0, 7])
+def test_homelab_elevation_failure_stops_before_user_package_setup(tmp_path, exit_code):
+    powershell = shutil.which("pwsh") or shutil.which("powershell.exe")
+    if powershell is None:
+        pytest.skip("PowerShell is unavailable")
+    script = Path(__file__).parents[1] / "config/homelab/scripts/init_system.win.ps1"
+    harness = tmp_path / "elevation.ps1"
+    harness.write_text(
+        r"""
+param($ScriptPath, [int]$ExitCode)
+$ErrorActionPreference = 'Stop'
+function Start-Process {
+    param($FilePath, $ArgumentList, $Verb, [switch]$Wait, [switch]$PassThru)
+    if ($Verb -ne 'RunAs' -or -not $Wait -or -not $PassThru -or
+        $ArgumentList[-1] -ne '-Admin' -or $ArgumentList[-2] -ne "`"$ScriptPath`"") {
+        throw 'unexpected elevation arguments'
     }
+    [pscustomobject]@{ ExitCode = $ExitCode }
 }
-Invoke-Admin {
-    param($mode, $message)
-    Write-Host $message
-    Write-Output 'relay-output'
-    Write-Output ''
-    Write-Output '   '
-    Write-Warning 'relay-warning'
-    Write-Verbose 'relay-verbose' -Verbose
-    if ($mode -eq 'throw') { throw 'relay-error' }
-    if ($mode -eq 'native') { cmd.exe /c 'echo native-output & exit 7' }
-} -ArgumentList $Mode, "relay-host 'quoted'"
-Write-Host 'after-admin'
+function winget {
+    Write-Output 'user-package-setup'
+    $global:LASTEXITCODE = 0
+}
+& $ScriptPath
+exit $LASTEXITCODE
 """,
         encoding="utf-8",
     )
     result = subprocess.run(
         [
-            shell,
+            powershell,
             "-NoProfile",
             "-ExecutionPolicy",
             "Bypass",
             "-File",
+            str(harness),
             str(script),
-            str(module),
-            mode,
+            str(exit_code),
         ],
-        env={**os.environ, "TEMP": str(tmp_path), "TMP": str(tmp_path)},
         capture_output=True,
         text=True,
         timeout=30,
     )
-    output = result.stdout + result.stderr
-    assert result.returncode == exit_code, output
-    assert ("after-admin" in output) == (exit_code == 0), output
-    for message in ("relay-host 'quoted'", "relay-output", "relay-warning", "relay-verbose"):
-        assert message in output, output
-    if mode == "throw":
-        assert output.count("relay-error") == 1, output
-    if mode == "native":
-        assert "native-output" in output
-    if not already_admin:
-        assert all(line.strip() for line in output.splitlines()), output
-    assert "CategoryInfo" not in output
-    assert "Admin block failed" not in output
-    assert not list(tmp_path.glob("*.tmp")), "relay temporary file was not cleaned up"
+    assert result.returncode == exit_code, result.stdout + result.stderr
+    assert ("user-package-setup" in result.stdout) == (exit_code == 0)
 
 
 def test_windows_features_report_failures_after_attempting_remaining_features(tmp_path: Path):
@@ -217,10 +201,6 @@ def test_windows_features_report_failures_after_attempting_remaining_features(tm
         r"""
 param($ScriptPath)
 $ErrorActionPreference = 'Stop'
-function Invoke-Admin {
-    param([scriptblock]$ScriptBlock)
-    & $ScriptBlock
-}
 function Enable-WindowsOptionalFeature {
     param([switch]$Online, [switch]$NoRestart, $FeatureName, $ErrorAction)
     $global:featureAttempts += $FeatureName
@@ -230,12 +210,12 @@ function Enable-WindowsOptionalFeature {
 }
 $global:featureAttempts = @()
 $global:simulateFeatureFailure = $false
-& $ScriptPath
+& $ScriptPath -Admin
 $successfulAttempts = $global:featureAttempts
 $global:featureAttempts = @()
 $global:simulateFeatureFailure = $true
 try {
-    & $ScriptPath
+    & $ScriptPath -Admin
     throw 'expected feature setup to fail'
 }
 catch {
