@@ -70,7 +70,7 @@ am = "AM"
 am_or_rebase = "AM/rebase"
 
 [git_status]
-format = "\b[[(*$all_status)](218)( $ahead_behind(≡$stashed))]($style) "
+format = "\b[[(*$all_status)](218)( $ahead_behind(≡$stashed ))]($style)"
 style = "bright-cyan"
 # ahead = "↑"
 # behind = "↓"
