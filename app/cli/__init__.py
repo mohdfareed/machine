@@ -5,7 +5,7 @@ from importlib.metadata import distribution
 
 import typer
 
-from app.configuration.discovery import list_machines, list_modules
+from app.config.discovery import list_machines, list_modules
 from app.runtime.env import get_current_machine
 
 # ═════════════════════════════════════════════════════════════════════════════

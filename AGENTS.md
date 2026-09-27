@@ -33,7 +33,7 @@ data; never expose credentials or secret values in output.
 ## Project Layout
 
 - `app/cli/` - CLI entrypoint, separate deploy/upgrade/sync commands, and info commands
-- `app/configuration/` - Models, discovery, machine loading and resolution, and validation
+- `app/config/` - Models, discovery, machine loading and resolution, and validation
 - `app/deployment/` - File deployment, package installation and manager maintenance, and script execution
 - `app/runtime/` - Host and selected-machine environment, saved selection, subprocess execution, reporting, and Unix command activation
 - `config/` - Shared dotfiles and configs
@@ -65,7 +65,7 @@ data; never expose credentials or secret values in output.
 Models perform field/type checks only. The loader normally normalizes and resolves
 inputs; `load_machine(..., validate=True)` additionally checks package declarations
 before platform filtering and resolved file sources and scripts through
-`app/configuration/validation.py`. The `mc validate` command adds executable availability checks
+`app/config/validation.py`. The `mc validate` command adds executable availability checks
 for every fixed platform manager. Full validation belongs there; `deploy`, `upgrade`, and `show` do not repeat
 it or perform live manager preflights. Elsewhere, retain only checks necessary for
 resolution, safe execution, data preservation, and idempotence. Do not probe macOS
@@ -220,7 +220,7 @@ or add special config entrypoints outside the module declaration system.
 - Group application code by clear responsibilities; do not flatten it into the `app/` root or add layers with overlapping ownership.
 - Completion discipline: investigate broadly, edit narrowly. Establish the user's actual workflow and intended outcome. Treat a highlighted example as an instance of an issue, not automatically its entire scope; inspect equivalent cases and affected references across the relevant repository areas, including staged and unstaged changes when reviewing work. Read matches in context, distinguish user work from agent changes, and fix the same issue consistently within the authorized scope—without unrelated cleanup or deleting useful material. Before declaring completion, review the final diff for unintended changes, repeat the issue-specific inspection, and run appropriate checks. Passing tests alone does not establish that the user's workflow or content was preserved. Report the scope actually verified and any unresolved cases; do not claim a repository-wide fix from a single-site edit.
 - LESS IS MORE: keep only personally needed capabilities; prefer established tools and native mechanisms that remove owned code over speculative support. Minimize lifetime maintenance: count code ownership, repeated configuration, dependencies, and manual recovery as well as line count. Keep ordinary package additions as configuration changes. Write direct, readable steps and preserve the established comment and section structure.
-- Keep runtime references rename-safe: use symbol references or framework metadata instead of duplicating internal names in strings, and explicit attributes for package access. Keep external contracts literal; do not add a naming framework. Tests are exempt.
+- Keep runtime references rename-safe: use symbol references or framework metadata instead of duplicating internal names in strings, and explicit attributes for package access. Keep external contracts literal; do not add a naming framework. In tests, derive generated imports and application source paths from imported objects (`__name__`, `__module__`, `__file__`), not duplicated package paths; synthetic fixture names can stay literal.
 - Always keep the happy path flat: handle alternative, skip, and failure paths first with early `return`, `continue`, `break`, or exceptions as appropriate, then let the main path proceed without unnecessary nesting or `else`. Apply this throughout control flow, not just validation; preserve required cleanup and shared follow-up work.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - This is a personal tool: implement demonstrated needs, not speculative requirements. Do not add runtime repair of the checkout; executable flags belong to checks and fix tooling, not deployment execution.
@@ -229,7 +229,7 @@ or add special config entrypoints outside the module declaration system.
 - Avoid trivial helper wrappers like `def _target(name): return str(base / name)`; use `str(base / path)` directly unless the helper adds real behavior
 - Keep type annotations readable: use named models for structured results instead of opaque positional tuples; use aliases when only the type expression needs a concise name.
 - If a package/file/script list is just static data used once, keep it inline in the `Module(...)` or `Machine(...)` definition; only extract it when there is real logic or reuse. Keep user-edited selections one complete item per line so entries can be changed or commented independently; do not reduce configurable URLs to fragments of a shared template.
-- Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration
+- Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration. Assert only the fields and effects relevant to the behavior under test; unrelated environment variables, packages, or services must not require test updates.
 - Git integration tests must clear inherited `GIT_*` variables before their first Git command and isolate user/system configuration. Temporary working directories alone do not isolate repository metadata or the index.
 - Keep permanent tests minimal and proportionate to the behavior changed. Prefer a few focused regression cases over exhaustive combinations, large fixtures, or test scaffolding. Use temporary tests for broader one-off verification and remove them afterward; do not retain exploratory coverage by default. Reuse existing tests and the standard check entrypoint rather than expanding the suite for every edit.
 - Preserve existing script phase comments, progress messages, command choices, and setup/update behavior when making focused changes

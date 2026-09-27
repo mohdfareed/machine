@@ -1,5 +1,5 @@
 """Explicitly selected OS settings and features."""
 
-from app.configuration.models import Module
+from app.config.models import Module
 
 module = Module()

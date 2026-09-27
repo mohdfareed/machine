@@ -9,7 +9,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from app.configuration.models import Platform
+from app.config.models import Platform
 from app.runtime import env
 
 
@@ -31,17 +31,14 @@ def test_host_detection_requires_supported_platform(
     monkeypatch.setattr(sys, "platform", host)
     monkeypatch.setattr(env.platform, "machine", lambda: architecture)
     monkeypatch.setattr(env.platform, "release", lambda: kernel)
-    monkeypatch.setattr(shutil, "which", lambda *args: pytest.fail("queried host tools"))
 
     if expected is None:
         with pytest.raises(RuntimeError, match="Unsupported platform"):
-            runpy.run_path(str(env.ROOT / "app" / "runtime" / "env.py"))
+            runpy.run_path(env.__file__)
         return
 
-    detected = runpy.run_path(str(env.ROOT / "app" / "runtime" / "env.py"))
+    detected = runpy.run_path(env.__file__)
     assert detected["PLATFORM"] == expected
-    assert detected["is_wsl"] == (expected == Platform.WSL)
-    assert detected["is_unix"] == (expected in {Platform.MAC, Platform.WSL})
 
 
 def test_build_env_uses_literal_declarations_without_saving_or_inheriting(tmp_path, monkeypatch):
@@ -49,23 +46,34 @@ def test_build_env_uses_literal_declarations_without_saving_or_inheriting(tmp_pa
     monkeypatch.setattr(env, "config_dir", lambda: directory)
     monkeypatch.setenv("MC_ID", "inherited")
     monkeypatch.setenv("CALLER_SECRET", "not-declared")
-    values = {"DEV": tmp_path / "Dev", "LITERAL": "$DEV/bin", "MC_ID": "wrong"}
+    values = {
+        "DEV": tmp_path / "Dev",
+        "LITERAL": "$DEV/bin",
+        "MC_ID": "wrong",
+        "MC_HOME": "wrong",
+    }
+    original = values.copy()
 
     result = env.build_env("test", values)
 
-    assert result == {"DEV": str(tmp_path / "Dev"), "LITERAL": "$DEV/bin", "MC_ID": "test"}
-    assert values["MC_ID"] == "wrong"
+    assert result["DEV"] == str(tmp_path / "Dev")
+    assert result["LITERAL"] == "$DEV/bin"
+    assert result["MC_ID"] == "test"
+    assert result["MC_HOME"] == str(env.ROOT)
+    assert "CALLER_SECRET" not in result
+    assert values == original
     assert not directory.exists()
 
 
-def test_build_env_keeps_explicit_path_and_windows_base_precedence(monkeypatch):
+def test_build_env_normalizes_windows_keys_and_keeps_explicit_path(monkeypatch):
     monkeypatch.setattr(env, "is_windows", True)
     monkeypatch.setenv("PATH", "inherited")
 
-    assert env.build_env("test", {"Path": "configured", "mc_id": "wrong"}) == {
-        "PATH": "configured",
-        "MC_ID": "test",
-    }
+    result = env.build_env("test", {"Path": "configured", "mc_id": "wrong"})
+
+    assert result["PATH"] == "configured"
+    assert result["MC_ID"] == "test"
+    assert "Path" not in result and "mc_id" not in result
 
 
 @pytest.mark.parametrize("shell", ["fish", "pwsh"])

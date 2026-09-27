@@ -22,6 +22,8 @@ def test_compose_uses_vault_references_and_stops_on_failure(tmp_path, monkeypatc
     media = tmp_path / "media"
     for name in ("movies", "series", "anime", "downloads"):
         (media / name).mkdir(parents=True)
+    existing_media = media / "movies" / "existing.mkv"
+    existing_media.write_bytes(b"existing media")
     monkeypatch.setenv("MC_HOMELAB_MEDIA_DIR", str(media))
     monkeypatch.setenv("MC_HOMELAB_STORAGE_DIR", str(tmp_path / "state"))
     monkeypatch.setattr(Path, "is_mount", lambda path: path == media)
@@ -30,7 +32,8 @@ def test_compose_uses_vault_references_and_stops_on_failure(tmp_path, monkeypatc
     calls = []
 
     def run(command, **kwargs):
-        assert kwargs == {"cwd": project, "check": True}
+        assert kwargs["cwd"] == project
+        assert kwargs["check"] is True
         calls.append(command)
         if fail_pull:
             raise subprocess.CalledProcessError(1, command)
@@ -49,4 +52,27 @@ def test_compose_uses_vault_references_and_stops_on_failure(tmp_path, monkeypatc
         expected.append([*prefix, "up", "-d", "--build", "--remove-orphans"])
     assert calls == expected
     assert (tmp_path / "state").is_dir()
-    assert not list((tmp_path / "state").iterdir())
+    assert existing_media.read_bytes() == b"existing media"
+
+
+@pytest.mark.parametrize("mounted", [False, True], ids=["unmounted-share", "missing-media-folders"])
+def test_unready_media_stops_before_creating_state_or_starting_services(
+    tmp_path, monkeypatch, mounted
+):
+    media = tmp_path / "media"
+    media.mkdir()
+    if not mounted:
+        for name in ("movies", "series", "anime", "downloads"):
+            (media / name).mkdir()
+    state = tmp_path / "state"
+    monkeypatch.setenv("MC_HOMELAB_MEDIA_DIR", str(media))
+    monkeypatch.setenv("MC_HOMELAB_STORAGE_DIR", str(state))
+    monkeypatch.setattr(Path, "is_mount", lambda path: mounted)
+    monkeypatch.setattr(
+        services,
+        "_wait_for_docker",
+        lambda: pytest.fail("started services before checking media storage"),
+    )
+    with pytest.raises(FileNotFoundError):
+        services.main()
+    assert not state.exists()

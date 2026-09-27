@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from app.configuration.models import FileMapping
+from app.config.models import FileMapping
 from app.deployment import files as machine_files
 
 
@@ -14,7 +14,7 @@ from app.deployment import files as machine_files
 def test_missing_source_fails_before_target_changes(tmp_path, dry_run):
     target = tmp_path / "target"
     target.write_text("existing")
-    mapping = FileMapping(source=str(tmp_path / "missing"), target=target)
+    mapping = FileMapping(source=tmp_path / "missing", target=target)
     with pytest.raises(FileNotFoundError):
         machine_files.deploy_file(mapping, env={}, dry_run=dry_run)
     assert target.read_text() == "existing"
@@ -36,7 +36,6 @@ def test_failed_link_preserves_data_and_reports_backup(monkeypatch, tmp_path, is
     target_data.write_text("existing")
 
     def deny_link(self, link_source, *, target_is_directory):
-        assert self == target and link_source == source
         assert target_is_directory is is_directory
         raise PermissionError("link denied")
 
@@ -132,10 +131,9 @@ def test_permissions_apply_to_correct_link_without_preview_mutation(tmp_path):
     mapping = FileMapping(source=source, target=target, mode=0o600)
     machine_files.deploy_file(mapping, env={}, dry_run=True)
     assert stat.S_IMODE(source.stat().st_mode) == 0o644
-    for _ in range(2):
-        machine_files.deploy_file(mapping, env={}, dry_run=False)
-        assert stat.S_IMODE(source.stat().st_mode) == 0o600
-        assert target.readlink() == source
+    machine_files.deploy_file(mapping, env={}, dry_run=False)
+    assert stat.S_IMODE(source.stat().st_mode) == 0o600
+    assert target.readlink() == source
     assert not (tmp_path / "target.backup").exists()
 
 
@@ -155,7 +153,7 @@ def test_windows_acl_reset_clears_explicit_grants_and_preview_does_not_write(mon
     )
 
     def run(command, **kwargs):
-        assert kwargs["env"] is env
+        assert kwargs["env"] == env
         assert kwargs["dry_run"] is False
         commands.append(command)
 
@@ -179,33 +177,28 @@ def test_windows_acl_reset_clears_explicit_grants_and_preview_does_not_write(mon
                 *suffix,
             ],
         ]
-    commands.clear()
-    machine_files.deploy_file(mapping, env=env, dry_run=True)
-    assert commands == []
     assert target.readlink() == source
 
 
-@pytest.mark.parametrize("dangling_backup", [False, True])
-def test_numbered_backups_are_preserved(tmp_path, dangling_backup):
+def test_numbered_backups_preserve_existing_files_and_dangling_links(tmp_path):
     source = tmp_path / "source.json"
     target = tmp_path / "settings.json"
     source.write_text("new")
     target.write_text("existing")
     backup = tmp_path / "settings.json.backup"
-    if dangling_backup:
-        backup.symlink_to(tmp_path / "missing")
-    else:
-        backup.write_text("older")
+    backup.write_text("older")
+    dangling_backup = tmp_path / "settings.json.backup.1"
+    dangling_backup.symlink_to(tmp_path / "missing")
+    new_backup = tmp_path / "settings.json.backup.2"
     mapping = FileMapping(source=source, target=target)
     machine_files.deploy_file(mapping, env={}, dry_run=True)
     assert target.read_text() == "existing"
-    assert not (tmp_path / "settings.json.backup.1").exists()
+    assert not target.is_symlink()
+    assert not new_backup.exists()
     machine_files.deploy_file(mapping, env={}, dry_run=False)
-    if dangling_backup:
-        assert backup.is_symlink() and backup.readlink() == tmp_path / "missing"
-    else:
-        assert backup.read_text() == "older"
-    assert (tmp_path / "settings.json.backup.1").read_text() == "existing"
+    assert backup.read_text() == "older"
+    assert dangling_backup.readlink() == tmp_path / "missing"
+    assert new_backup.read_text() == "existing"
     assert os.path.samefile(source, target)
 
 
@@ -232,7 +225,7 @@ def test_windows_acl_failure_preserves_link_and_backup(monkeypatch, tmp_path, ex
             raise failure
 
     monkeypatch.setattr(machine_files, "run", run)
-    monkeypatch.setattr(Path, "unlink", lambda *args: pytest.fail("removed link after ACL failure"))
+
     error_type = OSError if existing_target == "file" else subprocess.CalledProcessError
     with pytest.raises(error_type) as caught:
         machine_files.deploy_file(

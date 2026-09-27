@@ -5,9 +5,9 @@ from typing import Annotated
 import typer
 
 from app import cli
-from app.configuration.discovery import list_machines, list_modules
-from app.configuration.loader import load_machine
-from app.configuration.validation import validate_managers
+from app.config.discovery import list_machines, list_modules
+from app.config.loader import load_machine
+from app.config.validation import validate_managers
 from app.runtime import env, reporting
 from app.runtime.env import get_current_machine
 

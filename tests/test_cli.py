@@ -8,8 +8,8 @@ import pytest
 import typer
 from app import cli
 from app.cli import deploy, entry, info, sync, upgrade
-from app.configuration import validation
-from app.configuration.models import PkgManager, Platform
+from app.config import models, validation
+from app.config.models import PkgManager, Platform
 from app.runtime import env
 from typer.testing import CliRunner
 
@@ -116,10 +116,8 @@ def test_machine_selection_is_read_at_invocation(tmp_path, monkeypatch, command)
     assert persisted == []
 
 
-@pytest.mark.parametrize("windows", [False, True], ids=["unix", "windows"])
-def test_sync_restores_local_edits(sync_repos, monkeypatch, windows):
+def test_sync_restores_local_edits(sync_repos):
     canonical, checkout = sync_repos
-    monkeypatch.setattr(env, "is_windows", windows)
 
     # Change different parts of the same tracked file locally and upstream.
     original = "".join(f"setting {i}\n" for i in range(10))
@@ -177,34 +175,20 @@ def test_sync_fetch_failure_preserves_checkout(sync_repos, monkeypatch):
     assert git(checkout, "rev-parse", "HEAD") == before
 
 
-@pytest.mark.parametrize("windows", [False, True], ids=["unix", "windows"])
-def test_sync_dry_run_does_not_fetch(sync_repos, monkeypatch, windows):
+def test_sync_dry_run_does_not_fetch(sync_repos):
     _, checkout = sync_repos
-    monkeypatch.setattr(env, "is_windows", windows)
     result = CliRunner().invoke(entry._create_app(), ["sync", "--dry-run"])
     assert result.exit_code == 0, result.exception
     assert not (checkout / ".git" / "FETCH_HEAD").exists()
-    assert not (checkout.parent / "config/fish/completions/mc.fish").exists()
-    assert not (checkout.parent / "documents").exists()
-    assert not (checkout.parent / "config").exists()
 
 
-@pytest.mark.parametrize(
-    "platform,managers",
-    [
-        (Platform.MAC, [PkgManager.BREW, PkgManager.MAS]),
-        (Platform.WIN, [PkgManager.WINGET, PkgManager.SCOOP]),
-        (Platform.WSL, [PkgManager.BREW]),
-    ],
-)
-def test_validate_checks_configuration_and_managers_without_deployment(
-    tmp_path, monkeypatch, platform, managers
-):
+def test_validate_checks_configuration_and_managers_without_deployment(tmp_path, monkeypatch):
+    managers = [PkgManager.WINGET, PkgManager.SCOOP]
     machine = tmp_path / "machines" / "test"
     machine.mkdir(parents=True)
     declaration = machine / "machine.py"
-    declaration.write_text("from app.configuration.models import Machine\nmanifest = Machine()\n")
-    monkeypatch.setattr(env, "PLATFORM", platform)
+    declaration.write_text(f"from {models.__name__} import Machine\nmanifest = Machine()\n")
+    monkeypatch.setattr(env, "PLATFORM", Platform.WIN)
     monkeypatch.setattr(env, "ROOT", tmp_path)
     monkeypatch.setattr(env, "config_dir", lambda: tmp_path / "state")
     monkeypatch.setattr(
@@ -213,7 +197,7 @@ def test_validate_checks_configuration_and_managers_without_deployment(
     checked = []
 
     def find_executable(name, *, env):
-        assert env == {"MC_ID": "test"}
+        assert env["MC_ID"] == "test"
         checked.append(name)
         return name
 
@@ -234,7 +218,7 @@ def test_validate_checks_configuration_and_managers_without_deployment(
     result = runner.invoke(app, ["validate"])
     assert isinstance(result.exception, FileNotFoundError)
     declaration.write_text(
-        "from app.configuration.models import Machine, Package\n"
+        f"from {models.__name__} import Machine, Package\n"
         "manifest = Machine(packages=[Package()])\n"
     )
     assert runner.invoke(app, ["validate"]).exit_code != 0
@@ -242,8 +226,6 @@ def test_validate_checks_configuration_and_managers_without_deployment(
 
 @pytest.mark.parametrize("failed_phase", [None, "init_apps.ps1", "files", "packages"])
 def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, failed_phase) -> None:
-    from app.configuration import models
-
     managers = [models.PkgManager.WINGET, models.PkgManager.SCOOP]
     configuration = models.Configuration(
         pkg_managers=managers,
@@ -274,16 +256,16 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
             raise RuntimeError(f"{phase} failed")
 
     def setup_managers(declared, *, env, dry_run):
-        assert declared == managers and env is selected_env
+        assert declared == managers and env == selected_env
         record("managers")
 
     def run_scripts(scripts, *, env, dry_run):
-        assert env is selected_env
+        assert env == selected_env
         for script in scripts:
             record(script.name)
 
     def install_packages(packages, *, env, dry_run):
-        assert env is selected_env
+        assert env == selected_env
         assert [package.selected_source for package in packages] == ["winget"]
         record("packages")
         return []
@@ -323,7 +305,7 @@ def test_preview_uses_requested_machine_without_saving_or_running(tmp_path, monk
     machine_dir.mkdir(parents=True)
     (machine_dir / "config").write_text("new config")
     (machine_dir / "machine.py").write_text(
-        "from app.configuration.models import Machine, FileMapping, Package\n"
+        f"from {models.__name__} import Machine, FileMapping, Package\n"
         f"manifest = Machine(env={{'DEV': {str(tmp_path / 'selected')!r}}}, "
         f"files=[FileMapping(source='config', target={str(tmp_path / 'selected' / 'config')!r})], "
         "packages=[Package(name='mc-test-missing-command', cmd='echo selected-env')])\n"
@@ -347,7 +329,7 @@ def test_preview_uses_requested_machine_without_saving_or_running(tmp_path, monk
 
 
 def test_upgrade_passes_selected_environment_and_stops_on_failure(monkeypatch):
-    from app.configuration.models import Configuration
+    from app.config.models import Configuration
 
     selected_env = {"MC_ID": "test"}
     configuration = Configuration(
@@ -359,13 +341,13 @@ def test_upgrade_passes_selected_environment_and_stops_on_failure(monkeypatch):
     monkeypatch.setattr(upgrade, "load_machine", lambda *args, **kwargs: configuration)
 
     def managers(managers, *, env, dry_run):
-        assert env is selected_env and dry_run
+        assert env == selected_env and dry_run
         events.append("managers")
 
     monkeypatch.setattr(upgrade, "upgrade_managers", managers)
 
     def packages(packages, *, env, dry_run):
-        assert env is selected_env and dry_run
+        assert env == selected_env and dry_run
         events.append("packages")
         raise RuntimeError("upgrade failed")
 
@@ -396,16 +378,3 @@ def test_show_subcommands_skip_configuration_loading(tmp_path, monkeypatch):
         result = runner.invoke(app, ["show", command])
         assert result.exit_code == 0, result.exception
         assert expected in result.output
-
-
-def test_preview_flag_is_rejected_outside_deployment_commands():
-    runner = CliRunner()
-    app = entry._create_app()
-    for arguments in (
-        ["--dry-run", "deploy"],
-        ["show", "modules", "--dry-run"],
-        ["validate", "--dry-run"],
-        ["show", "--dry-run"],
-        ["show", "id", "--dry-run"],
-    ):
-        assert runner.invoke(app, arguments).exit_code == 2

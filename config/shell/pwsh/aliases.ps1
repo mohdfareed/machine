@@ -10,7 +10,7 @@ function ShowFile { bat --paging=never @args }
 
 # Configure ls similar to zsh.
 Set-Alias -Name ls -Value ListFiles
-function ListFiles { eza --group-directories-first --git @args }
+function ListFiles { eza --group-directories-first --git --icons @args }
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Development

@@ -4,8 +4,8 @@ import importlib.util
 from pathlib import Path
 from types import ModuleType
 
-from app.configuration.discovery import SCRIPT_SUFFIXES, list_modules, list_scripts
-from app.configuration.models import (
+from app.config.discovery import SCRIPT_SUFFIXES, list_modules, list_scripts
+from app.config.models import (
     Configuration,
     FileMapping,
     Machine,
@@ -15,7 +15,7 @@ from app.configuration.models import (
     PkgManager,
     Platform,
 )
-from app.configuration.validation import validate_configuration, validate_package
+from app.config.validation import validate_configuration, validate_package
 from app.runtime import env as machine_env
 
 # ═════════════════════════════════════════════════════════════════════════════

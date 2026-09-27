@@ -71,7 +71,7 @@ applies to `upgrade` and `sync`. Add `--debug` to show exception tracebacks.
 Create `machines/<id>/machine.py`:
 
 ```python
-from app.configuration.models import Machine
+from app.config.models import Machine
 from config import shell
 
 manifest = Machine(
@@ -105,7 +105,7 @@ strings or `Path` values. Redeploy after changing these variables, then open a n
 Create `config/<name>/module.py` and an empty `__init__.py` beside it:
 
 ```python
-from app.configuration.models import Module
+from app.config.models import Module
 
 module = Module()
 ```

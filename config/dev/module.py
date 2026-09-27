@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from app.configuration.models import FileMapping, Module, Package, Platform
+from app.config.models import FileMapping, Module, Package, Platform
 from app.runtime.env import PLATFORM
 
 _vscode = Path("~") / "Library" / "Application Support" / "Code" / "User"

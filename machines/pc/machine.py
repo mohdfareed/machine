@@ -2,8 +2,9 @@
 
 from pathlib import Path
 
-from app.configuration.models import Machine, Package, Platform
+from app.config.models import Machine, Package, Platform
 from app.runtime.env import PLATFORM
+
 from config import dev, onepass, shell, ssh, system, terminal
 
 sib_script_install_path = '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\steam-input-bridge"'

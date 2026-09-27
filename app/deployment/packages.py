@@ -1,6 +1,6 @@
 """Install and upgrade packages using the loader's resolved source choices."""
 
-from app.configuration.models import Package, PackageSource
+from app.config.models import Package, PackageSource
 from app.deployment import managers as package_managers
 from app.runtime.reporting import detail
 from app.runtime.shell import find_executable, run

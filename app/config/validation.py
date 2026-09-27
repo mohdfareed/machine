@@ -1,6 +1,6 @@
 """Explicit configuration and read-only host checks."""
 
-from app.configuration.models import Configuration, Package, PkgManager
+from app.config.models import Configuration, Package, PkgManager
 from app.runtime.shell import find_executable
 
 

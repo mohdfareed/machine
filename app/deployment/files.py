@@ -3,7 +3,7 @@
 import subprocess
 from pathlib import Path
 
-from app.configuration.models import FileMapping
+from app.config.models import FileMapping
 from app.runtime.env import is_windows
 from app.runtime.shell import query, run
 

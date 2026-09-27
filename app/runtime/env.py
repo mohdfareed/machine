@@ -10,7 +10,7 @@ from pathlib import Path
 from platformdirs import user_config_path
 from platformdirs.unix import Unix
 
-from app.configuration.models import Platform
+from app.config.models import Platform
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Host

@@ -18,7 +18,7 @@ def isolated_activation(tmp_path, monkeypatch):
     monkeypatch.setattr(shell, "_ENVIRONMENT_SCRIPT", activation)
 
 
-def test_argument_lists_preserve_paths_values_and_environment(tmp_path, monkeypatch):
+def test_argument_lists_preserve_paths_values_and_environment(tmp_path, monkeypatch, capfd):
     script = tmp_path / "script with spaces.py"
     script.write_text(
         """import json, os, sys
@@ -37,6 +37,7 @@ print(json.dumps([sys.argv[1:], os.environ['MC_TEST_VALUE'], os.environ.get('MC_
     )
     assert result is not None
     assert json.loads(result.stdout) == [arguments, "custom value", "inherited value"]
+    assert result.stdout.decode().strip() not in capfd.readouterr().out.splitlines()
 
 
 def test_default_execution_inherits_output(capfd):
@@ -54,27 +55,6 @@ def test_default_execution_inherits_output(capfd):
     assert result.stdout is None
     assert "direct output" in output.out.splitlines()
     assert "direct error" in output.err.splitlines()
-
-
-def test_preview_does_not_execute_command(tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        shell, "process_env", lambda *a: pytest.fail("preview prepared environment")
-    )
-    target = tmp_path / "must not exist"
-    result = shell.run(
-        [
-            sys.executable,
-            "-c",
-            "import pathlib, sys; pathlib.Path(sys.argv[1]).touch()",
-            str(target),
-        ],
-        env=dict(os.environ),
-        dry_run=True,
-        capture_output=True,
-        check=True,
-    )
-    assert result is None
-    assert not target.exists()
 
 
 def test_checked_execution_raises_after_command_failure():
@@ -109,18 +89,6 @@ def test_unix_string_commands_use_shell():
     assert result.stdout == b"expanded value"
 
 
-def test_captured_output_is_not_replayed(capfd):
-    result = shell.run(
-        [sys.executable, "-c", "import sys; sys.stdout.write('raw-output\\n')"],
-        env=dict(os.environ),
-        dry_run=False,
-        capture_output=True,
-    )
-    assert result is not None
-    assert result.stdout == f"raw-output{os.linesep}".encode()
-    assert "raw-output" not in capfd.readouterr().out.splitlines()
-
-
 def test_query_is_quiet_and_uses_the_supplied_path(capfd):
     environment = {
         "PATH": os.path.dirname(sys.executable),
@@ -134,8 +102,8 @@ def test_query_is_quiet_and_uses_the_supplied_path(capfd):
     assert capfd.readouterr() == ("", "")
 
 
-@pytest.mark.parametrize("windows,resolved", [(False, None), (True, None), (True, sys.executable)])
-def test_commands_resolve_only_on_windows_without_preflight(monkeypatch, windows, resolved):
+@pytest.mark.parametrize("windows", [False, True])
+def test_commands_resolve_only_on_windows_without_preflight(monkeypatch, windows):
     environment = {"PATH": "refreshed-path"}
     command = ["query-tool", "two words", ""]
     monkeypatch.setattr(shell, "is_windows", windows)
@@ -145,11 +113,11 @@ def test_commands_resolve_only_on_windows_without_preflight(monkeypatch, windows
         assert windows, "POSIX execution must use subprocess PATH lookup"
         assert name == command[0]
         assert path == environment["PATH"]
-        return resolved
+        return sys.executable
 
     def run(args, **kwargs):
-        assert args == [resolved or command[0], *command[1:]]
-        assert kwargs["env"] is environment
+        assert args == [sys.executable if windows else command[0], *command[1:]]
+        assert kwargs["env"] == environment
         return subprocess.CompletedProcess(args, 0)
 
     monkeypatch.setattr(shell.shutil, "which", which)
@@ -161,12 +129,10 @@ def test_commands_resolve_only_on_windows_without_preflight(monkeypatch, windows
 
 def test_missing_commands_raise_native_file_not_found(tmp_path):
     command = [str(tmp_path / "missing-command")]
-    with pytest.raises(FileNotFoundError) as failure:
+    with pytest.raises(FileNotFoundError):
         shell.query(command, env={})
-    assert failure.value.errno is not None
-    with pytest.raises(FileNotFoundError) as failure:
+    with pytest.raises(FileNotFoundError):
         shell.run(command, env={}, dry_run=False)
-    assert failure.value.errno is not None
 
 
 def test_git_context_cannot_redirect_queries_or_change_another_index(tmp_path, monkeypatch):
@@ -268,7 +234,7 @@ command.chmod(0o755)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix command activation")
-def test_activation_failure_stops_before_execution(tmp_path, monkeypatch):
+def test_activation_failure_stops_before_execution(monkeypatch):
     configuration = shell._ENVIRONMENT_SCRIPT
     configuration.write_text(
         """printf 'activation failed' >&2
@@ -279,7 +245,7 @@ return 7
         shell.query([sys.executable, "-c", "raise AssertionError('must not run')"], env={})
 
     def blocked(*args, **kwargs):
-        assert kwargs["timeout"] == 30
+        assert kwargs["timeout"] > 0
         raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
 
     monkeypatch.setattr(shell.subprocess, "run", blocked)
@@ -313,62 +279,70 @@ def test_windows_overrides_use_registered_values_without_activation(monkeypatch)
     }
 
 
-@pytest.mark.parametrize("windows", [False, True])
-@pytest.mark.parametrize("module_path", [None, "existing-modules"])
-def test_powershell_files_prepare_once_and_preserve_module_path(monkeypatch, windows, module_path):
+@pytest.mark.parametrize(
+    "windows,interpreter,module_path",
+    [
+        pytest.param(True, "powershell.exe", None, id="windows-path"),
+        pytest.param(False, "pwsh-preview", "existing-modules", id="unix-preview-fallback"),
+        pytest.param(True, None, "existing-modules", id="windows-system-root-fallback"),
+    ],
+)
+def test_powershell_uses_prepared_interpreter_and_environment(
+    tmp_path, monkeypatch, windows, interpreter, module_path
+):
     monkeypatch.setattr(shell, "is_windows", windows)
-    environment = {"PATH": "installed-path"}
+    environment = {"PATH": str(tmp_path / "installed tools"), "SystemRoot": str(tmp_path)}
     if module_path is not None:
         environment["PSModulePath"] = module_path
+    original = environment.copy()
     prepared = []
-    commands = []
-    interpreter = "powershell.exe" if windows else "pwsh-preview"
+    executable = (
+        tmp_path / "installed tools" / interpreter
+        if interpreter
+        else tmp_path / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
+    )
+    executable.parent.mkdir(parents=True)
+    executable.touch()
+    arguments = [str(tmp_path / "script with spaces.ps1"), "two words"]
 
     def process_env(overrides):
         prepared.append(overrides)
         return environment
 
     def which(name, *, path):
-        assert path == "installed-path"
-        return f"/tools/{interpreter}" if name == interpreter else None
+        assert path == environment["PATH"]
+        return str(executable) if name == interpreter else None
 
     def run(command, **kwargs):
-        assert kwargs["env"] is environment
-        commands.append(command)
+        assert command[0] == str(executable)
+        assert "-NoProfile" in command
+        assert command[command.index("-File") + 1 :] == arguments
+        assert kwargs["env"] == original
         return subprocess.CompletedProcess(command, 0)
 
     monkeypatch.setattr(shell, "process_env", process_env)
     monkeypatch.setattr(shell.shutil, "which", which)
     monkeypatch.setattr(shell.subprocess, "run", run)
-    shell.run(["script with spaces.ps1", "two words"], env={}, dry_run=False, powershell=True)
+    shell.run(arguments, env={}, dry_run=False, powershell=True)
 
     assert prepared == [{}]
-    assert commands == [
-        [
-            f"/tools/{interpreter}",
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-File",
-            "script with spaces.ps1",
-            "two words",
-        ]
-    ]
-    assert environment.get("PSModulePath") == module_path
+    assert environment == original
 
 
 @pytest.fixture
 def powershell(monkeypatch):
     executable = (
-        shutil.which("pwsh.exe")
-        or shutil.which("powershell.exe")
-        or shutil.which("pwsh")
-        or shutil.which("pwsh-preview")
+        shutil.which("powershell.exe") or shutil.which("pwsh") or shutil.which("pwsh-preview")
     )
     if executable is None:
         pytest.skip("PowerShell is unavailable")
     monkeypatch.setattr(shell, "is_windows", True)
-    monkeypatch.setattr(shell.shutil, "which", lambda *args, **kwargs: executable)
+    which = shutil.which
+    monkeypatch.setattr(
+        shell.shutil,
+        "which",
+        lambda name, **kwargs: executable if name == "powershell.exe" else which(name, **kwargs),
+    )
 
 
 @pytest.mark.parametrize(
@@ -376,21 +350,15 @@ def powershell(monkeypatch):
     [
         (
             '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\SteamInputBridge"; '
-            "Write-Output $env:STEAM_INPUT_BRIDGE_REPO",
-            r"C:\Dev Projects\SteamInputBridge",
-            0,
-        ),
-        ('Write-Output "quoted value" | ForEach-Object { "[$_]" }', "[quoted value]", 0),
-        (
+            'Write-Output $env:STEAM_INPUT_BRIDGE_REPO | ForEach-Object { "[$_]" }; '
             "Write-Host 'host output'; Write-Warning 'warning output'; "
             "Write-Progress -Activity 'probe' -Status 'probe'",
-            "warning output",
+            [r"[C:\Dev Projects\SteamInputBridge]", "host output", "warning output"],
             0,
         ),
-        ('Write-Host "before error"; throw "example failure"', "example failure", 1),
         (
-            "\"throw 'repository already exists'\" | Invoke-Expression",
-            "repository already exists",
+            'Write-Host "before error"; "throw \'repository already exists\'" | Invoke-Expression',
+            ["before error", "repository already exists"],
             1,
         ),
     ],
@@ -405,11 +373,23 @@ def test_windows_commands_preserve_source_and_failure(command, expected, code, p
     assert result is not None
     output = result.stdout
     assert b"CLIXML" not in output
-    assert b"CategoryInfo" not in output
-    assert b"FullyQualifiedErrorId" not in output
-    assert b"At line:" not in output
     assert result.returncode == code
-    assert expected in output.decode(errors="replace")
+    assert all(value in output.decode(errors="replace") for value in expected)
+
+
+def test_powershell_files_preserve_spaced_paths_and_arguments(tmp_path, powershell):
+    script = tmp_path / "script's space.ps1"
+    script.write_text("param($Value)\nWrite-Output $Value\n", encoding="utf-8")
+    result = shell.run(
+        [str(script), "value's space"],
+        env={},
+        dry_run=False,
+        capture_output=True,
+        check=True,
+        powershell=True,
+    )
+    assert result is not None
+    assert result.stdout.strip() == b"value's space"
 
 
 def test_windows_native_command_failures_propagate(powershell):

@@ -5,7 +5,7 @@ from typing import Annotated
 import typer
 
 from app import cli
-from app.configuration.loader import load_machine
+from app.config.loader import load_machine
 from app.deployment.managers import upgrade_managers
 from app.deployment.packages import upgrade_packages
 from app.deployment.scripts import run_scripts

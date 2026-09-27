@@ -2,8 +2,9 @@
 
 from pathlib import Path
 
-from app.configuration.models import Machine, Package, Platform
+from app.config.models import Machine, Package, Platform
 from app.runtime.env import PLATFORM
+
 from config import dev, shell, system, terminal
 
 manifest = Machine(

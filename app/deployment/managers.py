@@ -2,7 +2,7 @@
 
 import json
 
-from app.configuration.models import Package, PackageSource, PkgManager, Platform
+from app.config.models import Package, PackageSource, PkgManager, Platform
 from app.runtime import env as machine_env
 from app.runtime.shell import find_executable, query, run
 

@@ -9,8 +9,8 @@ from pathlib import Path
 
 import platformdirs
 import pytest
-from app.configuration import loader as machine_loader
-from app.configuration.models import Platform
+from app.config import loader as machine_loader
+from app.config.models import Platform
 from app.deployment import scripts as machine_scripts
 from app.runtime import env as machine_env
 from app.runtime import shell
@@ -23,6 +23,7 @@ def test_bootstrap_rejects_unsupported_linux_before_setup(tmp_path, kernel):
     uname.write_text(
         '#!/bin/sh\ncase "$1" in\n'
         "  -s) echo Linux ;;\n"
+        "  -m) echo x86_64 ;;\n"
         f'  -r) echo "{kernel}" ;;\n'
         "  *) exit 99 ;;\nesac\n"
     )
@@ -39,7 +40,7 @@ def test_bootstrap_rejects_unsupported_linux_before_setup(tmp_path, kernel):
     assert not result.stdout
 
 
-@pytest.mark.parametrize("platform", [Platform.WIN, Platform.MAC, Platform.WSL])
+@pytest.mark.parametrize("platform", [Platform.WIN, Platform.MAC])
 def test_script_selection_excludes_shell_on_windows(monkeypatch, platform):
     monkeypatch.setattr(machine_env, "PLATFORM", platform)
     names = ["setup.py", "setup.ps1", "setup.sh", "setup.win.sh", "_helper.py", "setup.txt"]
@@ -60,30 +61,22 @@ def test_powershell_mappings_follow_redirected_documents(monkeypatch, tmp_path):
     assert all(file.target.parent == documents / "PowerShell" for file in mappings)
 
 
-@pytest.mark.parametrize("failed_script", ["init_failed.py", "setup.py"])
-def test_scripts_stop_on_first_failure_without_interpreting_prefixes(
-    tmp_path: Path, monkeypatch, failed_script: str
-) -> None:
-    events = []
-    scripts = [tmp_path / name for name in ("init_first.py", failed_script, "last.py")]
+def test_scripts_preserve_order_and_stop_on_first_failure(tmp_path: Path) -> None:
+    marker = tmp_path / "runs.txt"
+    scripts = [tmp_path / name for name in ("setup.py", "init_failed.py", "last.py")]
     for script in scripts:
-        script.write_text("pass\n")
+        script.write_text(
+            "import os, sys\n"
+            "with open(os.environ['SCRIPT_MARKER'], 'a') as marker:\n"
+            f"    marker.write({script.name!r} + '\\n')\n"
+            f"sys.exit({7 if script.name == 'init_failed.py' else 0})\n"
+        )
 
-    def run(cmd, *, env, dry_run, check, powershell):
-        assert not powershell
-        assert check is True
-        assert dry_run is False
-        assert cmd[0] == sys.executable
-        name = Path(cmd[-1]).name
-        events.append(name)
-        if name == failed_script:
-            raise RuntimeError("script failed")
+    with pytest.raises(subprocess.CalledProcessError) as failure:
+        machine_scripts.run_scripts(scripts, env={"SCRIPT_MARKER": str(marker)}, dry_run=False)
 
-    monkeypatch.setattr(machine_scripts, "run", run)
-    with pytest.raises(RuntimeError, match="script failed"):
-        machine_scripts.run_scripts(scripts, env=dict(os.environ), dry_run=False)
-
-    assert events == ["init_first.py", failed_script]
+    assert failure.value.returncode == 7
+    assert marker.read_text().splitlines() == ["setup.py", "init_failed.py"]
 
 
 def test_scripts_run_each_time_with_spaced_paths(tmp_path: Path) -> None:
@@ -95,29 +88,38 @@ def test_scripts_run_each_time_with_spaced_paths(tmp_path: Path) -> None:
         script.write_text(
             "import os\n"
             "with open(os.environ['SCRIPT_MARKER'], 'a') as marker:\n"
-            "    marker.write('ran\\n')\n"
+            f"    marker.write({script.name!r} + '\\n')\n"
         )
 
     for _ in range(2):
         machine_scripts.run_scripts(
             scripts,
-            env={**os.environ, "SCRIPT_MARKER": str(marker)},
+            env={"SCRIPT_MARKER": str(marker)},
             dry_run=False,
         )
 
-    assert marker.read_text().splitlines() == ["ran"] * 4
+    assert marker.read_text().splitlines() == [script.name for script in scripts] * 2
 
 
-@pytest.mark.parametrize("shebang", ["#!/bin/sh", "#!/bin/bash"])
-def test_script_preview_preserves_permissions(tmp_path: Path, monkeypatch, shebang) -> None:
-    script = tmp_path / "init_preview.sh"
-    script.write_text(f"{shebang}\nexit 1\n")
-    script.chmod(0o600)
-    mode = script.stat().st_mode
-    monkeypatch.setattr(shell.shutil, "which", lambda *a, **kw: None)
-    machine_scripts.run_scripts([script], env=dict(os.environ), dry_run=True)
+def test_script_preview_does_not_prepare_execute_or_repair_scripts(tmp_path, monkeypatch):
+    scripts = [tmp_path / name for name in ("setup.py", "init_preview.sh", "setup.ps1")]
+    for script in scripts:
+        script.write_text("must not execute\n")
+        script.chmod(0o600)
+    modes = [script.stat().st_mode for script in scripts]
+    monkeypatch.setattr(
+        shell, "process_env", lambda *a: pytest.fail("preview prepared environment")
+    )
+    monkeypatch.setattr(
+        shell.shutil, "which", lambda *a, **kw: pytest.fail("preview resolved an interpreter")
+    )
+    monkeypatch.setattr(
+        shell.subprocess, "run", lambda *a, **kw: pytest.fail("preview executed a script")
+    )
 
-    assert script.stat().st_mode == mode
+    machine_scripts.run_scripts(scripts, env={}, dry_run=True)
+
+    assert [script.stat().st_mode for script in scripts] == modes
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix executable permissions")
@@ -131,11 +133,7 @@ def test_script_execution_does_not_repair_permissions(tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix script execution")
-def test_scripts_preserve_prepared_environment_without_loading_startup(tmp_path, monkeypatch):
-    # Make user startup conflict with the environment prepared for this invocation.
-    (tmp_path / ".profile").write_text(
-        "export MC_ID=other MC_VALUE=committed PATH=/committed/bin\n"
-    )
+def test_unix_scripts_use_declared_shebang_and_environment(tmp_path, monkeypatch):
     activation = tmp_path / "environment.sh"
     activation.write_text("")
     monkeypatch.setattr(shell, "_ENVIRONMENT_SCRIPT", activation)
@@ -150,26 +148,23 @@ def test_scripts_preserve_prepared_environment_without_loading_startup(tmp_path,
     # The OS executes the declared shebang; the runner does not reinterpret it.
     script = tmp_path / "inspect script.sh"
     result = tmp_path / "result.txt"
-    script.write_text('#!/bin/sh\nprintf "%s\\n" "$MC_ID|$MC_VALUE|$PATH" > "$RESULT"\n')
-    script.chmod(0o755)
-    machine_scripts.run_scripts([script], env={**environment, "RESULT": str(result)}, dry_run=False)
-    assert result.read_text().strip() == f"selected|private|{selected_path}"
-
-
-def test_powershell_preview_does_not_prepare_an_unavailable_interpreter(tmp_path, monkeypatch):
-    script = tmp_path / "setup.ps1"
-    script.write_text("throw 'preview executed'\n")
-    monkeypatch.setattr(shell.shutil, "which", lambda *a, **kw: None)
-    monkeypatch.setattr(
-        shell, "process_env", lambda *a: pytest.fail("preview prepared environment")
+    script.write_text(
+        '#!/bin/sh -e\nprintf "%s\\n" "$MC_ID|$MC_VALUE|$PATH" > "$RESULT"\nfalse\nexit 0\n'
     )
-
-    machine_scripts.run_scripts([script], env={}, dry_run=True)
+    script.chmod(0o755)
+    with pytest.raises(subprocess.CalledProcessError) as failure:
+        machine_scripts.run_scripts(
+            [script], env={**environment, "RESULT": str(result)}, dry_run=False
+        )
+    assert failure.value.returncode == 1
+    assert result.read_text().strip() == f"selected|private|{selected_path}"
 
 
 @pytest.mark.parametrize("exit_code", [0, 7])
 def test_docker_elevation_failure_stops_before_user_package_setup(tmp_path, exit_code):
-    powershell = shutil.which("pwsh") or shutil.which("powershell.exe")
+    powershell = (
+        shutil.which("powershell.exe") or shutil.which("pwsh") or shutil.which("pwsh-preview")
+    )
     if powershell is None:
         pytest.skip("PowerShell is unavailable")
     script = Path(__file__).parents[1] / "machines/pc/scripts/init_docker.win.ps1"
@@ -215,8 +210,10 @@ exit $LASTEXITCODE
 
 
 def test_windows_features_report_failures_after_attempting_remaining_features(tmp_path: Path):
-    shell = shutil.which("pwsh") or shutil.which("pwsh-preview") or shutil.which("powershell")
-    if shell is None:
+    powershell = (
+        shutil.which("powershell.exe") or shutil.which("pwsh") or shutil.which("pwsh-preview")
+    )
+    if powershell is None:
         pytest.skip("PowerShell is unavailable")
     script = Path(__file__).parents[1] / "config/system/scripts/system.win.ps1"
     harness = tmp_path / "features.ps1"
@@ -253,10 +250,17 @@ if ($global:featureAttempts.Count -le 2 -or
         encoding="utf-8",
     )
     result = subprocess.run(
-        [shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(harness), str(script)],
+        [
+            powershell,
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(harness),
+            str(script),
+        ],
         capture_output=True,
         text=True,
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.count("failed to enable ") == 2

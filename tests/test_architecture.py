@@ -3,12 +3,15 @@
 import ast
 from pathlib import Path
 
+import app
+from app.runtime import shell
+
 
 def test_subprocesses_use_shell_boundary() -> None:
-    root = Path(__file__).parents[1] / "app"
+    root = Path(app.__file__).resolve().parent
     commands = {"subprocess": {"run", "Popen"}, "os": {"system", "popen"}}
     for path in root.rglob("*.py"):
-        if path == root / "runtime" / "shell.py":
+        if path == Path(shell.__file__).resolve():
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):

@@ -5,8 +5,8 @@ from typing import Annotated
 import typer
 
 from app import cli
-from app.configuration.discovery import list_machines
-from app.configuration.loader import load_machine
+from app.config.discovery import list_machines
+from app.config.loader import load_machine
 from app.deployment.files import deploy_file
 from app.deployment.managers import setup_managers
 from app.deployment.packages import install_packages
