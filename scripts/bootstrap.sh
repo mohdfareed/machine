@@ -10,13 +10,18 @@ esac; done
 # Dependencies
 # ═════════════════════════════════════════════════════════════════════════════
 
+case "$(uname -s):$(uname -r)" in
+  Darwin:*|Linux:*[Mm]icrosoft-standard*) ;;
+  *) echo "Unsupported host: macOS or WSL2 required" >&2; exit 1 ;;
+esac
+
 # Locate Homebrew before shell configuration has been deployed.
 brew="$(command -v brew || true)"
 if [ -z "$brew" ]; then
   case "$(uname -s):$(uname -m)" in
     Darwin:arm64) brew=/opt/homebrew/bin/brew ;;
-    Darwin:*) brew=/usr/local/bin/brew ;;
-    *) brew=/home/linuxbrew/.linuxbrew/bin/brew ;;
+    Linux:*) brew=/home/linuxbrew/.linuxbrew/bin/brew ;;
+    *) echo "Unsupported platform: $(uname -s):$(uname -m)" >&2; exit 1 ;;
   esac
 fi
 

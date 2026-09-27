@@ -1,0 +1,162 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = false
+format = """
+$kubernetes\
+$directory\
+$git_branch\
+$git_status\
+$git_state\
+$git_commit\
+$all\
+$shlvl\
+$username\
+$hostname\
+$character"""
+
+# Prompt
+# ═════════════════════════════════════════════════════════════════════════════
+
+[character]
+success_symbol = "[❯](purple)"
+error_symbol = "[❯](red)"
+vimcmd_symbol = "[❮](green)"
+disabled = false
+
+[cmd_duration]
+format = "[$duration]($style) "
+style = "green"
+disabled = false
+
+[status]
+symbol = ""
+disabled = false
+
+# System
+# ═════════════════════════════════════════════════════════════════════════════
+
+[os]
+style = ""
+# disabled = false
+[os.symbols]
+Android = "[](dimmed green) "
+Ios = "[󰀷](dimmed white) "
+Linux = "[](dimmed yellow) "
+Macos = "[](dimmed white) "
+Raspbian = "[](dimmed red) "
+Ubuntu = "[](dimmed yellow) "
+Unknown = "[](bright-black) "
+Windows = "[󰍲](dimmed blue) "
+
+[battery]
+full_symbol = "󰁹 "
+charging_symbol = "󰂄 "
+discharging_symbol = "󰂃 "
+unknown_symbol = "󰂑 "
+empty_symbol = "󰂎 "
+disabled = false
+
+[memory_usage]
+format = "[$symbol ${ram}( | ${swap})]($style) "
+threshold = 80
+symbol = "󰍛 "
+disabled = false
+
+# Development
+# ═════════════════════════════════════════════════════════════════════════════
+
+[package]
+symbol = "󰏗 "
+disabled = false
+
+[azure]
+symbol = " "
+[container]
+symbol = " "
+[docker_context]
+symbol = " "
+[golang]
+symbol = "󰟓 "
+[python]
+symbol = " "
+[swift]
+symbol = " "
+
+# Session
+# ═════════════════════════════════════════════════════════════════════════════
+
+[username]
+format = "[$user]($style)"
+style_user = "red"
+style_root = "bold bright-red"
+disabled = false
+
+[hostname]
+format = "[@](black)[$hostname]($style)[$ssh_symbol](bold $style) "
+ssh_symbol = " "
+style = "bright-green"
+ssh_only = false
+disabled = false
+
+[shlvl]
+disabled = false
+style = "red"
+symbol = "󰹍 "
+
+[sudo]
+symbol = " "
+disabled = false
+
+[shell]
+fish_indicator = "[](dimmed white)"
+powershell_indicator = "[󰨊](blue)"
+style = ""
+disabled = false
+
+# Project
+# ═════════════════════════════════════════════════════════════════════════════
+
+[directory]
+style = "blue"
+read_only = " 󰌾"
+disabled = false
+
+[git_branch]
+format = "[$symbol$branch(:$remote_branch)]($style) "
+style = "bright-black"
+symbol = " "
+disabled = false
+
+[git_commit]
+only_detached = false
+tag_disabled = false
+tag_symbol = " "
+format = "[$tag_symbol](purple)[$tag]($style) "
+style = "bold bright-black"
+disabled = false
+
+[git_status]
+format = "\b[[(*$all_status)](218)( $ahead_behind(≡$stashed))]($style)"
+style = "bright-cyan"
+ahead = "↑"
+behind = "↓"
+diverged = "󰹹"
+conflicted = "\u200C"
+stashed = "\u200C"
+deleted = "\u200C"
+renamed = "\u200C"
+modified = "\u200C"
+staged = "\u200C"
+untracked = "\u200C"
+disabled = false
+
+[git_state]
+style = "bright-black"
+rebase = "rebasing"
+merge = "merging"
+revert = "reverting"
+cherry_pick = "cherry-pickign"
+bisect = "bisecting"
+am = "AM"
+am_or_rebase = "AM/rebase"
+disabled = false

@@ -1,66 +1,52 @@
-"""Compose deployment resolves each project's own vault references."""
+"""Homelab deployment commands and failure handling."""
 
+import importlib.util
 import subprocess
+from pathlib import Path
 
 import pytest
-from config.homelab.scripts import services
+
+_ROOT = Path(__file__).resolve().parents[1]
+_spec = importlib.util.spec_from_file_location(
+    "homelab_services", _ROOT / "machines/homelab/scripts/services.mac.py"
+)
+assert _spec is not None and _spec.loader is not None
+services = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(services)
 
 
-@pytest.mark.parametrize("has_secrets", [False, True])
-def test_project_uses_only_its_own_secret_file(tmp_path, monkeypatch, has_secrets):
-    project = tmp_path / "docker" / "example"
-    project.mkdir(parents=True)
-    (project / "compose.yaml").touch()
-    if has_secrets:
-        (project / "secrets.env").write_text('TOKEN="op://vault/item/field"\n')
-    # Another project's file must not make this project load secrets.
-    (project.parent / "secrets.env").touch()
+@pytest.mark.parametrize("fail_pull", [False, True])
+def test_compose_uses_vault_references_and_stops_on_failure(tmp_path, monkeypatch, fail_pull):
+    project = tmp_path / "docker"
+    project.mkdir()
+    media = tmp_path / "media"
+    for name in ("movies", "series", "anime", "downloads"):
+        (media / name).mkdir(parents=True)
+    monkeypatch.setenv("MC_HOMELAB_MEDIA_DIR", str(media))
+    monkeypatch.setenv("MC_HOMELAB_STORAGE_DIR", str(tmp_path / "state"))
+    monkeypatch.setattr(Path, "is_mount", lambda path: path == media)
+    monkeypatch.setattr(services, "__file__", str(tmp_path / "scripts/services.mac.py"))
+    monkeypatch.setattr(services, "_wait_for_docker", lambda: None)
     calls = []
 
     def run(command, **kwargs):
         assert kwargs == {"cwd": project, "check": True}
         calls.append(command)
+        if fail_pull:
+            raise subprocess.CalledProcessError(1, command)
         return subprocess.CompletedProcess(command, 0)
 
-    monkeypatch.setattr(services, "__file__", str(tmp_path / "scripts" / "services.py"))
-    monkeypatch.setattr(services, "ROOT", tmp_path)
-    monkeypatch.setenv("MC_ID", "machine")
-    monkeypatch.setattr(services, "_wait_for_docker", lambda: None)
     monkeypatch.setattr(services.subprocess, "run", run)
-
-    services.main()
-
-    prefix = ["docker", "compose"]
-    if has_secrets:
-        prefix = ["op", "run", "--env-file=secrets.env", "--", *prefix]
-    assert calls == [
-        [*prefix, "pull", "--ignore-pull-failures"],
-        [*prefix, "up", "-d", "--build", "--remove-orphans"],
-    ]
-
-
-@pytest.mark.parametrize("has_secrets", [False, True])
-def test_project_stops_on_secret_or_deployment_failure(tmp_path, monkeypatch, has_secrets):
-    for name in ("first", "second"):
-        project = tmp_path / "docker" / name
-        project.mkdir(parents=True)
-        (project / "compose.yaml").touch()
-        if has_secrets:
-            (project / "secrets.env").write_text('TOKEN="op://vault/item/field"\n')
-    calls = []
-
-    def run(command, **kwargs):
-        calls.append(command)
-        raise subprocess.CalledProcessError(1, command)
-
-    monkeypatch.setattr(services, "__file__", str(tmp_path / "scripts" / "services.py"))
-    monkeypatch.setattr(services, "ROOT", tmp_path)
-    monkeypatch.setenv("MC_ID", "machine")
-    monkeypatch.setattr(services, "_wait_for_docker", lambda: None)
-    monkeypatch.setattr(services.subprocess, "run", run)
-
-    with pytest.raises(subprocess.CalledProcessError):
+    if fail_pull:
+        with pytest.raises(subprocess.CalledProcessError):
+            services.main()
+    else:
         services.main()
 
-    assert len(calls) == 1
-    assert "pull" in calls[0]
+    prefix = ["op", "run", "--env-file=secrets.env", "--", "docker", "compose"]
+    expected = [[*prefix, "pull", "--ignore-pull-failures"]]
+    if not fail_pull:
+        expected.append([*prefix, "up", "-d", "--build", "--remove-orphans"])
+    assert calls == expected
+    assert (tmp_path / "state").is_dir()
+    assert not list((tmp_path / "state").iterdir())

@@ -80,7 +80,7 @@ def deploy(
     if not dry_run:
         save_machine(machine, env)
 
-    # Set up the declared package managers.
+    # Set up the platform's package managers.
     reporting.heading("Preparing package managers")
     setup_managers(configuration.pkg_managers, env=env, dry_run=dry_run)
 

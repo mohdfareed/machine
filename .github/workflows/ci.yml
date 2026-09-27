@@ -17,11 +17,11 @@ jobs:
     # MARK: Setup
     # ═══════════════════════════════════════════════════════════════════════
 
-    # Check all supported platforms in parallel.
+    # Check native macOS and Windows; tests also resolve WSL declarations.
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [macos-latest, windows-latest]
 
     # Run the check on each platform.
     runs-on: ${{ matrix.os }}
@@ -39,13 +39,6 @@ jobs:
       - name: Set up dependencies
         id: dependencies_setup
         run: uv sync --dev --locked
-
-      - name: Set up Linux tools
-        id: linux_tools
-        if: ${{ !cancelled() && steps.dependencies_setup.outcome == 'success' && runner.os == 'Linux' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes fish
 
       - name: Set up macOS tools
         id: macos_tools
@@ -72,8 +65,7 @@ jobs:
         id: scripts
         if: >-
           ${{ !cancelled() && steps.dependencies_setup.outcome == 'success' &&
-              (runner.os == 'Windows' || steps.linux_tools.outcome == 'success' ||
-               steps.macos_tools.outcome == 'success') }}
+              (runner.os == 'Windows' || steps.macos_tools.outcome == 'success') }}
         run: uv run --no-sync python scripts/checks/scripts.py
 
       # MARK: Reporting

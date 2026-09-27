@@ -47,38 +47,34 @@ defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -bool true
 defaults write com.apple.commerce AutoUpdate -bool true # Auto-update apps.
 
 echo "setting system defaults..."
-# reduce wallpaper tinting in windows
-defaults write .GlobalPreferences AppleReduceDesktopTinting -bool true
-# switch windows in same space
-defaults write NSGlobalDomain AppleSpacesSwitchOnActivate -bool false
-# double click title bar to maximize
-defaults write NSGlobalDomain AppleActionOnDoubleClick -string "Fill"
-# keyboard repeat rate
+
+# KB/M: keyboard repeat rate
 defaults write NSGlobalDomain KeyRepeat -int 2
-# keyboard repeat delay
+# KB/M: keyboard repeat delay
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
-# keyboard navigation
-defaults write NSGlobalDomain AppleKeyboardUIMode -int 2
-# tap to click
+# KB/M: trackpad double tap to click
 defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
-# drag with trackpad
+# KB/M: trackpad sticky dragging
 defaults write com.apple.AppleMultitouchTrackpad Dragging -bool true
-# auto-hide dock
-defaults write com.apple.dock autohide -bool true
-# hide recent apps
-defaults write com.apple.dock show-recents -bool false
-# minimize with scaling
-defaults write com.apple.dock mineffect -string "scale"
-# dock size
-defaults write com.apple.dock tilesize -int 48
-# enable app expose
-defaults write com.apple.dock showAppExposeGestureEnabled -bool true
-# disable rearranging spaces based on most recent use
+
+# Dock: disable rearranging spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
+# Dock: enable app expose
+defaults write com.apple.dock showAppExposeGestureEnabled -bool true
+# Dock: hide recent apps
+defaults write com.apple.dock show-recents -bool false
+# Dock: dock size
+defaults write com.apple.dock tilesize -int 48
+# Dock: auto-hide dock
+defaults write com.apple.dock autohide -bool true
+
 # Finder: default to list view
 defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 # Finder: sort folders first
 defaults write com.apple.finder _FXSortFoldersFirst -bool true
+
+# double click title bar to maximize
+defaults write NSGlobalDomain AppleActionOnDoubleClick -string "Fill"
 
 # time machine excluded paths
 # NOTE: Requires full disk access.

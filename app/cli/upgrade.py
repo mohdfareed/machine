@@ -55,7 +55,7 @@ def upgrade(
         f"{len(configuration.packages)} packages."
     )
 
-    # Upgrade all packages owned by the platform and optional managers.
+    # Upgrade all packages owned by the platform's fixed managers.
     reporting.heading("Upgrading managers and all their packages")
     upgrade_managers(configuration.pkg_managers, env=env, dry_run=dry_run)
 

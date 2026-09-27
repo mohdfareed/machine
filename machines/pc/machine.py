@@ -3,11 +3,8 @@
 from pathlib import Path
 
 from app.env import PLATFORM
-from app.models import Machine, Package, PkgManager, Platform
-from config import homelab
-from config.development import agents, python, vscode, zed
-from config.terminal import emulators, git, shell
-from config.terminal.ssh import client as ssh_client
+from app.models import Machine, Package, Platform
+from config import dev, onepass, shell, ssh, system, terminal
 
 sib_script_install_path = '$env:STEAM_INPUT_BRIDGE_REPO = "$env:DEV\\steam-input-bridge"'
 sib_script_url = (
@@ -18,31 +15,28 @@ manifest = Machine(
     env={
         "DEV": Path.home() / "Dev",
         "ICLOUD": Path.home() / "iCloudDrive",
-        # Homelab
-        "MC_HOMELAB_TIMEZONE": "America/New_York",
-        "HOMEPAGE_TITLE": "PC Dashboard",
-        "HOMEPAGE_FAVICON": "mdi-desktop-tower",
-        # Mass Storage
-        "MC_HOMELAB_STORAGE_DIR": Path("D:/Homelab"),
+        # Shared media storage
         "MC_HOMELAB_MEDIA_DIR": Path("D:/Media"),
     },
-    pkg_managers=[] if PLATFORM == Platform.WSL else [PkgManager.SCOOP],
     modules=(
-        [git, shell, ssh_client, python, agents]
+        [
+            system,
+            shell,
+            dev,
+        ]
         if PLATFORM == Platform.WSL
         else [
-            homelab,
-            emulators,
-            python,
-            agents,
-            vscode,
-            zed,
+            system,
+            onepass,
+            shell,
+            ssh,
+            terminal,
+            dev,
         ]
     ),
     packages=[
-        # Development
-        Package(name="dotnet", winget="Microsoft.DotNet.SDK.10"),
-        Package(name="go", brew="go", winget="golang.Go"),
+        # Networking
+        Package(name="tailscale", winget="Tailscale.Tailscale"),
         # System Utilities
         Package(name="sys-internals", winget="Microsoft.Sysinternals.Suite"),
         Package(name="power-toys", winget="microsoft.PowerToys"),

@@ -1,5 +1,6 @@
 """Manifest dependency and override behavior tests."""
 
+import shutil
 import sys
 from inspect import signature
 from pathlib import Path
@@ -9,7 +10,7 @@ from app import env as machine_env
 from app import machine as machine_loader
 from app.discovery import list_machines, list_modules
 from app.machine import load_machine
-from app.models import FileMapping, Package, PkgManager, Platform
+from app.models import FileMapping, Machine, Package, PkgManager, Platform
 from pydantic import ValidationError
 
 
@@ -79,48 +80,39 @@ def test_loader_rejects_environment_unsafe_for_processes_or_shells(
 
 
 @pytest.mark.parametrize(
-    "platform,additions,expected,source",
+    "platform,expected,sources",
     [
-        (Platform.MAC, "PkgManager.MAS, PkgManager.MAS", [PkgManager.BREW, PkgManager.MAS], "cask"),
-        (Platform.WIN, "PkgManager.SCOOP", [PkgManager.WINGET, PkgManager.SCOOP], "winget"),
-        (Platform.LINUX, "", [PkgManager.APT, PkgManager.BREW], "apt"),
-        (
-            Platform.WSL,
-            "PkgManager.SNAP",
-            [PkgManager.APT, PkgManager.BREW, PkgManager.SNAP],
-            "apt",
-        ),
+        (Platform.MAC, [PkgManager.BREW, PkgManager.MAS], ["cask", "brew", "mas"]),
+        (Platform.WIN, [PkgManager.WINGET, PkgManager.SCOOP], ["winget", "scoop", "scoop"]),
+        (Platform.WSL, [PkgManager.BREW], ["brew", "brew"]),
     ],
 )
-def test_platform_managers_and_optional_additions(
-    monkeypatch, tmp_path, selected_env, platform, additions, expected, source
+def test_fixed_platform_managers_and_source_order(
+    monkeypatch, tmp_path, selected_env, platform, expected, sources
 ):
     monkeypatch.setattr(machine_env, "ROOT", tmp_path)
     monkeypatch.setattr(machine_env, "PLATFORM", platform)
     monkeypatch.setattr(
-        machine_env.shutil, "which", lambda *args: pytest.fail("loader queried installed tools")
+        shutil, "which", lambda *args: pytest.fail("loader queried installed tools")
     )
     directory = tmp_path / "machines" / "test"
     directory.mkdir(parents=True)
     (directory / "machine.py").write_text(
-        "from app.models import Machine, Package, PkgManager\n"
-        f"manifest = Machine(pkg_managers=[{additions}], packages=[\n"
-        "    Package(brew='example', cask='example', apt='example', winget='Example.App'),\n"
+        "from app.models import Machine, Package\n"
+        "manifest = Machine(packages=[\n"
+        "    Package(brew='example', cask='example', mas=123, winget='Example.App', "
+        "scoop='example', cmd='setup'),\n"
+        "    Package(brew='example', mas=123, scoop='example'),\n"
+        "    Package(mas=123, scoop='example'),\n"
         "])\n"
     )
 
-    configuration = load_machine("test")
+    configuration = load_machine("test", validate=True)
     assert configuration.pkg_managers == expected
-    assert configuration.packages[0].selected_source == source
+    assert [package.selected_source for package in configuration.packages] == sources
 
-    unsupported = PkgManager.MAS if platform == Platform.WIN else PkgManager.SCOOP
-    (directory / "machine.py").write_text(
-        "from app.models import Machine, PkgManager\n"
-        f"manifest = Machine(pkg_managers=[PkgManager.{unsupported.name}])\n"
-    )
-    assert unsupported in load_machine("test").pkg_managers
-    with pytest.raises(ValueError, match="is not supported"):
-        load_machine("test", validate=True)
+    (directory / "machine.py").write_text("from app.models import Machine\nmanifest = Machine()\n")
+    assert load_machine("test", validate=True).pkg_managers == expected
 
 
 def test_load_machine_validates_only_applicable_selected_sources(
@@ -135,7 +127,7 @@ def test_load_machine_validates_only_applicable_selected_sources(
         "from pathlib import Path\n"
         "from app.models import FileMapping, Module, Platform\n"
         "module = Module(files=[\n"
-        "    FileMapping(source=Path('settings.conf'), target='~/.config'),\n"
+        "    FileMapping(source=Path('settings.conf'), target='~/$HOME/${HOME}/%HOME%'),\n"
         "    FileMapping(source='missing.conf', target='$UNDEFINED/config', "
         "platforms=[Platform.WIN]),\n"
         "])\n"
@@ -156,20 +148,42 @@ def test_load_machine_validates_only_applicable_selected_sources(
     (machine / "machine.py").write_text(
         "from app.models import Machine\n"
         "from config import selected, other\n"
-        "manifest = Machine(modules=[selected, other])\n"
+        "manifest = Machine(modules=[selected, other], "
+        f"env={{'HOME': {str(tmp_path / 'selected-home')!r}, "
+        f"'USERPROFILE': {str(tmp_path / 'selected-home')!r}}})\n"
     )
     (machine / "scripts").mkdir()
     (machine / "scripts" / "setup.unix.sh").write_text("#!/bin/sh\n")
 
     configuration = load_machine("test", ["selected"], validate=True)
     assert [file.source for file in configuration.files] == [source]
-    assert configuration.files[0].target == Path(selected_env["HOME"]) / ".config"
+    assert configuration.files[0].target == (
+        Path(selected_env["HOME"]) / "$HOME" / "${HOME}" / "%HOME%"
+    )
     assert configuration.scripts == []
 
     source.unlink()
     assert [file.source for file in load_machine("test", ["selected"]).files] == [source]
     with pytest.raises(ValueError, match="File source missing"):
         load_machine("test", ["selected"], validate=True)
+
+
+@pytest.mark.parametrize(
+    "target", ["relative/config", "$DEV/config", "${DEV}/config", "%DEV%/config"]
+)
+def test_loader_rejects_nonabsolute_targets(monkeypatch, tmp_path, target):
+    monkeypatch.setattr(machine_env, "ROOT", tmp_path)
+    monkeypatch.setenv("DEV", str(tmp_path))
+    directory = tmp_path / "machines" / "test"
+    directory.mkdir(parents=True)
+    (directory / "machine.py").write_text(
+        "from app.models import Machine, FileMapping\n"
+        f"manifest = Machine(env={{'DEV': {str(tmp_path)!r}}}, "
+        f"files=[FileMapping(source='config', target={target!r})])\n"
+    )
+
+    with pytest.raises(ValueError, match="must be absolute"):
+        load_machine("test")
 
 
 @pytest.mark.parametrize("cycle", [False, True], ids=["dependencies", "dependency-cycle"])
@@ -277,7 +291,7 @@ def test_manifest_override_preserves_metadata(
     assert filtered.files[0].target == override.target
     assert filtered.files[0].mode == override.mode
     assert filtered.files[0].platforms == override.platforms
-    assert filtered.pkg_managers == [PkgManager.BREW]
+    assert filtered.pkg_managers == [PkgManager.BREW, PkgManager.MAS]
 
 
 def test_only_declared_modules_are_included(monkeypatch, tmp_path: Path, selected_env) -> None:
@@ -316,8 +330,7 @@ manifest = Machine(modules=[apps])
 def test_platform_matching_is_directional_and_shared(monkeypatch, tmp_path: Path) -> None:
     expected = {
         Platform.MAC: {Platform.MAC, Platform.UNIX},
-        Platform.LINUX: {Platform.LINUX, Platform.UNIX},
-        Platform.WSL: {Platform.WSL, Platform.LINUX, Platform.UNIX},
+        Platform.WSL: {Platform.WSL, Platform.UNIX},
         Platform.WIN: {Platform.WIN},
         Platform.UNIX: {Platform.UNIX},
     }
@@ -491,35 +504,40 @@ def test_loader_rejects_unknown_references(monkeypatch, tmp_path, selected_env, 
 
 
 @pytest.mark.parametrize(
-    "package,managers,error",
+    "package,error",
     [
-        ("Package()", "[]", "no install source"),
-        ("Package(platforms=[])", "[]", "no install source"),
-        ("Package(winget='', platforms=[Platform.WIN])", "[]", "must be a package ID"),
-        ("Package(cmd='setup')", "[]", "require a name"),
-        ("Package(snap='example')", "[]", "manager not declared"),
-        ("Package(brew='example', up_cmd=True)", "[]", "requires cmd"),
-        ("Package(brew='example', snap_classic=True)", "[]", "requires a Snap source"),
-        ("Package(apt='--invalid')", "[]", "must be a package ID"),
-        ("Package(mas=0)", "[]", "must be a positive ID"),
-        ("Package(winget='Example.App', cmd='setup')", "[]", "require a name"),
+        ("Package()", "no install source"),
+        ("Package(platforms=[])", "no install source"),
+        ("Package(winget='', platforms=[Platform.WIN])", "must be a package ID"),
+        ("Package(cmd='setup')", "require a name"),
+        ("Package(brew='example', up_cmd=True)", "requires cmd"),
+        ("Package(brew='--invalid')", "must be a package ID"),
+        ("Package(mas=0)", "must be a positive ID"),
+        ("Package(winget='Example.App', cmd='setup')", "require a name"),
     ],
 )
 def test_loader_rejects_invalid_package_declarations(
-    monkeypatch, tmp_path, selected_env, package, managers, error
+    monkeypatch, tmp_path, selected_env, package, error
 ):
     monkeypatch.setattr(machine_env, "ROOT", tmp_path)
-    monkeypatch.setattr(machine_env, "PLATFORM", Platform.LINUX)
+    monkeypatch.setattr(machine_env, "PLATFORM", Platform.MAC)
     directory = tmp_path / "machines" / "test"
     directory.mkdir(parents=True)
     (directory / "machine.py").write_text(
-        "from app.models import Machine, Package, PkgManager, Platform\n"
-        f"manifest = Machine(pkg_managers={managers}, packages=[{package}])\n"
+        "from app.models import Machine, Package, Platform\n"
+        f"manifest = Machine(packages=[{package}])\n"
     )
 
     load_machine("test")
     with pytest.raises(ValueError, match=error):
         load_machine("test", validate=True)
+
+
+def test_machine_managers_are_not_a_declaration_field():
+    assert "pkg_managers" not in signature(Machine).parameters
+
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        Machine.model_validate({"pkg_managers": []})
 
 
 def test_package_source_is_not_a_declaration_field():
@@ -538,21 +556,19 @@ def test_loader_resolves_package_sources_without_querying_installed_tools(
     directory = tmp_path / "machines" / "test"
     directory.mkdir(parents=True)
     (directory / "machine.py").write_text(
-        "from app.models import Machine, Package, PkgManager\n"
-        "manifest = Machine(pkg_managers=[PkgManager.SNAP], packages=[\n"
-        "    Package(apt='example', snap='example'),\n"
-        "    Package(snap='classic-example', snap_classic=True),\n"
+        "from app.models import Machine, Package\n"
+        "manifest = Machine(packages=[\n"
+        "    Package(brew='example', cask='example'),\n"
+        "    Package(brew='brew-example'),\n"
         "    Package(name='custom', cmd='setup', up_cmd=True),\n"
         "    Package(winget='Windows.Example'),\n"
         "])\n"
     )
     monkeypatch.setattr(
-        machine_env.shutil, "which", lambda *args: pytest.fail("loader queried installed tools")
+        shutil, "which", lambda *args: pytest.fail("loader queried installed tools")
     )
 
     packages = load_machine("test", validate=validate).packages
 
-    assert [package.name for package in packages] == ["example", "classic-example", "custom"]
-    assert [package.selected_source for package in packages] == ["apt", "snap", None]
-    assert packages[1].snap == "classic-example"
-    assert packages[1].snap_classic
+    assert [package.name for package in packages] == ["example", "brew-example", "custom"]
+    assert [package.selected_source for package in packages] == ["brew", "brew", None]

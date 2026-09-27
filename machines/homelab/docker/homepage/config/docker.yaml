@@ -1,0 +1,4 @@
+---
+# Discover service cards and container status from Docker labels.
+docker:
+  socket: /var/run/docker.sock

@@ -33,8 +33,6 @@ Install-Feature -Feature 'Microsoft-Windows-Subsystem-Linux'
 Install-Feature -Feature 'VirtualMachinePlatform'
 # remote desktop
 Install-Feature -Feature 'Microsoft-RemoteDesktopConnection'
-# virtualization
-Install-Feature -Feature 'HypervisorPlatform'
 # windows sandbox
 Install-Feature -Feature 'Containers-DisposableClientVM'
 

@@ -1,0 +1,125 @@
+# Media - acquisition, organization, subtitles, and playback
+
+x-app-env: &app-env
+  TZ: ${MC_HOMELAB_TIMEZONE:?}
+  PUID: "${PUID:-501}"
+  PGID: "${PGID:-20}"
+  # plex only
+  PLEX_UID: "${PUID:-501}"
+  PLEX_GID: "${PGID:-20}"
+
+x-media-volume: &media-volume
+  type: bind
+  source: ${MC_HOMELAB_MEDIA_DIR:?}
+  target: /data
+  bind:
+    create_host_path: false
+
+services:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MARK: Services
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    restart: unless-stopped
+    labels:
+      homepage.group: Media
+      homepage.name: Plex
+      homepage.icon: mdi-plex
+      homepage.href: https://plex.${TAILNET_NAME:?}.ts.net
+      homepage.description: Media server
+      homepage.weight: "100"
+    environment:
+      <<: *app-env
+      PLEX_CLAIM: ${PLEX_CLAIM:-}
+      ADVERTISE_IP: https://plex.${TAILNET_NAME:?}.ts.net
+    volumes:
+      - <<: *media-volume
+      - type: bind
+        source: ${MC_HOMELAB_STORAGE_DIR:?}/plex
+        target: /config
+        bind:
+          create_host_path: true
+      - plex-transcode:/transcode
+
+  scryer:
+    image: ghcr.io/scryer-media/scryer:latest
+    container_name: scryer
+    restart: unless-stopped
+    labels:
+      homepage.group: Media
+      homepage.name: Scryer
+      homepage.icon: mdi-movie-search
+      homepage.href: https://scryer.${TAILNET_NAME:?}.ts.net
+      homepage.description: Movies, series, and subtitles
+      homepage.weight: "200"
+    environment:
+      <<: *app-env
+      SCRYER_PUBLIC_URL: https://scryer.${TAILNET_NAME:?}.ts.net
+    volumes:
+      - <<: *media-volume
+      - type: bind
+        source: ${MC_HOMELAB_STORAGE_DIR:?}/scryer
+        target: /config
+        bind:
+          create_host_path: true
+
+  weaver:
+    image: ghcr.io/scryer-media/weaver:latest
+    container_name: weaver
+    restart: unless-stopped
+    labels:
+      homepage.group: Media
+      homepage.name: Weaver
+      homepage.icon: mdi-cloud-download
+      homepage.href: https://weaver.${TAILNET_NAME:?}.ts.net
+      homepage.description: Usenet downloader
+      homepage.weight: "300"
+    environment:
+      <<: *app-env
+      WEAVER_HTTP_ALLOWED_HOSTS: "weaver,weaver.${TAILNET_NAME:?}.ts.net"
+    volumes:
+      - <<: *media-volume
+      - type: bind
+        source: ${MC_HOMELAB_STORAGE_DIR:?}/weaver
+        target: /config
+        bind:
+          create_host_path: true
+    healthcheck:
+      test: wget -q -T 3 -O /dev/null http://127.0.0.1:9090/readyz || exit 1
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MARK: Infrastructure
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  watchlist-sync:
+    build:
+      context: https://github.com/mohdfareed/watchlist-sync.git
+      dockerfile: docker/Dockerfile
+    container_name: watchlist-sync
+    restart: unless-stopped
+    stop_grace_period: 1m # allow for graceful syncing
+    user: "${PUID:-501}:${PGID:-20}"
+    environment:
+      <<: *app-env
+      PLEX_SERVER_URL: http://plex:32400
+      SCRYER_URL: http://scryer:8080
+      # Allow core-only bootstrap before creating this key; set it before starting sync.
+      SCRYER_API_KEY: "${SCRYER_API_KEY:-}"
+    volumes:
+      - type: bind
+        source: ${MC_HOMELAB_STORAGE_DIR:?}/watchlist-sync
+        target: /config
+        bind:
+          create_host_path: true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  plex-transcode:

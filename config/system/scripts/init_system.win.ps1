@@ -18,6 +18,7 @@ if ($Admin) {
 
     # wsl
     if ($InstallWsl) {
+        Write-Host "setting up wsl..."
         wsl --install --no-launch
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
@@ -30,7 +31,6 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 # Resolve the selected hostname and inspect this user's WSL distributions before UAC.
 $Hostname = $env:MC_ID
 if ($env:MC_HOSTNAME) { $Hostname = $env:MC_HOSTNAME }
-Write-Host "setting up wsl..."
 try {
     # Windows PowerShell 5 can turn redirected native stderr into an error record.
     $ErrorActionPreference = 'Continue'

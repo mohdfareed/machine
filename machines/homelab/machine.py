@@ -2,10 +2,8 @@
 
 from pathlib import Path
 
-from app.models import Machine, Package, PkgManager
-from config import homelab
-from config.development import agents, python, vscode
-from config.terminal import emulators
+from app.models import Machine, Package
+from config import onepass, shell, ssh, system, terminal
 
 manifest = Machine(
     env={
@@ -13,19 +11,15 @@ manifest = Machine(
         "MC_HOMELAB_TIMEZONE": "America/New_York",
         "HOMEPAGE_TITLE": "Homelab Dashboard",
         "HOMEPAGE_FAVICON": "mdi-home-analytics",
-        # Mass Storage
-        "MC_HOMELAB_STORAGE_DIR": Path("/Volumes/External HD/Homelab"),
-        "MC_HOMELAB_MEDIA_DIR": Path("/Volumes/External HD/Media"),
+        # Local state and shared media
+        "MC_HOMELAB_STORAGE_DIR": Path.home() / ".homelab",
+        "MC_HOMELAB_MEDIA_DIR": Path("/Volumes/Media"),
     },
-    pkg_managers=[PkgManager.MAS],
-    modules=[
-        homelab,
-        emulators,
-        python,
-        agents,
-        vscode,
-    ],
+    modules=[system, onepass, shell, ssh, terminal],
     packages=[
+        Package(name="tailscale", cask="tailscale"),
+        Package(name="docker", cask="docker-desktop"),
+        Package(brew="rsync"),  # file sync
         Package(brew="go"),
         Package(brew="7zip", winget="7zip.7zip"),  # archiving
         # Content Processing

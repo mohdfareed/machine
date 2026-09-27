@@ -1,6 +1,6 @@
 """1Password desktop, CLI, SSH agent, and Git signing configuration."""
 
-import platform
+import os
 from pathlib import Path
 
 from app.env import PLATFORM
@@ -12,17 +12,13 @@ match PLATFORM:
         _git_config = "git/config.mac"
         _ssh_config = "ssh/config.mac"
     case Platform.WIN:
-        _1pass_path = "%LOCALAPPDATA%/1Password/config/ssh"
+        _1pass_path = Path(os.environ["LOCALAPPDATA"]) / "1Password" / "config" / "ssh"
         _git_config = "git/config.win"
         _ssh_config = "ssh/config.win"
-    case Platform.WSL:
+    case _:  # WSL2 uses the Windows desktop app.
         _1pass_path = "~/.config/1Password/ssh"
         _git_config = "git/config.wsl"
         _ssh_config = "ssh/config.win"
-    case _:  # Linux
-        _1pass_path = "~/.config/1Password/ssh"
-        _git_config = "git/config.linux"
-        _ssh_config = "ssh/config.linux"
 
 module = Module(
     files=[
@@ -44,20 +40,11 @@ module = Module(
         Package(
             name="1password",
             cask="1password",
-            apt="1password",
             winget="AgileBits.1Password",
-            # WSL uses the Windows desktop app; Linux desktop requires x86-64.
-            platforms=(
-                [Platform.MAC, Platform.WIN]
-                if PLATFORM == Platform.WSL
-                or (PLATFORM.is_a(Platform.LINUX) and platform.machine() != "x86_64")
-                else None
-            ),
         ),
         Package(
             name="1password-cli",
             cask="1password-cli",
-            apt="1password-cli",
             winget="AgileBits.1Password.CLI",
         ),
     ],

@@ -7,15 +7,14 @@ and any per-machine configuration/overrides.
 The `mc` CLI deploys a machine, upgrades it, syncs with canonical `main`, and
 inspects the resolved configuration.
 
-The [homelab](config/homelab/README.md) configuration extends it to
-self-hosted services. It manages Docker-based servers setup, configuration,
-and service deployment.
+The [homelab](config/homelab/README.md) configuration extends the setup to
+manage self-hosted services. It manages Docker-based servers setup,
+configuration, and service deployment.
 
 ## Requirements
 
-- Python 3.8 or higher
+- macOS, Windows, or Ubuntu on WSL2
 - [App Installer](https://learn.microsoft.com/en-us/windows/package-manager/winget/) (Windows)
-- Apt (Linux)
 
 ## Bootstrap
 
@@ -45,12 +44,15 @@ bootstrapping to change it. To re-deploy at a different path and reinstall `mc`:
 
 ### WSL
 
-To set up WSL, run the following after a Windows machine is deployed:
+To set up Ubuntu on WSL2, run the following after a Windows machine is deployed:
 
 ```powershell
 cd (mc show home)
 wsl -- sh ./scripts/bootstrap.sh --deploy
 ```
+
+On WSL, `mc upgrade` updates Homebrew and Ubuntu system packages.
+Native Linux and WSL1 are not supported.
 
 ## Usage
 
@@ -70,7 +72,7 @@ Create `machines/<id>/machine.py`:
 
 ```python
 from app.models import Machine
-from config.terminal import shell
+from config import shell
 
 manifest = Machine(
     modules=[shell],
@@ -87,8 +89,11 @@ mc show -m <id>    # Inspect the resolved manifest
 mc deploy -m <id>  # Set machine selection and deploy
 ```
 
-Homebrew on Unix, WinGet on Windows, and APT on Linux/WSL are prerequisites;
-they are auto-installed when possible.
+Packages are handled based on the OS:
+
+- Homebrew + MAS on macOS,
+- WinGet + Scoop on Windows,
+- and Homebrew on WSL2.
 
 #### Environment
 
@@ -125,13 +130,12 @@ Top-level `.sh`, `.py`, and `.ps1` files are auto-discovered.
 `.sh` scripts run only on Unix, never on Windows. Untagged `.py` and `.ps1`
 scripts run on all platforms. Tags narrow that selection, e.g. `setup.mac.sh`:
 
-| Tag      | Runs on           |
-| -------- | ----------------- |
-| `.mac`   | macOS             |
-| `.linux` | Linux, WSL        |
-| `.unix`  | macOS, Linux, WSL |
-| `.win`   | Windows           |
-| `.wsl`   | WSL               |
+| Tag     | Runs on     |
+| ------- | ----------- |
+| `.mac`  | macOS       |
+| `.unix` | macOS, WSL2 |
+| `.win`  | Windows     |
+| `.wsl`  | WSL2        |
 
 | Prefix  | When it runs                     |
 | ------- | -------------------------------- |
@@ -155,7 +159,10 @@ Sign in to Tailscale to SSH into connected machines using keys stored in 1Passwo
 uv sync --dev                    # Install dev dependencies
 uv run mc --help                 # Run dev CLI without installing
 uv run mc validate [-m MACHINE]  # Validate machine configuration and modules
-./scripts/fix.sh                 # Upgrade dependencies, auto-fix, and validate
-./scripts/check.sh               # Validate codebase without modifying files
+./scripts/fix.py                 # Upgrade dependencies, auto-fix, and validate
+./scripts/check.py               # Validate without modifying files
 ./scripts/bootstrap.sh           # Install the dev build (symlinked)
 ```
+
+On Windows, use `uv run python scripts/fix.py` and
+`uv run --no-sync python scripts/check.py`.

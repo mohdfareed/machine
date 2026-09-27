@@ -2,8 +2,8 @@
 
 import ntpath
 import os
+import platform
 import re
-import shutil
 import sys
 from pathlib import Path
 
@@ -26,19 +26,16 @@ PLATFORM: Platform
 """Current host platform."""
 
 match sys.platform:
-    case _ if sys.platform.startswith("linux") and shutil.which("wslinfo"):
-        PLATFORM = Platform.WSL
     case _platform if _platform.startswith("darwin"):
         PLATFORM = Platform.MAC
-    case _platform if _platform.startswith("linux"):
-        PLATFORM = Platform.LINUX
     case _platform if _platform.startswith("win"):
         PLATFORM = Platform.WIN
+    case _ if "microsoft-standard" in platform.release().lower():
+        PLATFORM = Platform.WSL
     case _:
         raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
 is_macos = PLATFORM.is_a(Platform.MAC)
-is_linux = PLATFORM.is_a(Platform.LINUX)
 is_windows = PLATFORM.is_a(Platform.WIN)
 is_wsl = PLATFORM.is_a(Platform.WSL)
 is_unix = PLATFORM.is_a(Platform.UNIX)
@@ -87,22 +84,6 @@ def save_machine(machine_id: str, values: dict[str, str]) -> None:
 
     # Record the selection after both shell files are ready.
     (directory / "machine").write_text(f"{machine_id}\n", encoding="utf-8")
-
-
-def resolve_path(value: Path, env: dict[str, str]) -> Path:
-    """Expand a configured path using the selected environment and require an absolute path."""
-    # Expand references before resolving the current user's home directory.
-    variables = {**os.environ, **env}
-    expanded = _expand(str(value), variables)
-
-    if expanded == "~" or expanded.startswith(("~/", "~\\")):
-        home = variables.get("USERPROFILE") if is_windows else variables.get("HOME")
-        expanded = str(Path(home or Path.home()) / expanded[2:])
-
-    path = Path(expanded)
-    if not path.is_absolute():
-        raise ValueError(f"Configured path must be absolute: {value}")
-    return path
 
 
 def build_env(machine_id: str, values: dict[str, str | Path]) -> dict[str, str]:
@@ -187,10 +168,6 @@ def system_env(overrides: dict[str, str] | None = None) -> dict[str, str]:
 # MARK: Environment Helpers
 # ═════════════════════════════════════════════════════════════════════════════
 
-_ENV_REFERENCE = re.compile(
-    r"\$(?:{(?P<braced>[A-Za-z_][A-Za-z0-9_]*)}|(?P<plain>[A-Za-z_][A-Za-z0-9_]*))"
-    r"|%(?P<windows>[A-Za-z_][A-Za-z0-9_]*)%"
-)
 _WINDOWS_REFERENCE = re.compile(r"%([^%]+)%")
 
 
@@ -202,17 +179,3 @@ def _expand_registered(value: str, env: dict[str, str], seen: set[str]) -> str:
         return _expand_registered(env[name], env, seen | {name})
 
     return _WINDOWS_REFERENCE.sub(_replace, value)
-
-
-def _expand(value: str, env: dict[str, str]) -> str:
-    # Windows environment variable names are case-insensitive.
-    variables = {key.casefold(): val for key, val in env.items()} if is_windows else env
-
-    def _replace(match: re.Match[str]) -> str:
-        name = next(group for group in match.groups() if group is not None)
-        name = name.casefold() if is_windows else name
-        if name not in variables:
-            raise ValueError(f"Unresolved path variable: {match.group(0)}")
-        return variables[name]
-
-    return _ENV_REFERENCE.sub(_replace, value)

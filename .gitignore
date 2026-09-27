@@ -3,18 +3,13 @@
 
 # project
 __pycache__/
-.venv/
 .pytest_cache/
-.ruff_cache/
 .reports/
+.ruff_cache/
+.venv/
 dist/
 lazy-lock.json
 
 # machine deployment
 .env
 .env.*
-
-# homelab deployment
-**/docker/**/cache/
-**/docker/**/data/
-**/docker/**/logs/

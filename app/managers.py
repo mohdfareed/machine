@@ -2,7 +2,8 @@
 
 import json
 
-from app.models import Package, PackageSource, PkgManager
+from app import env as machine_env
+from app.models import Package, PackageSource, PkgManager, Platform
 from app.shell import find_executable, query, run
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -11,18 +12,15 @@ from app.shell import find_executable, query, run
 
 
 def setup_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run: bool) -> None:
-    """Install missing optional managers using their native setup commands."""
-    for manager in (PkgManager.MAS, PkgManager.SNAP, PkgManager.SCOOP):
+    """Install missing MAS or Scoop for the resolved platform using native installers."""
+    for manager in (PkgManager.MAS, PkgManager.SCOOP):
         if manager not in managers or find_executable(manager, env=env):
             continue
 
-        # Run the selected manager's installer directly.
+        # Run the missing manager's installer directly.
         match manager:
             case PkgManager.MAS:
                 run(["brew", "install", "mas"], env=env, dry_run=dry_run, check=True)
-            case PkgManager.SNAP:
-                run(["sudo", "apt", "update", "-y"], env=env, dry_run=dry_run, check=True)
-                run(["sudo", "apt", "install", "-y", "snapd"], env=env, dry_run=dry_run, check=True)
             case PkgManager.SCOOP:
                 run(
                     "$installer = Invoke-RestMethod -Uri https://get.scoop.sh\n"
@@ -48,12 +46,6 @@ def install_package(package: Package, *, env: dict[str, str], dry_run: bool) -> 
             command = ["brew", "install", value]
         case "cask":
             command = ["brew", "install", "--cask", value]
-        case "apt":
-            command = ["sudo", "apt", "install", "-y", value]
-        case "snap":
-            command = ["sudo", "snap", "install", value]
-            if package.snap_classic:
-                command.append("--classic")
         case "winget":
             command = [
                 "winget",
@@ -94,24 +86,18 @@ def upgrade_managers(managers: list[PkgManager], *, env: dict[str, str], dry_run
     for manager in managers:
         match manager:
             case PkgManager.BREW:
-                commands = [
-                    ["brew", "update"],
-                    ["brew", "upgrade"],
-                    ["brew", "upgrade", "--cask", "--greedy-latest"],
-                    ["brew", "autoremove"],
-                    ["brew", "cleanup", "--prune=all"],
-                    ["brew", "services", "cleanup"],
-                ]
+                commands = [["brew", "update"], ["brew", "upgrade"]]
+                if machine_env.PLATFORM == Platform.MAC:
+                    commands.append(["brew", "upgrade", "--cask", "--greedy-latest"])
+                commands.extend(
+                    [
+                        ["brew", "autoremove"],
+                        ["brew", "cleanup", "--prune=all"],
+                        ["brew", "services", "cleanup"],
+                    ]
+                )
             case PkgManager.MAS:
                 commands = [["mas", "upgrade"]]
-            case PkgManager.APT:
-                commands = [
-                    ["sudo", "apt", "update", "-y"],
-                    ["sudo", "apt", "upgrade", "-y"],
-                    ["sudo", "apt", "autoremove", "-y"],
-                ]
-            case PkgManager.SNAP:
-                commands = [["sudo", "snap", "refresh"]]
             case PkgManager.WINGET:
                 commands = [
                     ["winget", "source", "update"],
@@ -152,19 +138,6 @@ def source_installed(source: PackageSource, value: str | int, *, env: dict[str, 
             result = query(["mas", "list"], env=env)
             return any(
                 line.split()[0] == identity for line in result.stdout.splitlines() if line.strip()
-            )
-        case "apt":
-            result = query(["dpkg-query", "-W", "-f=${Package}\t${Status}\n"], env=env)
-            return any(
-                line.split("\t", 1) == [identity, "install ok installed"]
-                for line in result.stdout.splitlines()
-            )
-        case "snap":
-            result = query(["snap", "list"], env=env)
-            return any(
-                fields[0] == identity
-                for line in result.stdout.splitlines()[1:]
-                if (fields := line.split())
             )
         case "scoop":
             # Export provides exact names without the list command's regex/no-match ambiguity.

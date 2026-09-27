@@ -16,6 +16,29 @@ from app.models import Platform
 from app.ops import scripts as machine_scripts
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix bootstrap")
+@pytest.mark.parametrize("kernel", ["6.8.0-generic", "4.4.0-19041-Microsoft"])
+def test_bootstrap_rejects_unsupported_linux_before_setup(tmp_path, kernel):
+    uname = tmp_path / "uname"
+    uname.write_text(
+        '#!/bin/sh\ncase "$1" in\n'
+        "  -s) echo Linux ;;\n"
+        f'  -r) echo "{kernel}" ;;\n'
+        "  *) exit 99 ;;\nesac\n"
+    )
+    uname.chmod(0o755)
+    result = subprocess.run(
+        ["/bin/sh", str(machine_env.ROOT / "scripts" / "bootstrap.sh")],
+        env={**os.environ, "PATH": str(tmp_path)},
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 1
+    assert "Unsupported host" in result.stderr
+    assert not result.stdout
+
+
 @pytest.mark.parametrize("platform", [Platform.WIN, Platform.MAC, Platform.WSL])
 def test_script_selection_excludes_shell_on_windows(monkeypatch, platform):
     monkeypatch.setattr(machine_env, "PLATFORM", platform)
@@ -29,7 +52,7 @@ def test_powershell_mappings_follow_redirected_documents(monkeypatch, tmp_path):
     documents = tmp_path / "Redirected Documents"
     monkeypatch.setattr(machine_env, "PLATFORM", Platform.WIN)
     monkeypatch.setattr(platformdirs, "user_documents_path", lambda: documents)
-    path = Path(__file__).parents[1] / "config/terminal/shell/module.py"
+    path = Path(__file__).parents[1] / "config/shell/module.py"
     module = runpy.run_path(str(path))["module"]
 
     mappings = [file for file in [*module.files, *module.overrides] if file.source.suffix == ".ps1"]
@@ -145,11 +168,11 @@ def test_powershell_preview_does_not_prepare_an_unavailable_interpreter(tmp_path
 
 
 @pytest.mark.parametrize("exit_code", [0, 7])
-def test_homelab_elevation_failure_stops_before_user_package_setup(tmp_path, exit_code):
+def test_docker_elevation_failure_stops_before_user_package_setup(tmp_path, exit_code):
     powershell = shutil.which("pwsh") or shutil.which("powershell.exe")
     if powershell is None:
         pytest.skip("PowerShell is unavailable")
-    script = Path(__file__).parents[1] / "config/homelab/scripts/init_system.win.ps1"
+    script = Path(__file__).parents[1] / "machines/pc/scripts/init_docker.win.ps1"
     harness = tmp_path / "elevation.ps1"
     harness.write_text(
         r"""

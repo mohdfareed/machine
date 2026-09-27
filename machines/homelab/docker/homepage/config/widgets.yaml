@@ -1,0 +1,15 @@
+---
+- logo:
+    icon: "{{HOMEPAGE_VAR_FAVICON}}"
+- datetime:
+    text_size: xs
+    format:
+      dateStyle: short
+      timeStyle: long
+# CPU, memory, and uptime describe the Docker Linux VM, not native macOS.
+- resources:
+    label: Docker VM
+    cpu: true
+    memory: true
+    uptime: true
+    disk: /

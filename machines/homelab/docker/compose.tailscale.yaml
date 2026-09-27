@@ -1,0 +1,77 @@
+# =============================================================================
+# MARK: Gateway
+# =============================================================================
+
+services:
+  homelab-gateway:
+    image: tailscale/tailscale:v1.96.5
+    container_name: homelab-gateway
+    hostname: homelab-gateway
+    restart: unless-stopped
+    environment:
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY:?}
+      TS_AUTH_ONCE: "true"
+      TS_HOSTNAME: homelab-gateway
+      TS_EXTRA_ARGS: --advertise-tags=tag:container
+      TS_ACCEPT_DNS: "false"
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "true"
+      TS_EXPERIMENTAL_SERVICE_AUTO_ADVERTISEMENT: "true"
+    configs:
+      - source: tailscale-serve
+        target: /config/serve.json
+    volumes:
+      - homelab-gateway-state:/var/lib/tailscale
+
+# =============================================================================
+# MARK: Routes
+# =============================================================================
+
+configs:
+  tailscale-serve:
+    content: |
+      {
+        "Services": {
+          "svc:plex": {
+            "TCP": {"443": {"HTTPS": true}},
+            "Web": {
+              "plex.${TAILNET_NAME:?}.ts.net:443": {
+                "Handlers": {"/": {"Proxy": "http://plex:32400"}}
+              }
+            }
+          },
+          "svc:scryer": {
+            "TCP": {
+              "443": {
+                "TCPForward": "scryer:8080",
+                "TerminateTLS": "scryer.${TAILNET_NAME:?}.ts.net"
+              }
+            }
+          },
+          "svc:weaver": {
+            "TCP": {"443": {"HTTPS": true}},
+            "Web": {
+              "weaver.${TAILNET_NAME:?}.ts.net:443": {
+                "Handlers": {"/": {"Proxy": "http://weaver:9090"}}
+              }
+            }
+          },
+          "svc:dashboard": {
+            "TCP": {"443": {"HTTPS": true}},
+            "Web": {
+              "dashboard.${TAILNET_NAME:?}.ts.net:443": {
+                "Handlers": {"/": {"Proxy": "http://homepage:3000"}}
+              }
+            }
+          }
+        },
+        "AllowFunnel": {}
+      }
+
+# =============================================================================
+# MARK: Volumes
+# =============================================================================
+
+volumes:
+  homelab-gateway-state:

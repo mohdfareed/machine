@@ -49,8 +49,8 @@ data; never expose credentials or secret values in output.
 
 ## Commands
 
-- `./scripts/check.sh` (Windows: `./scripts/check.ps1`) - Non-mutating repository validation entrypoint (always use this to validate). Keep `scripts/checks/` to 4–6 scripts total, including its aggregate and helpers; group related tools rather than add one wrapper per command. Both entrypoints wrap `scripts/checks/all.py`; check groups can be rerun with `uv run --no-sync python` (PowerShell syntax uses `pwsh -NoProfile -File`). Check/fix take no machine selection and never require deployment managers or Full Disk Access. Manifest correctness is covered by tests loading each machine's platform branches; host readiness belongs to explicit `mc validate`, not repository checks. CI uses named check steps, native tool output, and pytest artifacts; do not add custom diagnostic parsers or a reporting layer for checks. Cross-platform configuration tests do not certify native deployment or WSL execution.
-- `./scripts/fix.sh` (Windows: `./scripts/fix.ps1`) - Complete pre-commit preparation: upgrade and sync dependencies, fix unambiguous spelling without renaming files, format, auto-fix lint, and normalize Unix script permissions before re-running checks
+- `./scripts/check.py` on Unix; `uv run --no-sync python scripts/check.py` on Windows - Non-mutating repository validation entrypoints (always use these to validate). Keep `scripts/checks/` to 4–6 scripts total; group related tools rather than add one wrapper per command. Check groups can be rerun with `uv run --no-sync python`. Check/fix take no machine selection and never require deployment managers or Full Disk Access. Manifest correctness is covered by tests loading each machine's platform branches; host readiness belongs to explicit `mc validate`, not repository checks. CI uses named check steps, native tool output, and pytest artifacts; do not add custom diagnostic parsers or a reporting layer for checks. Cross-platform configuration tests do not certify native deployment or WSL execution.
+- `./scripts/fix.py` on Unix; `uv run python scripts/fix.py` on Windows - Complete pre-commit preparation: upgrade and sync dependencies, fix unambiguous spelling without renaming files, format, auto-fix lint, and normalize Unix script permissions before re-running checks
 - `uv run mc --help` - Run CLI in dev
 - `--dry-run`/`-n` belongs only to `deploy`, `upgrade` and `sync`, after the command name.
   Information commands live under `show` (`id`, `home`, `machines`, `modules`);
@@ -71,16 +71,12 @@ data; never expose credentials or secret values in output.
 
 Models perform field/type checks only. The loader normally normalizes and resolves
 inputs; `load_machine(..., validate=True)` additionally checks package declarations
-before platform filtering, resolved file sources and scripts, and manager consistency
-and platform compatibility through `app/validation.py`. The `mc validate` command
-adds executable availability checks for every resolved manager, including optional
-managers. Full validation belongs there; `deploy`, `upgrade`, and `show` do not repeat
+before platform filtering and resolved file sources and scripts through
+`app/validation.py`. The `mc validate` command adds executable availability checks
+for every fixed platform manager. Full validation belongs there; `deploy`, `upgrade`, and `show` do not repeat
 it or perform live manager preflights. Elsewhere, retain only checks necessary for
-resolution, safe execution, data preservation, and idempotence. On macOS, command
-startup also probes Full Disk Access by opening (never reading) the current user's
-privacy database. Report permission denial with System Settings guidance; a missing
-probe file is inconclusive. Keep this heuristic in `app/validation.py`, without
-private APIs or attempts to grant permission automatically.
+resolution, safe execution, data preservation, and idempotence. Do not probe macOS
+privacy databases at command startup; operations surface their own permission failures.
 
 Keep loader-derived bookkeeping out of declaration constructors and schemas. Pass
 execution options and the selected environment explicitly. Keep the complete Typer
@@ -92,19 +88,23 @@ convention.
 
 ### Module (`config/<path>/module.py`)
 
-Module names are dotted paths relative to `config/`: `terminal/git/module.py`
-is `terminal.git`. Discovery recursively finds the reserved `module.py` filename,
+The shared catalog has exactly six selectable modules: `terminal`, `shell`, `dev`,
+`ssh`, `onepass`, and `system`. Resource subfolders are not separately selectable.
+Discovery finds the reserved `module.py` filename,
 excluding hidden and `__pycache__` directories; folder names must be valid Python
 identifiers, not keywords. Folder references select discovered names, without
 import-origin validation. `FileMapping` accepts strings or `Path` values and stores
 paths internally; sources resolve relative to the module directory.
-The loader expands target variables and `~`, not model construction.
+The loader expands target `~` with `Path.expanduser()` and requires absolute targets.
+Paths do not interpolate variables or use `Machine.env`; construct environment-based
+paths in Python with `os.environ` or native platformdirs paths, only in applicable
+platform branches.
 Module code must locate bundled resources relative to its own files, never by
 reconstructing its `config/...` location from `MC_HOME` or the working directory.
 
 Exports a `Module(files, packages, overrides, depends)`. `depends` and manifest
-`modules` contain imported config folders (`list[ModuleType]`), including groups.
-Use grouped folder imports such as `from config.terminal import git, shell`.
+`modules` contain imported config folders (`list[ModuleType]`).
+Use folder imports such as `from config import dev, shell`.
 Keep an empty `__init__.py` in `config/` and each module/group folder so Python and
 editors recognize them as packages. Keep these markers empty; declarations stay
 in `module.py` and are loaded by the app.
@@ -113,11 +113,11 @@ Scripts are discovered only under `scripts/`; declarations have no `scripts=` fi
 auto-includes prerequisite modules in manifests (deduped, ordered before
 the dependent).
 
-`terminal.ssh.client` and `terminal.ssh.server` share the `terminal.ssh` group;
-the server depends on the client. Machines select `terminal.ssh` for both or
-`terminal.ssh.client` alone. Python runtimes belong to the separately selected
-`development.python` module; bootstrap supplies uv through Homebrew on Unix and
-WinGet on Windows. Homebrew is a Unix bootstrap prerequisite.
+`terminal` owns terminal applications. `shell` owns shells, the prompt, CLI
+utilities, Git, and the SSH client. `ssh` owns inbound SSH and depends on `shell`.
+`dev` owns shared development runtimes, agents, and editors; WSL selects `system`,
+`shell`, and `dev` without desktop editors. Bootstrap supplies uv through Homebrew on Unix
+and WinGet on Windows. Homebrew is a Unix bootstrap prerequisite.
 
 The optional `onepass` module owns its desktop app, CLI, SSH integration, and Git
 signing. Ordinary SSH and Git must work without selecting it; Gleason's IT policy
@@ -128,7 +128,7 @@ that need credentials may authenticate through the CLI; do not automate account 
 
 ### Manifest (`machines/<id>/machine.py`)
 
-Exports a `Machine(pkg_managers, modules, files, packages, env)`.
+Exports a `Machine(modules, files, packages, env)`.
 Composes imported modules and adds machine-specific overrides. The loader derives
 full names from folder references; CLI filters use dotted strings. Both select the
 module or its dotted descendants: `terminal` matches `terminal` and `terminal.*`,
@@ -140,13 +140,14 @@ sources and normalized public environment. Declaration files execute afresh on e
 no resolved state. Filters include selected modules, their prerequisites, and
 conventional module-declared overrides. Arbitrary `Machine.files`, machine packages,
 and machine scripts are included only in full loads.
-Package managers remain machine-wide: the loader adds platform prerequisites to
-the optional declarations. Installed-tool availability never changes source selection.
+Package managers are derived from the native platform, never declared in manifests.
+Installed-tool availability never changes source selection.
 
 ### Cross-Platform Requirements
 
+- Support macOS, Windows, and Ubuntu WSL2 only, not general native Linux or WSL1. Linux containers are independent of host support.
 - Always verify Windows compatibility when touching files, paths, or scripts
-- Use `Platform.is_a()` for platform-family matching: WSL matches Linux and Unix; macOS and Linux match Unix. Keep these relationships in the enum.
+- Use `Platform.is_a()` for platform-family matching: macOS and WSL match Unix. Keep these relationships in the enum.
 - Windows SSH client is OpenSSH (built into Windows 10+): supports `~`, `IgnoreUnknown`
 - Unix shell files and ShellCheck configuration use LF line endings
 - Supported deployment scripts are `.sh`, `.ps1`, and `.py` only. Always exclude `.sh` on Windows; untagged `.ps1` and `.py` are cross-platform. Tags only narrow platform selection, so `.unix` is redundant for `.sh`.
@@ -154,9 +155,9 @@ the optional declarations. Installed-tool availability never changes source sele
 
 ### Packages and Files
 
-- Machines include only declared modules and their dependencies. OS settings and features belong in the explicitly selected `system` module. Platform managers are fixed prerequisites: Homebrew on macOS, WinGet on Windows, and APT plus Homebrew on Linux/WSL. Manifests declare only optional MAS, Scoop, or Snap in `pkg_managers`; never infer managers from packages or PATH. Bootstrap supplies Homebrew and uv on Unix; WinGet supplies uv on Windows. `BREW` includes casks. Explicit validation checks optional manager compatibility; `app/managers.py` queries optional manager availability only to decide whether setup is needed, then runs the installer without a post-install presence check. Actual use surfaces failures. Installation and maintenance use the complete resolved manager list; custom scripts follow the same policy.
+- Machines include only declared modules and their dependencies. Shared OS settings and features belong in the explicitly selected `system` module. Managers are fixed: Homebrew + MAS on macOS, WinGet + Scoop on Windows, and Homebrew on WSL2; never infer managers from packages or PATH. Bootstrap supplies Homebrew and uv on Unix; WinGet supplies uv on Windows. APT is not a package declaration backend; Ubuntu system-package updates belong to a WSL-only `up_` script in `system`, without release upgrades. `BREW` includes casks on macOS. `app/managers.py` queries MAS/Scoop availability only to decide whether setup is needed, then runs the installer without a post-install presence check. Actual use surfaces failures. Installation and maintenance use the complete resolved manager list; custom scripts follow the same policy.
 
-- Define packages with `Package(...)` directly; package helper constructors (`brew(...)`, `apt(...)`, etc.) are removed
+- Define packages with `Package(...)` directly; do not add package helper constructors
 - `FileMapping(mode=...)` owns mapped-file permissions and applies them to the source because the deployed file is a symlink. Owner-only modes use a current-user and SYSTEM ACL on Windows; ACL failures surface rather than being ignored. File deployment checks the source before target mutation, preserves existing data, reapplies declared modes on already-deployed mappings, and returns no changed-status flag. This declared permission change is distinct from repairing checkout script permissions at runtime.
 - Use `FileMapping(platforms=...)` for intentionally platform-specific files instead of conditionally constructing file lists
 - Use `cask=` for Homebrew casks; package source selection is platform-aware and should replace package-level `if PLATFORM ...` conditionals in manifests/modules
@@ -171,10 +172,10 @@ the optional declarations. Installed-tool availability never changes source sele
 
 - Platform tags narrow script selection: `name.mac.sh`, `name.win.ps1`. Ordinary Unix scripts need only `.sh`.
 - Script prefixes: `init_` = prepare host settings and package prerequisites before files and packages, `up_` = run only during `mc upgrade`, `_` = helper (never auto-executed, sourced by other scripts)
-- Execution order: optional manager setup -> `init_*` scripts -> files -> packages -> remaining scripts
+- Execution order: missing manager setup -> `init_*` scripts -> files -> packages -> remaining scripts
 - `Machine.env` declares public variables as strings or paths. The loader normalizes them and sets the selected `MC_ID`; scripts receive these values directly. Keep expressions in Python, not a second interpolation language.
 - Deployment saves the default selection in the app config directory's `machine` file and generates literal `env.fish` and `env.ps1` assignments beside it (PowerShell only on Windows). Shells source these files; redeployment refreshes them after manifest changes. Never snapshot inherited variables or secrets. The app derives its root from its code; `MC_HOME` is only a bootstrap destination option.
-- Secrets belong to 1Password and the consuming application. The app does not load private dotenv files or manage private SSH keys. Compose projects commit reference-only `secrets.env` files; the homelab script uses `op run --env-file=secrets.env` on every platform. Homepage (dashboard) is shared by machines selecting `homelab` and consumes each host's local Tailscale Environment through Compose. Prefer vault, item, and field IDs so renaming them does not break references. Keep secret values out of Python and the general deployment environment.
+- Secrets belong to 1Password and the consuming application. The app does not load private dotenv files or manage private SSH keys. The homelab Compose root commits reference-only `secrets.env`; its launcher uses `op run --env-file=secrets.env`. Homepage consumes the homelab's local Tailscale Environment through Compose. Prefer vault, item, and field IDs so renaming them does not break references. Keep secret values out of Python and the general deployment environment.
 - Fish and PowerShell load their generated environment without invoking Python or parsing dotenv. Machine-specific extras use `config.mc.fish` and profile-relative `profile.mc.ps1` links. Unix shell scripts execute directly: the OS handles shebangs. Use POSIX `/bin/sh` for `.sh` scripts, not Bash or Zsh. Keep failure handling POSIX-compatible; capture fallible command output before piping it rather than relying on `pipefail`. The runner neither parses shebangs nor changes executable bits; checks enforce those bits and fix scripts normalize them. Scripts inherit the app's prepared environment.
 - Fish is the Unix interactive shell; PowerShell remains the Windows shell. Homebrew owns Fisher; map the declared `fish_plugins` file with `FileMapping` and call `fisher update` directly during both deployment and upgrade. Keep downloaded plugin files and history machine-local. Shell configuration must not source application helpers.
 - Shell deployment installs native Fish completion with `fish -c 'mc --install-completion'`. PowerShell deployment writes one generated completion file: Typer 0.27.2's `--install-completion` appends to the profile and changes execution policy, so do not use it there. Completion templates ask `mc` dynamically; sync does not regenerate them.
@@ -205,20 +206,17 @@ arguments; output stays in that process rather than being relayed by the runner.
 Give configuration one owner: shared setup belongs in modules, host-specific setup
 belongs in machine manifests. Commit portable configuration; keep credentials,
 runtime state, caches, and machine-generated application data local.
-Keep `config/` organized as the catalog of selectable modules and module groups;
-`machines/` composes those declarations. Routine configuration changes belong there.
+Keep `config/` as the six-module shared catalog; `machines/` composes those
+declarations and owns host-only setup. Routine configuration changes belong there.
 Group tools by their function, not properties such as having a graphical interface.
-Keep standalone tools at the root; grouping folders should contain multiple related
-tools, not wrap a single tool just to categorize every root entry.
 Execution, environment refresh, and bootstrap orchestration belong in `app/`,
 including their supporting scripts. Do not move application internals into `config/`
 or add special config entrypoints outside the module declaration system.
 
 - Repo root is `app.env.ROOT`, derived from the installed code location; execution never reads a mutable root setting
 - The CLI reads its saved selection independently of inherited shell variables and keeps no log files. Invocation options belong to the CLI context; command metadata comes from the package entry point, outside configuration models.
-- Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/development/vscode/` and `config/development/zed/`
-- VS Code Remote Tunnels are owned by the `development.vscode` module; account authorization remains a one-time manual step on each machine
-- The `development.agents` module installs Codex; credentials, pairing/enrollments, live databases, histories, caches, downloaded plugins, and generated memories stay machine-local
+- Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/dev/vscode/` and `config/dev/zed/`
+- The `dev` module owns editor and Codex installation, not remote-access services. Use Zed over existing SSH for homelab access; VS Code tunnels are enabled manually where needed, including Gleason. The homelab does not select `dev` solely for remote editing. Credentials, pairing/enrollments, live databases, histories, caches, downloaded plugins, and generated memories stay machine-local
 - Editor tasks should avoid ad hoc external tool dependencies; prefer shell builtins or repo-managed entrypoints so tasks stay portable across machines
 - Shared repo policy should prefer cross-editor files (`pyproject.toml`, `.editorconfig`, `.markdownlint.json`) over editor-specific settings
 - Standalone services own their code, tests, dependencies, documentation, and internal directory setup; this repo owns only deployment wiring and host prerequisites
@@ -226,7 +224,8 @@ or add special config entrypoints outside the module declaration system.
 ## Coding Conventions
 
 - Before writing new code, check the codebase for existing patterns and follow them
-- Minimize lifetime maintenance: count code ownership, repeated configuration, dependencies, and manual recovery as well as line count. Prefer established mechanisms and fewer general-purpose tools over specialized tools for minor conveniences. Keep ordinary package additions as configuration changes. Write direct, readable steps and preserve the established comment and section structure.
+- Completion discipline: investigate broadly, edit narrowly. Establish the user's actual workflow and intended outcome. Treat a highlighted example as an instance of an issue, not automatically its entire scope; inspect equivalent cases and affected references across the relevant repository areas, including staged and unstaged changes when reviewing work. Read matches in context, distinguish user work from agent changes, and fix the same issue consistently within the authorized scope—without unrelated cleanup or deleting useful material. Before declaring completion, review the final diff for unintended changes, repeat the issue-specific inspection, and run appropriate checks. Passing tests alone does not establish that the user's workflow or content was preserved. Report the scope actually verified and any unresolved cases; do not claim a repository-wide fix from a single-site edit.
+- LESS IS MORE: keep only personally needed capabilities; prefer established tools and native mechanisms that remove owned code over speculative support. Minimize lifetime maintenance: count code ownership, repeated configuration, dependencies, and manual recovery as well as line count. Keep ordinary package additions as configuration changes. Write direct, readable steps and preserve the established comment and section structure.
 - Keep runtime references rename-safe: use symbol references or framework metadata instead of duplicating internal names in strings, and explicit attributes for package access. Keep external contracts literal; do not add a naming framework. Tests are exempt.
 - Always keep the happy path flat: handle alternative, skip, and failure paths first with early `return`, `continue`, `break`, or exceptions as appropriate, then let the main path proceed without unnecessary nesting or `else`. Apply this throughout control flow, not just validation; preserve required cleanup and shared follow-up work.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
@@ -248,37 +247,36 @@ or add special config entrypoints outside the module declaration system.
 - Operations stop at the first failure; let native command exceptions propagate without repeated package-level wrappers. Add exception context only for useful captured diagnostics or backup recovery. Do not collect failure reports or maintain ownership maps for output. Commands inherit the terminal; capture output only when a caller needs to inspect it.
 - Route all application-owned Python output through functions in `app/reporting.py`, including plain values, prompts, captured command output, and tracebacks. Keep consoles private to that module. Use bold magenta `▶` headings, green `✓` success, yellow `!` warnings, red `✗` errors, and dim commands/details. Use terminal theme colors, no fixed-width decoration or tool-name prefixes. Leave framework-generated help/errors and subprocess terminal output to their existing handlers; keep plain-value commands undecorated. Announce dry-run mode once when a deployment command starts; keep action messages the same in previews and execution. Keep presentation minimal; no reporting framework or extra tracking solely for richer summaries.
 - Do not add scripts whose only job is printing setup reminders; put that guidance in docs unless the script performs real work
-- Keep one-time repairs of previously deployed configuration manual; do not add migration or repair steps to routine deployment.
+- Keep configuration repairs and data transfers manual; routine deployment must not perform them.
 
 ## Homelab
 
-- Every macOS homelab deployment requires a manual review of System Settings -> General -> Sharing; the owner configures shared folders, permissions, and remote access there. Keep this requirement in the shared homelab setup notes, not reminder scripts.
-- Windows homelab nodes must support Windows containers and recover their services after reboot without manual intervention; automatic login is acceptable. Verify this with the chosen runtime before treating a node as ready.
+- Homelab belongs entirely to `machines/homelab`, not a shared module. The M1 runs all services with local databases and state; the PC shares bulk media over SMB and retains Docker for experiments. Both hosts stay awake for continuous media availability. Verify SMB mounting, Docker startup, and reboot recovery natively before treating the deployment as ready.
+- Every macOS homelab deployment requires a manual review of System Settings -> General -> Sharing; the owner configures shared folders, permissions, and remote access there. Keep this requirement in the homelab machine notes, not reminder scripts.
 - Do not SSH to, deploy to, or otherwise mutate the homelab until the user has
   reviewed the repository changes and explicitly approved deployment
 - Compose projects run from their repository directories; do not maintain a
   parallel tree of service links or a custom backup engine.
-- Keep service selection and storage paths in configuration. Moving a Compose
-  project between supported hosts must not require application or launcher edits.
+- Keep service selection and storage paths in configuration; use the single homelab Compose project with native includes, not a multi-host discovery framework.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
-- Keep path/configuration changes minimal: no new tests or storage machinery; simple parent-directory checks are sufficient for interactive setup
+- Keep storage setup minimal: check the media mount and required directories before starting services. The launcher creates only the local state root; Compose owns per-app bind directory creation. Keep service names out of launcher code; do not add storage controllers or automatic data transfers.
 - Use `${VAR:?}` for required shell/Compose variables, without custom error messages
 - Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration
 - Homelab is a single-user, Tailscale-private system: prefer minimal application login friction; never enable public exposure to achieve it
 - Media acquisition uses Usenet through Weaver only
-- Homelab migrations preserve existing runtime data and downloaded media for rollback; avoid extra backup trees, rollout modes, or new folder layouts unless actually required
-- In Docker Compose files, keep reusable extension anchors first, group sidecars before application services, and leave named volumes last; preserve established section markers and ordering when editing
-- Keep the media stack to two Compose files: app services and shared app settings in `compose.yaml`, sidecars and their state volumes in `compose.tailscale.yaml`
-- In homelab discussions, "dashboard" means the Homepage service
+- Preserve runtime data and downloaded media; avoid extra backup trees or folder layouts unless actually required
+- In Docker Compose files, keep reusable extension anchors first and named volumes last; preserve established section markers and ordering when editing. The root project includes the gateway, media, and Homepage configuration.
+- The dashboard uses Homepage; its user-facing name and Tailscale Service identity are `dashboard`. Keep application-internal Homepage names where required. Use one Tailscale Services gateway with central static routing and native Homepage Docker labels beside each app, not per-app sidecars or generators. Static dashboard entries are for physical-machine widgets. Use Service tags for access and auto-approval, not per-service policy lists. Keep ordinary app additions in Compose and Tailscale Admin; do not add dependencies or test-only metadata to cross-check personal configuration. Never enable Funnel or host port publication for these services.
 
 ## Documentation and Communication
 
-Keep project reference information in its relevant architecture section; do not
-add a new convention for every fix or feature, or record completed work here.
+Document only the repository's current state, including in comments and docstrings.
+Do not record change history, completed work, or comparisons with former structures.
+Keep project reference information in its relevant architecture section.
 
 - Keep `AGENTS.md` lean: only record durable, project-wide conventions, not one-off notes for a single helper or cleanup
-- All READMEs are personal working notes, not public-facing manuals: write for the task that brings the owner back, what they need to remember, and what information is already available at that point
-- Give the minimum starting point for new tasks (where to create a manifest, its minimal contents, how to deploy it); keep hard-to-discover conventions and manual setup reminders, but leave configurable fields to code completion and inline documentation and link existing configs instead of duplicating examples
+- All READMEs are personal working notes, not public-facing manuals. Scope each README to its own system's setup and operation; do not duplicate inventories or responsibilities across unrelated systems. Adding an app must not require editing unrelated READMEs. Preserve owner-written commands, URL/port tables, diagrams, setup choices, and section structure: these are working copy-paste references, not clutter. Make the smallest factual corrections; ask before deleting or reorganizing owner-written material unless explicitly requested.
+- Give the minimum starting point for new tasks (where to create a manifest, its minimal contents, how to deploy it); keep hard-to-discover conventions, manual setup reminders, and useful copy-paste examples. Document constraints only when they change an actual owner action; omit hypothetical version-selection advice and implementation trivia. Setup notes should explain installation and configuration, not recommend how to use already-installed tools.
 - Use Mermaid for useful diagrams, not ASCII art; avoid introductions, exhaustive inventories, generic tutorials, and repeated guidance across READMEs
 - Keep READMEs to actionable owner setup, usage, and troubleshooting notes. Never put agent constraints (including file-count limits), change summaries, or implementation rationale there; durable agent rules belong in `AGENTS.md`. Do not add navigation blocks or section-anchor cross-links.
 - Do not turn discussion questions into documentation changes; edit docs when requested or when implementation changes invalidate existing instructions

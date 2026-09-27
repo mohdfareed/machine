@@ -1,5 +1,6 @@
 """Selected environment construction and saved-default behavior."""
 
+import runpy
 import shutil
 import subprocess
 import sys
@@ -9,6 +10,34 @@ from types import SimpleNamespace
 
 import pytest
 from app import env
+from app.models import Platform
+
+
+@pytest.mark.parametrize(
+    "host,kernel,expected",
+    [
+        ("darwin", "", Platform.MAC),
+        ("win32", "", Platform.WIN),
+        ("linux", "6.6.87.2-microsoft-standard-WSL2", Platform.WSL),
+        ("linux", "4.19.104-microsoft-standard", Platform.WSL),
+        ("linux", "4.4.0-19041-Microsoft", None),
+        ("linux", "6.8.0-generic", None),
+    ],
+)
+def test_host_detection_requires_wsl2_kernel(monkeypatch, host, kernel, expected):
+    monkeypatch.setattr(sys, "platform", host)
+    monkeypatch.setattr(env.platform, "release", lambda: kernel)
+    monkeypatch.setattr(shutil, "which", lambda *args: pytest.fail("queried host tools"))
+
+    if expected is None:
+        with pytest.raises(RuntimeError, match="Unsupported platform"):
+            runpy.run_path(str(env.ROOT / "app" / "env.py"))
+        return
+
+    detected = runpy.run_path(str(env.ROOT / "app" / "env.py"))
+    assert detected["PLATFORM"] == expected
+    assert detected["is_wsl"] == (expected == Platform.WSL)
+    assert detected["is_unix"] == (expected in {Platform.MAC, Platform.WSL})
 
 
 def test_build_env_uses_literal_declarations_without_saving_or_inheriting(tmp_path, monkeypatch):
@@ -149,17 +178,3 @@ def test_machine_selection_reads_saved_file_instead_of_shell(tmp_path, monkeypat
     assert not (directory / "env.fish").exists()
     (directory / "machine").write_text("")
     assert env.get_current_machine() is None
-
-
-def test_paths_use_supplied_environment_and_reject_unresolved_targets(tmp_path, monkeypatch):
-    values = {"DEV": str(tmp_path), "HOME": str(tmp_path), "USERPROFILE": str(tmp_path)}
-    assert env.resolve_path(Path("$DEV/config"), values) == tmp_path / "config"
-    assert env.resolve_path(Path("~/.config"), values) == tmp_path / ".config"
-    with pytest.raises(ValueError, match="Unresolved path variable"):
-        env.resolve_path(Path("$MISSING/config"), values)
-    with pytest.raises(ValueError, match="must be absolute"):
-        env.resolve_path(Path("relative/config"), values)
-    monkeypatch.setattr(env, "is_windows", True)
-    assert env.resolve_path(Path("%Dev%/config"), values) == tmp_path / "config"
-    values["DEV"] = str(tmp_path / "$literal")
-    assert env.resolve_path(Path("$DEV/config"), values) == tmp_path / "$literal" / "config"

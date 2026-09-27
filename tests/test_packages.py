@@ -4,9 +4,10 @@ import json
 import subprocess
 
 import pytest
+from app import env as machine_env
 from app import managers as machine_managers
 from app import validation
-from app.models import Package, PkgManager
+from app.models import Package, PkgManager, Platform
 from app.ops import packages as machine_packages
 
 
@@ -26,7 +27,7 @@ def commands(monkeypatch):
     return calls
 
 
-@pytest.mark.parametrize("source", ["brew", "cask", "mas", "apt", "snap", "scoop"])
+@pytest.mark.parametrize("source", ["brew", "cask", "mas", "scoop"])
 @pytest.mark.parametrize("installed", [False, True])
 def test_install_only_when_selected_manager_lacks_package(monkeypatch, commands, source, installed):
     identity = 123 if source == "mas" else "example"
@@ -44,13 +45,9 @@ def test_install_only_when_selected_manager_lacks_package(monkeypatch, commands,
         assert kwargs["env"] == {"PATH": "chosen"}
         if source == "mas":
             output = "123 Example App\n" if installed else "456 Other\n"
-        elif source == "apt":
-            status = "install ok installed" if installed else "deinstall ok config-files"
-            output = f"example\t{status}\n"
+
         elif source == "scoop":
             output = json.dumps({"apps": [{"Name": "example" if installed else "example-extra"}]})
-        elif source == "snap":
-            output = "Name Id Version\n" + ("example 1.0\n" if installed else "example-extra 1.0\n")
         else:
             key = "formulae" if source == "brew" else "casks"
             output = json.dumps({key: [{"installed": ["1.0"] if installed else []}]})
@@ -61,25 +58,6 @@ def test_install_only_when_selected_manager_lacks_package(monkeypatch, commands,
     machine_packages.install_packages([package, package], env={"PATH": "chosen"}, dry_run=False)
     assert len(queries) == 1
     assert len(commands) == (0 if installed else 1)
-
-
-def test_snap_classic_is_only_an_install_argument(monkeypatch, commands):
-    queries = []
-    monkeypatch.setattr(
-        machine_managers,
-        "query",
-        lambda command, **kwargs: (
-            queries.append(command)
-            or subprocess.CompletedProcess(
-                command, 0, stdout="\n".join(["Name Version", "other 1.0"])
-            )
-        ),
-    )
-    package = Package(name="powershell", snap="powershell", snap_classic=True)
-    package.selected_source = "snap"
-    machine_packages.install_packages([package], env={}, dry_run=False)
-    assert queries == [["snap", "list"]]
-    assert commands == [["sudo", "snap", "install", "powershell", "--classic"]]
 
 
 def test_brew_presence_resolves_aliases_through_brew(monkeypatch):
@@ -241,6 +219,18 @@ def test_managed_packages_run_declared_upgrade_commands(monkeypatch, dry_run):
     assert seen == ["upgrade-first", "setup-second"]
 
 
+@pytest.mark.parametrize("platform", [Platform.MAC, Platform.WSL])
+def test_homebrew_upgrades_casks_only_on_macos(monkeypatch, commands, platform):
+    monkeypatch.setattr(machine_env, "PLATFORM", platform)
+
+    machine_managers.upgrade_managers([PkgManager.BREW], env={}, dry_run=False)
+
+    assert ["brew", "upgrade"] in commands
+    assert (["brew", "upgrade", "--cask", "--greedy-latest"] in commands) == (
+        platform == Platform.MAC
+    )
+
+
 def test_presence_cache_does_not_survive_an_invocation(monkeypatch, commands):
     queries = []
     monkeypatch.setattr(
@@ -281,13 +271,13 @@ def test_first_command_failure_stops_remaining_work(monkeypatch, commands, opera
             machine_packages.upgrade_packages([package, package], env={}, dry_run=False)
         else:
             machine_managers.upgrade_managers(
-                [PkgManager.BREW, PkgManager.SNAP], env={}, dry_run=False
+                [PkgManager.BREW, PkgManager.MAS], env={}, dry_run=False
             )
     assert caught.value is failure
     assert len(commands) == 1
 
 
-def test_preflight_checks_all_declared_managers(monkeypatch):
+def test_preflight_checks_all_resolved_managers(monkeypatch):
     selected_env = {"MC_ID": "test"}
     checked = []
 
@@ -306,24 +296,41 @@ def test_preflight_checks_all_declared_managers(monkeypatch):
             validation.validate_managers([manager], env=selected_env)
 
 
+@pytest.mark.parametrize(
+    "managers,installer",
+    [
+        ([PkgManager.BREW, PkgManager.MAS], ["brew", "install", "mas"]),
+        (
+            [PkgManager.WINGET, PkgManager.SCOOP],
+            "$installer = Invoke-RestMethod -Uri https://get.scoop.sh\n"
+            "& ([scriptblock]::Create($installer))",
+        ),
+        ([PkgManager.BREW], None),
+    ],
+)
+@pytest.mark.parametrize("installed", [False, True])
 @pytest.mark.parametrize("dry_run", [False, True])
-def test_manager_setup_installs_only_missing_declared_managers(monkeypatch, dry_run):
-    installed = {PkgManager.BREW, PkgManager.APT, PkgManager.SCOOP}
+def test_manager_setup_installs_only_missing_native_managers(
+    monkeypatch, managers, installer, installed, dry_run
+):
     selected_env = {"MC_ID": "test"}
     commands = []
-    monkeypatch.setattr(
-        machine_managers, "find_executable", lambda name, **kwargs: name in installed
-    )
+    checked = []
 
-    def run(command, *, env, dry_run, check):
-        assert env is selected_env and check
+    def find_executable(name, *, env):
+        assert env is selected_env
+        checked.append(name)
+        return installed
+
+    def run(command, **kwargs):
+        assert kwargs == {"env": selected_env, "dry_run": dry_run, "check": True}
         commands.append(command)
 
+    monkeypatch.setattr(machine_managers, "find_executable", find_executable)
     monkeypatch.setattr(machine_managers, "run", run)
-    machine_managers.setup_managers(
-        [PkgManager.BREW, PkgManager.MAS, PkgManager.SCOOP], env=selected_env, dry_run=dry_run
-    )
-    assert commands == [["brew", "install", "mas"]]
+    machine_managers.setup_managers(managers, env=selected_env, dry_run=dry_run)
+    assert commands == ([installer] if installer is not None and not installed else [])
+    assert checked == (managers[1:] if installer is not None else [])
 
 
 def test_manager_setup_stops_on_native_installation_failure(monkeypatch):
@@ -337,6 +344,6 @@ def test_manager_setup_stops_on_native_installation_failure(monkeypatch):
 
     monkeypatch.setattr(machine_managers, "run", fail)
     with pytest.raises(subprocess.CalledProcessError) as caught:
-        machine_managers.setup_managers([PkgManager.MAS, PkgManager.SNAP], env={}, dry_run=False)
+        machine_managers.setup_managers([PkgManager.MAS, PkgManager.SCOOP], env={}, dry_run=False)
     assert caught.value is failure
     assert commands == [["brew", "install", "mas"]]

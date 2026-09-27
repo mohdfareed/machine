@@ -8,70 +8,8 @@ import pytest
 import typer
 from app import cli, env, validation
 from app.cli import deploy, entry, info, sync, upgrade
+from app.models import PkgManager, Platform
 from typer.testing import CliRunner
-
-
-@pytest.fixture(autouse=True)
-def isolate_disk_access_probe(monkeypatch):
-    monkeypatch.setattr(entry, "validate_full_disk_access", lambda: None)
-
-
-@pytest.mark.parametrize("state", ["allowed", "missing", "denied"])
-def test_full_disk_access_probe_does_not_read_contents(monkeypatch, state):
-    from unittest.mock import mock_open
-
-    monkeypatch.setattr(env, "is_macos", True)
-    probe = mock_open()
-    if state == "missing":
-        probe.side_effect = FileNotFoundError
-    if state == "denied":
-        probe.side_effect = PermissionError
-    monkeypatch.setattr(Path, "open", probe)
-
-    if state == "denied":
-        with pytest.raises(PermissionError, match="Full Disk Access"):
-            validation.validate_full_disk_access()
-    else:
-        validation.validate_full_disk_access()
-
-    probe.assert_called_once_with("rb")
-    probe.return_value.read.assert_not_called()
-
-
-def test_full_disk_access_probe_skips_other_platforms(monkeypatch):
-    monkeypatch.setattr(env, "is_macos", False)
-    monkeypatch.setattr(Path, "open", lambda *a, **kw: pytest.fail("opened macOS file"))
-    validation.validate_full_disk_access()
-
-
-def test_startup_denial_blocks_commands_but_not_help_or_version(monkeypatch):
-    def denied():
-        raise PermissionError("Access denied")
-
-    monkeypatch.setattr(entry, "validate_full_disk_access", denied)
-    monkeypatch.setattr(
-        info, "get_current_machine", lambda: pytest.fail("command ran before probe")
-    )
-    runner = CliRunner()
-    app = entry._create_app()
-    result = runner.invoke(app, ["show", "id"])
-    assert isinstance(result.exception, PermissionError)
-    assert runner.invoke(app, ["--help"]).exit_code == 0
-    assert runner.invoke(app, ["--version"]).exit_code == 0
-
-
-def test_startup_denial_exits_without_traceback(monkeypatch):
-    def denied():
-        raise PermissionError("Access denied")
-
-    monkeypatch.setattr(entry, "validate_full_disk_access", denied)
-    monkeypatch.setattr("sys.argv", ["mc", "show", "id"])
-    monkeypatch.setattr(
-        entry.reporting, "exception", lambda *a: pytest.fail("unexpected traceback")
-    )
-    with pytest.raises(SystemExit) as failure:
-        entry.main()
-    assert failure.value.code == 1
 
 
 def git(root: Path, *args: str) -> str:
@@ -249,11 +187,22 @@ def test_sync_dry_run_does_not_fetch(sync_repos, monkeypatch, windows):
     assert not (checkout.parent / "config").exists()
 
 
-def test_validate_checks_configuration_and_managers_without_deployment(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    "platform,managers",
+    [
+        (Platform.MAC, [PkgManager.BREW, PkgManager.MAS]),
+        (Platform.WIN, [PkgManager.WINGET, PkgManager.SCOOP]),
+        (Platform.WSL, [PkgManager.BREW]),
+    ],
+)
+def test_validate_checks_configuration_and_managers_without_deployment(
+    tmp_path, monkeypatch, platform, managers
+):
     machine = tmp_path / "machines" / "test"
     machine.mkdir(parents=True)
     declaration = machine / "machine.py"
     declaration.write_text("from app.models import Machine\nmanifest = Machine()\n")
+    monkeypatch.setattr(env, "PLATFORM", platform)
     monkeypatch.setattr(env, "ROOT", tmp_path)
     monkeypatch.setattr(env, "config_dir", lambda: tmp_path / "state")
     monkeypatch.setattr(
@@ -271,13 +220,15 @@ def test_validate_checks_configuration_and_managers_without_deployment(tmp_path,
     app = entry._create_app()
     assert runner.invoke(app, ["validate"]).exit_code != 0
     assert runner.invoke(app, ["validate", "-m", "test"]).exit_code == 0
-    assert checked
+    assert checked == managers
     assert not (tmp_path / "state").exists()
 
     (tmp_path / "state").mkdir()
     (tmp_path / "state" / "machine").write_text("test\n")
     assert runner.invoke(app, ["validate"]).exit_code == 0
-    monkeypatch.setattr(validation, "find_executable", lambda *a, **kw: None)
+    monkeypatch.setattr(
+        validation, "find_executable", lambda name, **kw: None if name == managers[-1] else name
+    )
     result = runner.invoke(app, ["validate"])
     assert isinstance(result.exception, FileNotFoundError)
     declaration.write_text(
@@ -290,7 +241,7 @@ def test_validate_checks_configuration_and_managers_without_deployment(tmp_path,
 def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, failed_phase) -> None:
     from app import models
 
-    managers = [models.PkgManager.WINGET]
+    managers = [models.PkgManager.WINGET, models.PkgManager.SCOOP]
     configuration = models.Configuration(
         pkg_managers=managers,
         modules=["apps"],
@@ -371,7 +322,7 @@ def test_preview_uses_requested_machine_without_saving_or_running(tmp_path, monk
     (machine_dir / "machine.py").write_text(
         "from app.models import Machine, FileMapping, Package\n"
         f"manifest = Machine(env={{'DEV': {str(tmp_path / 'selected')!r}}}, "
-        "files=[FileMapping(source='config', target='$DEV/config')], "
+        f"files=[FileMapping(source='config', target={str(tmp_path / 'selected' / 'config')!r})], "
         "packages=[Package(name='mc-test-missing-command', cmd='echo selected-env')])\n"
     )
     seen = []

@@ -18,30 +18,23 @@ class Platform(StrEnum):
     MAC = "macos"
     WIN = "windows"
     WSL = "wsl"
-    LINUX = "linux"  # Linux or WSL.
-    UNIX = "unix"  # macOS, Linux, or WSL.
+    UNIX = "unix"  # macOS or WSL2.
 
     def is_a(self, other: Platform) -> bool:
         """Match this platform to itself or a broader family, never the reverse."""
-        return (
-            self == other
-            or (other == Platform.UNIX and self in {Platform.MAC, Platform.LINUX, Platform.WSL})
-            or (self == Platform.WSL and other == Platform.LINUX)
-        )
+        return self == other or (other == Platform.UNIX and self in {Platform.MAC, Platform.WSL})
 
 
 class PkgManager(StrEnum):
-    """Supported platform and optional package managers."""
+    """Supported native package managers."""
 
     BREW = "brew"
     MAS = "mas"
-    APT = "apt"
-    SNAP = "snap"
     WINGET = "winget"
     SCOOP = "scoop"
 
 
-type PackageSource = Literal["brew", "cask", "apt", "snap", "winget", "scoop", "mas"]
+type PackageSource = Literal["brew", "cask", "winget", "scoop", "mas"]
 """Package source identifiers carried by resolved declarations."""
 
 
@@ -86,15 +79,12 @@ class Package(BaseModel):
     cmd: str | None = None
     up_cmd: str | Literal[True] | None = None
 
-    # macOS packages.
+    # Homebrew formulae (macOS and WSL2).
     brew: str | None = None
+
+    # macOS packages.
     cask: str | None = None
     mas: int | None = None
-
-    # Linux packages.
-    apt: str | None = None
-    snap: str | None = None
-    snap_classic: bool = False
 
     # Windows packages.
     winget: str | None = None
@@ -116,8 +106,6 @@ class Package(BaseModel):
         values: dict[PackageSource, str | int | None] = {
             "brew": self.brew,
             "cask": self.cask,
-            "apt": self.apt,
-            "snap": self.snap,
             "winget": self.winget,
             "scoop": self.scoop,
             "mas": self.mas,
@@ -147,7 +135,7 @@ class Machine(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     env: dict[str, str | Path] = {}
-    pkg_managers: list[Literal[PkgManager.MAS, PkgManager.SNAP, PkgManager.SCOOP]] = []
+
     modules: list[ModuleType] = []
 
     files: list[FileMapping] = []

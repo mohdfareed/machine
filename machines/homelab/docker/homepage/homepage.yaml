@@ -1,0 +1,58 @@
+# Homepage - Homelab Dashboard
+
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    labels:
+      homepage.group: Services
+      homepage.name: Dashboard
+      homepage.icon: mdi-home-analytics
+      homepage.href: https://dashboard.${TAILNET_NAME:?}.ts.net
+      homepage.description: Homelab dashboard
+    volumes:
+      - type: bind
+        source: ${MC_HOMELAB_STORAGE_DIR:?}/homepage
+        target: /app/config
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+        bind:
+          create_host_path: false
+
+    configs:
+      - source: homepage-bookmarks
+        target: /app/config/bookmarks.yaml
+      - source: homepage-docker
+        target: /app/config/docker.yaml
+      - source: dashboard
+        target: /app/config/services.yaml
+      - source: homepage-settings
+        target: /app/config/settings.yaml
+      - source: homepage-widgets
+        target: /app/config/widgets.yaml
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: dashboard.${TAILNET_NAME:?}.ts.net
+      HOMEPAGE_VAR_TITLE: ${HOMEPAGE_TITLE:?}
+      HOMEPAGE_VAR_FAVICON: ${HOMEPAGE_FAVICON:?}
+      HOMEPAGE_VAR_TAILNET_NAME: ${TAILNET_NAME:?}
+      HOMEPAGE_VAR_TAILSCALE_API_KEY: ${TAILSCALE_API_KEY:?}
+      HOMEPAGE_VAR_TAILSCALE_HOMELAB_DEVICE_ID: ${TAILSCALE_HOMELAB_DEVICE_ID:?}
+      HOMEPAGE_VAR_TAILSCALE_PC_DEVICE_ID: ${TAILSCALE_PC_DEVICE_ID:?}
+      HOMEPAGE_VAR_TAILSCALE_TV_DEVICE_ID: ${TAILSCALE_TV_DEVICE_ID:?}
+
+configs:
+  homepage-bookmarks:
+    file: ./config/bookmarks.yaml
+  homepage-docker:
+    file: ./config/docker.yaml
+  dashboard:
+    file: ./config/dashboard.yaml
+  homepage-settings:
+    file: ./config/settings.yaml
+  homepage-widgets:
+    file: ./config/widgets.yaml

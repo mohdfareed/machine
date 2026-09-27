@@ -2,11 +2,8 @@
 
 from pathlib import Path
 
-from app.models import Machine, Package, PkgManager
-from config import onepass, system
-from config.development import agents, python, vscode, zed
-from config.terminal import emulators, git, shell
-from config.terminal.ssh import client as ssh_client
+from app.models import Machine, Package
+from config import dev, onepass, shell, system, terminal
 
 _dev = Path.home() / "Developer"
 
@@ -18,18 +15,12 @@ manifest = Machine(
         "GODOT": Path("/Applications/Godot_mono.app/Contents/MacOS/Godot"),
         "MC_HOSTNAME": "mohd-macbook",
     },
-    pkg_managers=[PkgManager.MAS],
     modules=[
         system,
-        git,
         shell,
-        ssh_client,
         onepass,
-        emulators,
-        python,
-        agents,
-        vscode,
-        zed,
+        terminal,
+        dev,
     ],
     files=[],
     packages=[
@@ -37,8 +28,6 @@ manifest = Machine(
         Package(brew="gh"),
         Package(name="xcode", mas=497799835),
         Package(cask="docker-desktop"),
-        Package(cask="dotnet-sdk"),
-        Package(brew="go"),
         Package(brew="gnu-time"),  # benchmarking/profiling
         # Files & Storage
         Package(brew="rsync"),  # file sync

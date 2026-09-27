@@ -1,0 +1,78 @@
+// Homelab tailnet policy sample; review before applying.
+{
+  // Define the tailnet access control policies.
+  "grants": [
+    // Owner can access everything on the tailnet.
+    {
+      "src": ["autogroup:owner"],
+      "dst": ["*"],
+      "ip": ["*"],
+    },
+
+    // Owner can access the homelab Services.
+    {
+      "src": ["autogroup:owner"],
+      "dst": ["tag:homelab"],
+      "ip": ["tcp:443"],
+    },
+
+    // Shared users can access any port on devices shared with them.
+    {
+      "src": ["autogroup:shared"],
+      "dst": ["*"],
+      "ip": ["*"],
+    },
+
+    // Family members can use exit nodes.
+    {
+      "src": ["group:family"],
+      "dst": ["autogroup:internet"],
+      "ip": ["*"],
+    },
+
+    // Family members can access media Services.
+    {
+      "src": ["group:family"],
+      "dst": ["tag:media"],
+      "ip": ["tcp:443"],
+    },
+  ],
+
+  // Define users and devices that can use Tailscale SSH.
+  "ssh": [
+    // Allow all users to SSH into their own devices in check mode.
+    // Comment this section out if you want to define specific restrictions.
+    {
+      "action": "check",
+      "src": ["autogroup:member"],
+      "dst": ["autogroup:self"],
+      "users": ["autogroup:nonroot", "root"],
+    },
+  ],
+
+  // Test access rules every time they're saved.
+  // "tests": [
+  //   {
+  //       "src": "alice@example.com",
+  //       "accept": ["tag:example"],
+  //       "deny": ["100.101.102.103:443"],
+  //   },
+  // ],
+
+  // Define user groups and their users.
+  "groups": { "group:family": ["chroe4euqhs@gmail.com"] },
+
+  // Define device and Service tags and who can assign them.
+  "tagOwners": {
+    "tag:container": ["autogroup:admin"],
+    "tag:homelab": ["autogroup:admin"],
+    "tag:media": ["autogroup:admin"],
+  },
+
+  // Approve container hosts for homelab-tagged Services.
+  "autoApprovers": {
+    "services": {
+      "tag:homelab": ["tag:container"],
+    },
+  },
+}

@@ -1,7 +1,6 @@
 """Load ready-to-use machine configuration."""
 
 import importlib.util
-from collections.abc import Sequence
 from pathlib import Path
 from types import ModuleType
 
@@ -76,7 +75,7 @@ def load_machine(
             )
 
     # Combine applicable inputs and optionally validate the resolved configuration.
-    managers = _resolve_managers(machine.pkg_managers)
+
     files = [file for module in modules.values() for file in module.files] + overrides
     packages = [package for module in modules.values() for package in module.packages]
     scripts = [
@@ -91,14 +90,14 @@ def load_machine(
 
     configuration = Configuration(
         env=env,
-        pkg_managers=managers,
+        pkg_managers=list(_PLATFORM_MANAGERS[machine_env.PLATFORM]),
         modules=list(modules),
-        files=_resolve_files(files, env),
-        packages=_resolve_packages(packages, managers, validate=validate),
+        files=_resolve_files(files),
+        packages=_resolve_packages(packages, validate=validate),
         scripts=_resolve_scripts(scripts),
     )
     if validate:
-        validate_configuration(configuration, machine_env.PLATFORM)
+        validate_configuration(configuration)
     return configuration
 
 
@@ -169,35 +168,22 @@ def _expand_modules(selections: list[str], available: list[str]) -> list[str]:
 # MARK: Package Resolution
 # ═════════════════════════════════════════════════════════════════════════════
 
+_PLATFORM_MANAGERS: dict[Platform, tuple[PkgManager, ...]] = {
+    Platform.MAC: (PkgManager.BREW, PkgManager.MAS),
+    Platform.WIN: (PkgManager.WINGET, PkgManager.SCOOP),
+    Platform.WSL: (PkgManager.BREW,),
+}
+
 _PLATFORM_SOURCES: dict[Platform, tuple[PackageSource, ...]] = {
     Platform.MAC: ("cask", "brew", "mas"),
-    Platform.LINUX: ("apt", "snap", "brew"),
+    Platform.WSL: ("brew",),
     Platform.WIN: ("winget", "scoop"),
 }
 
 
-def _resolve_managers(additions: Sequence[PkgManager]) -> list[PkgManager]:
-    # Start with the native managers and Unix bootstrap's Homebrew.
-    if machine_env.PLATFORM.is_a(Platform.LINUX):
-        managers = [PkgManager.APT, PkgManager.BREW]
-    elif machine_env.PLATFORM.is_a(Platform.WIN):
-        managers = [PkgManager.WINGET]
-    else:
-        managers = [PkgManager.BREW]
-
-    return list(dict.fromkeys([*managers, *additions]))
-
-
-def _resolve_packages(
-    packages: list[Package], managers: list[PkgManager], *, validate: bool
-) -> list[Package]:
+def _resolve_packages(packages: list[Package], *, validate: bool) -> list[Package]:
     resolved: list[Package] = []
-    preferred: list[PackageSource] = [
-        source
-        for platform, sources in _PLATFORM_SOURCES.items()
-        if machine_env.PLATFORM.is_a(platform)
-        for source in sources
-    ]
+    preferred = _PLATFORM_SOURCES[machine_env.PLATFORM]
 
     for package in packages:
         if validate:
@@ -209,13 +195,7 @@ def _resolve_packages(
         if not applicable and not package.cmd:
             continue
 
-        # Prefer enabled sources; retain an undeclared source for validation to reject.
         package.selected_source = applicable[0] if applicable else None
-        for source in applicable:
-            manager = PkgManager.BREW if source == "cask" else PkgManager(source)
-            if manager in managers:
-                package.selected_source = source
-                break
         package.name = package.name.strip()
         if not package.name and package.selected_source is not None:
             package.name = str(next(iter(sources.values())))
@@ -229,14 +209,16 @@ def _resolve_packages(
 # ═════════════════════════════════════════════════════════════════════════════
 
 
-def _resolve_files(files: list[FileMapping], env: dict[str, str]) -> list[FileMapping]:
+def _resolve_files(files: list[FileMapping]) -> list[FileMapping]:
     # Later overrides replace earlier mappings before source validation.
     targets: dict[Path, FileMapping] = {}
     for file in files:
         if not file.applies_to(machine_env.PLATFORM):
             continue
 
-        file.target = machine_env.resolve_path(file.target, env)
+        file.target = file.target.expanduser()
+        if not file.target.is_absolute():
+            raise ValueError(f"Configured path must be absolute: {file.target}")
         targets[file.target] = file
 
     return list(targets.values())
@@ -245,7 +227,6 @@ def _resolve_files(files: list[FileMapping], env: dict[str, str]) -> list[FileMa
 def _resolve_scripts(scripts: list[Path]) -> list[Path]:
     tags = {
         ".mac": Platform.MAC,
-        ".linux": Platform.LINUX,
         ".unix": Platform.UNIX,
         ".win": Platform.WIN,
         ".wsl": Platform.WSL,

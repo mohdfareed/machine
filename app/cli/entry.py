@@ -8,7 +8,6 @@ import typer
 
 from app import cli, env, reporting
 from app.cli import deploy, info, sync, upgrade
-from app.validation import validate_full_disk_access
 
 type _Callback = Callable[..., Any]
 
@@ -59,8 +58,6 @@ def _callback(
         reporting.plain(f"{cli.NAME} {cli.VERSION}")
         raise SystemExit()
 
-    validate_full_disk_access()
-
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Configuration
@@ -106,6 +103,8 @@ def _short_help(callback: _Callback) -> str:
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Registration
 # ═════════════════════════════════════════════════════════════════════════════
+# NOTE: Custom registration is required to manually assign `short_help`.
+# This is a workaround to a `click` bug that truncates help text.
 
 
 def _register(
