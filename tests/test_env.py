@@ -84,6 +84,7 @@ def test_saved_shell_environment_round_trips_literal_values(tmp_path, monkeypatc
     directory = tmp_path / "mc"
     monkeypatch.setattr(env, "config_dir", lambda: directory)
     monkeypatch.setattr(env, "is_windows", False)
+    monkeypatch.setattr(env, "PLATFORM", Platform.MAC)
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     monkeypatch.setenv("CALLER_SECRET", "not-declared")
     value = (
@@ -100,14 +101,23 @@ def test_saved_shell_environment_round_trips_literal_values(tmp_path, monkeypatc
     else:
         script = tmp_path / "read.ps1"
         script.write_text(
-            "param($EnvironmentFile)\n. $EnvironmentFile\n[Console]::Write($env:PUBLIC)"
+            "param($ProfilePath)\n"
+            "if ($ProfilePath) { $PROFILE.CurrentUserAllHosts = $ProfilePath }\n"
+            ". (Join-Path (Split-Path -Parent $PROFILE.CurrentUserAllHosts) 'mc/env.ps1')\n"
+            "[Console]::Write($env:PUBLIC)"
         )
-        arguments = [executable, "-NoProfile", "-File", str(script), str(directory / "env.ps1")]
+        arguments = [executable, "-NoProfile", "-File", str(script)]
+        if sys.platform == "win32":
+            # Isolate the Windows profile; Unix PowerShell follows XDG_CONFIG_HOME directly.
+            arguments.append(str(env.powershell_config_dir() / "profile.ps1"))
 
     result = subprocess.run(arguments, capture_output=True, check=True)
     assert result.stdout.decode("utf-8") == value
     assert env.get_current_machine() == "test"
-    for path in [*directory.iterdir(), tmp_path / "fish" / "mc" / "env.fish"]:
+    for path in [
+        env.powershell_config_dir() / "mc" / "env.ps1",
+        tmp_path / "fish" / "mc" / "env.fish",
+    ]:
         assert "CALLER_SECRET" not in path.read_text()
 
 
@@ -181,13 +191,16 @@ def test_machine_selection_reads_saved_file_instead_of_shell(tmp_path, monkeypat
     directory = tmp_path / "mc"
     monkeypatch.setattr(env, "config_dir", lambda: directory)
     monkeypatch.setattr(env, "is_windows", True)
+    monkeypatch.setattr(env, "PLATFORM", Platform.WIN)
+    documents = tmp_path / "Redirected Documents"
+    monkeypatch.setattr(env.platformdirs, "user_documents_path", lambda: documents)
     monkeypatch.setenv("MC_ID", "stale")
 
     assert env.get_current_machine() is None
     env.save_machine("next", env.build_env("next", {}))
     assert env.get_current_machine() == "next"
     assert (directory / "machine").read_text() == "next\n"
-    assert (directory / "env.ps1").is_file()
+    assert (documents / "PowerShell" / "mc" / "env.ps1").is_file()
     assert not (tmp_path / "fish").exists()
     (directory / "machine").write_text("")
     assert env.get_current_machine() is None

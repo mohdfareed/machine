@@ -11,7 +11,6 @@ from app.deployment.files import deploy_file
 from app.deployment.managers import setup_managers
 from app.deployment.packages import install_packages
 from app.deployment.scripts import run_scripts
-from app.runtime import env as app_env
 from app.runtime import reporting
 from app.runtime.env import get_current_machine, save_machine
 
@@ -93,8 +92,7 @@ def deploy(
     # Deploy files after initialization has prepared their prerequisites.
     reporting.heading("Deploying files")
     for mapping in configuration.files:
-        if deploy_file(mapping, env=env, dry_run=dry_run):
-            reporting.link(mapping.source, mapping.target, root=app_env.ROOT)
+        deploy_file(mapping, env=env, dry_run=dry_run)
 
     # Install missing packages.
     reporting.heading("Installing packages")

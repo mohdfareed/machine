@@ -1,49 +1,51 @@
-#!/usr/bin/env pwsh
+Remove-Item Alias:cat, Alias:ls -ErrorAction Ignore
+function cat { bat --paging=never @args }
+function ls { eza --group-directories-first --git --icons @args }
 
-# ═════════════════════════════════════════════════════════════════════════════
-# MARK: Files and directories
-# ═════════════════════════════════════════════════════════════════════════════
+# macOS
+if ($IsMacOS) {
+    function hide  {
+        param(
+            [ValidateSet('On', 'Off')]
+            [string]$State = 'On',
+            [string]$Path = '.',
+            [switch]$Recursive
+        )
 
-# Configure cat/bat.
-Set-Alias -Name cat -Value ShowFile
-function ShowFile { bat --paging=never @args }
-
-# Configure ls similar to zsh.
-Set-Alias -Name ls -Value ListFiles
-function ListFiles { eza --group-directories-first --git --icons @args }
-
-# ═════════════════════════════════════════════════════════════════════════════
-# MARK: Development
-# ═════════════════════════════════════════════════════════════════════════════
-
-# Activate a Python virtual environment in this shell.
-function Enter-VirtualEnv {
-    [CmdletBinding()]
-    param ([string]$Path = '.venv')
-
-    # Python uses Activate.ps1; uv uses the lowercase filename.
-    $bin = if ($IsWindows) { 'Scripts' } else { 'bin' }
-    $activate = Join-Path $Path $bin 'Activate.ps1'
-    if (-not (Test-Path -LiteralPath $activate -PathType Leaf)) {
-        $activate = Join-Path $Path $bin 'activate.ps1'
+        if ($Recursive) { $flags += '-R' }
+        if ($State -eq 'On') { $flags += 'hidden' }
+        if ($State -eq 'Off') { $flags += 'nohidden' }
+        chflags -h @flags $Path
     }
-
-    . $activate
 }
 
-# ═════════════════════════════════════════════════════════════════════════════
-# MARK: Shell and environment
-# ═════════════════════════════════════════════════════════════════════════════
+# WSL
+if ($env:WSL_DISTRO_NAME) {
+    Set-Alias ssh ssh.exe
+    Set-Alias ssh-add ssh-add.exe
+}
 
+# VSCode
 if ($env:TERM_PROGRAM -eq 'vscode') {
     function Clear {
         Clear-Host; Clear-Host
     }
 }
 
-function Restart-Shell { Stop-Process -Id $PID -PassThru; pwsh }
+# PowerShell
 
-function Measure-StartupTime {
+function pwsh::reload {
+    Stop-Process -Id $PID -PassThru
+    pwsh
+}
+
+function pwsh::time {
     $time = (Measure-Command { pwsh -Command "Exit" }).TotalMilliseconds
     Write-Host "Elapsed time: $time ms"
+}
+
+function pwsh::check {
+    param([string]$Path)
+    $code = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+    $null = [scriptblock]::Create($code)
 }

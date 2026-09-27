@@ -27,7 +27,10 @@ module = Module(
             target=Path(_1pass_path) / "agent.toml",
             platforms=[] if PLATFORM == Platform.WSL else None,
         ),
-        FileMapping(source=_git_config, target="~/.config/git/config.1pass"),
+        FileMapping(
+            source=_git_config,
+            target="~/.config/git/config.1pass",
+        ),
         FileMapping(
             source=_ssh_config,
             target="~/.ssh/config.d/1password",

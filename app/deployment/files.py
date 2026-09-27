@@ -4,7 +4,8 @@ import subprocess
 from pathlib import Path
 
 from app.config.models import FileMapping
-from app.runtime.env import is_windows
+from app.runtime.env import ROOT, is_windows
+from app.runtime.reporting import link
 from app.runtime.shell import query, run
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -12,19 +13,19 @@ from app.runtime.shell import query, run
 # ═════════════════════════════════════════════════════════════════════════════
 
 
-def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> bool:
+def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool):
     """Deploy a resolved mapping and its permissions, preserving existing data."""
     target = mapping.target
     backup: Path | None = None
     same_file = target.exists() and target.samefile(mapping.source)
 
-    # Require the source before any target mutation; previews never write.
     mapping.source.stat()
     if dry_run:
-        return not same_file
-    if same_file:  # Already deployed.
+        link(mapping.source, mapping.target, root=ROOT)
+        return  # Dry run.
+    if same_file:
         _set_permissions(mapping.source, target, mapping.mode, env=env)
-        return False
+        return  # Already deployed.
 
     try:  # Deploy the mapping, with backup and recovery.
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -38,7 +39,7 @@ def deploy_file(mapping: FileMapping, *, env: dict[str, str], dry_run: bool) -> 
 
         # Apply declared permissions after creating the replacement link.
         _set_permissions(mapping.source, target, mapping.mode, env=env)
-        return True
+        link(mapping.source, mapping.target, root=ROOT)
 
     # Add recovery context only when existing data has moved to a backup.
     except (OSError, RuntimeError, subprocess.SubprocessError) as exc:

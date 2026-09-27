@@ -7,7 +7,7 @@ import re
 import sys
 from pathlib import Path
 
-from platformdirs import user_config_path
+import platformdirs
 from platformdirs.unix import Unix
 
 from app.config.models import Platform
@@ -45,8 +45,19 @@ is_unix = PLATFORM.is_a(Platform.UNIX)
 
 
 def config_dir() -> Path:
-    """Return the app configuration directory shared with shell startup files."""
-    return user_config_path("mc", appauthor=False) if is_windows else Unix("mc").user_config_path
+    """Return the app configuration directory containing the saved selection."""
+    return (
+        platformdirs.user_config_path("mc", appauthor=False)
+        if is_windows
+        else Unix("mc").user_config_path
+    )
+
+
+def powershell_config_dir() -> Path:
+    """Return PowerShell's user profile directory, including redirected Documents."""
+    if PLATFORM == Platform.WIN:
+        return platformdirs.user_documents_path() / "PowerShell"
+    return Unix("powershell").user_config_path
 
 
 def get_current_machine() -> str | None:
@@ -76,7 +87,11 @@ def save_machine(machine_id: str, values: dict[str, str]) -> None:
         fish.append(f"set -gx {name} '{quoted}'\n")
 
     # Write literal shell assignments.
-    (directory / "env.ps1").write_text("".join(powershell), encoding="utf-8", newline="\n")
+    powershell_directory = powershell_config_dir() / "mc"
+    powershell_directory.mkdir(parents=True, exist_ok=True)
+    (powershell_directory / "env.ps1").write_text(
+        "".join(powershell), encoding="utf-8", newline="\n"
+    )
     if not is_windows:
         fish_directory = directory.parent / "fish" / "mc"
         fish_directory.mkdir(parents=True, exist_ok=True)
