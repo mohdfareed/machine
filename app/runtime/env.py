@@ -10,17 +10,15 @@ from pathlib import Path
 from platformdirs import user_config_path
 from platformdirs.unix import Unix
 
-from app.models import Platform
+from app.configuration.models import Platform
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Host
 # ═════════════════════════════════════════════════════════════════════════════
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 """Repository containing this installation."""
 
-SCRIPTS_ROOT = Path(__file__).resolve().parent / "scripts"
-"""Directory containing the app scripts."""
 
 PLATFORM: Platform
 """Current host platform."""
@@ -101,6 +99,7 @@ def build_env(machine_id: str, values: dict[str, str | Path]) -> dict[str, str]:
 
     # The selected identity always overrides a declaration or inherited shell value.
     env["MC_ID"] = machine_id
+    env["MC_HOME"] = str(ROOT)
     return env
 
 

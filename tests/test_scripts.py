@@ -9,11 +9,11 @@ from pathlib import Path
 
 import platformdirs
 import pytest
-from app import env as machine_env
-from app import machine as machine_loader
-from app import shell
-from app.models import Platform
-from app.ops import scripts as machine_scripts
+from app.configuration import loader as machine_loader
+from app.configuration.models import Platform
+from app.deployment import scripts as machine_scripts
+from app.runtime import env as machine_env
+from app.runtime import shell
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix bootstrap")

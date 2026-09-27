@@ -6,8 +6,9 @@ from typing import Any
 
 import typer
 
-from app import cli, env, reporting
+from app import cli
 from app.cli import deploy, info, sync, upgrade
+from app.runtime import env, reporting
 
 type _Callback = Callable[..., Any]
 

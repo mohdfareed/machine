@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from app.models import Machine, Package
+from app.configuration.models import Machine, Package
 from config import onepass, shell, ssh, system, terminal
 
 manifest = Machine(

@@ -6,8 +6,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from app.models import FileMapping
-from app.ops import files as machine_files
+from app.configuration.models import FileMapping
+from app.deployment import files as machine_files
 
 
 @pytest.mark.parametrize("dry_run", [False, True])

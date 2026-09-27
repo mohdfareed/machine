@@ -4,11 +4,12 @@ from typing import Annotated
 
 import typer
 
-from app import cli, env, reporting
-from app.discovery import list_machines, list_modules
-from app.env import get_current_machine
-from app.machine import load_machine
-from app.validation import validate_managers
+from app import cli
+from app.configuration.discovery import list_machines, list_modules
+from app.configuration.loader import load_machine
+from app.configuration.validation import validate_managers
+from app.runtime import env, reporting
+from app.runtime.env import get_current_machine
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Info Commands

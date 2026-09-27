@@ -5,8 +5,8 @@ from importlib.metadata import distribution
 
 import typer
 
-from app.discovery import list_machines, list_modules
-from app.env import get_current_machine
+from app.configuration.discovery import list_machines, list_modules
+from app.runtime.env import get_current_machine
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Application

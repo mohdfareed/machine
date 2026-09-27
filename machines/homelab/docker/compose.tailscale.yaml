@@ -8,19 +8,26 @@ services:
     container_name: homelab-gateway
     hostname: homelab-gateway
     restart: unless-stopped
+    # Resolve the template before Tailscale reads its Serve configuration.
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        sed "s/__TAILNET_NAME__/$${TAILNET_NAME:?}/g" /config/serve.template.json > /tmp/serve.json
+        exec /usr/local/bin/containerboot
     environment:
+      TAILNET_NAME: ${TAILNET_NAME:?}
       TS_AUTHKEY: ${TS_DOCKER_AUTHKEY:?}
       TS_AUTH_ONCE: "true"
       TS_HOSTNAME: homelab-gateway
       TS_EXTRA_ARGS: --advertise-tags=tag:homelab
       TS_ACCEPT_DNS: "false"
-      TS_SERVE_CONFIG: /config/serve.json
+      TS_SERVE_CONFIG: /tmp/serve.json
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: "true"
       TS_EXPERIMENTAL_SERVICE_AUTO_ADVERTISEMENT: "true"
     configs:
       - source: tailscale-serve
-        target: /config/serve.json
+        target: /config/serve.template.json
     volumes:
       - homelab-gateway-state:/var/lib/tailscale
 
@@ -30,44 +37,7 @@ services:
 
 configs:
   tailscale-serve:
-    content: |
-      {
-        "Services": {
-          "svc:plex": {
-            "TCP": {"443": {"HTTPS": true}},
-            "Web": {
-              "plex.${TAILNET_NAME:?}.ts.net:443": {
-                "Handlers": {"/": {"Proxy": "http://plex:32400"}}
-              }
-            }
-          },
-          "svc:scryer": {
-            "TCP": {
-              "443": {
-                "TCPForward": "scryer:8080",
-                "TerminateTLS": "scryer.${TAILNET_NAME:?}.ts.net"
-              }
-            }
-          },
-          "svc:weaver": {
-            "TCP": {"443": {"HTTPS": true}},
-            "Web": {
-              "weaver.${TAILNET_NAME:?}.ts.net:443": {
-                "Handlers": {"/": {"Proxy": "http://weaver:9090"}}
-              }
-            }
-          },
-          "svc:dashboard": {
-            "TCP": {"443": {"HTTPS": true}},
-            "Web": {
-              "dashboard.${TAILNET_NAME:?}.ts.net:443": {
-                "Handlers": {"/": {"Proxy": "http://homepage:3000"}}
-              }
-            }
-          }
-        },
-        "AllowFunnel": {}
-      }
+    file: ./tailscale-serve.json
 
 # =============================================================================
 # MARK: Volumes

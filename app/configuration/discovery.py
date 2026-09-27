@@ -3,7 +3,7 @@
 from keyword import iskeyword
 from pathlib import Path
 
-from app import env
+from app.runtime import env
 
 SCRIPT_SUFFIXES = {".sh", ".py", ".ps1"}
 """Set of valid script file extensions."""

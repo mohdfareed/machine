@@ -4,11 +4,11 @@ import json
 import subprocess
 
 import pytest
-from app import env as machine_env
-from app import managers as machine_managers
-from app import validation
-from app.models import Package, PkgManager, Platform
-from app.ops import packages as machine_packages
+from app.configuration import validation
+from app.configuration.models import Package, PkgManager, Platform
+from app.deployment import managers as machine_managers
+from app.deployment import packages as machine_packages
+from app.runtime import env as machine_env
 
 
 @pytest.fixture

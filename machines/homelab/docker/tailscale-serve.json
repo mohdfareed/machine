@@ -1,0 +1,37 @@
+{
+  "Services": {
+    "svc:plex": {
+      "TCP": {"443": {"HTTPS": true}},
+      "Web": {
+        "plex.__TAILNET_NAME__.ts.net:443": {
+          "Handlers": {"/": {"Proxy": "http://plex:32400"}}
+        }
+      }
+    },
+    "svc:scryer": {
+      "TCP": {
+        "443": {
+          "TCPForward": "scryer:8080",
+          "TerminateTLS": "scryer.__TAILNET_NAME__.ts.net"
+        }
+      }
+    },
+    "svc:weaver": {
+      "TCP": {"443": {"HTTPS": true}},
+      "Web": {
+        "weaver.__TAILNET_NAME__.ts.net:443": {
+          "Handlers": {"/": {"Proxy": "http://weaver:9090"}}
+        }
+      }
+    },
+    "svc:dashboard": {
+      "TCP": {"443": {"HTTPS": true}},
+      "Web": {
+        "dashboard.__TAILNET_NAME__.ts.net:443": {
+          "Handlers": {"/": {"Proxy": "http://homepage:3000"}}
+        }
+      }
+    }
+  },
+  "AllowFunnel": {}
+}

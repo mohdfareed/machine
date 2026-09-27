@@ -33,16 +33,9 @@ data; never expose credentials or secret values in output.
 ## Project Layout
 
 - `app/cli/` - CLI entrypoint, separate deploy/upgrade/sync commands, and info commands
-- `app/models.py` - Configuration data shapes and field/type checks
-- `app/reporting.py` - Shared Rich consoles and small human-facing presentation helpers
-- `app/discovery.py` - Machine, module, and script discovery
-- `app/machine.py` - `load_machine()` normalizes and resolves declarations into one `Configuration`
-- `app/validation.py` - Explicit package declaration, resolved-input, and manager availability checks
-- `app/env.py` - Host facts, explicit selected-machine environment, and saved selection
-- `app/shell.py` - Explicit command execution/preview, bounded queries, and fresh execution environments
-- `app/managers.py` - Package-manager setup, presence checks, installation, and maintenance
-- `app/ops/` - File, package, and script deployment
-- `app/scripts/` - Internal Unix command activation
+- `app/configuration/` - Models, discovery, machine loading and resolution, and validation
+- `app/deployment/` - File deployment, package installation and manager maintenance, and script execution
+- `app/runtime/` - Host and selected-machine environment, saved selection, subprocess execution, reporting, and Unix command activation
 - `config/` - Shared dotfiles and configs
 - `machines/` - Per-host configurations
 - `scripts/bootstrap.sh` / `scripts/bootstrap.ps1` - Bare-machine bootstrap
@@ -72,7 +65,7 @@ data; never expose credentials or secret values in output.
 Models perform field/type checks only. The loader normally normalizes and resolves
 inputs; `load_machine(..., validate=True)` additionally checks package declarations
 before platform filtering and resolved file sources and scripts through
-`app/validation.py`. The `mc validate` command adds executable availability checks
+`app/configuration/validation.py`. The `mc validate` command adds executable availability checks
 for every fixed platform manager. Full validation belongs there; `deploy`, `upgrade`, and `show` do not repeat
 it or perform live manager preflights. Elsewhere, retain only checks necessary for
 resolution, safe execution, data preservation, and idempotence. Do not probe macOS
@@ -83,7 +76,7 @@ execution options and the selected environment explicitly. Keep the complete Typ
 command tree in `app/cli/entry.py`, registering command callbacks directly without
 forwarding wrappers. Operations may call shared reporting functions directly; do not
 add callbacks solely to route output. The architecture test checks the direct
-subprocess execution boundary at `app/shell.py`, not a registry of every architectural
+subprocess execution boundary at `app/runtime/shell.py`, not a registry of every architectural
 convention.
 
 ### Module (`config/<path>/module.py`)
@@ -155,7 +148,7 @@ Installed-tool availability never changes source selection.
 
 ### Packages and Files
 
-- Machines include only declared modules and their dependencies. Shared OS settings and features belong in the explicitly selected `system` module. Managers are fixed: Homebrew + MAS on macOS, WinGet + Scoop on Windows, and Homebrew on WSL2; never infer managers from packages or PATH. Bootstrap supplies Homebrew and uv on Unix; WinGet supplies uv on Windows. APT is not a package declaration backend; Ubuntu system-package updates belong to a WSL-only `up_` script in `system`, without release upgrades. `BREW` includes casks on macOS. `app/managers.py` queries MAS/Scoop availability only to decide whether setup is needed, then runs the installer without a post-install presence check. Actual use surfaces failures. Installation and maintenance use the complete resolved manager list; custom scripts follow the same policy.
+- Machines include only declared modules and their dependencies. Shared OS settings and features belong in the explicitly selected `system` module. Managers are fixed: Homebrew + MAS on macOS, WinGet + Scoop on Windows, and Homebrew on WSL2; never infer managers from packages or PATH. Bootstrap supplies Homebrew and uv on Unix; WinGet supplies uv on Windows. APT is not a package declaration backend; Ubuntu system-package updates belong to a WSL-only `up_` script in `system`, without release upgrades. `BREW` includes casks on macOS. `app/deployment/managers.py` queries MAS/Scoop availability only to decide whether setup is needed, then runs the installer without a post-install presence check. Actual use surfaces failures. Installation and maintenance use the complete resolved manager list; custom scripts follow the same policy.
 
 - Define packages with `Package(...)` directly; do not add package helper constructors
 - `FileMapping(mode=...)` owns mapped-file permissions and applies them to the source because the deployed file is a symlink. Owner-only modes use a current-user and SYSTEM ACL on Windows; ACL failures surface rather than being ignored. File deployment checks the source before target mutation, preserves existing data, reapplies declared modes on already-deployed mappings, and returns no changed-status flag. This declared permission change is distinct from repairing checkout script permissions at runtime.
@@ -193,7 +186,7 @@ host environment, then applies those overrides. POSIX execution leaves executabl
 lookup to the OS using that environment's PATH; Windows resolves executables against
 the refreshed environment. Subprocess environments exclude Git repository and
 diff-tool context from the caller; global Git configuration and authentication remain
-available. Internal Unix activation lives in `app/scripts/environment.sh`;
+available. Internal Unix activation lives in `app/runtime/environment.sh`;
 it must be quiet, read-only, safe before tools are installed, and safe to source repeatedly.
 Windows reads registered machine/user variables without loading PowerShell profiles.
 Shell execution uses the chosen PowerShell interpreter with `-NoProfile` and
@@ -213,7 +206,7 @@ Execution, environment refresh, and bootstrap orchestration belong in `app/`,
 including their supporting scripts. Do not move application internals into `config/`
 or add special config entrypoints outside the module declaration system.
 
-- Repo root is `app.env.ROOT`, derived from the installed code location; execution never reads a mutable root setting
+- Repo root is `app.runtime.env.ROOT`, derived from the installed code location; execution never reads a mutable root setting
 - The CLI reads its saved selection independently of inherited shell variables and keeps no log files. Invocation options belong to the CLI context; command metadata comes from the package entry point, outside configuration models.
 - Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/dev/vscode/` and `config/dev/zed/`
 - The `dev` module owns editor and Codex installation, not remote-access services. Use Zed over existing SSH for homelab access; VS Code tunnels are enabled manually where needed, including Gleason. The homelab does not select `dev` solely for remote editing. Credentials, pairing/enrollments, live databases, histories, caches, downloaded plugins, and generated memories stay machine-local
@@ -224,6 +217,7 @@ or add special config entrypoints outside the module declaration system.
 ## Coding Conventions
 
 - Before writing new code, check the codebase for existing patterns and follow them
+- Group application code by clear responsibilities; do not flatten it into the `app/` root or add layers with overlapping ownership.
 - Completion discipline: investigate broadly, edit narrowly. Establish the user's actual workflow and intended outcome. Treat a highlighted example as an instance of an issue, not automatically its entire scope; inspect equivalent cases and affected references across the relevant repository areas, including staged and unstaged changes when reviewing work. Read matches in context, distinguish user work from agent changes, and fix the same issue consistently within the authorized scope—without unrelated cleanup or deleting useful material. Before declaring completion, review the final diff for unintended changes, repeat the issue-specific inspection, and run appropriate checks. Passing tests alone does not establish that the user's workflow or content was preserved. Report the scope actually verified and any unresolved cases; do not claim a repository-wide fix from a single-site edit.
 - LESS IS MORE: keep only personally needed capabilities; prefer established tools and native mechanisms that remove owned code over speculative support. Minimize lifetime maintenance: count code ownership, repeated configuration, dependencies, and manual recovery as well as line count. Keep ordinary package additions as configuration changes. Write direct, readable steps and preserve the established comment and section structure.
 - Keep runtime references rename-safe: use symbol references or framework metadata instead of duplicating internal names in strings, and explicit attributes for package access. Keep external contracts literal; do not add a naming framework. Tests are exempt.
@@ -245,7 +239,7 @@ or add special config entrypoints outside the module declaration system.
 - Document public functions, classes, and properties with concise docstrings; do not add docstrings to private helpers. Use ordinary comments for non-obvious private implementation details.
 - Keep CLI errors consistent: a short red failure summary on the error console, followed by separate dim recovery guidance when actionable. `--debug` adds dim resolution and execution traces and includes exception tracebacks. Do not configure application logging or create log files or command transcripts.
 - Operations stop at the first failure; let native command exceptions propagate without repeated package-level wrappers. Add exception context only for useful captured diagnostics or backup recovery. Do not collect failure reports or maintain ownership maps for output. Commands inherit the terminal; capture output only when a caller needs to inspect it.
-- Route all application-owned Python output through functions in `app/reporting.py`, including plain values, prompts, captured command output, and tracebacks. Keep consoles private to that module. Use bold magenta `▶` headings, green `✓` success, yellow `!` warnings, red `✗` errors, and dim commands/details. Use terminal theme colors, no fixed-width decoration or tool-name prefixes. Leave framework-generated help/errors and subprocess terminal output to their existing handlers; keep plain-value commands undecorated. Announce dry-run mode once when a deployment command starts; keep action messages the same in previews and execution. Keep presentation minimal; no reporting framework or extra tracking solely for richer summaries.
+- Route all application-owned Python output through functions in `app/runtime/reporting.py`, including plain values, prompts, captured command output, and tracebacks. Keep consoles private to that module. Use bold magenta `▶` headings, green `✓` success, yellow `!` warnings, red `✗` errors, and dim commands/details. Use terminal theme colors, no fixed-width decoration or tool-name prefixes. Leave framework-generated help/errors and subprocess terminal output to their existing handlers; keep plain-value commands undecorated. Announce dry-run mode once when a deployment command starts; keep action messages the same in previews and execution. Keep presentation minimal; no reporting framework or extra tracking solely for richer summaries.
 - Do not add scripts whose only job is printing setup reminders; put that guidance in docs unless the script performs real work
 - Keep configuration repairs and data transfers manual; routine deployment must not perform them.
 
@@ -266,7 +260,7 @@ or add special config entrypoints outside the module declaration system.
 - Media acquisition uses Usenet through Weaver only
 - Preserve runtime data and downloaded media; avoid extra backup trees or folder layouts unless actually required
 - In Docker Compose files, keep reusable extension anchors first and named volumes last; preserve established section markers and ordering when editing. The root project includes the gateway, media, and Homepage configuration.
-- The dashboard uses Homepage; its user-facing name and Tailscale Service identity are `dashboard`. Keep application-internal Homepage names where required. Use one Tailscale Services gateway with central static routing and native Homepage Docker labels beside each app, not per-app sidecars or generators. Static dashboard entries are for physical-machine widgets. Use `tag:homelab` for the gateway and all its Services, adding `tag:media` only to Services family may access. Use these tags for access and auto-approval, not per-service policy lists or a separate gateway tag. Keep the tailnet DNS name dynamic through configuration, not hardcoded in service routes. Keep ordinary app additions in Compose and Tailscale Admin; do not add dependencies or test-only metadata to cross-check personal configuration. Never enable Funnel or host port publication for these services.
+- The dashboard uses Homepage; its user-facing name and Tailscale Service identity are `dashboard`. Keep application-internal Homepage names where required. Use one Tailscale Services gateway with central static routes in a JSON template and native Homepage Docker labels beside each app, not per-app sidecars or service-discovery generators. Static dashboard entries are for physical-machine widgets. Use `tag:homelab` for the gateway and all its Services, adding `tag:media` only to Services family may access. Use these tags for access and auto-approval, not per-service policy lists or a separate gateway tag. Keep the tailnet DNS name dynamic through configuration, not hardcoded in service routes. Keep ordinary app additions in Compose and Tailscale Admin; do not add dependencies or test-only metadata to cross-check personal configuration. Never enable Funnel or host port publication for these services.
 
 ## Documentation and Communication
 

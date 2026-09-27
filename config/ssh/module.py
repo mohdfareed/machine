@@ -1,6 +1,6 @@
 """SSH server setup module."""
 
-from app.models import FileMapping, Module
+from app.configuration.models import FileMapping, Module
 
 from config import shell
 

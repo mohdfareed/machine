@@ -4,15 +4,16 @@ from typing import Annotated
 
 import typer
 
-from app import cli, reporting
-from app import env as app_env
-from app.discovery import list_machines
-from app.env import get_current_machine, save_machine
-from app.machine import load_machine
-from app.managers import setup_managers
-from app.ops.files import deploy_file
-from app.ops.packages import install_packages
-from app.ops.scripts import run_scripts
+from app import cli
+from app.configuration.discovery import list_machines
+from app.configuration.loader import load_machine
+from app.deployment.files import deploy_file
+from app.deployment.managers import setup_managers
+from app.deployment.packages import install_packages
+from app.deployment.scripts import run_scripts
+from app.runtime import env as app_env
+from app.runtime import reporting
+from app.runtime.env import get_current_machine, save_machine
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Deploy Command

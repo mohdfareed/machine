@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 import pytest
-from app import shell
+from app.runtime import shell
 
 
 @pytest.fixture(autouse=True)

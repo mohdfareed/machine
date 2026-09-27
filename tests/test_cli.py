@@ -6,9 +6,11 @@ from pathlib import Path
 
 import pytest
 import typer
-from app import cli, env, validation
+from app import cli
 from app.cli import deploy, entry, info, sync, upgrade
-from app.models import PkgManager, Platform
+from app.configuration import validation
+from app.configuration.models import PkgManager, Platform
+from app.runtime import env
 from typer.testing import CliRunner
 
 
@@ -201,7 +203,7 @@ def test_validate_checks_configuration_and_managers_without_deployment(
     machine = tmp_path / "machines" / "test"
     machine.mkdir(parents=True)
     declaration = machine / "machine.py"
-    declaration.write_text("from app.models import Machine\nmanifest = Machine()\n")
+    declaration.write_text("from app.configuration.models import Machine\nmanifest = Machine()\n")
     monkeypatch.setattr(env, "PLATFORM", platform)
     monkeypatch.setattr(env, "ROOT", tmp_path)
     monkeypatch.setattr(env, "config_dir", lambda: tmp_path / "state")
@@ -232,14 +234,15 @@ def test_validate_checks_configuration_and_managers_without_deployment(
     result = runner.invoke(app, ["validate"])
     assert isinstance(result.exception, FileNotFoundError)
     declaration.write_text(
-        "from app.models import Machine, Package\nmanifest = Machine(packages=[Package()])\n"
+        "from app.configuration.models import Machine, Package\n"
+        "manifest = Machine(packages=[Package()])\n"
     )
     assert runner.invoke(app, ["validate"]).exit_code != 0
 
 
 @pytest.mark.parametrize("failed_phase", [None, "init_apps.ps1", "files", "packages"])
 def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, failed_phase) -> None:
-    from app import models
+    from app.configuration import models
 
     managers = [models.PkgManager.WINGET, models.PkgManager.SCOOP]
     configuration = models.Configuration(
@@ -320,13 +323,13 @@ def test_preview_uses_requested_machine_without_saving_or_running(tmp_path, monk
     machine_dir.mkdir(parents=True)
     (machine_dir / "config").write_text("new config")
     (machine_dir / "machine.py").write_text(
-        "from app.models import Machine, FileMapping, Package\n"
+        "from app.configuration.models import Machine, FileMapping, Package\n"
         f"manifest = Machine(env={{'DEV': {str(tmp_path / 'selected')!r}}}, "
         f"files=[FileMapping(source='config', target={str(tmp_path / 'selected' / 'config')!r})], "
         "packages=[Package(name='mc-test-missing-command', cmd='echo selected-env')])\n"
     )
     seen = []
-    from app.ops import packages
+    from app.deployment import packages
 
     def command(cmd, *, env, dry_run, **kwargs):
         assert dry_run
@@ -344,7 +347,7 @@ def test_preview_uses_requested_machine_without_saving_or_running(tmp_path, monk
 
 
 def test_upgrade_passes_selected_environment_and_stops_on_failure(monkeypatch):
-    from app.models import Configuration
+    from app.configuration.models import Configuration
 
     selected_env = {"MC_ID": "test"}
     configuration = Configuration(

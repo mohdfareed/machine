@@ -4,12 +4,13 @@ from typing import Annotated
 
 import typer
 
-from app import cli, reporting
-from app.env import get_current_machine
-from app.machine import load_machine
-from app.managers import upgrade_managers
-from app.ops.packages import upgrade_packages
-from app.ops.scripts import run_scripts
+from app import cli
+from app.configuration.loader import load_machine
+from app.deployment.managers import upgrade_managers
+from app.deployment.packages import upgrade_packages
+from app.deployment.scripts import run_scripts
+from app.runtime import reporting
+from app.runtime.env import get_current_machine
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Upgrade Command

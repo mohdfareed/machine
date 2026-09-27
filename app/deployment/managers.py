@@ -2,9 +2,9 @@
 
 import json
 
-from app import env as machine_env
-from app.models import Package, PackageSource, PkgManager, Platform
-from app.shell import find_executable, query, run
+from app.configuration.models import Package, PackageSource, PkgManager, Platform
+from app.runtime import env as machine_env
+from app.runtime.shell import find_executable, query, run
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Setup

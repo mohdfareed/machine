@@ -7,10 +7,10 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from app import reporting
-from app.env import ROOT, SCRIPTS_ROOT, is_windows, system_env
+from app.runtime import reporting
+from app.runtime.env import ROOT, is_windows, system_env
 
-_ENVIRONMENT_SCRIPT = SCRIPTS_ROOT / "environment.sh"
+_ENVIRONMENT_SCRIPT = Path(__file__).with_name("environment.sh")
 
 
 # ═════════════════════════════════════════════════════════════════════════════

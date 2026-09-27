@@ -9,8 +9,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from app import env
-from app.models import Platform
+from app.configuration.models import Platform
+from app.runtime import env
 
 
 @pytest.mark.parametrize(
@@ -35,10 +35,10 @@ def test_host_detection_requires_supported_platform(
 
     if expected is None:
         with pytest.raises(RuntimeError, match="Unsupported platform"):
-            runpy.run_path(str(env.ROOT / "app" / "env.py"))
+            runpy.run_path(str(env.ROOT / "app" / "runtime" / "env.py"))
         return
 
-    detected = runpy.run_path(str(env.ROOT / "app" / "env.py"))
+    detected = runpy.run_path(str(env.ROOT / "app" / "runtime" / "env.py"))
     assert detected["PLATFORM"] == expected
     assert detected["is_wsl"] == (expected == Platform.WSL)
     assert detected["is_unix"] == (expected in {Platform.MAC, Platform.WSL})

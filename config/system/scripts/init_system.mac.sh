@@ -48,14 +48,16 @@ defaults write com.apple.commerce AutoUpdate -bool true # Auto-update apps.
 
 echo "setting system defaults..."
 
-# KB/M: keyboard repeat rate
-defaults write NSGlobalDomain KeyRepeat -int 2
-# KB/M: keyboard repeat delay
-defaults write NSGlobalDomain InitialKeyRepeat -int 15
 # KB/M: trackpad double tap to click
 defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
 # KB/M: trackpad sticky dragging
 defaults write com.apple.AppleMultitouchTrackpad Dragging -bool true
+# KB/M: keyboard repeat rate
+defaults write NSGlobalDomain KeyRepeat -int 2
+# KB/M: keyboard repeat delay
+defaults write NSGlobalDomain InitialKeyRepeat -int 15
+# KB/M: double click title bar to maximize
+defaults write NSGlobalDomain AppleActionOnDoubleClick -string "Fill"
 
 # Dock: disable rearranging spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
@@ -72,9 +74,6 @@ defaults write com.apple.dock autohide -bool true
 defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 # Finder: sort folders first
 defaults write com.apple.finder _FXSortFoldersFirst -bool true
-
-# double click title bar to maximize
-defaults write NSGlobalDomain AppleActionOnDoubleClick -string "Fill"
 
 # time machine excluded paths
 # NOTE: Requires full disk access.

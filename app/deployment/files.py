@@ -3,9 +3,9 @@
 import subprocess
 from pathlib import Path
 
-from app.env import is_windows
-from app.models import FileMapping
-from app.shell import query, run
+from app.configuration.models import FileMapping
+from app.runtime.env import is_windows
+from app.runtime.shell import query, run
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Deployment

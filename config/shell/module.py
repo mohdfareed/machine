@@ -1,7 +1,7 @@
 """Interactive shells, Git, and SSH client configuration."""
 
-from app.env import PLATFORM
-from app.models import FileMapping, Module, Package, Platform
+from app.configuration.models import FileMapping, Module, Package, Platform
+from app.runtime.env import PLATFORM
 from platformdirs import user_documents_path
 from platformdirs.unix import Unix
 

@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 
-from app.shell import run
+from app.runtime.shell import run
 
 
 def run_scripts(

@@ -6,11 +6,11 @@ from inspect import signature
 from pathlib import Path
 
 import pytest
-from app import env as machine_env
-from app import machine as machine_loader
-from app.discovery import list_machines, list_modules
-from app.machine import load_machine
-from app.models import FileMapping, Machine, Package, PkgManager, Platform
+from app.configuration import loader as machine_loader
+from app.configuration.discovery import list_machines, list_modules
+from app.configuration.loader import load_machine
+from app.configuration.models import FileMapping, Machine, Package, PkgManager, Platform
+from app.runtime import env as machine_env
 from pydantic import ValidationError
 
 
@@ -72,7 +72,7 @@ def test_loader_rejects_environment_unsafe_for_processes_or_shells(
     directory = tmp_path / "machines" / "test"
     directory.mkdir(parents=True)
     (directory / "machine.py").write_text(
-        "from app.models import Machine\n" + f"manifest = Machine(env={values!r})\n"
+        "from app.configuration.models import Machine\n" + f"manifest = Machine(env={values!r})\n"
     )
 
     with pytest.raises(ValueError, match=error):
@@ -98,7 +98,7 @@ def test_fixed_platform_managers_and_source_order(
     directory = tmp_path / "machines" / "test"
     directory.mkdir(parents=True)
     (directory / "machine.py").write_text(
-        "from app.models import Machine, Package\n"
+        "from app.configuration.models import Machine, Package\n"
         "manifest = Machine(packages=[\n"
         "    Package(brew='example', cask='example', mas=123, winget='Example.App', "
         "scoop='example', cmd='setup'),\n"
@@ -111,7 +111,9 @@ def test_fixed_platform_managers_and_source_order(
     assert configuration.pkg_managers == expected
     assert [package.selected_source for package in configuration.packages] == sources
 
-    (directory / "machine.py").write_text("from app.models import Machine\nmanifest = Machine()\n")
+    (directory / "machine.py").write_text(
+        "from app.configuration.models import Machine\nmanifest = Machine()\n"
+    )
     assert load_machine("test", validate=True).pkg_managers == expected
 
 
@@ -125,7 +127,7 @@ def test_load_machine_validates_only_applicable_selected_sources(
     (selected.parent / "__init__.py").touch()
     (selected / "module.py").write_text(
         "from pathlib import Path\n"
-        "from app.models import FileMapping, Module, Platform\n"
+        "from app.configuration.models import FileMapping, Module, Platform\n"
         "module = Module(files=[\n"
         "    FileMapping(source=Path('settings.conf'), target='~/$HOME/${HOME}/%HOME%'),\n"
         "    FileMapping(source='missing.conf', target='$UNDEFINED/config', "
@@ -140,13 +142,13 @@ def test_load_machine_validates_only_applicable_selected_sources(
     other = tmp_path / "config" / "other"
     other.mkdir()
     (other / "module.py").write_text(
-        "from app.models import FileMapping, Module\n"
+        "from app.configuration.models import FileMapping, Module\n"
         "module = Module(files=[FileMapping(source='missing.conf', target='~/.other')])\n"
     )
     machine = tmp_path / "machines" / "test"
     machine.mkdir(parents=True)
     (machine / "machine.py").write_text(
-        "from app.models import Machine\n"
+        "from app.configuration.models import Machine\n"
         "from config import selected, other\n"
         "manifest = Machine(modules=[selected, other], "
         f"env={{'HOME': {str(tmp_path / 'selected-home')!r}, "
@@ -177,7 +179,7 @@ def test_loader_rejects_nonabsolute_targets(monkeypatch, tmp_path, target):
     directory = tmp_path / "machines" / "test"
     directory.mkdir(parents=True)
     (directory / "machine.py").write_text(
-        "from app.models import Machine, FileMapping\n"
+        "from app.configuration.models import Machine, FileMapping\n"
         f"manifest = Machine(env={{'DEV': {str(tmp_path)!r}}}, "
         f"files=[FileMapping(source='config', target={target!r})])\n"
     )
@@ -203,14 +205,14 @@ def test_module_dependencies_loaded_once(monkeypatch, tmp_path: Path, cycle, sel
     }.items():
         (config_dir / name).mkdir(parents=True, exist_ok=True)
         (config_dir / name / "module.py").write_text(
-            "from app.models import Module\n"
+            "from app.configuration.models import Module\n"
             + (f"from config import {', '.join(dependencies)}\n" if dependencies else "")
             + f"module = Module(depends=[{', '.join(dependencies)}])\n",
             encoding="utf-8",
         )
     (machine_dir / "machine.py").write_text(
         """
-from app.models import Machine
+from app.configuration.models import Machine
 from config import server, client
 manifest = Machine(modules=[server, client])
 """,
@@ -248,7 +250,7 @@ def test_manifest_override_preserves_metadata(
     (config_dir / "__init__.py").touch()
     (config_dir / "example").mkdir()
     (config_dir / "example" / "module.py").write_text(
-        "from app.models import FileMapping, Module, Platform\n"
+        "from app.configuration.models import FileMapping, Module, Platform\n"
         "module = Module(files=[FileMapping(source='missing', target='~/.example/config')],\n"
         "overrides=[FileMapping(\n"
         "    source='local.conf', target='~/.example/config',\n"
@@ -265,7 +267,7 @@ def test_manifest_override_preserves_metadata(
         else ""
     )
     (machine_dir / "machine.py").write_text(
-        "from app.models import FileMapping, Machine, Platform\n"
+        "from app.configuration.models import FileMapping, Machine, Platform\n"
         "from config import example\n"
         "manifest = Machine(modules=[example], "
         f"files=[{explicit_mapping}])\n",
@@ -302,25 +304,25 @@ def test_only_declared_modules_are_included(monkeypatch, tmp_path: Path, selecte
     (config_dir / "__init__.py").touch()
     (config_dir / "core").mkdir()
     (config_dir / "core" / "module.py").write_text(
-        "from app.models import Module\nmodule = Module()\n"
+        "from app.configuration.models import Module\nmodule = Module()\n"
     )
     (config_dir / "apps").mkdir()
     (config_dir / "apps" / "module.py").write_text(
-        "from app.models import Module\nmodule = Module()\n"
+        "from app.configuration.models import Module\nmodule = Module()\n"
     )
     machines_dir = tmp_path / "machines"
     machines_dir.mkdir()
     (machines_dir / "empty").mkdir()
     (machines_dir / "empty" / "machine.py").write_text(
         """
-from app.models import Machine
+from app.configuration.models import Machine
 from config import apps
 manifest = Machine(modules=[apps])
 """
     )
     (machines_dir / "declared").mkdir()
     (machines_dir / "declared" / "machine.py").write_text(
-        "from app.models import Machine, Package\n"
+        "from app.configuration.models import Machine, Package\n"
         "manifest = Machine(packages=[Package(winget='Example.App')])\n"
     )
     assert load_machine("empty").modules == ["apps"]
@@ -365,11 +367,13 @@ def test_nested_modules_discovery_and_resolution(
     for name in ["core", "tools/base", "tools/editor", "toolsmith/editor", "tools/editor/assets"]:
         directory = config / name
         directory.mkdir(parents=True, exist_ok=True)
-        (directory / "module.py").write_text("from app.models import Module\nmodule = Module()\n")
+        (directory / "module.py").write_text(
+            "from app.configuration.models import Module\nmodule = Module()\n"
+        )
     (config / "__init__.py").touch()
     editor = config / "tools" / "editor"
     (editor / "module.py").write_text(
-        "from app.models import Module, FileMapping\n"
+        "from app.configuration.models import Module, FileMapping\n"
         "from config.tools import base\n"
         "module = Module(depends=[base], "
         "files=[FileMapping(source='settings.json', target='~/.editor.json')])\n"
@@ -383,7 +387,7 @@ def test_nested_modules_discovery_and_resolution(
     (machines / "test").mkdir()
     (machines / "test" / "machine.py").write_text(
         f"""
-from app.models import Machine
+from app.configuration.models import Machine
 import config.{selection}
 manifest = Machine(modules=[config.{selection}])
 """
@@ -422,7 +426,7 @@ def test_same_leaf_modules_keep_distinct_inputs(monkeypatch, tmp_path, selected_
     machine = tmp_path / "machines" / "test"
     machine.mkdir(parents=True)
     (machine / "machine.py").write_text(
-        "from app.models import Machine\n"
+        "from app.configuration.models import Machine\n"
         "from config.work import editor as work_editor\n"
         "from config.home import editor as home_editor\n"
         "manifest = Machine(modules=[work_editor, home_editor])\n"
@@ -431,7 +435,7 @@ def test_same_leaf_modules_keep_distinct_inputs(monkeypatch, tmp_path, selected_
         directory = tmp_path / "config" / group / "editor"
         directory.mkdir(parents=True)
         (directory / "module.py").write_text(
-            "from app.models import FileMapping, Module, Package\n"
+            "from app.configuration.models import FileMapping, Module, Package\n"
             "module = Module(files=[\n"
             f"    FileMapping(source='settings', target='~/{group}/settings')\n"
             "], overrides=[\n"
@@ -494,7 +498,7 @@ def test_loader_rejects_unknown_references(monkeypatch, tmp_path, selected_env, 
     machine = tmp_path / "machines" / "test"
     machine.mkdir(parents=True)
     (machine / "machine.py").write_text(
-        "from app.models import Machine\n"
+        "from app.configuration.models import Machine\n"
         f"import {reference}\n"
         f"manifest = Machine(modules=[{reference}])\n"
     )
@@ -524,7 +528,7 @@ def test_loader_rejects_invalid_package_declarations(
     directory = tmp_path / "machines" / "test"
     directory.mkdir(parents=True)
     (directory / "machine.py").write_text(
-        "from app.models import Machine, Package, Platform\n"
+        "from app.configuration.models import Machine, Package, Platform\n"
         f"manifest = Machine(packages=[{package}])\n"
     )
 
@@ -556,7 +560,7 @@ def test_loader_resolves_package_sources_without_querying_installed_tools(
     directory = tmp_path / "machines" / "test"
     directory.mkdir(parents=True)
     (directory / "machine.py").write_text(
-        "from app.models import Machine, Package\n"
+        "from app.configuration.models import Machine, Package\n"
         "manifest = Machine(packages=[\n"
         "    Package(brew='example', cask='example'),\n"
         "    Package(brew='brew-example'),\n"

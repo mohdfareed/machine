@@ -4,8 +4,8 @@ from typing import Annotated
 
 import typer
 
-from app import env, reporting
-from app.shell import query, run
+from app.runtime import env, reporting
+from app.runtime.shell import query, run
 
 _CANONICAL_REPO_URL = "https://github.com/mohdfareed/machine.git"
 

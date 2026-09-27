@@ -1,7 +1,7 @@
 """Explicit configuration and read-only host checks."""
 
-from app.models import Configuration, Package, PkgManager
-from app.shell import find_executable
+from app.configuration.models import Configuration, Package, PkgManager
+from app.runtime.shell import find_executable
 
 
 def validate_managers(managers: list[PkgManager], *, env: dict[str, str]) -> None:

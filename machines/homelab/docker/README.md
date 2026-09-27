@@ -28,6 +28,7 @@ op run --env-file=secrets.env -- docker compose up -d
   - tags (`tag:homelab`)
 
 Use the tailnet name without `.ts.net` for `TAILNET_NAME`.
+In `tailscale-serve.json`, use `__TAILNET_NAME__` in route hostnames.
 
 ```env
 # secrets.env (references, never secret values)
@@ -44,4 +45,9 @@ other tailnet devices must not claim them.
 
 Define the app, storage mounts, and `homepage.*` dashboard labels in its Compose
 file; include it from `compose.yaml` if needed. For a user-facing app, add its
-route in `compose.tailscale.yaml` and matching Service in Tailscale Admin.
+route in `tailscale-serve.json` and matching Service in Tailscale Admin.
+Recreate the gateway after editing routes:
+
+```sh
+op run --env-file=secrets.env -- docker compose up -d --force-recreate homelab-gateway
+```
