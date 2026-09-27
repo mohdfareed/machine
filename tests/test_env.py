@@ -14,18 +14,22 @@ from app.models import Platform
 
 
 @pytest.mark.parametrize(
-    "host,kernel,expected",
+    "host,architecture,kernel,expected",
     [
-        ("darwin", "", Platform.MAC),
-        ("win32", "", Platform.WIN),
-        ("linux", "6.6.87.2-microsoft-standard-WSL2", Platform.WSL),
-        ("linux", "4.19.104-microsoft-standard", Platform.WSL),
-        ("linux", "4.4.0-19041-Microsoft", None),
-        ("linux", "6.8.0-generic", None),
+        ("darwin", "arm64", "", Platform.MAC),
+        ("darwin", "x86_64", "", None),
+        ("win32", "AMD64", "", Platform.WIN),
+        ("linux", "x86_64", "6.6.87.2-microsoft-standard-WSL2", Platform.WSL),
+        ("linux", "x86_64", "4.19.104-microsoft-standard", Platform.WSL),
+        ("linux", "x86_64", "4.4.0-19041-Microsoft", None),
+        ("linux", "x86_64", "6.8.0-generic", None),
     ],
 )
-def test_host_detection_requires_wsl2_kernel(monkeypatch, host, kernel, expected):
+def test_host_detection_requires_supported_platform(
+    monkeypatch, host, architecture, kernel, expected
+):
     monkeypatch.setattr(sys, "platform", host)
+    monkeypatch.setattr(env.platform, "machine", lambda: architecture)
     monkeypatch.setattr(env.platform, "release", lambda: kernel)
     monkeypatch.setattr(shutil, "which", lambda *args: pytest.fail("queried host tools"))
 
@@ -72,6 +76,7 @@ def test_saved_shell_environment_round_trips_literal_values(tmp_path, monkeypatc
     directory = tmp_path / "mc"
     monkeypatch.setattr(env, "config_dir", lambda: directory)
     monkeypatch.setattr(env, "is_windows", False)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     monkeypatch.setenv("CALLER_SECRET", "not-declared")
     value = (
         "quotes: '\u2018\u2019\u201a\u201b \"; dollar: $HOME $(echo injected); slash: \\\n"
@@ -82,8 +87,8 @@ def test_saved_shell_environment_round_trips_literal_values(tmp_path, monkeypatc
 
     if shell == "fish":
         script = tmp_path / "read.fish"
-        script.write_text("source $argv[1]\nprintf '%s' \"$PUBLIC\"\n")
-        arguments = [executable, "--no-config", str(script), str(directory / "env.fish")]
+        script.write_text('source "$__fish_config_dir/mc/env.fish"\nprintf \'%s\' "$PUBLIC"\n')
+        arguments = [executable, "--no-config", str(script)]
     else:
         script = tmp_path / "read.ps1"
         script.write_text(
@@ -94,7 +99,7 @@ def test_saved_shell_environment_round_trips_literal_values(tmp_path, monkeypatc
     result = subprocess.run(arguments, capture_output=True, check=True)
     assert result.stdout.decode("utf-8") == value
     assert env.get_current_machine() == "test"
-    for path in directory.iterdir():
+    for path in [*directory.iterdir(), tmp_path / "fish" / "mc" / "env.fish"]:
         assert "CALLER_SECRET" not in path.read_text()
 
 
@@ -175,6 +180,6 @@ def test_machine_selection_reads_saved_file_instead_of_shell(tmp_path, monkeypat
     assert env.get_current_machine() == "next"
     assert (directory / "machine").read_text() == "next\n"
     assert (directory / "env.ps1").is_file()
-    assert not (directory / "env.fish").exists()
+    assert not (tmp_path / "fish").exists()
     (directory / "machine").write_text("")
     assert env.get_current_machine() is None

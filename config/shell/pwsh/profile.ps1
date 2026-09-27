@@ -50,11 +50,11 @@ Remove-Variable comp -ErrorAction SilentlyContinue
 Remove-Variable f -ErrorAction SilentlyContinue
 
 $env:PIP_REQUIRE_VIRTUALENV = $true
-$env:GOPATH = Join-Path $HOME 'go'
+$env:GOPATH = Join-Path $HOME '.go'
 
 $env:PATH += "$([IO.Path]::PathSeparator)$HOME/.local/bin"
 $env:PATH += "$([IO.Path]::PathSeparator)$HOME/.docker/bin"
-$env:PATH += "$([IO.Path]::PathSeparator)$GOPATH/bin"
+$env:PATH += [IO.Path]::PathSeparator + (Join-Path $env:GOPATH 'bin')
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Configuration

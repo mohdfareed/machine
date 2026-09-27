@@ -7,13 +7,13 @@ and any per-machine configuration/overrides.
 The `mc` CLI deploys a machine, upgrades it, syncs with canonical `main`, and
 inspects the resolved configuration.
 
-The [homelab](config/homelab/README.md) configuration extends the setup to
+The [homelab](machines/homelab/README.md) configuration extends the setup to
 manage self-hosted services. It manages Docker-based servers setup,
 configuration, and service deployment.
 
 ## Requirements
 
-- macOS, Windows, or Ubuntu on WSL2
+- macOS M1+, Windows, or Ubuntu on WSL2
 - [App Installer](https://learn.microsoft.com/en-us/windows/package-manager/winget/) (Windows)
 
 ## Bootstrap
@@ -114,7 +114,7 @@ To deploy a specific module, import its folder into the manifest's `modules`
 list, then `mc deploy <name>` to set up that module on the selected machine.
 
 CLI arguments use dotted names:
-`config/terminal/git/module.py` becomes `terminal.git`.
+`config/<group>/<name>/module.py` becomes `<group>.<name>`.
 Discovery recursively finds the reserved `module.py` filename, **folder names
 must be valid Python identifiers, not keywords.**
 

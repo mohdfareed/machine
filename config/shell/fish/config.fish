@@ -19,7 +19,8 @@ for brew in /opt/homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
 end
 
 set --global --export PIP_REQUIRE_VIRTUALENV true
-set --global --export GOPATH "$HOME/go"
+set --global --export GOPATH "$HOME/.go"
+
 fish_add_path --path "$HOME/.local/bin"
 fish_add_path --path "$HOME/.docker/bin"
 fish_add_path --path "$GOPATH/bin"

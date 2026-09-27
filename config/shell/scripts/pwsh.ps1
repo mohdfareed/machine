@@ -13,7 +13,7 @@ Install-Module -Name posh-git -Scope CurrentUser
 
 # Set up the completion directory.
 $completions = Join-Path (Split-Path -Parent $PROFILE.CurrentUserAllHosts) 'completions'
-New-Item -ItemType Directory -Path $directory -Force | Out-Null
+New-Item -ItemType Directory -Path $completions -Force | Out-Null
 
 # Install mc completion.
 $env:_MC_COMPLETE = 'source_powershell'

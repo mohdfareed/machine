@@ -26,14 +26,14 @@ PLATFORM: Platform
 """Current host platform."""
 
 match sys.platform:
-    case _platform if _platform.startswith("darwin"):
+    case _platform if _platform.startswith("darwin") and platform.machine() == "arm64":
         PLATFORM = Platform.MAC
     case _platform if _platform.startswith("win"):
         PLATFORM = Platform.WIN
     case _ if "microsoft-standard" in platform.release().lower():
         PLATFORM = Platform.WSL
     case _:
-        raise RuntimeError(f"Unsupported platform: {sys.platform}")
+        raise RuntimeError(f"Unsupported platform: {sys.platform} ({platform.machine()})")
 
 is_macos = PLATFORM.is_a(Platform.MAC)
 is_windows = PLATFORM.is_a(Platform.WIN)
@@ -80,7 +80,9 @@ def save_machine(machine_id: str, values: dict[str, str]) -> None:
     # Write literal shell assignments.
     (directory / "env.ps1").write_text("".join(powershell), encoding="utf-8", newline="\n")
     if not is_windows:
-        (directory / "env.fish").write_text("".join(fish), encoding="utf-8", newline="\n")
+        fish_directory = directory.parent / "fish" / "mc"
+        fish_directory.mkdir(parents=True, exist_ok=True)
+        (fish_directory / "env.fish").write_text("".join(fish), encoding="utf-8", newline="\n")
 
     # Record the selection after both shell files are ready.
     (directory / "machine").write_text(f"{machine_id}\n", encoding="utf-8")
