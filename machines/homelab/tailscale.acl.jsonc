@@ -60,19 +60,18 @@
   // ],
 
   // Define user groups and their users.
-  "groups": { "group:family": ["chroe4euqhs@gmail.com"] },
+  "groups": { "group:family": ["alice@example.com"] },
 
   // Define device and Service tags and who can assign them.
   "tagOwners": {
-    "tag:container": ["autogroup:admin"],
     "tag:homelab": ["autogroup:admin"],
     "tag:media": ["autogroup:admin"],
   },
 
-  // Approve container hosts for homelab-tagged Services.
+  // Approve homelab hosts to publish homelab-tagged Services.
   "autoApprovers": {
     "services": {
-      "tag:homelab": ["tag:container"],
+      "tag:homelab": ["tag:homelab"],
     },
   },
 }

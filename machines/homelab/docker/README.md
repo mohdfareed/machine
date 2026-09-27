@@ -25,7 +25,7 @@ op run --env-file=secrets.env -- docker compose up -d
   - Reusable,
   - ephemeral (optional),
   - pre-approved (optional),
-  - tags (`tag:container`)
+  - tags (`tag:homelab`)
 
 Use the tailnet name without `.ts.net` for `TAILNET_NAME`.
 
@@ -39,9 +39,6 @@ Enable MagicDNS and HTTPS certificates in Tailscale Admin. For each user-facing
 route, create a matching Service with endpoint `tcp:443` and `tag:homelab`.
 Add `tag:media` only when family should have access. Reserve Service DNS names;
 other tailnet devices must not claim them.
-
-The gateway **device** uses `tag:container`; `tag:homelab` and `tag:media` belong
-to the **Services**. Review `../tailscale.acl.jsonc` before applying the policy.
 
 ## Add a service
 
