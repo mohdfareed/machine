@@ -43,7 +43,7 @@ jobs:
       - name: Set up macOS tools
         id: macos_tools
         if: ${{ !cancelled() && steps.dependencies_setup.outcome == 'success' && runner.os == 'macOS' }}
-        run: brew install --cask powershell
+        run: brew install --cask powershell@preview
 
       # MARK: Checks
       # ═══════════════════════════════════════════════════════════════════════
