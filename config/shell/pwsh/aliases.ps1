@@ -14,27 +14,33 @@ carapace eza powershell | Out-String | Invoke-Expression
 Register-ArgumentCompleter -Native -CommandName ls `
     -ScriptBlock ${function:_eza_completer}
 
-function search {
-    <#
-    .SYNOPSIS
-    Search file contents with ripgrep and fzf.
-    .PARAMETER Pattern
-    The initial ripgrep search pattern.
-    #>
-    param([Parameter(Mandatory)][string]$Pattern)
-    Invoke-PsFzfRipgrep -SearchString $Pattern
-}
+function ll { ls -l @args }
+function lt { param([int]$Level=1) ls -TL="$Level" @args }
+function llt { param([int]$Level=1) ll -TL="$Level" @args }
+
+Set-Alias search::files Invoke-PsFzfRipgrep
+Set-Alias search::proc Invoke-FuzzyKillProcess
+Set-Alias search::git Invoke-FuzzyGitStatus
+Set-Alias search::git::log Invoke-PsFzfGitHashes
+Set-Alias search::git::branches Invoke-PsFzfGitBranches
+Set-Alias search::git::tags Invoke-PsFzfGitTags
+Set-Alias search::git::stashes Invoke-PsFzfGitStashes
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Powershell
 # ═════════════════════════════════════════════════════════════════════════════
 
-function pwsh::reload {
-    . $PROFILE.CurrentUserAllHosts
-}
 function pwsh::time {
     $time = (Measure-Command { pwsh -Command "Exit" }).TotalMilliseconds
     Write-Host "Elapsed time: $time ms"
+}
+function pwsh::reload {
+    if ($IsWindows) {
+        & "$PSHOME/pwsh.exe" -NoLogo
+        exit
+    } else {
+        exec "$PSHOME/pwsh" -NoLogo
+    }
 }
 
 # ═════════════════════════════════════════════════════════════════════════════

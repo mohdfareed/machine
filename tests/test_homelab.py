@@ -2,6 +2,7 @@
 
 import importlib.util
 import subprocess
+from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,11 @@ _spec = importlib.util.spec_from_file_location(
 assert _spec is not None and _spec.loader is not None
 services = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(services)
+
+
+@pytest.fixture(autouse=True)
+def _unlocked_operations(monkeypatch):
+    monkeypatch.setattr(services, "_operation_lock", nullcontext)
 
 
 @pytest.mark.parametrize("fail_pull", [False, True])

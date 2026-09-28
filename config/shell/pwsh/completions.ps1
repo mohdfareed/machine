@@ -27,26 +27,26 @@ $env:FZF_CTRL_T_OPTS = @(
 # MARK: Completions
 # ═════════════════════════════════════════════════════════════════════════════
 
-# Enable command history.
+# Enable command history (50ms).
 Import-Module PSReadLine
 Set-PSReadLineOption -PredictionSource History
 Set-PSReadLineKeyHandler -Key Alt+k -Function ShowKeyBindings
 
-# Enable fuzzy search.
+# Enable fuzzy search (150ms).
 Import-Module PSFzf
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t'
 Set-PsFzfOption -PSReadlineChordSetLocation 'Alt+c'
 Set-PsFzfOption -PSReadlineChordReverseHistory 'Ctrl+r'
 Set-PsFzfOption -PSReadlineChordReverseHistoryArgs 'Alt+a'
 
-# Load carapace completions.
+# Load carapace completions (150ms).
 carapace _carapace powershell | Out-String | Invoke-Expression
 
 # Load user completions.
 Get-ChildItem "$ConfigHome/completions/*.ps1" -ErrorAction Ignore |
     ForEach-Object { . $_.FullName }
 
-# Enable tab completions.
+# Enable tab completions (50ms).
 Import-Module PSCompletions
 
 # ═════════════════════════════════════════════════════════════════════════════

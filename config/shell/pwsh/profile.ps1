@@ -23,7 +23,7 @@ $env:PATH += [IO.Path]::PathSeparator + (Join-Path $env:GOPATH 'bin')
 # MARK: Configuration
 # ═════════════════════════════════════════════════════════════════════════════
 
-# Activate Homebrew (ARM macOS and WSL).
+# Activate Homebrew => ARM macOS and WSL (100ms).
 foreach ($brew in @(
     '/opt/homebrew/bin/brew', '/home/linuxbrew/.linuxbrew/bin/brew'
 )) {
@@ -37,7 +37,7 @@ Remove-Variable brew -ErrorAction SilentlyContinue
 # Load completions.
 . (Join-Path $ConfigHome "completions.ps1")
 
-# Initialize starship prompt.
+# Initialize starship prompt (150ms).
 Invoke-Expression (&starship init powershell)
 
 # ═════════════════════════════════════════════════════════════════════════════
