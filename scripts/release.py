@@ -27,7 +27,6 @@ def main(bump: Bump):
     tag = f"v{version}"
 
     if output("git", "tag", "--list", tag):
-        run("git", "reset", "--hard")
         sys.exit(f"Tag {tag} already exists.")
 
     print("\n==> Running checks...", flush=True)
