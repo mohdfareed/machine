@@ -18,7 +18,7 @@ Both machines must remain awake for continuous media access.
 
 Deploy on the M1 after reviewing the configuration and completing service setup:
 
-```sh
+```powershell
 mc deploy -m homelab
 ```
 

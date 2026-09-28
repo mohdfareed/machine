@@ -1,17 +1,11 @@
 #!/bin/sh
 set -eu
 
-# Install and update the declared Fish plugins.
-fish -c 'fisher update'
-
-# Install mc completion.
-fish -c 'mc --install-completion'
-
-# Add Fish to /etc/shells if not already present.
-fish_path=$(command -v fish)
-if ! grep -Fxq "$fish_path" /etc/shells; then
-  echo "adding Fish to /etc/shells..."
-  printf '%s\n' "$fish_path" | sudo tee -a /etc/shells
+# Add PowerShell to /etc/shells if not already present.
+pwsh_path=$(command -v pwsh)
+if ! grep -Fxq "$pwsh_path" /etc/shells; then
+  echo "adding PowerShell to /etc/shells..."
+  printf '%s\n' "$pwsh_path" | sudo tee -a /etc/shells
 fi
 
 # Read the account's login shell; $SHELL can be stale.
@@ -24,8 +18,8 @@ else
   current_shell=${current_shell##*:}
 fi
 
-# Set Fish as the default shell.
-if [ "$current_shell" != "$fish_path" ]; then
-  echo "setting Fish as default shell..."
-  chsh -s "$fish_path"
+# Set PowerShell as the default shell.
+if [ "$current_shell" != "$pwsh_path" ]; then
+  echo "setting PowerShell as default shell..."
+  chsh -s "$pwsh_path"
 fi

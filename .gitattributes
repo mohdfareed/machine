@@ -3,7 +3,6 @@
 
 # unix
 *.sh text eol=lf
-*.fish text eol=lf
 
 # windows
 *.bat text eol=crlf

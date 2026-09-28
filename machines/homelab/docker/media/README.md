@@ -35,11 +35,11 @@ flowchart TD
 Use this order on a fresh install; existing app state keeps its setup.
 
 1. Make sure the media storage is mounted and Tailscale Services are configured.
-2. Get a token from <https://www.plex.tv/claim>, export `PLEX_CLAIM` in the
+2. Get a token from <https://www.plex.tv/claim>, set `PLEX_CLAIM` in the
    current process, then deploy the stack on the homelab:
 
-   ```sh
-   export PLEX_CLAIM=claim-...
+   ```powershell
+   $env:PLEX_CLAIM = 'claim-...'
    mc deploy -m homelab
    ```
 

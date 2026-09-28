@@ -12,7 +12,7 @@ widget credentials. Keep its values machine-local, not in the manifest or reposi
 
 For direct Compose commands, run from this directory:
 
-```sh
+```powershell
 op run --env-file=secrets.env -- docker compose up -d
 ```
 
@@ -48,6 +48,6 @@ file; include it from `compose.yaml` if needed. For a user-facing app, add its
 route in `tailscale-serve.json` and matching Service in Tailscale Admin.
 Recreate the gateway after editing routes:
 
-```sh
+```powershell
 op run --env-file=secrets.env -- docker compose up -d --force-recreate homelab-gateway
 ```

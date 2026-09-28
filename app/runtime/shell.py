@@ -31,14 +31,7 @@ def run(
     if powershell:
         if isinstance(cmd, str):
             raise ValueError("PowerShell file execution requires an argument list")
-        cmd = [
-            "powershell.exe" if is_windows else "pwsh",
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-File",
-            *cmd,
-        ]
+        cmd = ["pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", *cmd]
     if isinstance(cmd, str):
         command = cmd
     else:
@@ -199,7 +192,7 @@ def _resolve_executable(name: str, env: dict[str, str]) -> str:
 
 
 def _powershell_executable(env: dict[str, str]) -> str:
-    names = ("powershell.exe",) if is_windows else ("pwsh", "pwsh-preview")
+    names = ("pwsh.exe", "powershell.exe") if is_windows else ("pwsh",)
     for name in names:
         executable = shutil.which(name, path=env.get("PATH", ""))
         if executable is not None:
@@ -210,7 +203,7 @@ def _powershell_executable(env: dict[str, str]) -> str:
         (value for key, value in env.items() if key.casefold() == "systemroot"), None
     )
     if is_windows and system_root:
-        path = Path(system_root) / "System32" / "WindowsPowerShell" / "v1.0" / names[0]
+        path = Path(system_root) / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
         if path.is_file():
             return str(path)
     raise FileNotFoundError(f"PowerShell executable not found: {' or '.join(names)}")

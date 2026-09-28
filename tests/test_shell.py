@@ -282,8 +282,9 @@ def test_windows_overrides_use_registered_values_without_activation(monkeypatch)
 @pytest.mark.parametrize(
     "windows,interpreter,module_path",
     [
-        pytest.param(True, "powershell.exe", None, id="windows-path"),
-        pytest.param(False, "pwsh-preview", "existing-modules", id="unix-preview-fallback"),
+        pytest.param(True, "pwsh.exe", None, id="windows-pwsh-preferred"),
+        pytest.param(True, "powershell.exe", None, id="windows-bootstrap-fallback"),
+        pytest.param(False, "pwsh", "existing-modules", id="unix-pwsh"),
         pytest.param(True, None, "existing-modules", id="windows-system-root-fallback"),
     ],
 )
@@ -311,6 +312,8 @@ def test_powershell_uses_prepared_interpreter_and_environment(
 
     def which(name, *, path):
         assert path == environment["PATH"]
+        if interpreter == "pwsh.exe" and name == "powershell.exe":
+            return str(executable.with_name("powershell.exe"))
         return str(executable) if name == interpreter else None
 
     def run(command, **kwargs):
@@ -331,9 +334,7 @@ def test_powershell_uses_prepared_interpreter_and_environment(
 
 @pytest.fixture
 def powershell(monkeypatch):
-    executable = (
-        shutil.which("powershell.exe") or shutil.which("pwsh") or shutil.which("pwsh-preview")
-    )
+    executable = shutil.which("pwsh") or shutil.which("powershell.exe")
     if executable is None:
         pytest.skip("PowerShell is unavailable")
     monkeypatch.setattr(shell, "is_windows", True)
@@ -341,7 +342,7 @@ def powershell(monkeypatch):
     monkeypatch.setattr(
         shell.shutil,
         "which",
-        lambda name, **kwargs: executable if name == "powershell.exe" else which(name, **kwargs),
+        lambda name, **kwargs: executable if name == "pwsh.exe" else which(name, **kwargs),
     )
 
 

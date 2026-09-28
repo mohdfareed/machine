@@ -10,4 +10,5 @@ window-height = 24
 background-opacity = 1
 background-blur = true
 
+command = /opt/homebrew/bin/pwsh -NoLogo
 env = TERM=xterm-256color

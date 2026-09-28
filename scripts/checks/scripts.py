@@ -14,9 +14,6 @@ run("pwsh", "-NoProfile", "-File", str(Path(__file__).with_name("pwsh.ps1")))
 if os.name == "nt":
     exit()  # not unix
 
-for path in files("*.fish"):
-    run("fish", "--no-config", "--no-execute", str(path))
-
 for path in files("*/scripts/*"):
     if os.access(path, os.X_OK):
         continue  # executable

@@ -75,6 +75,12 @@ module = Module(
             winget="ZedIndustries.Zed",
             platforms=[Platform.MAC, Platform.WIN],
         ),
+        # Fonts
+        Package(
+            name="jetbrains-mono",
+            cask="font-jetbrains-mono-nerd-font",
+            winget="DEVCOM.JetBrainsMonoNerdFont",
+        ),
         # Extension dependencies.
         Package(
             brew="shellcheck",

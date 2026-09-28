@@ -162,9 +162,7 @@ def test_unix_scripts_use_declared_shebang_and_environment(tmp_path, monkeypatch
 
 @pytest.mark.parametrize("exit_code", [0, 7])
 def test_docker_elevation_failure_stops_before_user_package_setup(tmp_path, exit_code):
-    powershell = (
-        shutil.which("powershell.exe") or shutil.which("pwsh") or shutil.which("pwsh-preview")
-    )
+    powershell = shutil.which("pwsh") or shutil.which("powershell.exe")
     if powershell is None:
         pytest.skip("PowerShell is unavailable")
     script = Path(__file__).parents[1] / "machines/pc/scripts/init_docker.win.ps1"
@@ -210,9 +208,7 @@ exit $LASTEXITCODE
 
 
 def test_windows_features_report_failures_after_attempting_remaining_features(tmp_path: Path):
-    powershell = (
-        shutil.which("powershell.exe") or shutil.which("pwsh") or shutil.which("pwsh-preview")
-    )
+    powershell = shutil.which("pwsh") or shutil.which("powershell.exe")
     if powershell is None:
         pytest.skip("PowerShell is unavailable")
     script = Path(__file__).parents[1] / "config/system/scripts/system.win.ps1"

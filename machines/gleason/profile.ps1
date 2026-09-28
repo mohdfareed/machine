@@ -4,7 +4,8 @@
 Get-ChildItem -Path $env:DEV_BIN -Filter *.psm1 | ForEach-Object {
     Import-Module $_.FullName
 }
-$env:Path += ";$env:DEV_BIN"
+$env:PATH += [IO.Path]::PathSeparator + $env:DEV_BIN
 
 # msbuild
-$env:Path += ";C:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin"
+$env:PATH += [IO.Path]::PathSeparator + `
+"C:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin"

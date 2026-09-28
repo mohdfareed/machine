@@ -32,5 +32,10 @@ module = Module(
     packages=[
         Package(name="ghostty", cask="ghostty"),
         Package(name="windows-terminal", winget="microsoft.WindowsTerminal"),
+        Package(
+            name="jetbrains-mono",
+            cask="font-jetbrains-mono-nerd-font",
+            winget="DEVCOM.JetBrainsMonoNerdFont",
+        ),
     ],
 )

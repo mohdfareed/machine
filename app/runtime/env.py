@@ -73,9 +73,8 @@ def save_machine(machine_id: str, values: dict[str, str]) -> None:
     directory = config_dir()
     directory.mkdir(parents=True, exist_ok=True)
 
-    # Write native assignments without evaluating declared values in either shell.
+    # Write native assignments without evaluating declared values in PowerShell.
     powershell = []
-    fish = []
     for name, value in values.items():
         # PowerShell also treats typographic apostrophes as string delimiters.
         quoted = value
@@ -83,21 +82,15 @@ def save_machine(machine_id: str, values: dict[str, str]) -> None:
             quoted = quoted.replace(quote, quote * 2)
 
         powershell.append(f"$env:{name} = '{quoted}'\n")
-        quoted = value.replace("\\", "\\\\").replace("'", "\\'")
-        fish.append(f"set -gx {name} '{quoted}'\n")
 
     # Write literal shell assignments.
-    powershell_directory = powershell_config_dir() / "mc"
+    powershell_directory = powershell_config_dir()
     powershell_directory.mkdir(parents=True, exist_ok=True)
-    (powershell_directory / "env.ps1").write_text(
+    (powershell_directory / "env.mc.ps1").write_text(
         "".join(powershell), encoding="utf-8", newline="\n"
     )
-    if not is_windows:
-        fish_directory = directory.parent / "fish" / "mc"
-        fish_directory.mkdir(parents=True, exist_ok=True)
-        (fish_directory / "env.fish").write_text("".join(fish), encoding="utf-8", newline="\n")
 
-    # Record the selection after both shell files are ready.
+    # Record the selection after the environment file is ready.
     (directory / "machine").write_text(f"{machine_id}\n", encoding="utf-8")
 
 

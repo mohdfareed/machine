@@ -35,7 +35,7 @@ $script = irm $repo/scripts/bootstrap.ps1
 
 Restart the shell afterward to make `mc` available on `PATH`.
 
-By default, the repo is deployed to `~/.machine`. Export `MC_HOME` before
+By default, the repo is deployed to `~/.machine`. Set `MC_HOME` before
 bootstrapping to change it. To re-deploy at a different path and reinstall `mc`:
 
 1. After moving the checkout,
@@ -56,7 +56,7 @@ Native Linux and WSL1 are not supported.
 
 ## Usage
 
-```sh
+```powershell
 mc deploy [mods...]  # Deploy all or the selected modules to the machine
 mc upgrade           # Upgrade installed packages and run upgrade scripts
 mc sync              # Integrate canonical main and refresh the CLI
@@ -84,7 +84,7 @@ manifest = Machine(
 
 Replace `<id>` below with the machine name:
 
-```sh
+```powershell
 mc show -m <id>    # Inspect the resolved manifest
 mc deploy -m <id>  # Set machine selection and deploy
 ```
@@ -99,6 +99,8 @@ Packages are handled based on the OS:
 
 Declare public environment variables in the manifest's `env` mapping, using
 strings or `Path` values. Redeploy after changing these variables, then open a new terminal.
+Put machine-specific PowerShell configuration in `machines/<id>/profile.ps1`;
+the shared profile loads it automatically.
 
 ### Modules
 
@@ -155,7 +157,7 @@ Sign in to Tailscale to SSH into connected machines using keys stored in 1Passwo
 
 ## Development
 
-```sh
+```powershell
 uv sync --dev                    # Install dev dependencies
 uv run mc --help                 # Run dev CLI without installing
 uv run mc validate [-m MACHINE]  # Validate machine configuration and modules

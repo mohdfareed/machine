@@ -69,8 +69,18 @@
   "accessibility.signals.terminalBell": {
     "sound": "on",
   },
-  "terminal.integrated.defaultProfile.osx": "fish",
-  "terminal.integrated.defaultProfile.linux": "fish",
+  // Powershell
+  "terminal.integrated.profiles.osx": {
+    "PowerShell": { "path": "pwsh", "args": ["-NoLogo"] },
+  },
+  "terminal.integrated.profiles.linux": {
+    "PowerShell": { "path": "pwsh", "args": ["-NoLogo"] },
+  },
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": { "path": "pwsh.exe", "args": ["-NoLogo"] },
+  },
+  "terminal.integrated.defaultProfile.osx": "PowerShell",
+  "terminal.integrated.defaultProfile.linux": "PowerShell",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
   // MARK: font
   // ══════════════════════════════════════════════════════════════════════════

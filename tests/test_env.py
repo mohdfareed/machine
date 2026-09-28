@@ -76,15 +76,14 @@ def test_build_env_normalizes_windows_keys_and_keeps_explicit_path(monkeypatch):
     assert "Path" not in result and "mc_id" not in result
 
 
-@pytest.mark.parametrize("shell", ["fish", "pwsh"])
-def test_saved_shell_environment_round_trips_literal_values(tmp_path, monkeypatch, shell):
-    executable = shutil.which(shell)
+def test_saved_powershell_environment_round_trips_literal_values(tmp_path, monkeypatch):
+    executable = shutil.which("pwsh")
     if executable is None:
-        pytest.skip(f"{shell} is not installed")
+        pytest.skip("pwsh is not installed")
     directory = tmp_path / "mc"
     monkeypatch.setattr(env, "config_dir", lambda: directory)
-    monkeypatch.setattr(env, "is_windows", False)
-    monkeypatch.setattr(env, "PLATFORM", Platform.MAC)
+    documents = tmp_path / "Redirected Documents"
+    monkeypatch.setattr(env.platformdirs, "user_documents_path", lambda: documents)
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     monkeypatch.setenv("CALLER_SECRET", "not-declared")
     value = (
@@ -94,31 +93,26 @@ def test_saved_shell_environment_round_trips_literal_values(tmp_path, monkeypatc
     values = env.build_env("test", {"PUBLIC": value})
     env.save_machine("test", values)
 
-    if shell == "fish":
-        script = tmp_path / "read.fish"
-        script.write_text('source "$__fish_config_dir/mc/env.fish"\nprintf \'%s\' "$PUBLIC"\n')
-        arguments = [executable, "--no-config", str(script)]
-    else:
-        script = tmp_path / "read.ps1"
-        script.write_text(
-            "param($ProfilePath)\n"
-            "if ($ProfilePath) { $PROFILE.CurrentUserAllHosts = $ProfilePath }\n"
-            ". (Join-Path (Split-Path -Parent $PROFILE.CurrentUserAllHosts) 'mc/env.ps1')\n"
-            "[Console]::Write($env:PUBLIC)"
-        )
-        arguments = [executable, "-NoProfile", "-File", str(script)]
-        if sys.platform == "win32":
-            # Isolate the Windows profile; Unix PowerShell follows XDG_CONFIG_HOME directly.
-            arguments.append(str(env.powershell_config_dir() / "profile.ps1"))
+    script = tmp_path / "read.ps1"
+    script.write_text(
+        "param($ProfilePath)\n"
+        "$ErrorActionPreference = 'Stop'\n"
+        "if ($ProfilePath) { $PROFILE.CurrentUserAllHosts = $ProfilePath }\n"
+        ". (Join-Path (Split-Path -Parent $PROFILE.CurrentUserAllHosts) 'env.mc.ps1')\n"
+        "[Console]::Write($env:PUBLIC)",
+        encoding="utf-8",
+    )
+    arguments = [executable, "-NoProfile", "-File", str(script)]
+    if sys.platform == "win32":
+        # Isolate the Windows profile; Unix PowerShell follows XDG_CONFIG_HOME directly.
+        arguments.append(str(env.powershell_config_dir() / "profile.ps1"))
 
-    result = subprocess.run(arguments, capture_output=True, check=True)
+    result = subprocess.run(arguments, capture_output=True, check=True, timeout=30)
     assert result.stdout.decode("utf-8") == value
     assert env.get_current_machine() == "test"
-    for path in [
-        env.powershell_config_dir() / "mc" / "env.ps1",
-        tmp_path / "fish" / "mc" / "env.fish",
-    ]:
-        assert "CALLER_SECRET" not in path.read_text()
+    assert "CALLER_SECRET" not in (env.powershell_config_dir() / "env.mc.ps1").read_text(
+        encoding="utf-8"
+    )
 
 
 @pytest.mark.parametrize(
@@ -200,7 +194,7 @@ def test_machine_selection_reads_saved_file_instead_of_shell(tmp_path, monkeypat
     env.save_machine("next", env.build_env("next", {}))
     assert env.get_current_machine() == "next"
     assert (directory / "machine").read_text() == "next\n"
-    assert (documents / "PowerShell" / "mc" / "env.ps1").is_file()
-    assert not (tmp_path / "fish").exists()
+    assert (documents / "PowerShell" / "env.mc.ps1").is_file()
+
     (directory / "machine").write_text("")
     assert env.get_current_machine() is None

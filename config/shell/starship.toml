@@ -57,7 +57,7 @@ empty_symbol = "󰂎 "
 disabled = false
 
 [memory_usage]
-format = "[$symbol${ram}(|${swap})]($style) "
+format = "[$symbol${ram}( | ${swap})]($style) "
 threshold = 80
 symbol = "󰍛 "
 disabled = false
@@ -108,10 +108,11 @@ symbol = " "
 disabled = false
 
 [shell]
-fish_indicator = "[](dimmed white)"
-powershell_indicator = "[󰨊](blue)"
 style = ""
 disabled = false
+powershell_indicator = "[󰨊](blue)"
+bash_indicator = "[](dimmed green)"
+zsh_indicator = "[](dimmed green)"
 
 # Project
 # ═════════════════════════════════════════════════════════════════════════════

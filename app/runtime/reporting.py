@@ -54,7 +54,7 @@ def command(cmd: str, *, root: Path | None = None) -> None:
 
 def command_end(code: int) -> None:
     """Announce a command exit."""
-    _print(f"=> {code}", prefix="# ", style="magenta")
+    _print(f"=> {code}", prefix=" ", style="magenta")
 
 
 def detail(message: str | Text, *, error: bool = False) -> None:

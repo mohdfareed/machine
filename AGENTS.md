@@ -106,7 +106,7 @@ Scripts are discovered only under `scripts/`; declarations have no `scripts=` fi
 auto-includes prerequisite modules in manifests (deduped, ordered before
 the dependent).
 
-`terminal` owns terminal applications. `shell` owns shells, the prompt, CLI
+`terminal` owns terminal applications. `shell` owns PowerShell, the prompt, CLI
 utilities, Git, and the SSH client. `ssh` owns inbound SSH and depends on `shell`.
 `dev` owns shared development runtimes, agents, and editors; WSL selects `system`,
 `shell`, and `dev` without desktop editors. Bootstrap supplies uv through Homebrew on Unix
@@ -166,13 +166,13 @@ Installed-tool availability never changes source selection.
 - Platform tags narrow script selection: `name.mac.sh`, `name.win.ps1`. Ordinary Unix scripts need only `.sh`.
 - Script prefixes: `init_` = prepare host settings and package prerequisites before files and packages, `up_` = run only during `mc upgrade`, `_` = helper (never auto-executed, sourced by other scripts)
 - Execution order: missing manager setup -> `init_*` scripts -> files -> packages -> remaining scripts
-- `Machine.env` declares public variables as strings or paths. The loader normalizes them and sets the selected `MC_ID`; scripts receive these values directly. Keep expressions in Python, not a second interpolation language. Set `GOPATH` to `~/.go` directly in the Fish and PowerShell profiles; do not add manifest wiring for this shared shell setting.
-- Deployment saves the default selection in the app config directory's `machine` file. Write literal `mc/env.ps1` assignments in PowerShell's user profile directory, using the same directory lookup as profile deployment; PowerShell sources it relative to `$PROFILE.CurrentUserAllHosts`. On Unix, write `env.fish` in Fish's config directory under `mc/` (`~/.config/fish/mc/env.fish`, respecting `XDG_CONFIG_HOME`) so Fish sources it through `$__fish_config_dir`. Shells source these files; redeployment refreshes them after manifest changes. Never snapshot inherited variables or secrets. The app derives its root from its code; `MC_HOME` is only a bootstrap destination option.
+- `Machine.env` declares public variables as strings or paths. The loader normalizes them and sets the selected `MC_ID`; scripts receive these values directly. Keep expressions in Python, not a second interpolation language. Set `GOPATH` to `~/.go` directly in the PowerShell profile; do not add manifest wiring for this shared shell setting.
+- Deployment saves the default selection in the app config directory's `machine` file. Write literal `mc/env.ps1` assignments in PowerShell's user profile directory, using the same directory lookup as profile deployment; PowerShell sources it relative to `$PROFILE.CurrentUserAllHosts`. On Unix, the profile directory is `~/.config/powershell`, respecting `XDG_CONFIG_HOME`; on Windows, it is `PowerShell` under the user's Documents directory, including redirected Documents. Redeployment refreshes the environment after manifest changes. Never snapshot inherited variables or secrets. The app derives its root from its code; `MC_HOME` is only a bootstrap destination option.
 - Secrets belong to 1Password and the consuming application. The app does not load private dotenv files or manage private SSH keys. The homelab Compose root commits reference-only `secrets.env`; its launcher uses `op run --env-file=secrets.env`. Homepage consumes the homelab's local Tailscale Environment through Compose. Prefer vault, item, and field IDs so renaming them does not break references. Keep secret values out of Python and the general deployment environment.
-- Fish and PowerShell load their generated environment without invoking Python or parsing dotenv. Machine-specific extras use `config.mc.fish` and profile-relative `profile.mc.ps1` links. Unix shell scripts execute directly: the OS handles shebangs. Use POSIX `/bin/sh` for `.sh` scripts, not Bash or Zsh. Keep failure handling POSIX-compatible; capture fallible command output before piping it rather than relying on `pipefail`. The runner neither parses shebangs nor changes executable bits; checks enforce those bits and fix scripts normalize them. Scripts inherit the app's prepared environment.
-- Fish is the Unix interactive shell; PowerShell remains the Windows shell. Homebrew owns Fisher; map the declared `fish_plugins` file with `FileMapping` and call `fisher update` directly during both deployment and upgrade. Keep downloaded plugin files and history machine-local. Shell configuration must not source application helpers.
-- Use Carapace for supported command completions in Fish and PowerShell; retain native completion for unsupported tools and keep fuzzy search/history bindings. Do not duplicate CLI definitions in custom completion specs when the tool already provides dynamic completion.
-- Shell deployment installs native Fish completion with `fish -c 'mc --install-completion'`. PowerShell deployment writes one generated completion file: Typer 0.27.2's `--install-completion` appends to the profile and changes execution policy, so do not use it there. Completion templates ask `mc` dynamically; sync does not regenerate them.
+- PowerShell loads its generated environment without invoking Python or parsing dotenv. Machine-specific extras use profile-relative `profile.mc.ps1` links. Unix shell scripts execute directly: the OS handles shebangs. Use POSIX `/bin/sh` for `.sh` scripts, not Bash or Zsh. Keep failure handling POSIX-compatible; capture fallible command output before piping it rather than relying on `pipefail`. The runner neither parses shebangs nor changes executable bits; checks enforce those bits and fix scripts normalize them. Scripts inherit the app's prepared environment.
+- PowerShell 7 (`pwsh`) is the only interactive shell on macOS, Windows, and WSL2. Homebrew installs the stable PowerShell cask on macOS and formula on WSL; Scoop owns it on Windows. Unix deployment registers `pwsh` as the login shell. POSIX `sh` remains available for scripts and bootstrap. Keep downloaded modules and history machine-local. Shell configuration must not source application helpers.
+- Use Carapace for supported command completions in PowerShell; retain native completion for unsupported tools and keep fuzzy search/history bindings. Do not duplicate CLI definitions in custom completion specs when the tool already provides dynamic completion.
+- Load native `mc` completion from PowerShell through `mc --show-completion`; Typer detects the calling shell. Its `--install-completion` appends to the profile and changes execution policy, so do not use it. Completion templates ask `mc` dynamically; sync does not regenerate them.
 - Windows SSH uses the same PowerShell 7 and profile as local terminals. Elevate
   system changes through script-local native PowerShell UAC; keep the whole
   deployment unelevated and do not add recurring link-repair scripts. Scoop owns PowerShell
@@ -190,8 +190,9 @@ diff-tool context from the caller; global Git configuration and authentication r
 available. Internal Unix activation lives in `app/runtime/environment.sh`;
 it must be quiet, read-only, safe before tools are installed, and safe to source repeatedly.
 Windows reads registered machine/user variables without loading PowerShell profiles.
-Shell execution uses the chosen PowerShell interpreter with `-NoProfile` and
-`-File`, without injecting `PSModulePath`. Scripts request native UAC elevation in
+PowerShell script execution prefers `pwsh`, with built-in Windows PowerShell only
+as a bootstrap fallback before `pwsh` is installed. Use `-NoProfile` and `-File`,
+without injecting `PSModulePath`. Scripts request native UAC elevation in
 a separate visible administrator process and pass required values as explicit
 arguments; output stays in that process rather than being relayed by the runner.
 
@@ -260,6 +261,7 @@ or add special config entrypoints outside the module declaration system.
 - Homelab is a single-user, Tailscale-private system: prefer minimal application login friction; never enable public exposure to achieve it
 - Media acquisition uses Usenet through Weaver only
 - Preserve runtime data and downloaded media; avoid extra backup trees or folder layouts unless actually required
+- Homelab backups are for rolling back bad setup, deployments, and upgrades. Keep recovery local and minimal; do not add off-site storage, bulk-media backups, or disaster-recovery infrastructure unless explicitly requested. Important personal data is managed separately in iCloud and 1Password.
 - In Docker Compose files, keep reusable extension anchors first and named volumes last; preserve established section markers and ordering when editing. The root project includes the gateway, media, and Homepage configuration.
 - The dashboard uses Homepage; its user-facing name and Tailscale Service identity are `dashboard`. Keep application-internal Homepage names where required. Use one Tailscale Services gateway with central static routes in a JSON template and native Homepage Docker labels beside each app, not per-app sidecars or service-discovery generators. Static dashboard entries are for physical-machine widgets. Use `tag:homelab` for the gateway and all its Services, adding `tag:media` only to Services family may access. Use these tags for access and auto-approval, not per-service policy lists or a separate gateway tag. Keep the tailnet DNS name dynamic through configuration, not hardcoded in service routes. Keep ordinary app additions in Compose and Tailscale Admin; do not add dependencies or test-only metadata to cross-check personal configuration. Never enable Funnel or host port publication for these services.
 
