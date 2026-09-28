@@ -131,7 +131,7 @@ disabled = false
 [git_commit]
 only_detached = false
 tag_disabled = false
-tag_symbol = " "
+tag_symbol = "  "
 format = "[$tag_symbol](purple)[$tag]($style) "
 style = "bold bright-black"
 disabled = false

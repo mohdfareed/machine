@@ -108,12 +108,13 @@ def test_replaces_other_symlink_without_changing_its_source(tmp_path, dangling):
     if not dangling:
         previous_source.write_text("existing")
     target.symlink_to(previous_source)
+    original_link = target.readlink()
     mapping = FileMapping(source=source, target=target)
 
     machine_files.deploy_file(mapping, env={}, dry_run=True)
-    assert target.readlink() == previous_source
+    assert target.readlink() == original_link
     machine_files.deploy_file(mapping, env={}, dry_run=False)
-    assert target.readlink() == source
+    assert target.is_symlink() and target.samefile(source)
     assert target.read_text() == "new"
     assert not (tmp_path / "target.backup").exists()
     if not dangling:
@@ -133,7 +134,7 @@ def test_permissions_apply_to_correct_link_without_preview_mutation(tmp_path):
     assert stat.S_IMODE(source.stat().st_mode) == 0o644
     machine_files.deploy_file(mapping, env={}, dry_run=False)
     assert stat.S_IMODE(source.stat().st_mode) == 0o600
-    assert target.readlink() == source
+    assert target.is_symlink() and target.samefile(source)
     assert not (tmp_path / "target.backup").exists()
 
 
@@ -177,7 +178,7 @@ def test_windows_acl_reset_clears_explicit_grants_and_preview_does_not_write(mon
                 *suffix,
             ],
         ]
-    assert target.readlink() == source
+    assert target.is_symlink() and target.samefile(source)
 
 
 def test_numbered_backups_preserve_existing_files_and_dangling_links(tmp_path):
@@ -189,6 +190,7 @@ def test_numbered_backups_preserve_existing_files_and_dangling_links(tmp_path):
     backup.write_text("older")
     dangling_backup = tmp_path / "settings.json.backup.1"
     dangling_backup.symlink_to(tmp_path / "missing")
+    original_link = dangling_backup.readlink()
     new_backup = tmp_path / "settings.json.backup.2"
     mapping = FileMapping(source=source, target=target)
     machine_files.deploy_file(mapping, env={}, dry_run=True)
@@ -197,7 +199,7 @@ def test_numbered_backups_preserve_existing_files_and_dangling_links(tmp_path):
     assert not new_backup.exists()
     machine_files.deploy_file(mapping, env={}, dry_run=False)
     assert backup.read_text() == "older"
-    assert dangling_backup.readlink() == tmp_path / "missing"
+    assert dangling_backup.readlink() == original_link
     assert new_backup.read_text() == "existing"
     assert os.path.samefile(source, target)
 
@@ -239,5 +241,5 @@ def test_windows_acl_failure_preserves_link_and_backup(monkeypatch, tmp_path, ex
     else:
         assert caught.value is failure
         assert not (tmp_path / "target.backup").exists()
-    assert target.readlink() == source
+    assert target.is_symlink() and target.samefile(source)
     assert source.read_text() == "settings"

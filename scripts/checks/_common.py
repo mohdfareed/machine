@@ -15,6 +15,11 @@ def run(*command: str) -> None:
         raise SystemExit(result.returncode)
 
 
+def output(*args):
+    """Run from the repository root and return the output as a string."""
+    return subprocess.check_output(args, text=True).strip()
+
+
 def files(pattern: str) -> Iterator[Path]:
     """Find source files in the application, configuration, and scripts."""
     for folder in ("app", "config", "machines", "scripts"):

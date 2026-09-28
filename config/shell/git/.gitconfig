@@ -19,6 +19,8 @@
 ; git commands
 [fetch]
     prune = true ; remove stale remote-tracking branches
+[push]
+	followTags = true ; push tags when pushing branches
 [pull]
     rebase = true ; rebase automatically on pull
 [merge]
