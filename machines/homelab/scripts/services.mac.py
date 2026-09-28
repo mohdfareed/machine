@@ -2,7 +2,6 @@
 """Deploy the homelab's single Compose project."""
 
 import os
-import runpy
 import shutil
 import subprocess
 import time
@@ -11,16 +10,7 @@ from pathlib import Path
 
 def main() -> None:
     """Check storage, then deploy services with their vault references."""
-    with _operation_lock():
-        _deploy()
 
-
-def _operation_lock():
-    helper = Path(__file__).resolve().parent.parent / "backup/state.py"
-    return runpy.run_path(str(helper))["operation_lock"]()
-
-
-def _deploy() -> None:
     # Refuse an unmounted share rather than writing media into an empty local folder.
     media = Path(os.environ["MC_HOMELAB_MEDIA_DIR"])
     if not media.is_mount():
