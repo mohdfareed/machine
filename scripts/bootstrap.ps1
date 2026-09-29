@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
-$ErrorActionPreference = "Stop"
 param([switch]$Deploy)
+$ErrorActionPreference = "Stop"
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Dependencies
@@ -27,12 +27,14 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
 # Ensure git is available.
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     winget install "git.git"
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Update-Path
 }
 
 # Ensure uv is available.
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     winget install "astral-sh.uv"
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Update-Path
 }
 
@@ -51,10 +53,13 @@ else {
 # Clone repo if needed.
 if (-not (Test-Path "$env:MC_HOME\.git")) {
     git clone https://github.com/mohdfareed/machine.git "$env:MC_HOME"
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
 # Install `mc` with uv, forcing an update if already installed.
 uv tool install $env:MC_HOME --editable --force
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 if ($Deploy) {
     uv run --project $env:MC_HOME mc deploy
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }

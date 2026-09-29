@@ -4,6 +4,9 @@
 # Aliases
 # ═════════════════════════════════════════════════════════════════════════════
 
+# Windows built-in aliases shadow similarly named functions.
+Remove-Item Alias:cat, Alias:ls -Force -ErrorAction SilentlyContinue
+
 function cat { bat --color=auto --paging=never @args }
 carapace bat powershell | Out-String | Invoke-Expression
 Register-ArgumentCompleter -Native -CommandName cat `
