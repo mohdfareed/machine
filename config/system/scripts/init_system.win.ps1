@@ -26,7 +26,17 @@ if ($Admin) {
 }
 
 # Allow the deployed PowerShell profile to load for the invoking user.
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+try {
+    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+}
+catch {
+    # Allow overrides if the user has already set a more permissive policy.
+    if ($_.FullyQualifiedErrorId -notlike 'ExecutionPolicyOverride,*' -or
+        (Get-ExecutionPolicy -Scope CurrentUser) -ne 'RemoteSigned' -or
+        (Get-ExecutionPolicy) -ne 'Bypass') {
+        throw
+    }
+}
 
 # Resolve the selected hostname and inspect this user's WSL distributions before UAC.
 $Hostname = $env:MC_ID
