@@ -10,7 +10,10 @@ $PSNativeCommandUseErrorActionPreference = $false
 if ($Admin) {  # Admin version.
     # Enable Windows containers and their Hyper-V isolation before installing Docker.
     Write-Host "enabling container features..."
-    $features = @('Containers', 'Microsoft-Hyper-V-All')
+    $features = @(
+        'Containers'
+        'Microsoft-Hyper-V-All'
+    )
     foreach ($name in $features) {
         $feature = Get-WindowsOptionalFeature -Online -FeatureName $name
         if ($feature.State -eq 'Enabled') { continue }
@@ -22,7 +25,9 @@ if ($Admin) {  # Admin version.
 
 # Elevate machine settings without changing the user who owns the WinGet pin.
 $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"", '-Admin')
-$process = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList $arguments `
+# Use the native servicing host, not Microsoft Store PowerShell.
+$powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+$process = Start-Process -FilePath $powershell -ArgumentList $arguments `
     -Verb RunAs -Wait -PassThru
 if ($process.ExitCode -ne 0) { exit $process.ExitCode }
 
