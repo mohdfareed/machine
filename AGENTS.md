@@ -190,8 +190,9 @@ diff-tool context from the caller; global Git configuration and authentication r
 available. Internal Unix activation lives in `app/runtime/environment.sh`;
 it must be quiet, read-only, safe before tools are installed, and safe to source repeatedly.
 Windows reads registered machine/user variables without loading PowerShell profiles.
-PowerShell script execution prefers `pwsh`, with built-in Windows PowerShell only
-as a bootstrap fallback before `pwsh` is installed. Use `-NoProfile` and `-File`,
+PowerShell script execution prefers `pwsh`; built-in Windows PowerShell is available
+for bootstrap and native Windows servicing. Interactive shells remain PowerShell 7.
+Use `-NoProfile` and `-File`,
 without injecting `PSModulePath`. Scripts request native UAC elevation in
 a separate visible administrator process and pass required values as explicit
 arguments; output stays in that process rather than being relayed by the runner.
@@ -230,6 +231,7 @@ or add special config entrypoints outside the module declaration system.
 - Keep substantive Python out of shell strings; put it in a normal `.py` file and have the shell entrypoint invoke it
 - Avoid trivial helper wrappers like `def _target(name): return str(base / name)`; use `str(base / path)` directly unless the helper adds real behavior
 - Keep type annotations readable: use named models for structured results instead of opaque positional tuples; use aliases when only the type expression needs a concise name.
+- Never iterate directly over an inline literal list of names in a `for`/`foreach` loop. Declare the names in a descriptively named collection before the loop, with one item per line, then iterate over that collection. Apply this across languages.
 - If a package/file/script list is just static data used once, keep it inline in the `Module(...)` or `Machine(...)` definition; only extract it when there is real logic or reuse. Keep user-edited selections one complete item per line so entries can be changed or commented independently; do not reduce configurable URLs to fragments of a shared template.
 - Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration. Assert only the fields and effects relevant to the behavior under test; unrelated environment variables, packages, or services must not require test updates.
 - Git integration tests must clear inherited `GIT_*` variables before their first Git command and isolate user/system configuration. Temporary working directories alone do not isolate repository metadata or the index.

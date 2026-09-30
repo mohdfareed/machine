@@ -260,3 +260,52 @@ if ($global:featureAttempts.Count -le 2 -or
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("outcome", ["success", "failure", "restart"])
+def test_ssh_skips_installed_capabilities_and_stops_on_install_failure(tmp_path, outcome):
+    powershell = shutil.which("pwsh") or shutil.which("powershell.exe")
+    if powershell is None:
+        pytest.skip("PowerShell is unavailable")
+    script = machine_env.ROOT / "config/ssh/scripts/init_ssh.win.ps1"
+    harness = tmp_path / "ssh.ps1"
+    harness.write_text(
+        r"""
+param($ScriptPath, $Outcome)
+function Get-WindowsCapability {
+    param([switch]$Online, $Name)
+    $state = if ($Name -like 'OpenSSH.Client*') { 'Installed' } else { 'NotPresent' }
+    [pscustomobject]@{ State = $state }
+}
+function Add-WindowsCapability {
+    param([switch]$Online, $Name)
+    if ($Name -notlike 'OpenSSH.Server*') { throw 'unexpected installation' }
+    Write-Host 'install-server'
+    if ($Outcome -eq 'failure') { throw 'installation failed' }
+    [pscustomobject]@{ RestartNeeded = $Outcome -eq 'restart' }
+}
+function Get-Service { 'sshd' }
+function Set-Service { }
+function Start-Service { 'service-started' }
+& $ScriptPath -Admin
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [
+            powershell,
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(harness),
+            str(script),
+            outcome,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.stdout.count("install-server") == 1, result.stdout + result.stderr
+    assert (result.returncode == 0) == (outcome == "success"), result.stdout + result.stderr
+    assert ("service-started" in result.stdout) == (outcome == "success")
