@@ -24,6 +24,7 @@ def install_packages(packages: list[Package], *, env: dict[str, str], dry_run: b
             run(package.cmd, env=env, dry_run=dry_run, check=True)
             continue
 
+        # TODO: Query installed packages in advance, including `winget`.
         # Query and cache each package; skip packages already installed.
         package_id = package.sources[source]
         key = (source, str(package_id))

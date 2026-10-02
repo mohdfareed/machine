@@ -42,7 +42,7 @@ data; never expose credentials or secret values in output.
 
 ## Commands
 
-- `./scripts/check.py` on Unix; `uv run --no-sync python scripts/check.py` on Windows - Non-mutating repository validation entrypoints (always use these to validate). Keep `scripts/checks/` to 4–6 scripts total; group related tools rather than add one wrapper per command. Check groups can be rerun with `uv run --no-sync python`. Check/fix take no machine selection and never require deployment managers or Full Disk Access. Manifest correctness is covered by tests loading each machine's platform branches; host readiness belongs to explicit `mc validate`, not repository checks. CI uses named check steps, native tool output, and pytest artifacts; do not add custom diagnostic parsers or a reporting layer for checks. Cross-platform configuration tests do not certify native deployment or WSL execution.
+- `./scripts/check.py` on Unix; `uv run --no-sync python scripts/check.py` on Windows - Non-mutating repository validation entrypoints (always use these to validate). Keep `scripts/checks/` to 4–6 scripts total; group related tools rather than add one wrapper per command. Check groups can be rerun with `uv run --no-sync python`. Check/fix take no machine selection and never require deployment managers or Full Disk Access. Validate manifest correctness and host readiness through explicit `mc validate`, not configuration tests. CI uses named check steps, native tool output, and pytest artifacts; do not add custom diagnostic parsers or a reporting layer for checks. App tests do not certify native deployment or WSL execution.
 - `./scripts/fix.py` on Unix; `uv run python scripts/fix.py` on Windows - Complete pre-commit preparation: upgrade and sync dependencies, fix unambiguous spelling without renaming files, format, auto-fix lint, and normalize Unix script permissions before re-running checks
 - `uv run mc --help` - Run CLI in dev
 - `--dry-run`/`-n` belongs only to `deploy`, `upgrade` and `sync`, after the command name.
@@ -196,6 +196,8 @@ Use `-NoProfile` and `-File`,
 without injecting `PSModulePath`. Scripts request native UAC elevation in
 a separate visible administrator process and pass required values as explicit
 arguments; output stays in that process rather than being relayed by the runner.
+Administrator windows must prompt with `Read-Host 'Press Enter to exit'` after
+completing their work, before returning control to deployment.
 
 ### Configuration Ownership and State
 
@@ -233,7 +235,7 @@ or add special config entrypoints outside the module declaration system.
 - Keep type annotations readable: use named models for structured results instead of opaque positional tuples; use aliases when only the type expression needs a concise name.
 - Never iterate directly over an inline literal list of names in a `for`/`foreach` loop. Declare the names in a descriptively named collection before the loop, with one item per line, then iterate over that collection. Apply this across languages.
 - If a package/file/script list is just static data used once, keep it inline in the `Module(...)` or `Machine(...)` definition; only extract it when there is real logic or reuse. Keep user-edited selections one complete item per line so entries can be changed or commented independently; do not reduce configurable URLs to fragments of a shared template.
-- Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration. Assert only the fields and effects relevant to the behavior under test; unrelated environment variables, packages, or services must not require test updates.
+- Test only code under `app/`; never add tests for repository configuration, machine manifests, setup scripts, or bootstrap scripts. Use temporary mocked checks for those when needed. Test app business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration. Assert only the fields and effects relevant to the behavior under test; unrelated environment variables, packages, or services must not require test updates.
 - Git integration tests must clear inherited `GIT_*` variables before their first Git command and isolate user/system configuration. Temporary working directories alone do not isolate repository metadata or the index.
 - Keep permanent tests minimal and proportionate to the behavior changed. Prefer a few focused regression cases over exhaustive combinations, large fixtures, or test scaffolding. Use temporary tests for broader one-off verification and remove them afterward; do not retain exploratory coverage by default. Reuse existing tests and the standard check entrypoint rather than expanding the suite for every edit. Keep validation focused on the changed behavior; do not run exhaustive exploratory tests or repeatedly run broad checks for small changes.
 - Preserve existing script phase comments, progress messages, command choices, and setup/update behavior when making focused changes
@@ -259,7 +261,7 @@ or add special config entrypoints outside the module declaration system.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - Keep storage setup minimal: check the media mount and required directories before starting services. The launcher creates only the local state root; Compose owns per-app bind directory creation. Keep service names out of launcher code; do not add storage controllers or automatic data transfers.
 - Use `${VAR:?}` for required shell/Compose variables, without custom error messages
-- Test business logic only: deployment decisions, data preservation, permissions, and failure handling; do not lock down UI wording/layout, retest framework behavior, or snapshot incidental personal configuration
+- Test only app business logic; do not add tests for homelab configuration or machine scripts
 - Homelab is a single-user, Tailscale-private system: prefer minimal application login friction; never enable public exposure to achieve it
 - Media acquisition uses Usenet through Weaver only
 - Preserve runtime data and downloaded media; avoid extra backup trees or folder layouts unless actually required

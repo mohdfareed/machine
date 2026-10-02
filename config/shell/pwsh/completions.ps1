@@ -43,8 +43,8 @@ Set-PsFzfOption -PSReadlineChordReverseHistoryArgs 'Alt+a'
 carapace _carapace powershell | Out-String | Invoke-Expression
 
 # Load user completions.
-Get-ChildItem "$ConfigHome/completions/*.ps1" -ErrorAction Ignore |
-    ForEach-Object { . $_.FullName }
+Get-ChildItem "$ConfigHome/Completions/*.ps1" -ErrorAction Ignore |
+ForEach-Object { . $_.FullName }
 
 # Enable tab completions (50ms).
 Import-Module PSCompletions

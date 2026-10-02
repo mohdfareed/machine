@@ -41,3 +41,5 @@ Install-Feature -Feature 'Containers-DisposableClientVM'
 if ($failed.Count) {
     throw "Failed Windows features: $($failed -join ', ')"
 }
+
+Read-Host 'Press Enter to exit'

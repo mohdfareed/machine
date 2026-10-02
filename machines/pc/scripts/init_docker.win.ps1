@@ -7,7 +7,8 @@ $PSNativeCommandUseErrorActionPreference = $false
 # Initialization
 # ═════════════════════════════════════════════════════════════════════════════
 
-if ($Admin) {  # Admin version.
+if ($Admin) {
+    # Admin version.
     # Enable Windows containers and their Hyper-V isolation before installing Docker.
     Write-Host "enabling container features..."
     $features = @(
@@ -20,6 +21,7 @@ if ($Admin) {  # Admin version.
         Enable-WindowsOptionalFeature -Online -FeatureName $name -All -NoRestart
     }
 
+    Read-Host 'Press Enter to exit'
     return
 }
 

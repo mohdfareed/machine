@@ -22,6 +22,7 @@ if ($Admin) {
         wsl --install --no-launch
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
+    Read-Host 'Press Enter to exit'
     return
 }
 

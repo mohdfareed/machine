@@ -21,6 +21,7 @@ if ($Admin) {
     Get-Service -Name sshd | Set-Service -StartupType Automatic
     # Generate the default sshd_config on a fresh installation.
     Start-Service -Name sshd
+    Read-Host 'Press Enter to exit'
     return
 }
 

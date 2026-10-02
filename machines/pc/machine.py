@@ -51,7 +51,10 @@ manifest = Machine(
         # Utilities
         Package(name="raycast", winget="9PFXXSHC64H3"),
         Package(name="craft", winget="LukiLabs.Craft"),
-        Package(name="spotify", winget="Spotify.Spotify"),
+        # FIXME: Spotify installer fails with winget error: -1978335212
+        # Installer failed with exit code: 29
+        # Spotify Installer - A Windows Store install of Spotify is already on the system.
+        # Package(name="spotify", winget="Spotify.Spotify"),
         Package(name="plex", winget="Plex.Plex"),
         Package(name="discord", winget="Discord.Discord"),
         # ─────────────────────────────────────────────────────────────────────

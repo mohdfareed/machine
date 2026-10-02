@@ -9,8 +9,8 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 
 # Install mc completion.
 $ConfigHome = Split-Path -Parent $PROFILE.CurrentUserAllHosts
-New-Item -ItemType Directory -Force "$ConfigHome/completions" | Out-Null
-mc --show-completion > "$ConfigHome/completions/mc.ps1"
+New-Item -ItemType Directory -Force "$ConfigHome/Completions" | Out-Null
+mc --show-completion > "$ConfigHome/Completions/mc.ps1"
 
 if (-not $IsWindows) {
     # Add Carapace bridge to brew zsh completion.
@@ -23,6 +23,6 @@ if (-not $IsWindows) {
 # Install interactive modules for the current PowerShell 7 user.
 Install-Module -Name PSFzf -Scope CurrentUser
 Install-Module -Name PSCompletions -Scope CurrentUser
-Update-Help -ErrorAction Continue
+# Update-Help -ErrorAction Continue # TODO: Move to `up_` script due to speed.
 psc config menu filter_mode subsequence
 psc update

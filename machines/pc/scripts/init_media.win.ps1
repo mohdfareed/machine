@@ -70,21 +70,20 @@ if (-not $share) {
 $ruleName = 'MC-Media-SMB'
 $rule = Get-NetFirewallRule | Where-Object Name -eq $ruleName
 $settings = @{
-    DisplayName = 'Media SMB (Private LAN)'
-    Enabled = 'True'
-    Direction = 'Inbound'
-    Action = 'Allow'
-    Profile = 'Private'
-    Protocol = 'TCP'
-    LocalPort = 445
-    RemoteAddress = 'LocalSubnet'
+    Enabled             = 'True'
+    Direction           = 'Inbound'
+    Action              = 'Allow'
+    Profile             = 'Private'
+    Protocol            = 'TCP'
+    LocalPort           = 445
+    RemoteAddress       = 'LocalSubnet'
     EdgeTraversalPolicy = 'Block'
 }
 if ($rule) {
-    Set-NetFirewallRule -Name $ruleName @settings
+    Set-NetFirewallRule -Name $ruleName -NewDisplayName 'Media SMB' @settings
 }
 if (-not $rule) {
-    New-NetFirewallRule -Name $ruleName @settings | Out-Null
+    New-NetFirewallRule -Name $ruleName -DisplayName 'Media SMB' @settings | Out-Null
 }
 
 # Keep storage available on AC without requiring automatic sign-in.
@@ -93,3 +92,5 @@ powercfg /change standby-timeout-ac 0
 if ($LASTEXITCODE -ne 0) { throw 'Could not disable automatic sleep' }
 powercfg /change hibernate-timeout-ac 0
 if ($LASTEXITCODE -ne 0) { throw 'Could not disable automatic hibernation' }
+
+Read-Host 'Press Enter to exit'

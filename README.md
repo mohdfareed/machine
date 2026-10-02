@@ -150,8 +150,8 @@ scripts run on all platforms. Tags narrow that selection, e.g. `setup.mac.sh`:
 
 On machines selecting `onepass`, sign in and enable **SSH Agent**, **Generate
 SSH config files with bookmarked hosts**, and **Developer Integrations** in
-Developer settings. On an existing Windows installation, stop and disable
-Windows' `ssh-agent` service if enabled.
+Developer settings. Restart 1Password after this handoff so
+its SSH agent can take over.
 
 Sign in to Tailscale to SSH into connected machines using keys stored in 1Password.
 

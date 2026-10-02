@@ -19,6 +19,7 @@ if ($Admin) {
 
     Set-Content $sshdConfig
     Restart-Service sshd
+    Read-Host 'Press Enter to exit'
     return
 }
 
