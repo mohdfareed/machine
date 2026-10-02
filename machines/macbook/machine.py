@@ -25,41 +25,38 @@ manifest = Machine(
     ],
     files=[],
     packages=[
-        # Dev tools
+        # Development
         Package(brew="gh"),
         Package(name="xcode", mas=497799835),
         Package(cask="docker-desktop"),
         Package(brew="gnu-time"),  # benchmarking/profiling
-        # Files & Storage
+        # Files
         Package(brew="rsync"),  # file sync
         Package(brew="7zip", winget="7zip.7zip"),  # archiving
         Package(cask="macpacker"),  # archives
         Package(cask="tablepro"),  # databases
-        # Content Processing
+        # Processing
         Package(brew="pandoc", winget="JohnMacFarlane.Pandoc"),  # documents
         Package(brew="imagemagick", winget="ImageMagick.Q16-HDRI"),  # images
         Package(brew="sox", winget="ChrisBagwell.SoX"),  # audio
         Package(brew="ffmpeg", winget="Gyan.FFmpeg"),  # video
         Package(brew="yt-dlp", winget="yt-dlp.yt-dlp"),  # video downloader
         Package(brew="tesseract", winget="tesseract-ocr.tesseract"),  # ocr
-        # Productivity & Design
+        # Productivity
         Package(cask="craft"),
-        Package(cask="figma"),
-        Package(cask="sf-symbols"),
-        Package(cask="font-computer-modern"),
         Package(name="keynote", mas=409183694),
         Package(name="numbers", mas=409203825),
         Package(name="pages", mas=409201541),
-        # System & Desktop
+        # Design
+        Package(cask="figma"),
+        Package(cask="sf-symbols"),
+        Package(cask="font-computer-modern"),
+        # System
         Package(cask="tailscale"),  # vpn
         Package(cask="windows-app"),  # win remote desktop
-        Package(cask="raycast"),  # spotlight
-        Package(cask="mos"),  # mouse settings
-        Package(cask="swish"),  # trackpad gestures
-        Package(cask="monitorcontrol"),  # external monitors (alt -> https://displaybuddy.app)
         Package(name="unfold", mas=6760872758),  # quickLook plugin
-        Package(cask="dockdoor"),  # alt-tab preview
-        Package(cask="alcove"),  # dynamic island
+        Package(cask="swish"),  # trackpad gestures
+        Package(cask="vorssaint"),  # utilities
         # Browser
         Package(name="noir", mas=1592917505),  # web dark mode
         Package(cask="adguard"),  # ad blocker
