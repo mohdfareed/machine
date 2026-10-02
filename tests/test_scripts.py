@@ -173,7 +173,8 @@ param($ScriptPath, [int]$ExitCode)
 $ErrorActionPreference = 'Stop'
 function Start-Process {
     param($FilePath, $ArgumentList, $Verb, [switch]$Wait, [switch]$PassThru)
-    if ($Verb -ne 'RunAs' -or -not $Wait -or -not $PassThru -or
+    $nativeHost = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    if ($FilePath -ne $nativeHost -or $Verb -ne 'RunAs' -or -not $Wait -or -not $PassThru -or
         $ArgumentList[-1] -ne '-Admin' -or $ArgumentList[-2] -ne "`"$ScriptPath`"") {
         throw 'unexpected elevation arguments'
     }
@@ -199,6 +200,7 @@ exit $LASTEXITCODE
             str(script),
             str(exit_code),
         ],
+        env={**os.environ, "SystemRoot": str(tmp_path / "Windows")},
         capture_output=True,
         text=True,
         timeout=30,

@@ -35,7 +35,7 @@ module = Module(
         Package(name="git", brew="git", winget="Git.Git"),
         Package(name="git-lfs", brew="git-lfs", winget="GitHub.GitLFS"),
         # shell
-        Package(brew="powershell", cask="powershell", scoop="pwsh"),
+        Package(brew="powershell", cask="powershell@preview", scoop="pwsh"),
         Package(brew="carapace", winget="rsteube.Carapace"),  # command completions
         Package(brew="starship", winget="Starship.Starship"),  # prompt theme
         # files
