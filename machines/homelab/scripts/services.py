@@ -11,10 +11,13 @@ from pathlib import Path
 def main() -> None:
     """Check storage, then deploy services with their vault references."""
 
-    # Refuse an unmounted share rather than writing media into an empty local folder.
+    # Require a mounted volume so missing storage cannot fall back to the internal disk.
     media = Path(os.environ["MC_HOMELAB_MEDIA_DIR"])
-    if not media.is_mount():
-        raise FileNotFoundError(f"Mount the PC's Media share at {media} before deployment")
+    volume = media.resolve()
+    while volume.parent != Path("/Volumes") and volume != volume.parent:
+        volume = volume.parent
+    if volume.parent != Path("/Volumes") or not volume.is_mount():
+        raise FileNotFoundError(f"Mount the volume containing {media} before deployment")
     for name in ("movies", "series", "anime", "downloads"):
         if not (media / name).is_dir():
             raise FileNotFoundError(f"Media directory missing: {media / name}")

@@ -15,6 +15,7 @@ $env:PIP_REQUIRE_VIRTUALENV = $true
 $env:GOPATH = Join-Path $HOME '.go'
 
 # Define binary paths.
+$env:PATH += "$([IO.Path]::PathSeparator)/usr/local/bin/"
 $env:PATH += "$([IO.Path]::PathSeparator)$HOME/.local/bin"
 $env:PATH += "$([IO.Path]::PathSeparator)$HOME/.docker/bin"
 $env:PATH += [IO.Path]::PathSeparator + (Join-Path $env:GOPATH 'bin')
