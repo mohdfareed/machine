@@ -168,7 +168,7 @@ Installed-tool availability never changes source selection.
 - Execution order: missing manager setup -> `init_*` scripts -> files -> packages -> remaining scripts
 - `Machine.env` declares public variables as strings or paths. The loader normalizes them and sets the selected `MC_ID`; scripts receive these values directly. Keep expressions in Python, not a second interpolation language. Set `GOPATH` to `~/.go` directly in the PowerShell profile; do not add manifest wiring for this shared shell setting.
 - Deployment saves the default selection in the app config directory's `machine` file. Write literal `mc/env.ps1` assignments in PowerShell's user profile directory, using the same directory lookup as profile deployment; PowerShell sources it relative to `$PROFILE.CurrentUserAllHosts`. On Unix, the profile directory is `~/.config/powershell`, respecting `XDG_CONFIG_HOME`; on Windows, it is `PowerShell` under the user's Documents directory, including redirected Documents. Redeployment refreshes the environment after manifest changes. Never snapshot inherited variables or secrets. The app derives its root from its code; `MC_HOME` is only a bootstrap destination option.
-- Secrets belong to 1Password and the consuming application. The app does not load private dotenv files or manage private SSH keys. The homelab Compose root commits reference-only `secrets.env`; its launcher uses `op run --env-file=secrets.env`. Homepage consumes the homelab's local Tailscale Environment through Compose. Prefer vault, item, and field IDs so renaming them does not break references. Keep secret values out of Python and the general deployment environment.
+- Secrets belong to 1Password and the consuming application. The app does not load private dotenv files or manage private SSH keys. Each homelab Compose project commits an ordered `env.txt` list and optional reference-only `secrets.env`. Its launcher runs each project through a separate `op run` with the CLI beta and a reusable machine-local service-account token. Deployment does not sign in through the desktop app or read desktop-mounted Environment files. A missing token prompts privately in an interactive terminal. Check secret loading with a no-op child before runtime changes; loading failures offer explicit private token replacement and recheck all projects. Docker failures never prompt for credentials. Noninteractive failures stop; declining or empty input preserves the saved token. Prefer vault, item, and field IDs so renaming them does not break references. Keep secret values out of Python and the general deployment environment.
 - PowerShell loads its generated environment without invoking Python or parsing dotenv. Machine-specific extras use profile-relative `profile.mc.ps1` links. Unix shell scripts execute directly: the OS handles shebangs. Use POSIX `/bin/sh` for `.sh` scripts, not Bash or Zsh. Keep failure handling POSIX-compatible; capture fallible command output before piping it rather than relying on `pipefail`. The runner neither parses shebangs nor changes executable bits; checks enforce those bits and fix scripts normalize them. Scripts inherit the app's prepared environment.
 - PowerShell 7 (`pwsh`) is the only interactive shell on macOS, Windows, and WSL2. Homebrew installs the stable PowerShell cask on macOS and formula on WSL; Scoop owns it on Windows. Unix deployment registers `pwsh` as the login shell. POSIX `sh` remains available for scripts and bootstrap. Keep downloaded modules and history machine-local. Shell configuration must not source application helpers.
 - Use Carapace for supported command completions in PowerShell; retain native completion for unsupported tools and keep fuzzy search/history bindings. Do not duplicate CLI definitions in custom completion specs when the tool already provides dynamic completion.
@@ -251,13 +251,15 @@ or add special config entrypoints outside the module declaration system.
 
 ## Homelab
 
+- Use the official Tailscale Docker image with the `latest` tag; do not pin its version.
+
 - Homelab belongs entirely to `machines/homelab`, not a shared module. The M1 runs all services with local databases and state; the PC shares bulk media over SMB and retains Docker for experiments. Both hosts stay awake for continuous media availability. Verify SMB mounting, Docker startup, and reboot recovery natively before treating the deployment as ready.
 - Every macOS homelab deployment requires a manual review of System Settings -> General -> Sharing; the owner configures shared folders, permissions, and remote access there. Keep this requirement in the homelab machine notes, not reminder scripts.
 - Do not SSH to, deploy to, or otherwise mutate the homelab until the user has
   reviewed the repository changes and explicitly approved deployment
 - Compose projects run from their repository directories; do not maintain a
   parallel tree of service links or a custom backup engine.
-- Keep service selection and storage paths in configuration; use the single homelab Compose project with native includes, not a multi-host discovery framework.
+- Keep service selection and storage paths in configuration. Discover independent Compose projects only in visible immediate `docker/` subdirectories containing `compose.yaml`; share the external `homelab` network. Each project selects its own Environments without injecting their values into another project's process.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - Keep storage setup minimal: check the media mount and required directories before starting services. The launcher creates only the local state root; Compose owns per-app bind directory creation. Keep service names out of launcher code; do not add storage controllers or automatic data transfers.
 - Use `${VAR:?}` for required shell/Compose variables, without custom error messages
@@ -265,7 +267,15 @@ or add special config entrypoints outside the module declaration system.
 - Homelab is a single-user, Tailscale-private system: prefer minimal application login friction; never enable public exposure to achieve it
 - Media acquisition uses Usenet through Weaver only
 - Preserve runtime data and downloaded media; avoid extra backup trees or folder layouts unless actually required
-- In Docker Compose files, keep reusable extension anchors first and named volumes last; preserve established section markers and ordering when editing. The root project includes the gateway, media, and Homepage configuration.
+- Backups are an on-demand agent workflow using existing tools, not a custom program.
+  Inventory configuration, bind-mounted application data, Docker volumes, and their users;
+  make a consistent capture before any pruning, stopping only affected writers when needed.
+  Verify archives and copied database health, restore prior service operation, and check health.
+  Prune only explicitly approved unused volumes after their backups verify; recheck attachments
+  before deletion. On failed verification, stop cleanup and preserve the copies for recovery.
+  Keep the latest seven successful snapshots unless the user specifies another count.
+  Never delete media or existing recovery copies; protect credential-bearing backups.
+- In Docker Compose files, keep reusable extension anchors first and named volumes last; preserve established section markers and ordering when editing. Gateway, media, and Homepage are independent projects.
 - The dashboard uses Homepage; its user-facing name and Tailscale Service identity are `dashboard`. Keep application-internal Homepage names where required. Use one Tailscale Services gateway with central static routes in a JSON template and native Homepage Docker labels beside each app, not per-app sidecars or service-discovery generators. Static dashboard entries are for physical-machine widgets. Use `tag:homelab` for the gateway and all its Services, adding `tag:media` only to Services family may access. Use these tags for access and auto-approval, not per-service policy lists or a separate gateway tag. Keep the tailnet DNS name dynamic through configuration, not hardcoded in service routes. Keep ordinary app additions in Compose and Tailscale Admin; do not add dependencies or test-only metadata to cross-check personal configuration. Never enable Funnel or host port publication for these services.
 
 ## Documentation and Communication

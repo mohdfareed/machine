@@ -1,0 +1,55 @@
+name: homelab-gateway
+
+# =============================================================================
+# MARK: Gateway
+# =============================================================================
+
+services:
+  homelab-gateway:
+    image: tailscale/tailscale:latest
+    container_name: homelab-gateway
+    hostname: homelab-gateway
+    restart: unless-stopped
+    # Resolve the template before Tailscale reads its Serve configuration.
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        sed "s/__TAILNET_NAME__/$${TAILNET_NAME:?}/g" /config/serve.template.json > /tmp/serve.json
+        exec /usr/local/bin/containerboot
+    environment:
+      TAILNET_NAME: ${TAILNET_NAME:?}
+      TS_AUTHKEY: ${TS_DOCKER_AUTHKEY:?}
+      TS_AUTH_ONCE: "true"
+      TS_HOSTNAME: homelab-gateway
+      TS_EXTRA_ARGS: --advertise-tags=tag:homelab
+      TS_ACCEPT_DNS: "false"
+      TS_SERVE_CONFIG: /tmp/serve.json
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "true"
+      TS_EXPERIMENTAL_SERVICE_AUTO_ADVERTISEMENT: "true"
+    configs:
+      - source: tailscale-serve
+        target: /config/serve.template.json
+    volumes:
+      - homelab-gateway-state:/var/lib/tailscale
+
+# =============================================================================
+# MARK: Routes
+# =============================================================================
+
+configs:
+  tailscale-serve:
+    file: ./tailscale-serve.json
+
+networks:
+  default:
+    name: homelab
+    external: true
+
+# =============================================================================
+# MARK: Volumes
+# =============================================================================
+
+volumes:
+  homelab-gateway-state:
+    name: homelab_homelab-gateway-state

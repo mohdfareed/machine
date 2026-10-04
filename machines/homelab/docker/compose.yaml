@@ -1,6 +1,0 @@
-name: homelab
-
-include:
-  - compose.tailscale.yaml
-  - media/compose.yaml
-  - homepage/compose.yaml

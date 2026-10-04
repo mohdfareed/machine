@@ -47,7 +47,8 @@ module = Module(
         ),
         Package(
             name="1password-cli",
-            cask="1password-cli",
+            # TODO: Return to latest stable once it supports 1Password Environments.
+            cask="1password-cli@beta",
             winget="AgileBits.1Password.CLI",
         ),
     ],

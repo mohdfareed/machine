@@ -2,19 +2,18 @@
 
 ## Launcher and secrets
 
-Run the single `homelab` project from this directory, not an included subdirectory.
+Run `mc deploy -m homelab` to deploy each immediate subdirectory containing
+`compose.yaml`. Projects share the `homelab` Docker network.
 
-Authenticate the 1Password CLI first. Keep only secret references in `secrets.env`,
-preferably using vault, item, and field IDs.
+Each project lists its 1Password Environment IDs in `env.txt`, one per line;
+later entries take precedence. Optional `secrets.env` files contain vault references.
+Direct Environment loading requires the 1Password CLI beta.
 
-Mount the homelab's Tailscale Environment locally at `~/tailscale.env` for dashboard
-widget credentials. Keep its values machine-local, not in the manifest or repository.
-
-For direct Compose commands, run from this directory:
-
-```powershell
-op run --env-file=secrets.env -- docker compose up -d
-```
+A missing service-account token prompts privately and
+is saved in `~/.config/machine/credentials/1password-token` with owner-only access.
+If secret loading fails, deployment shows the error and offers private token replacement.
+Declining or entering nothing leaves the saved token unchanged.
+Grant the account access to the selected Environments and referenced vaults.
 
 ## Tailscale routing
 
@@ -28,7 +27,7 @@ op run --env-file=secrets.env -- docker compose up -d
   - tags (`tag:homelab`)
 
 Use the tailnet name without `.ts.net` for `TAILNET_NAME`.
-In `tailscale-serve.json`, use `__TAILNET_NAME__` in route hostnames.
+In `gateway/tailscale-serve.json`, use `__TAILNET_NAME__` in route hostnames.
 
 ```env
 # secrets.env (references, never secret values)
@@ -44,10 +43,8 @@ other tailnet devices must not claim them.
 ## Add a service
 
 Define the app, storage mounts, and `homepage.*` dashboard labels in its Compose
-file; include it from `compose.yaml` if needed. For a user-facing app, add its
-route in `tailscale-serve.json` and matching Service in Tailscale Admin.
-Recreate the gateway after editing routes:
-
-```powershell
-op run --env-file=secrets.env -- docker compose up -d --force-recreate homelab-gateway
-```
+file. For a new project, add a subdirectory with `compose.yaml` and `env.txt`
+(which may be empty), and join its default network to the external `homelab`
+network. Add `secrets.env` only when using vault references. For a user-facing app, add its
+route in `gateway/tailscale-serve.json` and matching Service in Tailscale Admin.
+Recreate the gateway after editing routes by redeploying machine.
