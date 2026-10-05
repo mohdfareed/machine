@@ -98,7 +98,7 @@ services:
 
   watchlist-sync:
     build:
-      context: https://github.com/mohdfareed/watchlist-sync.git#89ce9755b9a8f6daabb95f32e98137e346597007
+      context: https://github.com/mohdfareed/watchlist-sync.git#cf1fc4b078ad8f4544b0e3bcdf222bbf632902f9
       dockerfile: docker/Dockerfile
     container_name: watchlist-sync
     restart: unless-stopped
