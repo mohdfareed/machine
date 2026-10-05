@@ -98,18 +98,17 @@ services:
 
   watchlist-sync:
     build:
-      context: https://github.com/mohdfareed/watchlist-sync.git
+      context: https://github.com/mohdfareed/watchlist-sync.git#89ce9755b9a8f6daabb95f32e98137e346597007
       dockerfile: docker/Dockerfile
     container_name: watchlist-sync
     restart: unless-stopped
     stop_grace_period: 1m # allow for graceful syncing
-    user: "${PUID:-501}:${PGID:-20}"
+    user: "10001:10001"
     environment:
-      <<: *app-env
-      PLEX_SERVER_URL: http://plex:32400
+      TZ: ${MC_HOMELAB_TIMEZONE:?}
+      TRAKT_CLIENT_ID: ${TRAKT_CLIENT_ID:?}
       SCRYER_URL: http://scryer:8080
-      # Allow core-only bootstrap before creating this key; set it before starting sync.
-      SCRYER_API_KEY: "${SCRYER_API_KEY:-}"
+      SCRYER_API_KEY: ${SCRYER_API_KEY:?}
     volumes:
       - type: bind
         source: ${MC_HOMELAB_STORAGE_DIR:?}/watchlist-sync
