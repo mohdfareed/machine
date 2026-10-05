@@ -104,7 +104,7 @@ style = "red"
 symbol = "󰹍 "
 
 [sudo]
-symbol = " "
+symbol = "  "
 disabled = false
 
 [shell]
