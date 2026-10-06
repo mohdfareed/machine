@@ -107,8 +107,9 @@ services:
     environment:
       TZ: ${MC_HOMELAB_TIMEZONE:?}
       TRAKT_CLIENT_ID: ${TRAKT_CLIENT_ID:?}
-      SCRYER_URL: http://scryer:8080
       SCRYER_API_KEY: ${SCRYER_API_KEY:?}
+      SCRYER_URL: http://scryer:8080
+      SYNC_INTERVAL_SEC: 10
     volumes:
       - type: bind
         source: ${MC_HOMELAB_STORAGE_DIR:?}/watchlist-sync
