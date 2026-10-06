@@ -78,7 +78,7 @@
     "option_as_meta": true,
     "shell": {
       "with_arguments": {
-        "program": "pwsh",
+        "program": "/opt/homebrew/bin/pwsh",
         "args": ["-NoLogo"],
       },
     },
