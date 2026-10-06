@@ -14,7 +14,7 @@ manifest = Machine(
         "HOMEPAGE_FAVICON": "mdi-home-analytics",
         # Local state and shared media
         "MC_HOMELAB_STORAGE_DIR": Path.home() / ".homelab",
-        "MC_HOMELAB_MEDIA_DIR": Path("/Volumes/Media"),
+        "MC_HOMELAB_MEDIA_DIR": Path("/Volumes/External HD/Media"),
     },
     modules=[system, onepass, shell, ssh, terminal],
     packages=[
