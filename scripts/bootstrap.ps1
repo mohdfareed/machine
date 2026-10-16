@@ -38,6 +38,13 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     Update-Path
 }
 
+# Ensure same-terminal elevation is available before deployment scripts run.
+if (-not (Get-Command gsudo -ErrorAction SilentlyContinue)) {
+    winget install --id gerardog.gsudo --exact --source winget
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Update-Path
+}
+
 # ═════════════════════════════════════════════════════════════════════════════
 # Bootstrap
 # ═════════════════════════════════════════════════════════════════════════════

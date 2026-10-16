@@ -21,7 +21,6 @@ if ($Admin) {
     Get-Service -Name sshd | Set-Service -StartupType Automatic
     # Generate the default sshd_config on a fresh installation.
     Start-Service -Name sshd
-    Read-Host 'Press Enter to exit'
     return
 }
 
@@ -30,9 +29,7 @@ scoop config no_junction true
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Elevate OpenSSH installation, not the invoking user's Scoop configuration.
-$arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"", '-Admin')
 # Use the native servicing host, not Microsoft Store PowerShell.
 $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-$process = Start-Process -FilePath $powershell -ArgumentList $arguments `
-    -Verb RunAs -Wait -PassThru
-if ($process.ExitCode -ne 0) { exit $process.ExitCode }
+gsudo --direct $powershell -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -Admin
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

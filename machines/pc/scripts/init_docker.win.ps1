@@ -21,17 +21,14 @@ if ($Admin) {
         Enable-WindowsOptionalFeature -Online -FeatureName $name -All -NoRestart
     }
 
-    Read-Host 'Press Enter to exit'
     return
 }
 
 # Elevate machine settings without changing the user who owns the WinGet pin.
-$arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"", '-Admin')
 # Use the native servicing host, not Microsoft Store PowerShell.
 $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-$process = Start-Process -FilePath $powershell -ArgumentList $arguments `
-    -Verb RunAs -Wait -PassThru
-if ($process.ExitCode -ne 0) { exit $process.ExitCode }
+gsudo --direct $powershell -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -Admin
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Docker

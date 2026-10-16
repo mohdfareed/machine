@@ -13,6 +13,7 @@ from app.deployment.packages import install_packages
 from app.deployment.scripts import run_scripts
 from app.runtime import reporting
 from app.runtime.env import get_current_machine, save_machine
+from app.runtime.shell import elevation_cache
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MARK: Deploy Command
@@ -84,26 +85,31 @@ def deploy(
     reporting.heading("Preparing package managers")
     setup_managers(configuration.pkg_managers, env=env, dry_run=dry_run)
 
-    # Prepare the host before linking files or installing packages.
-    reporting.heading("Running init scripts")
-    init_scripts = [script for script in configuration.scripts if script.name.startswith("init_")]
-    run_scripts(init_scripts, env=env, dry_run=dry_run)
+    with elevation_cache(env=env, dry_run=dry_run):
+        # Prepare the host before linking files or installing packages.
+        reporting.heading("Running init scripts")
+        init_scripts = [
+            script for script in configuration.scripts if script.name.startswith("init_")
+        ]
+        run_scripts(init_scripts, env=env, dry_run=dry_run)
 
-    # Deploy files after initialization has prepared their prerequisites.
-    reporting.heading("Deploying files")
-    for mapping in configuration.files:
-        deploy_file(mapping, env=env, dry_run=dry_run)
+        # Deploy files after initialization has prepared their prerequisites.
+        reporting.heading("Deploying files")
+        for mapping in configuration.files:
+            deploy_file(mapping, env=env, dry_run=dry_run)
 
-    # Install missing packages.
-    reporting.heading("Installing packages")
-    install_packages(configuration.packages, env=env, dry_run=dry_run)
+        # Install missing packages.
+        reporting.heading("Installing packages")
+        install_packages(configuration.packages, env=env, dry_run=dry_run)
 
-    # Run the deployment scripts.
-    reporting.heading("Running scripts")
-    post_scripts = [
-        script for script in configuration.scripts if not script.name.startswith(("init_", "up_"))
-    ]
-    run_scripts(post_scripts, env=env, dry_run=dry_run)
+        # Run the deployment scripts.
+        reporting.heading("Running scripts")
+        post_scripts = [
+            script
+            for script in configuration.scripts
+            if not script.name.startswith(("init_", "up_"))
+        ]
+        run_scripts(post_scripts, env=env, dry_run=dry_run)
 
     reporting.plain("")
     reporting.success("Complete.")

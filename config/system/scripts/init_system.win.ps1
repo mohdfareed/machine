@@ -22,7 +22,6 @@ if ($Admin) {
         wsl --install --no-launch
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
-    Read-Host 'Press Enter to exit'
     return
 }
 
@@ -52,11 +51,11 @@ finally {
     $ErrorActionPreference = 'Stop'
 }
 
-$arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"", '-Admin')
-if ($Hostname) { $arguments += @('-Hostname', "`"$Hostname`"") }
+$arguments = @()
+if ($Hostname) { $arguments += @('-Hostname', $Hostname) }
 if ($wslExitCode -ne 0 -or $distros.Count -eq 0) { $arguments += '-InstallWsl' }
 
 # Elevate only machine settings; pass public selections explicitly across UAC.
-$process = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList $arguments `
-    -Verb RunAs -Wait -PassThru
-if ($process.ExitCode -ne 0) { exit $process.ExitCode }
+gsudo --direct (Get-Process -Id $PID).Path -NoProfile -ExecutionPolicy Bypass `
+    -File $PSCommandPath -Admin @arguments
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

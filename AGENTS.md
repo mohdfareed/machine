@@ -148,10 +148,10 @@ Installed-tool availability never changes source selection.
 
 ### Packages and Files
 
-- Machines include only declared modules and their dependencies. Shared OS settings and features belong in the explicitly selected `system` module. Managers are fixed: Homebrew + MAS on macOS, WinGet + Scoop on Windows, and Homebrew on WSL2; never infer managers from packages or PATH. Bootstrap supplies Homebrew and uv on Unix; WinGet supplies uv on Windows. APT is not a package declaration backend; Ubuntu system-package updates belong to a WSL-only `up_` script in `system`, without release upgrades. `BREW` includes casks on macOS. `app/deployment/managers.py` queries MAS/Scoop availability only to decide whether setup is needed, then runs the installer without a post-install presence check. Actual use surfaces failures. Installation and maintenance use the complete resolved manager list; custom scripts follow the same policy.
+- Machines include only declared modules and their dependencies. Shared OS settings and features belong in the explicitly selected `system` module. Managers are fixed: Homebrew + MAS on macOS, WinGet + Scoop on Windows, and Homebrew on WSL2; never infer managers from packages or PATH. Bootstrap supplies Homebrew and uv on Unix; WinGet supplies uv and gsudo on Windows. APT is not a package declaration backend; Ubuntu system-package updates belong to a WSL-only `up_` script in `system`, without release upgrades. `BREW` includes casks on macOS. `app/deployment/managers.py` queries MAS/Scoop availability only to decide whether setup is needed, then runs the installer without a post-install presence check. Actual use surfaces failures. Installation and maintenance use the complete resolved manager list; custom scripts follow the same policy.
 
 - Define packages with `Package(...)` directly; do not add package helper constructors
-- `FileMapping(mode=...)` owns mapped-file permissions and applies them to the source because the deployed file is a symlink. Owner-only modes use a current-user and SYSTEM ACL on Windows; ACL failures surface rather than being ignored. File deployment checks the source before target mutation, preserves existing data, reapplies declared modes on already-deployed mappings, and returns no changed-status flag. This declared permission change is distinct from repairing checkout script permissions at runtime.
+- `FileMapping(mode=...)` owns mapped-file permissions and applies them to the source because the deployed file is a symlink. Owner-only modes use a current-user and SYSTEM ACL on Windows; ACL failures surface rather than being ignored. File deployment checks the source before target mutation, preserves existing data, reapplies declared modes on already-deployed mappings, and returns no changed-status flag. Windows file deployment uses gsudo only for symlink creation and assigning the invoking user's ownership. Existing untrusted links require an explicit one-time repair from resolved mappings, not Win32 trust detection, a maintained repair list, or recurring recreation. This declared permission change is distinct from repairing checkout script permissions at runtime.
 - Use `FileMapping(platforms=...)` for intentionally platform-specific files instead of conditionally constructing file lists
 - Use `cask=` for Homebrew casks; package source selection is platform-aware and should replace package-level `if PLATFORM ...` conditionals in manifests/modules
 - Use package `platforms=` only when a package is intentionally restricted or command-backed; normal multi-manager package selection should not need manifest-level platform conditionals
@@ -174,8 +174,8 @@ Installed-tool availability never changes source selection.
 - Use Carapace for supported command completions in PowerShell; retain native completion for unsupported tools and keep fuzzy search/history bindings. Do not duplicate CLI definitions in custom completion specs when the tool already provides dynamic completion.
 - Load native `mc` completion from PowerShell through `mc --show-completion`; Typer detects the calling shell. Its `--install-completion` appends to the profile and changes execution policy, so do not use it. Completion templates ask `mc` dynamically; sync does not regenerate them.
 - Windows SSH uses the same PowerShell 7 and profile as local terminals. Elevate
-  system changes through script-local native PowerShell UAC; keep the whole
-  deployment unelevated and do not add recurring link-repair scripts. Scoop owns PowerShell
+  only required operations with gsudo; keep the CLI, user setup, and package managers
+  unelevated. Prefer gsudo over custom UAC launchers, batching frameworks, or recurring link-repair scripts. Scoop owns PowerShell
   installation and upgrades; configure `no_junction` before packages install and
   register its stable executable launcher as the SSH login shell.
 - Scripts check their own prerequisites and existing setup before changing anything; there is no script-run history. Package installation uses the requested manager's checks or native idempotence at deployment time.
@@ -192,12 +192,12 @@ it must be quiet, read-only, safe before tools are installed, and safe to source
 Windows reads registered machine/user variables without loading PowerShell profiles.
 PowerShell script execution prefers `pwsh`; built-in Windows PowerShell is available
 for bootstrap and native Windows servicing. Interactive shells remain PowerShell 7.
-Use `-NoProfile` and `-File`,
-without injecting `PSModulePath`. Scripts request native UAC elevation in
-a separate visible administrator process and pass required values as explicit
-arguments; output stays in that process rather than being relayed by the runner.
-Administrator windows must prompt with `Read-Host 'Press Enter to exit'` after
-completing their work, before returning control to deployment.
+Use `-NoProfile` and `-File`, without injecting `PSModulePath`.
+Windows scripts use `gsudo --direct` with an explicit executable and arguments;
+resolve user-specific values before elevation. Keep stdout/stderr in the current
+terminal, propagate exit codes, and do not open administrator windows or pause for
+exit confirmation. Deployment scopes a temporary gsudo cache to its own process
+and closes it on completion or failure; never enable global automatic caching.
 
 ### Configuration Ownership and State
 

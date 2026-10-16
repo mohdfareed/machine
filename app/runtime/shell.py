@@ -5,6 +5,8 @@ import shlex
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
 
 from app.runtime import reporting
@@ -100,6 +102,21 @@ def query(
         detail = result.stderr.strip() or result.stdout.strip()
         raise RuntimeError(f"Query failed (exit {result.returncode}): {cmd[0]}\n{detail}")
     return result
+
+
+@contextmanager
+def elevation_cache(*, env: dict[str, str], dry_run: bool) -> Generator[None]:
+    """Limit a temporary gsudo credential cache to this Windows deployment process."""
+    if not is_windows or dry_run:
+        yield
+        return
+
+    pid = str(os.getpid())
+    run(["gsudo", "cache", "on", "--pid", pid], env=env, dry_run=False, check=True)
+    try:
+        yield
+    finally:
+        run(["gsudo", "cache", "off", "--pid", pid], env=env, dry_run=False, check=True)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

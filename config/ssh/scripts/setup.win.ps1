@@ -19,7 +19,6 @@ if ($Admin) {
 
     Set-Content $sshdConfig
     Restart-Service sshd
-    Read-Host 'Press Enter to exit'
     return
 }
 
@@ -31,10 +30,6 @@ if (-not (Test-Path -LiteralPath $DefaultShell -PathType Leaf)) {
 }
 
 # Resolve the user's launcher before UAC; an alternate admin may have a different home.
-$arguments = @(
-    '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"", '-Admin',
-    '-DefaultShell', "`"$DefaultShell`""
-)
-$process = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList $arguments `
-    -Verb RunAs -Wait -PassThru
-if ($process.ExitCode -ne 0) { exit $process.ExitCode }
+gsudo --direct (Get-Process -Id $PID).Path -NoProfile -ExecutionPolicy Bypass `
+    -File $PSCommandPath -Admin -DefaultShell $DefaultShell
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

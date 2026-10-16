@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
@@ -272,6 +273,7 @@ def test_filtered_deploy_preserves_phases_and_stops_on_failure(monkeypatch, fail
 
     monkeypatch.setattr(deploy, "load_machine", load_machine)
     monkeypatch.setattr(deploy, "deploy_file", lambda mapping, **kwargs: record("files"))
+    monkeypatch.setattr(deploy, "elevation_cache", lambda **kwargs: nullcontext())
     monkeypatch.setattr(deploy, "setup_managers", setup_managers)
     monkeypatch.setattr(deploy, "run_scripts", run_scripts)
     monkeypatch.setattr(deploy, "install_packages", install_packages)

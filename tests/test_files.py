@@ -10,6 +10,15 @@ from app.config.models import FileMapping
 from app.deployment import files as machine_files
 
 
+@pytest.fixture(autouse=True)
+def local_symlinks(monkeypatch):
+    monkeypatch.setattr(
+        machine_files,
+        "_create_symlink",
+        lambda source, target, **kw: target.symlink_to(source, target_is_directory=source.is_dir()),
+    )
+
+
 @pytest.mark.parametrize("dry_run", [False, True])
 def test_missing_source_fails_before_target_changes(tmp_path, dry_run):
     target = tmp_path / "target"
