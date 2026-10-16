@@ -89,11 +89,10 @@ symbol = " "
 format = "[$user]($style)"
 style_user = "red"
 style_root = "bold bright-red"
-# disabled = false
+disabled = false
 
 [hostname]
-# format = "[@](bright-black)[$hostname]($style)[$ssh_symbol](bold $style) "
-format = "[$hostname]($style)[$ssh_symbol](bold $style) "
+format = "[@](bright-black)[$hostname]($style)[$ssh_symbol](bold $style) "
 ssh_symbol = " "
 style = "bright-green"
 ssh_only = false
@@ -105,6 +104,8 @@ style = "red"
 symbol = "󰹍 "
 
 [sudo]
+format = "[$symbol]($style) "
+style = "red"
 symbol = "  "
 disabled = false
 
