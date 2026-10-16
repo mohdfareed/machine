@@ -106,7 +106,7 @@ symbol = "󰹍 "
 [sudo]
 format = "[$symbol]($style) "
 style = "red"
-symbol = "  "
+symbol = " "
 disabled = false
 
 [shell]

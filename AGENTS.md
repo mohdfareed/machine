@@ -175,9 +175,10 @@ Installed-tool availability never changes source selection.
 - Load native `mc` completion from PowerShell through `mc --show-completion`; Typer detects the calling shell. Its `--install-completion` appends to the profile and changes execution policy, so do not use it. Completion templates ask `mc` dynamically; sync does not regenerate them.
 - Windows SSH uses the same PowerShell 7 and profile as local terminals. Elevate
   only required operations with gsudo; keep the CLI, user setup, and package managers
-  unelevated. Prefer gsudo over custom UAC launchers, batching frameworks, or recurring link-repair scripts. Scoop owns PowerShell
-  installation and upgrades; configure `no_junction` before packages install and
-  register its stable executable launcher as the SSH login shell.
+  unelevated. Prefer gsudo over custom UAC launchers, batching frameworks, or recurring link-repair scripts. Scoop owns PowerShell and Carapace
+  installation and upgrades; the shell module configures `no_junction` before packages install.
+  Register Scoop's stable PowerShell launcher as the SSH login shell and set
+  OpenSSH's `DefaultShellArguments` to `-NoLogo`, preserving profiles and remote commands.
 - Scripts check their own prerequisites and existing setup before changing anything; there is no script-run history. Package installation uses the requested manager's checks or native idempotence at deployment time.
 
 `build_env(machine_id, values)` prepares explicit machine overrides without reading the saved

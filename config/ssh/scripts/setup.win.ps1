@@ -12,6 +12,14 @@ if ($Admin) {
         -PropertyType String `
         -Force | Out-Null
 
+    # Suppress the interactive banner and timing message without skipping profiles.
+    New-ItemProperty `
+        -Path "HKLM:\SOFTWARE\OpenSSH" `
+        -Name DefaultShellArguments `
+        -Value '-NoLogo' `
+        -PropertyType String `
+        -Force | Out-Null
+
     # Use the shared per-user allowlist for administrator accounts too.
     $sshdConfig = "$env:ProgramData\ssh\sshd_config"
     (Get-Content $sshdConfig) -replace '^(Match Group administrators)', '#$1' `

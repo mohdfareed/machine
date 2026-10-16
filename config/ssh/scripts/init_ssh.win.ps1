@@ -24,11 +24,7 @@ if ($Admin) {
     return
 }
 
-# Keep Scoop's launchers usable over SSH without version-directory junctions.
-scoop config no_junction true
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-# Elevate OpenSSH installation, not the invoking user's Scoop configuration.
+# Elevate OpenSSH installation.
 # Use the native servicing host, not Microsoft Store PowerShell.
 $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 gsudo --direct $powershell -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -Admin

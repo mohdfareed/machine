@@ -36,7 +36,7 @@ module = Module(
         Package(name="git-lfs", brew="git-lfs", winget="GitHub.GitLFS"),
         # shell
         Package(brew="powershell", cask="powershell@preview", scoop="pwsh"),
-        Package(brew="carapace", winget="rsteube.Carapace"),  # command completions
+        Package(brew="carapace", scoop="extras/carapace-bin"),  # command completions
         Package(brew="starship", winget="Starship.Starship"),  # prompt theme
         # files
         Package(brew="micro", winget="zyedidia.micro"),  # text editor
