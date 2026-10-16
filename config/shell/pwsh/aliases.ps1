@@ -7,22 +7,26 @@
 # Windows built-in aliases shadow similarly named functions.
 Remove-Item Alias:cat, Alias:ls -Force -ErrorAction SilentlyContinue
 
+# cat
 function cat { bat --color=auto --paging=never @args }
 carapace bat powershell | Out-String | Invoke-Expression
 Register-ArgumentCompleter -Native -CommandName cat `
     -ScriptBlock ${function:_bat_completer}
 
+# ls
 function ls { eza --color=auto --group-directories-first --git --icons=auto @args }
 carapace eza powershell | Out-String | Invoke-Expression
 Register-ArgumentCompleter -Native -CommandName ls `
     -ScriptBlock ${function:_eza_completer}
 
+# ls variants
 function ll { ls -l @args }
 function lls { ll --total-size @args }
 function lt { param([int]$Level=1) ls -TL="$Level" @args }
 function llt { param([int]$Level=1) ll -TL="$Level" @args }
 function llts { param([int]$Level=1) lls -TL="$Level" @args }
 
+# Search aliases
 Set-Alias search::files Invoke-PsFzfRipgrep
 Set-Alias search::proc Invoke-FuzzyKillProcess
 Set-Alias search::git Invoke-FuzzyGitStatus

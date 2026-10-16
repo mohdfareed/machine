@@ -20,8 +20,12 @@ manifest = Machine(
     packages=[
         Package(name="tailscale", cask="tailscale"),
         Package(name="docker", cask="docker-desktop"),
-        Package(brew="rsync"),  # file sync
         Package(brew="go"),
+        # Agents
+        Package(name="remindctl", brew="steipete/tap/remindctl"),  # reminders
+        # Utilities
+        Package(brew="wakeonlan"),  # wake devices
+        Package(brew="rsync"),  # file sync
         Package(brew="7zip", winget="7zip.7zip"),  # archiving
         # Content Processing
         Package(brew="pandoc", winget="JohnMacFarlane.Pandoc"),  # documents
