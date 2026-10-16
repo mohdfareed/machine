@@ -1,11 +1,23 @@
 #!/bin/sh
 set -eu
 
-# Add PowerShell to /etc/shells if not already present.
+# Install a quiet login launcher; SSH does not pass shell startup options.
 pwsh_path=$(command -v pwsh)
-if ! grep -Fxq "$pwsh_path" /etc/shells; then
+login_shell="$HOME/.local/bin/pwsh-login"
+mkdir -p "${login_shell%/*}"
+cat > "$login_shell" <<EOF
+#!/bin/sh
+if [ "\$#" -eq 0 ]; then
+    exec "$pwsh_path" -Login -NoLogo
+fi
+exec "$pwsh_path" -NoLogo "\$@"
+EOF
+chmod 755 "$login_shell"
+
+# Add PowerShell's login launcher to /etc/shells if not already present.
+if ! grep -Fxq "$login_shell" /etc/shells; then
   echo "adding PowerShell to /etc/shells..."
-  printf '%s\n' "$pwsh_path" | sudo tee -a /etc/shells
+  printf '%s\n' "$login_shell" | sudo tee -a /etc/shells
 fi
 
 # Read the account's login shell; $SHELL can be stale.
@@ -19,7 +31,7 @@ else
 fi
 
 # Set PowerShell as the default shell.
-if [ "$current_shell" != "$pwsh_path" ]; then
+if [ "$current_shell" != "$login_shell" ]; then
   echo "setting PowerShell as default shell..."
-  chsh -s "$pwsh_path"
+  chsh -s "$login_shell"
 fi

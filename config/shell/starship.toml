@@ -89,7 +89,7 @@ symbol = " "
 format = "[$user]($style)"
 style_user = "red"
 style_root = "bold bright-red"
-disabled = false
+# disabled = false
 
 [hostname]
 format = "[@](bright-black)[$hostname]($style)[$ssh_symbol](bold $style) "
