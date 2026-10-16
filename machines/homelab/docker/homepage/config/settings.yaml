@@ -1,6 +1,6 @@
 ---
-title: "Dashboard"
-favicon: "mdi-home-automation"
+title: Dashboard
+favicon: mdi-home-automation
 
 headerStyle:
 hideVersion: true

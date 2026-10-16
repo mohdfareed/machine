@@ -26,6 +26,18 @@ services:
         bind:
           create_host_path: true
       - type: bind
+        source: /Volumes/External HD
+        target: /Volumes/External HD
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /Volumes/Time Machine
+        target: /Volumes/Time Machine
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
         source: /var/run/docker.sock
         target: /var/run/docker.sock
         read_only: true

@@ -1,6 +1,6 @@
 ---
 - logo:
-    icon: "mdi-home-automation"
+    icon: mdi-home-automation
 
 - datetime:
     text_size: xs
@@ -15,11 +15,11 @@
     uptime: true
 
 - resources:
-    label: Internal Storage
-    disk: /
+    label: Internal
+    disk: /config-source
 - resources:
-    label: External Storage
-    disk: "/Volumes/External HD"
+    label: External
+    disk: /Volumes/External HD
 - resources:
     label: Time Machine
-    disk: "/Volumes/Time Machine"
+    disk: /Volumes/Time Machine
