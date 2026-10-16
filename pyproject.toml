@@ -1,6 +1,6 @@
 [project]
 name = "machine"
-version = "1.2.1"
+version = "1.2.2"
 description = "Machine setup CLI app."
 readme = "README.md"
 
