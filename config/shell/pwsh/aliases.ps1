@@ -18,8 +18,10 @@ Register-ArgumentCompleter -Native -CommandName ls `
     -ScriptBlock ${function:_eza_completer}
 
 function ll { ls -l @args }
+function lls { ll --total-size @args }
 function lt { param([int]$Level=1) ls -TL="$Level" @args }
 function llt { param([int]$Level=1) ll -TL="$Level" @args }
+function llts { param([int]$Level=1) lls -TL="$Level" @args }
 
 Set-Alias search::files Invoke-PsFzfRipgrep
 Set-Alias search::proc Invoke-FuzzyKillProcess
