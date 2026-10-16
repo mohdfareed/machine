@@ -8,11 +8,7 @@ from config import onepass, shell, ssh, system, terminal
 
 manifest = Machine(
     env={
-        # Homelab
         "MC_HOMELAB_TIMEZONE": "America/New_York",
-        "HOMEPAGE_TITLE": "Homelab Dashboard",
-        "HOMEPAGE_FAVICON": "mdi-home-analytics",
-        # Local state and shared media
         "MC_HOMELAB_STORAGE_DIR": Path.home() / ".homelab",
         "MC_HOMELAB_MEDIA_DIR": Path("/Volumes/External HD/Media"),
     },

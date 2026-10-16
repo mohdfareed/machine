@@ -1,7 +1,7 @@
 ---
 - Machines:
     - Homelab:
-        icon: mdi-home-analytics
+        icon: mdi-server-network
         description: MacBook Air
         widget:
           type: tailscale

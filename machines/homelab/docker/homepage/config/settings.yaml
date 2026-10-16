@@ -1,6 +1,6 @@
 ---
-title: "{{HOMEPAGE_VAR_TITLE}}"
-favicon: "{{HOMEPAGE_VAR_FAVICON}}"
+title: "Homelab Dashboard"
+favicon: "mdi-home-automation"
 
 headerStyle:
 hideVersion: true
