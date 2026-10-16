@@ -12,7 +12,13 @@ from app.runtime.shell import find_executable, run
 
 def install_packages(packages: list[Package], *, env: dict[str, str], dry_run: bool) -> None:
     """Install missing packages, stopping at the first failure."""
-    installed: dict[tuple[PackageSource, str], bool] = {}
+    sources: set[PackageSource] = {
+        package.selected_source for package in packages if package.selected_source
+    }
+    installed: dict[PackageSource, set[str]] = (
+        {} if dry_run else package_managers.installed_packages(sources, env=env)
+    )
+
     for package in packages:
         # Run custom setup only when its command is missing.
         if not (source := package.selected_source):
@@ -24,13 +30,13 @@ def install_packages(packages: list[Package], *, env: dict[str, str], dry_run: b
             run(package.cmd, env=env, dry_run=dry_run, check=True)
             continue
 
-        # TODO: Query installed packages in advance, including `winget`.
-        # Query and cache each package; skip packages already installed.
-        package_id = package.sources[source]
-        key = (source, str(package_id))
-        if not dry_run and key not in installed:
-            installed[key] = package_managers.source_installed(source, package_id, env=env)
-        if installed.get(key, False):
+        # Match the selected manager's identity against this deployment's inventory.
+        identity = str(package.sources[source])
+        if source == "scoop":
+            identity = identity.rsplit("/", 1)[-1]
+        if source in ("scoop", "winget"):
+            identity = identity.casefold()
+        if not dry_run and identity in installed[source]:
             detail(f"Already installed: {source} -> {package.name}")
             continue  # Ignored during dry runs for reporting.
 
@@ -39,7 +45,7 @@ def install_packages(packages: list[Package], *, env: dict[str, str], dry_run: b
 
         # Cache only real installations to avoid duplicate dependencies.
         if not dry_run:
-            installed[key] = True
+            installed[source].add(identity)
 
 
 # ═════════════════════════════════════════════════════════════════════════════

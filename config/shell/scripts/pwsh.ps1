@@ -23,6 +23,4 @@ if (-not $IsWindows) {
 # Install interactive modules for the current PowerShell 7 user.
 Install-Module -Name PSFzf -Scope CurrentUser -Repository PSGallery -Force
 Install-Module -Name PSCompletions -Scope CurrentUser -Repository PSGallery -Force
-# Update-Help -ErrorAction Continue # TODO: Move to `up_` script due to speed.
 psc config menu filter_mode subsequence
-psc update

@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+from pathlib import Path
 
 import pytest
 from app.config import validation
@@ -27,12 +28,21 @@ def commands(monkeypatch):
     return calls
 
 
-@pytest.mark.parametrize("source", ["brew", "cask", "mas", "scoop"])
+@pytest.mark.parametrize("source", ["brew", "cask", "mas", "scoop", "winget"])
 @pytest.mark.parametrize("installed", [False, True])
 def test_install_only_when_selected_manager_lacks_package(monkeypatch, commands, source, installed):
-    identity = {"mas": 123, "scoop": "extras/example"}.get(source, "example")
+    identity = {
+        "brew": "tools/tap/example",
+        "cask": "tools/tap/example",
+        "mas": 123,
+        "scoop": "extras/example",
+        "winget": "Example.App",
+    }[source]
     package = Package.model_validate({"name": "example", source: identity})
     package.selected_source = source
+    other_id = {"mas": 456, "winget": "Other.App"}.get(source, "other")
+    other = Package.model_validate({"name": "other", source: other_id})
+    other.selected_source = source
     queries = []
     monkeypatch.setattr(
         machine_packages,
@@ -43,37 +53,91 @@ def test_install_only_when_selected_manager_lacks_package(monkeypatch, commands,
     def query(command, **kwargs):
         queries.append(command)
         assert kwargs["env"] == {"PATH": "chosen"}
+        name = "example" if installed else "example-extra"
         if source == "mas":
-            output = "123 Example App\n" if installed else "1234 Other App\n"
+            output = ("123 Example App\n" if installed else "1234 Other App\n") + "456 Other\n"
         elif source == "scoop":
-            output = json.dumps({"apps": [{"Name": "EXAMPLE" if installed else "example-extra"}]})
-        else:
-            key = "formulae" if source == "brew" else "casks"
+            output = json.dumps({"apps": [{"Name": name.upper()}, {"Name": "other"}]})
+        elif source == "winget":
             output = json.dumps(
-                {key: [{"name": "canonical-example", "installed": ["1.0"] if installed else []}]}
+                {
+                    "Sources": [
+                        {
+                            "Packages": [
+                                {
+                                    "PackageIdentifier": "example.app"
+                                    if installed
+                                    else "example.app-extra"
+                                },
+                                {"PackageIdentifier": "other.app"},
+                            ]
+                        }
+                    ]
+                }
             )
+            Path(command[3]).write_text(output, encoding="utf-8-sig")
+            output = "An unrelated application could not be matched."
+        else:
+            formulae = [
+                {
+                    "name": "canonical-example",
+                    "full_name": "tools/tap/canonical-example",
+                    "tap": "tools/tap",
+                    "aliases": [name],
+                },
+                {"name": "other", "full_name": "other"},
+            ]
+            casks = [
+                {"token": name, "full_token": f"tools/tap/{name}", "tap": "tools/tap"},
+                {"token": "other", "full_token": "other"},
+            ]
+            output = json.dumps({"formulae": formulae, "casks": casks})
         return subprocess.CompletedProcess(command, 0, stdout=output)
 
     monkeypatch.setattr(machine_managers, "query", query)
 
-    machine_packages.install_packages([package, package], env={"PATH": "chosen"}, dry_run=False)
+    machine_packages.install_packages(
+        [package, other, package], env={"PATH": "chosen"}, dry_run=False
+    )
     expected_query = {
-        "brew": ["brew", "info", "--json=v2", "--formula", identity],
-        "cask": ["brew", "info", "--json=v2", "--cask", identity],
+        "brew": ["brew", "info", "--json=v2", "--installed"],
+        "cask": ["brew", "info", "--json=v2", "--installed"],
         "mas": ["mas", "list"],
         "scoop": ["scoop", "export"],
+        "winget": [
+            "winget",
+            "export",
+            "--output",
+            queries[0][3],
+            "--accept-source-agreements",
+            "--disable-interactivity",
+        ]
+        if source == "winget"
+        else [],
     }[source]
     expected_install = {
         "brew": ["brew", "install", identity],
         "cask": ["brew", "install", "--cask", identity],
         "mas": ["mas", "install", str(identity)],
         "scoop": ["scoop", "install", identity],
+        "winget": [
+            "winget",
+            "install",
+            "--id",
+            identity,
+            "--no-upgrade",
+            "--accept-source-agreements",
+            "--accept-package-agreements",
+        ],
     }[source]
     assert queries == [expected_query]
     assert commands == ([] if installed else [expected_install])
 
 
 def test_source_choice_does_not_fall_back_to_an_available_manager(monkeypatch, commands):
+    monkeypatch.setattr(
+        machine_managers, "installed_packages", lambda *args, **kwargs: {"winget": set()}
+    )
     monkeypatch.setattr(
         machine_packages,
         "find_executable",
@@ -92,7 +156,7 @@ def test_preview_shows_installation_without_presence_checks(monkeypatch, command
     custom = Package(name="custom", cmd="setup-custom")
     monkeypatch.setattr(
         machine_managers,
-        "source_installed",
+        "installed_packages",
         lambda *args, **kwargs: pytest.fail("queried package presence during preview"),
     )
     monkeypatch.setattr(
@@ -130,9 +194,9 @@ def test_query_failure_stops_before_installing(monkeypatch, commands):
 
 
 @pytest.mark.parametrize("code", [0, 0x8A150061, 0x8A150061 - 2**32, 0x8A15002B])
-def test_winget_install_interprets_its_status_without_presence_queries(monkeypatch, code):
+def test_winget_install_interprets_its_status(monkeypatch, code):
     monkeypatch.setattr(
-        machine_managers, "query", lambda *args, **kwargs: pytest.fail("queried WinGet presence")
+        machine_managers, "installed_packages", lambda *args, **kwargs: {"winget": set()}
     )
     monkeypatch.setattr(
         machine_packages,
@@ -224,20 +288,31 @@ def test_homebrew_upgrades_casks_only_on_macos(monkeypatch, commands, platform):
 def test_presence_cache_does_not_survive_an_invocation(monkeypatch, commands):
     queries = []
     monkeypatch.setattr(
-        machine_managers, "source_installed", lambda *args, **kwargs: queries.append(args) or False
+        machine_managers,
+        "installed_packages",
+        lambda sources, **kwargs: queries.append(sources) or {source: set() for source in sources},
     )
     package = Package(name="example", brew="example")
     package.selected_source = "brew"
+    cask = Package(name="example-cask", cask="example")
+    cask.selected_source = "cask"
     for _ in range(2):
-        machine_packages.install_packages([package, package], env={}, dry_run=False)
-    assert len(queries) == len(commands) == 2
+        machine_packages.install_packages([package, cask, package], env={}, dry_run=False)
+    assert queries == [{"brew", "cask"}, {"brew", "cask"}]
+    assert (
+        commands == [["brew", "install", "example"], ["brew", "install", "--cask", "example"]] * 2
+    )
 
 
 @pytest.mark.parametrize(
     "operation", ["install", "custom-install", "custom-upgrade", "manager-upgrade"]
 )
 def test_first_command_failure_stops_remaining_work(monkeypatch, commands, operation):
-    monkeypatch.setattr(machine_managers, "source_installed", lambda *args, **kwargs: False)
+    monkeypatch.setattr(
+        machine_managers,
+        "installed_packages",
+        lambda sources, **kwargs: {source: set() for source in sources},
+    )
 
     failure = subprocess.CalledProcessError(1, ["installer"])
 
