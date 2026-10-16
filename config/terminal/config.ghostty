@@ -1,14 +1,13 @@
 theme = dark:One Double Dark,light:One Double Light
-cursor-style = bar
-
 font-family = JetBrainsMono Nerd Font
 font-size = 14
+cursor-style = bar
 
 window-width = 80
 window-height = 24
-
 background-opacity = 1
 background-blur = true
+quit-after-last-window-closed=true
 
 command = /opt/homebrew/bin/pwsh -NoLogo
 env = TERM=xterm-256color

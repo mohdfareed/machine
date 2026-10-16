@@ -13,12 +13,11 @@
     cpu: true
     memory: true
     uptime: true
+    # Internal HD
+    disk: /config-source
 
 - resources:
-    label: Internal
-    disk: /config-source
-- resources:
-    label: External
+    label: External HD
     disk: /Volumes/External HD
 - resources:
     label: Time Machine
