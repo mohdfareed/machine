@@ -92,7 +92,8 @@ style_root = "bold bright-red"
 # disabled = false
 
 [hostname]
-format = "[@](bright-black)[$hostname]($style)[$ssh_symbol](bold $style) "
+# format = "[@](bright-black)[$hostname]($style)[$ssh_symbol](bold $style) "
+format = "[$hostname]($style)[$ssh_symbol](bold $style) "
 ssh_symbol = " "
 style = "bright-green"
 ssh_only = false

@@ -4,7 +4,7 @@
         - icon: mdi-router-network
           href: https://login.tailscale.com/admin
     - Apple TV Admin Console:
-        - icon: mdi-television
+        - icon: mdi-television-box
           href: http://apple-tv.{{HOMEPAGE_VAR_TAILNET_NAME}}.ts.net:5252
     - Machine Repository:
         - icon: mdi-source-repository
