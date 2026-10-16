@@ -23,12 +23,12 @@
       "keys": "ctrl+c"
     },
     {
-      "id": "Terminal.FindText",
-      "keys": "ctrl+f"
-    },
-    {
       "id": "Terminal.PasteFromClipboard",
       "keys": "ctrl+v"
+    },
+    {
+      "id": "Terminal.FindText",
+      "keys": "ctrl+f"
     }
   ],
   "newTabMenu": [
@@ -61,6 +61,11 @@
         "source": "Microsoft.WSL"
       },
       {
+        "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
+        "hidden": false,
+        "name": "Command Prompt"
+      },
+      {
         "commandline": "pwsh.exe -NoLogo -NoExit -Command \"ssh homelab\"",
         "guid": "{35b7b1c4-9680-4279-aaf3-a177fd826273}",
         "hidden": false,
@@ -74,6 +79,13 @@
         "hidden": false,
         "name": "GEMS Machine",
         "startingDirectory": "%USERPROFILE%\\Dev\\GEMS\\Gems.Machine"
+      },
+      {
+        "commandline": "pwsh.exe -NoLogo",
+        "guid": "{d32ec650-0820-414c-93b7-4caca9509156}",
+        "hidden": false,
+        "name": "GEMS Core",
+        "startingDirectory": "%USERPROFILE%\\Dev\\GEMS\\Gems.Core"
       }
     ]
   },
