@@ -5,6 +5,7 @@ favicon: mdi-home-automation
 headerStyle:
 hideVersion: true
 showStats: true
+statusStyle: dot
 
 background:
   image: https://singlecolorimage.com/get/1e1e1e/100x100
