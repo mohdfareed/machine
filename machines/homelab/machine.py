@@ -14,6 +14,7 @@ manifest = Machine(
     },
     modules=[system, onepass, shell, ssh, terminal],
     packages=[
+        Package(brew="gh"),
         Package(name="tailscale", cask="tailscale"),
         Package(name="docker", cask="docker-desktop"),
         Package(brew="go"),
