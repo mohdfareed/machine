@@ -1,0 +1,39 @@
+#!/usr/bin/env zsh
+
+alias reboot='sudo reboot'
+
+# display the cpu and gpt temperature of raspberry pi
+function temp {
+  # read temps from system
+  cpu=$(</sys/class/thermal/thermal_zone0/temp)
+  gpu=$(vcgencmd measure_temp)
+
+  # convert to integers
+  cpu_temp=$(("cpu/1000"))
+  gpu_temp=$(echo "$gpu" | grep -E -o '[[:digit:]][[:digit:]]')
+
+  # set cpu temp color
+  if [ $cpu_temp -lt 45 ];   then cpu_color='\033[0;32m' # green
+  elif [ $cpu_temp -lt 65 ]; then cpu_color='\033[0;33m' # yellow
+  else                            cpu_color='\033[0;31m' # red
+  fi
+
+  # set gpu temp color
+  if [ "$gpu_temp" -lt 45 ];   then gpu_color='\033[0;32m' # green
+  elif [ "$gpu_temp" -lt 65 ]; then gpu_color='\033[0;33m' # yellow
+  else                            gpu_color='\033[0;31m' # red
+  fi
+
+  # convert to display format
+  cpu_temp="$((cpu/1000)).$((cpu%1000/100))'C"
+  gpu_temp="$(echo "$gpu" | grep -E -o '[[:digit:]].*')"
+
+  # set prefix colors
+  cpu_prefix='\033[1;34m' # blue
+  gpu_prefix='\033[1;35m' # purple
+
+  # display
+  clear='\033[0m'
+  echo -e "${cpu_prefix}CPU$clear => $cpu_color$cpu_temp$clear"
+  echo -e "${gpu_prefix}GPU$clear => $gpu_color$gpu_temp$clear"
+}

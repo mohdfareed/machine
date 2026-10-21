@@ -48,11 +48,18 @@ module-root = ""
 [tool.ruff]
 line-length = 100
 src = ["app", "config", "machines"]
+extend-exclude = ["archive"]
 
 [tool.ruff.lint]
 select = ["E", "W", "I", "UP", "RUF"]
 
 [tool.pyright]
+exclude = [
+  "archive",
+  "**/node_modules",
+  "**/__pycache__",
+  "**/.*",
+]
 typeCheckingMode = "standard"
 useLibraryCodeForTypes = true
 

@@ -157,6 +157,9 @@ Sign in to Tailscale to SSH into connected machines using keys stored in 1Passwo
 
 ## Development
 
+Historical machine configurations in `archive/` are reference-only and excluded from
+checks and automatic fixes.
+
 ```powershell
 uv sync --dev                    # Install dev dependencies
 uv run mc --help                 # Run dev CLI without installing

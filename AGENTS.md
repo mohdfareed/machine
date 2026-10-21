@@ -38,6 +38,7 @@ data; never expose credentials or secret values in output.
 - `app/runtime/` - Host and selected-machine environment, saved selection, subprocess execution, reporting, and Unix command activation
 - `config/` - Shared dotfiles and configs
 - `machines/` - Per-host configurations
+- `archive/` - Historical snapshots; preserve their contents and exclude them from checks and automatic fixes
 - `scripts/bootstrap.sh` / `scripts/bootstrap.ps1` - Bare-machine bootstrap
 
 ## Commands
