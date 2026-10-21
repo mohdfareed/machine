@@ -79,6 +79,5 @@ defaults write com.apple.finder _FXSortFoldersFirst -bool true
 # NOTE: Requires full disk access.
 sudo /usr/bin/tmutil addexclusion -p \
   "$HOME/Downloads" \
-  "$HOME/Library/Cache" \
-  "$HOME/Library/Developer/Xcode/DerivedData" \
+  "$HOME/Library/Caches" \
   "$HOME/Library/Containers/com.docker.docker/Data/vms" || true
