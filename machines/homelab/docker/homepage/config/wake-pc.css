@@ -1,0 +1,14 @@
+/* ========================================================================= */
+/* MARK: Use the MDI power icon inside the native status indicator */
+/* ========================================================================= */
+.wake-pc-icon {
+    mask: url("https://cdn.jsdelivr.net/npm/@mdi/svg@latest/svg/power.svg") no-repeat center / contain;
+}
+
+/* ========================================================================= */
+/* MARK: Disable the action while sending */
+/* ========================================================================= */
+[data-wake-pc]:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}

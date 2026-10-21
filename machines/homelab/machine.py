@@ -22,6 +22,12 @@ manifest = Machine(
         Package(name="remindctl", brew="steipete/tap/remindctl"),  # reminders
         # Utilities
         Package(brew="wakeonlan"),  # wake devices
+        Package(brew="supervisor"),  # manage local services
+        Package(
+            name="waitress-serve",
+            cmd="uv tool install --with flask waitress",
+            up_cmd="uv tool upgrade waitress",
+        ),  # local servers (e.g. wake-pc)
         Package(brew="rsync"),  # file sync
         Package(brew="7zip", winget="7zip.7zip"),  # archiving
         # Content Processing

@@ -232,7 +232,7 @@ or add special config entrypoints outside the module declaration system.
 - Keep code and operational surface minimal - repair existing mechanisms before adding replacement tools or services; avoid unnecessary abstractions, callbacks, or progress bars
 - This is a personal tool: implement demonstrated needs, not speculative requirements. Do not add runtime repair of the checkout; executable flags belong to checks and fix tooling, not deployment execution.
 - Question low-value features before adding code to support them. Rely on CLI help for obvious usage; omit repeated command reminders and command-specific title plumbing. Retain meaningful errors and recovery context.
-- Keep substantive Python out of shell strings; put it in a normal `.py` file and have the shell entrypoint invoke it
+- Keep substantive code in its own language's files, not embedded strings in another language. Keep shell entrypoints thin and use existing icon assets rather than hand-written SVG.
 - Avoid trivial helper wrappers like `def _target(name): return str(base / name)`; use `str(base / path)` directly unless the helper adds real behavior
 - Keep type annotations readable: use named models for structured results instead of opaque positional tuples; use aliases when only the type expression needs a concise name.
 - Never iterate directly over an inline literal list of names in a `for`/`foreach` loop. Declare the names in a descriptively named collection before the loop, with one item per line, then iterate over that collection. Apply this across languages.

@@ -21,6 +21,12 @@ services:
         bind:
           create_host_path: false
       - type: bind
+        source: ./config/wake-pc.css
+        target: /app/public/wake-pc.css
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
         source: ${MC_HOMELAB_STORAGE_DIR:?}/homepage
         target: /app/config
         bind:
