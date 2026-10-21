@@ -44,7 +44,7 @@ services:
         bind:
           create_host_path: false
 
-    # Copy managed YAML before startup; keep custom files and logs in local state.
+    # Copy managed configuration before startup; keep CSS and logs in local state.
     entrypoint: ["/bin/sh", "-ec"]
     command:
       - |
@@ -53,6 +53,7 @@ services:
         cp /config-source/dashboard.yaml /app/config/services.yaml
         cp /config-source/settings.yaml /app/config/settings.yaml
         cp /config-source/widgets.yaml /app/config/widgets.yaml
+        cp /config-source/wake-pc.js /app/config/custom.js
         exec docker-entrypoint.sh node server.js
     environment:
       HOMEPAGE_ALLOWED_HOSTS: dashboard.${TAILNET_NAME:?}.ts.net

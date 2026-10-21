@@ -9,6 +9,7 @@
           key: "{{HOMEPAGE_VAR_TAILSCALE_API_KEY}}"
           fields: ["address", "last_seen", "expires"]
     - PC:
+        id: pc
         icon: mdi-desktop-tower
         description: Desktop PC
         widget:
