@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
   workflow_call:
+    inputs:
+      release-base:
+        type: string
+        default: ""
+      release-commit:
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -29,6 +36,26 @@ jobs:
       - name: Check out repository
         id: checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.release-base || github.sha }}
+          persist-credentials: false
+
+      - name: Download release candidate
+        if: ${{ inputs.release-commit != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: release-candidate
+          path: ${{ runner.temp }}/release-candidate
+
+      - name: Check out release candidate
+        if: ${{ inputs.release-commit != '' }}
+        shell: bash
+        env:
+          RELEASE_COMMIT: ${{ inputs.release-commit }}
+        run: |
+          git fetch "$RUNNER_TEMP/release-candidate/candidate.bundle" HEAD
+          test "$(git rev-parse FETCH_HEAD)" = "$RELEASE_COMMIT"
+          git checkout --detach "$RELEASE_COMMIT"
 
       - name: Set up uv
         id: uv_setup

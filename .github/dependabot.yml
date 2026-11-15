@@ -21,12 +21,7 @@ updates:
     patterns: ["*"]
     multi-ecosystem-group: "monthly-dependencies"
 
-  - package-ecosystem: "docker"
-    directories: ["**/*"]
-    patterns: ["*"]
-    multi-ecosystem-group: "monthly-dependencies"
-
   - package-ecosystem: "docker-compose"
-    directories: ["**/*"]
+    directories: ["/config/**/*"]
     patterns: ["*"]
     multi-ecosystem-group: "monthly-dependencies"

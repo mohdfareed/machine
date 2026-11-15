@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version increment
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare release
+    runs-on: macos-latest
+    outputs:
+      base: ${{ steps.candidate.outputs.base }}
+      commit: ${{ steps.candidate.outputs.commit }}
+      tag: ${{ steps.candidate.outputs.tag }}
+    steps:
+      - name: Require main
+        if: ${{ github.ref != 'refs/heads/main' }}
+        run: exit 1
+
+      - name: Check out main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up PowerShell
+        run: brew install --cask powershell@preview
+
+      - name: Prepare and validate release
+        id: candidate
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          base=$(git rev-parse HEAD)
+          ./scripts/release.py "$BUMP"
+          commit=$(git rev-parse HEAD)
+          tag="v$(uv version --short)"
+          git bundle create "$RUNNER_TEMP/candidate.bundle" HEAD "refs/tags/$tag" "^$base"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate
+          path: ${{ runner.temp }}/candidate.bundle
+          if-no-files-found: error
+
+  check:
+    name: Check release candidate
+    needs: prepare
+    uses: ./.github/workflows/ci.yml
+    with:
+      release-base: ${{ needs.prepare.outputs.base }}
+      release-commit: ${{ needs.prepare.outputs.commit }}
+
+  publish:
+    name: Publish release
+    needs: [prepare, check]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out release base
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.base }}
+          fetch-depth: 0
+
+      - name: Download release candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: release-candidate
+          path: ${{ runner.temp }}/release-candidate
+
+      - name: Publish commit and tag
+        env:
+          BASE: ${{ needs.prepare.outputs.base }}
+          COMMIT: ${{ needs.prepare.outputs.commit }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          git fetch "$RUNNER_TEMP/release-candidate/candidate.bundle" HEAD "refs/tags/$TAG:refs/tags/$TAG"
+          test "$(git rev-parse FETCH_HEAD)" = "$COMMIT"
+          test "$(git rev-parse "$COMMIT^")" = "$BASE"
+          test "$(git rev-parse "$TAG^{commit}")" = "$COMMIT"
+          git push --atomic --force-with-lease="refs/heads/main:$BASE" origin \
+            "$COMMIT:refs/heads/main" "refs/tags/$TAG:refs/tags/$TAG"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: gh release create "$TAG" --verify-tag --generate-notes
