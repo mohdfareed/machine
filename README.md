@@ -158,17 +158,23 @@ Sign in to Tailscale to SSH into connected machines using keys stored in 1Passwo
 
 ## Development
 
-Historical machine configurations in `archive/` are reference-only and excluded from
-checks and automatic fixes.
+Historical machine configurations in `archive/` are reference-only
+and excluded from checks and automatic fixes.
 
 ```powershell
-uv sync --dev                    # Install dev dependencies
-uv run mc --help                 # Run dev CLI without installing
-uv run mc validate [-m MACHINE]  # Validate machine configuration and modules
-./scripts/fix.py                 # Upgrade dependencies, auto-fix, and validate
-./scripts/check.py               # Validate without modifying files
-./scripts/bootstrap.sh           # Install the dev build (symlinked)
+mc validate [-m MACHINE]  # Validate machine configs and modules
+./scripts/mc --help       # Run without bootstrapping
+./scripts/fix.py          # Install/upgrade dependencies, auto-fix, and check
+./scripts/check.py        # Validate without modifying files
+./scripts/bootstrap.sh    # Install the dev build (symlinked)
 ```
 
-On Windows, use `uv run python scripts/fix.py` and
-`uv run --no-sync python scripts/check.py`.
+On Windows, use:
+
+```powershell
+uv run mc validate [-m MACHINE]
+uv run mc --help
+uv run python scripts/fix.py
+uv run --no-sync python scripts/check.py
+uv run --no-sync python scripts/bootstrap.sh
+```

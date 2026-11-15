@@ -6,7 +6,6 @@ from collections.abc import Iterable
 from pathlib import Path
 
 import click
-import typer
 from rich.columns import Columns
 from rich.console import Console
 from rich.padding import Padding
@@ -103,8 +102,8 @@ def exception(debug: bool) -> None:
 def prompt(message: str, choices: list[str]) -> str:
     """Prompt for one of the allowed values, accepting any casing."""
     message = message + f" [{', '.join(choices)}]"
-    # return typer.prompt(f"? {message}", type=click.Choice(choices, case_sensitive=False))
-    return typer.prompt(f" {message}", type=click.Choice(choices, case_sensitive=False))
+    # return click.prompt(f"? {message}", type=click.Choice(choices, case_sensitive=False))
+    return click.prompt(f" {message}", type=click.Choice(choices, case_sensitive=False))
 
 
 def grid(values: Iterable[str], *, left: int = 2) -> None:

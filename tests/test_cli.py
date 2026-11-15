@@ -108,7 +108,7 @@ def test_machine_selection_is_read_at_invocation(tmp_path, monkeypatch, command)
     runner = CliRunner()
 
     # A new machine can be selected, then a changed file supplies the next default.
-    result = runner.invoke(app, [command], input="FIRST\n")
+    result = runner.invoke(app, [command], input="invalid\nFIRST\n")
     assert isinstance(result.exception, RuntimeError)
     env_file.write_text("second\n")
     result = runner.invoke(app, [command], input="\n")
