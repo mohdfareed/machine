@@ -1,0 +1,4 @@
+[submodule "config/machines/homelab"]
+	path = config/machines/homelab
+	url = https://github.com/mohdfareed/homelab.git
+	branch = main

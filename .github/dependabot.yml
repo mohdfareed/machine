@@ -25,3 +25,8 @@ updates:
     directories: ["/config/**/*"]
     patterns: ["*"]
     multi-ecosystem-group: "monthly-dependencies"
+
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "monthly"

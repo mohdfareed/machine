@@ -63,6 +63,106 @@ def sync_repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     return canonical, checkout
 
 
+@pytest.fixture
+def sync_submodule(sync_repos, tmp_path, monkeypatch):
+    canonical, checkout = sync_repos
+    source = tmp_path / "submodule-source"
+    source.mkdir()
+    git(source, "init", "-b", "main")
+    (source / "data.txt").write_text("original\n")
+    git(source, "add", "data.txt")
+    git(source, "commit", "-m", "Initial submodule")
+    git(canonical, "-c", "protocol.file.allow=always", "submodule", "add", str(source), "nested")
+    git(canonical, "commit", "-am", "Add submodule")
+    monkeypatch.setenv("GIT_ALLOW_PROTOCOL", "file")
+    return canonical, checkout, source
+
+
+def test_sync_initializes_empty_submodule(sync_submodule):
+    canonical, checkout, _ = sync_submodule
+    sync.sync()
+    assert git(checkout / "nested", "rev-parse", "HEAD") == git(
+        canonical / "nested", "rev-parse", "HEAD"
+    )
+
+
+def test_sync_preserves_initialized_submodule(sync_submodule, monkeypatch):
+    canonical, checkout, source = sync_submodule
+    sync.sync()
+    nested = checkout / "nested"
+    (nested / "data.txt").write_text("local commit\n")
+    git(nested, "commit", "-am", "Local work")
+    local_head = git(nested, "rev-parse", "HEAD")
+    (nested / "data.txt").write_text("uncommitted work\n")
+    (source / "data.txt").write_text("upstream\n")
+    git(source, "commit", "-am", "Upstream work")
+    git(canonical / "nested", "-c", "protocol.file.allow=always", "fetch", "origin")
+    git(canonical / "nested", "checkout", git(source, "rev-parse", "HEAD"))
+    git(canonical, "add", "nested")
+    git(canonical, "commit", "-m", "Advance submodule")
+
+    warnings = []
+    refreshed = []
+    original_run = sync.run
+    monkeypatch.setattr(sync.reporting, "warning", warnings.append)
+
+    def run(cmd, **kwargs):
+        if cmd[0] == "uv":
+            refreshed.append(cmd)
+        return original_run(cmd, **kwargs)
+
+    monkeypatch.setattr(sync, "run", run)
+    sync.sync()
+    assert warnings
+    assert refreshed
+    assert git(nested, "rev-parse", "HEAD") == local_head
+    assert (nested / "data.txt").read_text() == "uncommitted work\n"
+
+
+def test_sync_skips_staged_submodule_pointer(sync_submodule, monkeypatch):
+    _, checkout, _ = sync_submodule
+    sync.sync()
+    nested = checkout / "nested"
+    (nested / "data.txt").write_text("local commit\n")
+    git(nested, "commit", "-am", "Local work")
+    local_head = git(nested, "rev-parse", "HEAD")
+    git(checkout, "add", "nested")
+    warnings = []
+    monkeypatch.setattr(sync.reporting, "warning", warnings.append)
+
+    sync.sync()
+    assert warnings
+    assert git(nested, "rev-parse", "HEAD") == local_head
+    assert git(checkout, "rev-parse", ":nested") == local_head
+
+
+def test_sync_refuses_occupied_uninitialized_submodule(sync_submodule):
+    _, checkout, _ = sync_submodule
+    nested = checkout / "nested"
+    nested.mkdir()
+    (nested / "local.txt").write_text("keep\n")
+    with pytest.raises(RuntimeError, match="not empty"):
+        sync.sync()
+    assert (nested / "local.txt").read_text() == "keep\n"
+
+
+def test_sync_submodule_dry_run_does_not_initialize(sync_submodule):
+    canonical, checkout, _ = sync_submodule
+    git(checkout, "fetch", str(canonical), "main")
+    git(checkout, "merge", "--ff-only", "FETCH_HEAD")
+    sync.sync(dry_run=True)
+    assert not (checkout / "nested" / ".git").exists()
+
+
+def test_sync_matching_submodule_leaves_edits_alone(sync_submodule):
+    _, checkout, _ = sync_submodule
+    sync.sync()
+    nested = checkout / "nested"
+    (nested / "data.txt").write_text("local work\n")
+    sync.sync()
+    assert (nested / "data.txt").read_text() == "local work\n"
+
+
 def test_machine_validation_is_case_insensitive(monkeypatch):
     monkeypatch.setattr(cli, "list_machines", lambda: ["homelab", "macbook"])
 

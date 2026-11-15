@@ -59,7 +59,7 @@ else {
 
 # Clone repo if needed.
 if (-not (Test-Path "$env:MC_HOME\.git")) {
-    git clone https://github.com/mohdfareed/machine.git "$env:MC_HOME"
+    git clone --recurse-submodules https://github.com/mohdfareed/machine.git "$env:MC_HOME"
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 

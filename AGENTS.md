@@ -59,6 +59,9 @@ data; never expose credentials or secret values in output.
   Tracked local edits are restored before the refresh; ahead commits and detached HEAD are
   allowed. Git failures or autostash restoration conflicts stop the sync. Never
   discard local changes; leave conflicting auto-stashes for recovery with Git.
+  Initialize empty submodules; never move an existing checkout automatically. Warn and
+  skip submodules with staged pointers or checkouts differing from the recorded commit.
+  Submodule management must be generic, not specific to an individual machine.
   Branches, commits, pushes, and PRs belong to Git.
 
 ## Architecture
@@ -204,6 +207,9 @@ and closes it on completion or failure; never enable global automatic caching.
 
 ### Configuration Ownership and State
 
+Keep the machine repository's Docker Compose Dependabot configuration, even when
+current Compose projects live in separate repositories.
+
 Give configuration one owner: shared setup belongs in modules, host-specific setup
 belongs in machine manifests. Commit portable configuration; keep credentials,
 runtime state, caches, and machine-generated application data local.
@@ -256,7 +262,7 @@ or add special config entrypoints outside the module declaration system.
 
 - Use the official Tailscale Docker image with the `latest` tag; do not pin its version.
 
-- Homelab belongs entirely to `config/machines/homelab`, not a shared module. The M1 runs all services with local databases and state; the PC shares bulk media over SMB and retains Docker for experiments. Both hosts stay awake for continuous media availability. Verify SMB mounting, Docker startup, and reboot recovery natively before treating the deployment as ready.
+- Homelab lives in the public `mohdfareed/homelab` repository, checked out as the `config/machines/homelab` submodule, not a shared module. The M1 runs all services with local databases and state; the PC shares bulk media over SMB and retains Docker for experiments. Both hosts stay awake for continuous media availability. Verify SMB mounting, Docker startup, and reboot recovery natively before treating the deployment as ready.
 - Every macOS homelab deployment requires a manual review of System Settings -> General -> Sharing; the owner configures shared folders, permissions, and remote access there. Keep this requirement in the homelab machine notes, not reminder scripts.
 - Do not SSH to, deploy to, or otherwise mutate the homelab until the user has
   reviewed the repository changes and explicitly approved deployment

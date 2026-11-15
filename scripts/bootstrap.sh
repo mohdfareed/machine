@@ -53,7 +53,7 @@ export MC_HOME
 # Clone repo if needed.
 if ! [ -d "$MC_HOME/.git" ]; then
   echo "Cloning machine repo to $MC_HOME..."
-  "$git" clone https://github.com/mohdfareed/machine.git "$MC_HOME"
+  "$git" clone --recurse-submodules https://github.com/mohdfareed/machine.git "$MC_HOME"
 fi
 
 # Install `mc` with uv, forcing an update if already installed.

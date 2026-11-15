@@ -62,7 +62,7 @@
     "enabled": true,
   },
   // Line Wrapping
-  "soft_wrap": "editor_width",
+  "soft_wrap": "none",
   "preferred_line_length": 120,
   "wrap_guides": [80, 120],
   // Formatting

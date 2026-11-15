@@ -7,7 +7,7 @@ and any per-machine configuration/overrides.
 The `mc` CLI deploys a machine, upgrades it, syncs with canonical `main`, and
 inspects the resolved configuration.
 
-The [homelab](config/machines/homelab/README.md) configuration extends the setup to
+The [homelab](https://github.com/mohdfareed/homelab) configuration extends the setup to
 manage self-hosted services. It manages Docker-based servers setup,
 configuration, and service deployment.
 
