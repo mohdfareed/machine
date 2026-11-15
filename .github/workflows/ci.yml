@@ -42,7 +42,7 @@ jobs:
 
       - name: Download release candidate
         if: ${{ inputs.release-commit != '' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-candidate
           path: ${{ runner.temp }}/release-candidate
@@ -101,7 +101,7 @@ jobs:
       - name: Upload test report
         id: test_report
         if: ${{ always() && hashFiles('.reports/pytest.xml') != '' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pytest-${{ runner.os }}
           path: .reports/pytest.xml
