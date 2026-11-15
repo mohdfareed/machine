@@ -36,8 +36,8 @@ data; never expose credentials or secret values in output.
 - `app/config/` - Models, discovery, machine loading and resolution, and validation
 - `app/deployment/` - File deployment, package installation and manager maintenance, and script execution
 - `app/runtime/` - Host and selected-machine environment, saved selection, subprocess execution, reporting, and Unix command activation
-- `config/` - Shared dotfiles and configs
-- `machines/` - Per-host configurations
+- `config/modules/` - Shared dotfiles and configs
+- `config/machines/` - Per-host configurations
 - `archive/` - Historical snapshots; preserve their contents and exclude them from checks and automatic fixes
 - `scripts/bootstrap.sh` / `scripts/bootstrap.ps1` - Bare-machine bootstrap
 
@@ -80,10 +80,11 @@ add callbacks solely to route output. The architecture test checks the direct
 subprocess execution boundary at `app/runtime/shell.py`, not a registry of every architectural
 convention.
 
-### Module (`config/<path>/module.py`)
+### Module (`config/modules/<path>/module.py`)
 
 The shared catalog has exactly six selectable modules: `terminal`, `shell`, `dev`,
-`ssh`, `onepass`, and `system`. Resource subfolders are not separately selectable.
+`ssh`, `onepass`, and `system`, under `config/modules/`. Resource subfolders are not separately selectable.
+CLI names are relative to `config/modules/`: `shell` and `dev`, not `modules.shell`.
 Discovery finds the reserved `module.py` filename,
 excluding hidden and `__pycache__` directories; folder names must be valid Python
 identifiers, not keywords. Folder references select discovered names, without
@@ -94,12 +95,12 @@ Paths do not interpolate variables or use `Machine.env`; construct environment-b
 paths in Python with `os.environ` or native platformdirs paths, only in applicable
 platform branches.
 Module code must locate bundled resources relative to its own files, never by
-reconstructing its `config/...` location from `MC_HOME` or the working directory.
+reconstructing its `config/modules/...` location from `MC_HOME` or the working directory.
 
 Exports a `Module(files, packages, overrides, depends)`. `depends` and manifest
 `modules` contain imported config folders (`list[ModuleType]`).
-Use folder imports such as `from config import dev, shell`.
-Keep an empty `__init__.py` in `config/` and each module/group folder so Python and
+Use folder imports such as `from config.modules import dev, shell`.
+Keep an empty `__init__.py` in `config/`, `config/modules/`, and each module/group folder so Python and
 editors recognize them as packages. Keep these markers empty; declarations stay
 in `module.py` and are loaded by the app.
 Scripts are discovered only under `scripts/`; declarations have no `scripts=` field.
@@ -120,7 +121,7 @@ copy private keys or load them into another agent. Track the shared public-key
 allowlist in the SSH server module and deploy it through `FileMapping`. Scripts
 that need credentials may authenticate through the CLI; do not automate account enrollment.
 
-### Manifest (`machines/<id>/machine.py`)
+### Manifest (`config/machines/<id>/machine.py`)
 
 Exports a `Machine(modules, files, packages, env)`.
 Composes imported modules and adds machine-specific overrides. The loader derives
@@ -206,7 +207,7 @@ and closes it on completion or failure; never enable global automatic caching.
 Give configuration one owner: shared setup belongs in modules, host-specific setup
 belongs in machine manifests. Commit portable configuration; keep credentials,
 runtime state, caches, and machine-generated application data local.
-Keep `config/` as the six-module shared catalog; `machines/` composes those
+Keep `config/modules/` as the six-module shared catalog; `config/machines/` composes those
 declarations and owns host-only setup. Routine configuration changes belong there.
 Group tools by their function, not properties such as having a graphical interface.
 Execution, environment refresh, and bootstrap orchestration belong in `app/`,
@@ -215,7 +216,7 @@ or add special config entrypoints outside the module declaration system.
 
 - Repo root is `app.runtime.env.ROOT`, derived from the installed code location; execution never reads a mutable root setting
 - The CLI reads its saved selection independently of inherited shell variables and keeps no log files. Invocation options belong to the CLI context; command metadata comes from the package entry point, outside configuration models.
-- Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/dev/vscode/` and `config/dev/zed/`
+- Workspace-local editor config lives in `.vscode/` for VS Code and `.zed/` for Zed only for repo-specific file associations and context servers; personal editor defaults belong in `config/modules/dev/vscode/` and `config/modules/dev/zed/`
 - The `dev` module owns editor and Codex installation, not remote-access services. Use Zed over existing SSH for homelab access; VS Code tunnels are enabled manually where needed, including Gleason. The homelab does not select `dev` solely for remote editing. Credentials, pairing/enrollments, live databases, histories, caches, downloaded plugins, and generated memories stay machine-local
 - Editor tasks should avoid ad hoc external tool dependencies; prefer shell builtins or repo-managed entrypoints so tasks stay portable across machines
 - Shared repo policy should prefer cross-editor files (`pyproject.toml`, `.editorconfig`, `.markdownlint.json`) over editor-specific settings
@@ -255,7 +256,7 @@ or add special config entrypoints outside the module declaration system.
 
 - Use the official Tailscale Docker image with the `latest` tag; do not pin its version.
 
-- Homelab belongs entirely to `machines/homelab`, not a shared module. The M1 runs all services with local databases and state; the PC shares bulk media over SMB and retains Docker for experiments. Both hosts stay awake for continuous media availability. Verify SMB mounting, Docker startup, and reboot recovery natively before treating the deployment as ready.
+- Homelab belongs entirely to `config/machines/homelab`, not a shared module. The M1 runs all services with local databases and state; the PC shares bulk media over SMB and retains Docker for experiments. Both hosts stay awake for continuous media availability. Verify SMB mounting, Docker startup, and reboot recovery natively before treating the deployment as ready.
 - Every macOS homelab deployment requires a manual review of System Settings -> General -> Sharing; the owner configures shared folders, permissions, and remote access there. Keep this requirement in the homelab machine notes, not reminder scripts.
 - Do not SSH to, deploy to, or otherwise mutate the homelab until the user has
   reviewed the repository changes and explicitly approved deployment

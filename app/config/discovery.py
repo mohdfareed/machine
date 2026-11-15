@@ -22,8 +22,8 @@ def list_scripts(directory: Path) -> list[Path]:
 
 
 def list_modules() -> list[str]:
-    """List available module names by scanning ``config/``."""
-    root = env.ROOT / "config"
+    """List available module names by scanning ``config/modules/``."""
+    root = env.ROOT / "config" / "modules"
     names: list[str] = []
     for path in root.rglob("module.py"):
         parts = path.parent.relative_to(root).parts
@@ -41,8 +41,8 @@ def list_modules() -> list[str]:
 
 
 def list_machines() -> list[str]:
-    """List available machine IDs by scanning ``machines/``."""
-    machines_dir = env.ROOT / "machines"
+    """List available machine IDs by scanning ``config/machines/``."""
+    machines_dir = env.ROOT / "config" / "machines"
     if not machines_dir.exists():
         return []
 

@@ -185,7 +185,7 @@ def test_sync_dry_run_does_not_fetch(sync_repos):
 
 def test_validate_checks_configuration_and_managers_without_deployment(tmp_path, monkeypatch):
     managers = [PkgManager.WINGET, PkgManager.SCOOP]
-    machine = tmp_path / "machines" / "test"
+    machine = tmp_path / "config" / "machines" / "test"
     machine.mkdir(parents=True)
     declaration = machine / "machine.py"
     declaration.write_text(f"from {models.__name__} import Machine\nmanifest = Machine()\n")
@@ -303,7 +303,7 @@ def test_preview_uses_requested_machine_without_saving_or_running(tmp_path, monk
     env_file.parent.mkdir()
     env_file.write_text("first\n")
     monkeypatch.setattr(env, "config_dir", lambda: env_file.parent)
-    machine_dir = tmp_path / "machines" / "second"
+    machine_dir = tmp_path / "config" / "machines" / "second"
     machine_dir.mkdir(parents=True)
     (machine_dir / "config").write_text("new config")
     (machine_dir / "machine.py").write_text(

@@ -3,8 +3,7 @@
 from pathlib import Path
 
 from app.config.models import Machine, Package
-
-from config import dev, onepass, shell, system, terminal
+from config.modules import dev, onepass, shell, system, terminal
 
 _dev = Path.home() / "Developer"
 

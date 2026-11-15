@@ -7,7 +7,7 @@ and any per-machine configuration/overrides.
 The `mc` CLI deploys a machine, upgrades it, syncs with canonical `main`, and
 inspects the resolved configuration.
 
-The [homelab](machines/homelab/README.md) configuration extends the setup to
+The [homelab](config/machines/homelab/README.md) configuration extends the setup to
 manage self-hosted services. It manages Docker-based servers setup,
 configuration, and service deployment.
 
@@ -68,11 +68,11 @@ applies to `upgrade` and `sync`. Add `--debug` to show exception tracebacks.
 
 ### Machines
 
-Create `machines/<id>/machine.py`:
+Create `config/machines/<id>/machine.py`:
 
 ```python
 from app.config.models import Machine
-from config import shell
+from config.modules import shell
 
 manifest = Machine(
     modules=[shell],
@@ -99,12 +99,12 @@ Packages are handled based on the OS:
 
 Declare public environment variables in the manifest's `env` mapping, using
 strings or `Path` values. Redeploy after changing these variables, then open a new terminal.
-Put machine-specific PowerShell configuration in `machines/<id>/profile.ps1`;
+Put machine-specific PowerShell configuration in `config/machines/<id>/profile.ps1`;
 the shared profile loads it automatically.
 
 ### Modules
 
-Create `config/<name>/module.py` and an empty `__init__.py` beside it:
+Create `config/modules/<name>/module.py` and an empty `__init__.py` beside it:
 
 ```python
 from app.config.models import Module
@@ -115,18 +115,19 @@ module = Module()
 To deploy a specific module, import its folder into the manifest's `modules`
 list, then `mc deploy <name>` to set up that module on the selected machine.
 
-CLI arguments use dotted names:
-`config/<group>/<name>/module.py` becomes `<group>.<name>`.
+CLI arguments use dotted names relative to `config/modules/`:
+`config/modules/<group>/<name>/module.py` becomes `<group>.<name>`.
+The shared modules remain `shell`, `dev`, etc., not `modules.shell`.
 Discovery recursively finds the reserved `module.py` filename, **folder names
 must be valid Python identifiers, not keywords.**
 
-With `from config import terminal`, `modules=[terminal]` includes all modules
+With `from config.modules import terminal`, `modules=[terminal]` includes all modules
 under that grouping folder, including newly added ones. Grouping folders also
 need an empty `__init__.py`. **Import folders, not their `module.py` files.**
 
 ### Scripts
 
-Create scripts directly in `config/<name>/scripts/` or `machines/<id>/scripts/`.
+Create scripts directly in `config/modules/<name>/scripts/` or `config/machines/<id>/scripts/`.
 Top-level `.sh`, `.py`, and `.ps1` files are auto-discovered.
 
 `.sh` scripts run only on Unix, never on Windows. Untagged `.py` and `.ps1`

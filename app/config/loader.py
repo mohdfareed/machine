@@ -31,7 +31,7 @@ def load_machine(
 ) -> Configuration:
     """Resolve native-platform inputs, optionally checking declarations and sources."""
     # Load the machine declaration and resolve its local paths.
-    machine_dir = machine_env.ROOT / "machines" / machine_id
+    machine_dir = machine_env.ROOT / "config" / "machines" / machine_id
     path = machine_dir / "machine.py"
     machine = getattr(_import_py(path), "manifest", None)
     if not isinstance(machine, Machine):
@@ -81,7 +81,9 @@ def load_machine(
     scripts = [
         script
         for name in modules
-        for script in list_scripts(machine_env.ROOT / "config" / Path(*name.split(".")) / "scripts")
+        for script in list_scripts(
+            machine_env.ROOT / "config" / "modules" / Path(*name.split(".")) / "scripts"
+        )
     ]
     if not module_names:
         files.extend(machine.files)
@@ -118,7 +120,7 @@ def _load_modules(selections: list[ModuleType]) -> dict[str, Module]:
             raise ValueError(f"Circular module dependency: {' -> '.join([*visiting, name])}")
 
         # Locate and load the module declaration.
-        directory = machine_env.ROOT / "config" / Path(*name.split("."))
+        directory = machine_env.ROOT / "config" / "modules" / Path(*name.split("."))
         path = directory / "module.py"
         module = getattr(_import_py(path), "module", None)
         if not isinstance(module, Module):
@@ -143,9 +145,9 @@ def _load_modules(selections: list[ModuleType]) -> dict[str, Module]:
 def _reference_names(references: list[ModuleType]) -> list[str]:
     names: list[str] = []
     for reference in references:
-        if not reference.__name__.startswith("config."):
+        if not reference.__name__.startswith("config.modules."):
             raise ValueError(f"Expected a config module or group: {reference.__name__}")
-        names.append(reference.__name__.removeprefix("config."))
+        names.append(reference.__name__.removeprefix("config.modules."))
 
     return names
 

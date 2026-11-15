@@ -5,7 +5,7 @@ $root = Join-Path $PSScriptRoot '../..'
 
 # Parse scripts without executing them.
 $failed = $false
-foreach ($folder in 'app', 'config', 'machines', 'scripts') {
+foreach ($folder in 'app', 'config', 'scripts') {
     foreach ($script in Get-ChildItem (Join-Path $root $folder) -Recurse -File) {
         if ($script.Extension -notin '.ps1', '.psm1') { continue }
         $tokens = $null

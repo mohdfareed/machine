@@ -214,9 +214,9 @@
     "default_profile": "write",
     "default_model": {
       "provider": "openai-subscribed",
-      "model": "gpt-6-astra",
+      "model": "gpt-6.1-terra",
       "enable_thinking": true,
-      "effort": "high",
+      "effort": "medium",
       "speed": "standard",
     },
     "profiles": {

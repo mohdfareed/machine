@@ -2,7 +2,7 @@
 
 from app.config.models import FileMapping, Module
 
-from config import shell
+from config.modules import shell
 
 module = Module(
     depends=[shell],

@@ -22,5 +22,5 @@ def output(*args):
 
 def files(pattern: str) -> Iterator[Path]:
     """Find source files in the application, configuration, and scripts."""
-    for folder in ("app", "config", "machines", "scripts"):
+    for folder in ("app", "config", "scripts"):
         yield from (ROOT / folder).rglob(pattern)

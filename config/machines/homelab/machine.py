@@ -3,8 +3,7 @@
 from pathlib import Path
 
 from app.config.models import Machine, Package
-
-from config import onepass, shell, ssh, system, terminal
+from config.modules import onepass, shell, ssh, system, terminal
 
 manifest = Machine(
     env={
