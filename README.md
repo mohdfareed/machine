@@ -85,8 +85,9 @@ manifest = Machine(
 Replace `<id>` below with the machine name:
 
 ```powershell
-mc show -m <id>    # Inspect the resolved manifest
-mc deploy -m <id>  # Set machine selection and deploy
+mc show -m <id>      # Inspect the resolved manifest
+mc deploy -m <id>    # Set machine selection and deploy
+mc validate -m <id>  # Validate machine configs and modules
 ```
 
 Packages are handled based on the OS:
@@ -162,7 +163,6 @@ Historical machine configurations in `archive/` are reference-only
 and excluded from checks and automatic fixes.
 
 ```powershell
-mc validate [-m MACHINE]  # Validate machine configs and modules
 ./scripts/mc --help       # Run without bootstrapping
 ./scripts/fix.py          # Install/upgrade dependencies, auto-fix, and check
 ./scripts/check.py        # Validate without modifying files
@@ -172,7 +172,6 @@ mc validate [-m MACHINE]  # Validate machine configs and modules
 On Windows, use:
 
 ```powershell
-uv run mc validate [-m MACHINE]
 uv run mc --help
 uv run python scripts/fix.py
 uv run --no-sync python scripts/check.py
