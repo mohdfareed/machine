@@ -6,6 +6,14 @@
       },
     },
   },
+  "file_scan_exclusions": [
+    "**/.DS_Store",
+    "**/.git",
+    "**/__pycache__",
+    "**/.pytest_cache",
+    "**/.ruff_cache",
+    "**/.uv-cache",
+  ],
   // file associations
   "file_types": {
     "JSONC": ["**/zed/settings.json", "**/vscode/settings.json", ".code-snippets"],

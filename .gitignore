@@ -6,10 +6,9 @@ __pycache__/
 .pytest_cache/
 .reports/
 .ruff_cache/
+.uv-cache/
 .venv/
 dist/
-lazy-lock.json
 
 # machine deployment
-.env
-.env.*
+.env*
