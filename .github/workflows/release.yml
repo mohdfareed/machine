@@ -45,10 +45,7 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Set up PowerShell
-        run: brew install --cask powershell@preview
-
-      - name: Prepare and validate release
+      - name: Prepare release
         id: candidate
         env:
           BUMP: ${{ inputs.bump }}
@@ -56,7 +53,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           base=$(git rev-parse HEAD)
-          ./scripts/release.py "$BUMP"
+          uv run python scripts/release.py "$BUMP" --skip-check
           commit=$(git rev-parse HEAD)
           tag="v$(uv version --short)"
           git bundle create "$RUNNER_TEMP/candidate.bundle" HEAD "refs/tags/$tag" "^$base"

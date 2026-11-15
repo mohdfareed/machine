@@ -16,7 +16,7 @@ class Bump(StrEnum):
     MAJOR = "major"
 
 
-def main(bump: Bump):
+def main(bump: Bump, *, skip_check: bool = False):
     os.chdir(output("git", "rev-parse", "--show-toplevel"))
     if output("git", "branch", "--show-current") != "main":
         sys.exit("Switch to main before releasing.")
@@ -29,11 +29,12 @@ def main(bump: Bump):
     if output("git", "tag", "--list", tag):
         sys.exit(f"Tag {tag} already exists.")
 
-    # Bump and validate without upgrading dependencies or fixing files.
+    # Bump without upgrading dependencies or fixing files.
     print(f"\n==> Preparing release {tag}...", flush=True)
     run("uv", "version", "--bump", bump.value, "--no-sync")
-    run("uv", "sync", "--dev", "--locked")
-    run(sys.executable, str(Path(__file__).resolve().with_name("check.py")))
+    if not skip_check:
+        run("uv", "sync", "--dev", "--locked")
+        run(sys.executable, str(Path(__file__).resolve().with_name("check.py")))
 
     # Commit only the release version and create its annotated tag.
     run("git", "add", "--", "pyproject.toml", "uv.lock")
@@ -45,6 +46,7 @@ def main(bump: Bump):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("bump", choices=[item.value for item in Bump])
-    bump = Bump(parser.parse_args().bump)
+    parser.add_argument("--skip-check", action="store_true", help="Defer validation to CI.")
+    args = parser.parse_args()
 
-    main(bump)
+    main(Bump(args.bump), skip_check=args.skip_check)
