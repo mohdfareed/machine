@@ -71,7 +71,7 @@ jobs:
           if-no-files-found: error
 
   check:
-    name: Check release candidate
+    name: Check release
     needs: prepare
     uses: ./.github/workflows/ci.yml
     with:
@@ -85,11 +85,17 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Require deploy key
+        env:
+          RELEASE_DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
+        run: test -n "$RELEASE_DEPLOY_KEY"
+
       - name: Check out release base
         uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.base }}
           fetch-depth: 0
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
 
       - name: Download release candidate
         uses: actions/download-artifact@v8
