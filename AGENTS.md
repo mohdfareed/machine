@@ -300,5 +300,5 @@ Keep project reference information in its relevant architecture section.
 - Keep READMEs to actionable owner setup, usage, and troubleshooting notes. Never put agent constraints (including file-count limits), change summaries, or implementation rationale there; durable agent rules belong in `AGENTS.md`. Do not add navigation blocks or section-anchor cross-links.
 - Do not turn discussion questions into documentation changes; edit docs when requested or when implementation changes invalidate existing instructions
 - Keep bootstrap prerequisites limited to actions the owner must perform manually before running the command; automate supported setup in its existing owner instead of documenting extra manual work.
-- Never add inline spellchecker directives to Markdown; keep spelling exceptions in `.typos.toml`, shared by the Typos CLI and editor extensions
+- Never add inline spellchecker directives to Markdown; keep spelling exceptions in `pyproject.toml` under `tool.typos`, shared by the Typos CLI and editor extensions
 - Before sending, remove every bullet whose deletion would not change the reader's understanding or next action

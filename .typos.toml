@@ -1,6 +1,0 @@
-[files]
-extend-exclude = ["archive/"]
-
-[default.extend-words]
-# PowerShell's case-insensitive not-equal operator.
-ine = "ine"
